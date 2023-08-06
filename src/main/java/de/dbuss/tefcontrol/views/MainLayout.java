@@ -23,6 +23,7 @@ import de.dbuss.tefcontrol.data.entity.User;
 import de.dbuss.tefcontrol.security.AuthenticatedUser;
 import de.dbuss.tefcontrol.views.about.AboutView;
 import de.dbuss.tefcontrol.views.hwmapping.HWMappingView;
+import de.dbuss.tefcontrol.views.knowledgeBase.KnowledgeBaseView;
 import de.dbuss.tefcontrol.views.pfgproductmapping.PFGProductMappingView;
 import java.io.ByteArrayInputStream;
 import java.util.Optional;
@@ -79,10 +80,18 @@ public class MainLayout extends AppLayout {
             nav.addItem(new SideNavItem("HW Mapping", HWMappingView.class, LineAwesomeIcon.TH_SOLID.create()));
 
         }
+
+        if (accessChecker.hasAccess(KnowledgeBaseView.class)) {
+            nav.addItem(new SideNavItem("KB", KnowledgeBaseView.class, LineAwesomeIcon.INFO_CIRCLE_SOLID.create()));
+
+        }
+
+
         if (accessChecker.hasAccess(AboutView.class)) {
             nav.addItem(new SideNavItem("About", AboutView.class, LineAwesomeIcon.INFO_CIRCLE_SOLID.create()));
 
         }
+
 
         return nav;
     }
