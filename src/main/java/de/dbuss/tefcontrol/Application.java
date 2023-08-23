@@ -19,7 +19,8 @@ import org.springframework.context.annotation.Bean;
  *
  */
 @SpringBootApplication
-@Theme(value = "tefcontrol", variant = Lumo.DARK)
+//@Theme(value = "tefcontrol", variant = Lumo.DARK)
+@Theme(value = "tefcontrol", variant = Lumo.LIGHT)
 public class Application implements AppShellConfigurator {
 
     public static void main(String[] args) {

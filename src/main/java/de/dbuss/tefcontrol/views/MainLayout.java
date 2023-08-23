@@ -11,6 +11,7 @@ import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Header;
 import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.sidenav.SideNav;
@@ -19,7 +20,9 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.server.auth.AccessAnnotationChecker;
 import com.vaadin.flow.theme.lumo.LumoUtility;
+import de.dbuss.tefcontrol.data.entity.Department;
 import de.dbuss.tefcontrol.data.entity.User;
+import de.dbuss.tefcontrol.data.repository.DepartmentData;
 import de.dbuss.tefcontrol.security.AuthenticatedUser;
 import de.dbuss.tefcontrol.views.about.AboutView;
 import de.dbuss.tefcontrol.views.hwmapping.HWMappingView;
@@ -28,6 +31,7 @@ import de.dbuss.tefcontrol.views.pfgproductmapping.PFGProductMappingView;
 import java.io.ByteArrayInputStream;
 import java.util.Optional;
 import org.vaadin.lineawesome.LineAwesomeIcon;
+import org.vaadin.tatu.Tree;
 
 /**
  * The main view is a top-level placeholder for other views.
@@ -63,9 +67,40 @@ public class MainLayout extends AppLayout {
         appName.addClassNames(LumoUtility.FontSize.LARGE, LumoUtility.Margin.NONE);
         Header header = new Header(appName);
 
-        Scroller scroller = new Scroller(createNavigation());
+        //Scroller scroller = new Scroller(createNavigation());
+        Scroller scroller = new Scroller(createTree());
 
         addToDrawer(header, scroller, createFooter());
+    }
+
+    private Tree createTree() {
+
+        DepartmentData departmentData = new DepartmentData();
+        Tree<Department> tree = new Tree<>(Department::getName);
+        tree.setItems(departmentData.getRootDepartments(),
+                departmentData::getChildDepartments);
+
+        //    tree.setItemIconProvider(item -> getIcon(item));
+        //    tree.setItemIconSrcProvider(item -> getImageIconSrc(item));
+        tree.setItemTooltipProvider(Department::getManager);
+
+        tree.addExpandListener(event ->
+                System.out.println(String.format("Expanded %s item(s)", event.getItems().size()))
+        );
+        tree.addCollapseListener(event ->
+                System.out.println(String.format("Collapsed %s item(s)", event.getItems().size()))
+        );
+
+        tree.asSingleSelect().addValueChangeListener(event -> {
+            if (event.getValue() != null)
+                System.out.println(event.getValue().getName() + " selected");
+        });
+        tree.setAllRowsVisible(true);
+        //tree.setSizeFull();
+        tree.setWidth("350px");
+        //add(tree);
+        return tree;
+
     }
 
     private SideNav createNavigation() {
