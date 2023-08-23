@@ -13,21 +13,21 @@ public class DepartmentData {
     private static List<Department> createDepartmentList() {
         List<Department> departmentList = new ArrayList<>();
 
-        departmentList.add(new Department(1, "CO_ONE", null, "Päivi"));
-        departmentList.add(new Department(11, "Teilnehmer", departmentList.get(0), "Pekka"));
-        departmentList.add(new Department(111, "Anforderung", departmentList.get(1), "Pekka"));
-        departmentList.add(new Department(111, "QS", departmentList.get(1), "Gilberto"));
-        departmentList.add(new Department(12, "Usage", departmentList.get(0), "Pekka"));
-        departmentList.add(new Department(13, "Anforderung", departmentList.get(4), "Thomas"));
-        departmentList.add(new Department(14, "QS", departmentList.get(4), "Tomi"));
-        departmentList.add(new Department(2, "HR", null, "Anne"));
-        departmentList.add(new Department(21, "Office", departmentList.get(7), "Anu"));
-        departmentList.add(new Department(22, "Employee", departmentList.get(7), "Minna"));
-        departmentList.add(new Department(3, "Marketing", null, "Niko"));
-        departmentList.add(new Department(31, "Growth", departmentList.get(10), "Ömer"));
-        departmentList.add(new Department(32, "Demand Generation", departmentList.get(10), "Marcus"));
-        departmentList.add(new Department(33, "Product Marketing", departmentList.get(10), "Pekka"));
-        departmentList.add(new Department(34, "Brand Experience", departmentList.get(10), "Eero"));
+        departmentList.add(new Department(1, "CO_ONE", null, "Päivi","HW-Mapping"));
+        departmentList.add(new Department(11, "Teilnehmer", departmentList.get(0), "Pekka","kb"));
+        departmentList.add(new Department(111, "Anforderung", departmentList.get(1), "Pekka","PFG-Mapping"));
+        departmentList.add(new Department(111, "QS", departmentList.get(1), "Gilberto",""));
+        departmentList.add(new Department(12, "Usage", departmentList.get(0), "Pekka",""));
+        departmentList.add(new Department(13, "Anforderung", departmentList.get(4), "Thomas",""));
+        departmentList.add(new Department(14, "QS", departmentList.get(4), "Tomi",""));
+        departmentList.add(new Department(2, "HR", null, "Anne",""));
+        departmentList.add(new Department(21, "Office", departmentList.get(7), "Anu",""));
+        departmentList.add(new Department(22, "Employee", departmentList.get(7), "Minna",""));
+        departmentList.add(new Department(3, "Marketing", null, "Niko",""));
+        departmentList.add(new Department(31, "Growth", departmentList.get(10), "Ömer",""));
+        departmentList.add(new Department(32, "Demand Generation", departmentList.get(10), "Marcus",""));
+        departmentList.add(new Department(33, "Product Marketing", departmentList.get(10), "Pekka",""));
+        departmentList.add(new Department(34, "Brand Experience", departmentList.get(10), "Eero",""));
 
         return departmentList;
     }

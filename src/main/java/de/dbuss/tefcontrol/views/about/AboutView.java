@@ -1,5 +1,6 @@
 package de.dbuss.tefcontrol.views.about;
 
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Paragraph;
@@ -69,6 +70,9 @@ public class AboutView extends VerticalLayout {
         tree.asSingleSelect().addValueChangeListener(event -> {
             if (event.getValue() != null)
                 System.out.println(event.getValue().getName() + " selected");
+
+
+
         });
         tree.setAllRowsVisible(true);
         //tree.setSizeFull();

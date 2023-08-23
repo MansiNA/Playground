@@ -4,14 +4,15 @@ public class Department {
     private int id;
     private String name;
     private String manager;
+    private String url;
     private Department parent;
-    private int parent_id;
 
-    public Department(int id, String name, Department parent, String manager) {
+    public Department(int id, String name, Department parent, String manager, String url) {
         this.id = id;
         this.name = name;
         this.manager = manager;
         this.parent = parent;
+        this.url=url;
     }
 
     public int getId() {
@@ -20,6 +21,14 @@ public class Department {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
     }
 
     public String getName() {

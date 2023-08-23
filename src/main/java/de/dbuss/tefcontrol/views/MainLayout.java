@@ -1,5 +1,6 @@
 package de.dbuss.tefcontrol.views;
 
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
 import com.vaadin.flow.component.avatar.Avatar;
@@ -94,6 +95,8 @@ public class MainLayout extends AppLayout {
         tree.asSingleSelect().addValueChangeListener(event -> {
             if (event.getValue() != null)
                 System.out.println(event.getValue().getName() + " selected");
+            System.out.println(event.getValue().getUrl());
+               UI.getCurrent().navigate(event.getValue().getUrl());
         });
         tree.setAllRowsVisible(true);
         //tree.setSizeFull();
