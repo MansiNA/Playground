@@ -1,34 +1,30 @@
 package de.dbuss.tefcontrol.data.entity;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotEmpty;
+
+@Entity
+@Table(schema = "dbo", name = "Department")
 public class Department {
-    private int id;
+    @Id
+    private Long id;
+    @NotEmpty
     private String name;
-    private String manager;
-    private String url;
-    private Department parent;
+    @NotEmpty
+    private String description;
+    @NotEmpty
+    private String page_URL;
+    @NotEmpty
+    private Long parent_id;
 
-    public Department(int id, String name, Department parent, String manager, String url) {
-        this.id = id;
-        this.name = name;
-        this.manager = manager;
-        this.parent = parent;
-        this.url=url;
-    }
-
-    public int getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Long id) {
         this.id = id;
-    }
-
-    public String getUrl() {
-        return url;
-    }
-
-    public void setUrl(String url) {
-        this.url = url;
     }
 
     public String getName() {
@@ -39,22 +35,28 @@ public class Department {
         this.name = name;
     }
 
-    public String getManager() {
-        return manager;
+    public String getDescription() {
+        return description;
     }
 
-    public void setManager(String manager) {
-        this.manager = manager;
+    public void setDescription(String description) {
+        this.description = description;
     }
 
-    public Department getParent() {
-
-        return parent;
-
+    public String getPage_URL() {
+        return page_URL;
     }
 
-    public void setParent(Department parent) {
-        this.parent = parent;
+    public void setPage_URL(String page_URL) {
+        this.page_URL = page_URL;
+    }
+
+    public Long getParent_id() {
+        return parent_id;
+    }
+
+    public void setParent_id(Long parent_id) {
+        this.parent_id = parent_id;
     }
 
     @Override

@@ -1,5 +1,6 @@
 package de.dbuss.tefcontrol.views;
 
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
@@ -12,24 +13,27 @@ import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Header;
 import com.vaadin.flow.component.icon.Icon;
-import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.sidenav.SideNav;
 import com.vaadin.flow.component.sidenav.SideNavItem;
 import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.router.RouterLink;
 import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.server.auth.AccessAnnotationChecker;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import de.dbuss.tefcontrol.data.entity.Department;
 import de.dbuss.tefcontrol.data.entity.User;
-import de.dbuss.tefcontrol.data.repository.DepartmentData;
+import de.dbuss.tefcontrol.data.service.DepartmentService;
 import de.dbuss.tefcontrol.security.AuthenticatedUser;
 import de.dbuss.tefcontrol.views.about.AboutView;
 import de.dbuss.tefcontrol.views.hwmapping.HWMappingView;
 import de.dbuss.tefcontrol.views.knowledgeBase.KnowledgeBaseView;
 import de.dbuss.tefcontrol.views.pfgproductmapping.PFGProductMappingView;
 import java.io.ByteArrayInputStream;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import org.vaadin.lineawesome.LineAwesomeIcon;
 import org.vaadin.tatu.Tree;
@@ -44,9 +48,20 @@ public class MainLayout extends AppLayout {
     private AuthenticatedUser authenticatedUser;
     private AccessAnnotationChecker accessChecker;
 
-    public MainLayout(AuthenticatedUser authenticatedUser, AccessAnnotationChecker accessChecker) {
+    private DepartmentService departmentService;
+
+    // Map to associate URLs with view classes
+    private Map<String, Class<? extends Component>> urlToViewMap = new HashMap<>();
+
+    public MainLayout(AuthenticatedUser authenticatedUser, AccessAnnotationChecker accessChecker, DepartmentService departmentService) {
         this.authenticatedUser = authenticatedUser;
         this.accessChecker = accessChecker;
+        this.departmentService = departmentService;
+
+        // Add mappings for URLs and view classes
+        urlToViewMap.put("PFG-Mapping", PFGProductMappingView.class);
+        urlToViewMap.put("HW-Mapping", HWMappingView.class);
+        urlToViewMap.put("kb", KnowledgeBaseView.class);
 
         setPrimarySection(Section.DRAWER);
         addDrawerContent();
@@ -69,21 +84,26 @@ public class MainLayout extends AppLayout {
         Header header = new Header(appName);
 
         //Scroller scroller = new Scroller(createNavigation());
-        Scroller scroller = new Scroller(createTree());
 
-        addToDrawer(header, scroller, createFooter());
+        Scroller scroller = new Scroller(createTree());
+        //scroller.addClassNames("AboutView");
+
+        addToDrawer(header, scroller,createFooter());
     }
 
     private Tree createTree() {
 
-        DepartmentData departmentData = new DepartmentData();
+        Long id = 1L;
+        Optional<Department> department = departmentService.findById(id);
+
+        //    editor.setValue(department.get().getRichText());
+        //    DepartmentData departmentData = new DepartmentData();
         Tree<Department> tree = new Tree<>(Department::getName);
-        tree.setItems(departmentData.getRootDepartments(),
-                departmentData::getChildDepartments);
+        tree.setItems(departmentService.getRootDepartments(),departmentService::getChildDepartments);
 
         //    tree.setItemIconProvider(item -> getIcon(item));
         //    tree.setItemIconSrcProvider(item -> getImageIconSrc(item));
-        tree.setItemTooltipProvider(Department::getManager);
+        tree.setItemTooltipProvider(Department::getDescription);
 
         tree.addExpandListener(event ->
                 System.out.println(String.format("Expanded %s item(s)", event.getItems().size()))
@@ -93,33 +113,46 @@ public class MainLayout extends AppLayout {
         );
 
         tree.asSingleSelect().addValueChangeListener(event -> {
-            if (event.getValue() != null)
-                System.out.println(event.getValue().getName() + " selected");
-            System.out.println(event.getValue().getUrl());
-               UI.getCurrent().navigate(event.getValue().getUrl());
+            Department selectedDepartment = event.getValue();
+            if (selectedDepartment != null && selectedDepartment.getPage_URL() != null) {
+                Class<? extends Component> viewClass = urlToViewMap.get(selectedDepartment.getPage_URL());
+                if (viewClass != null && accessChecker.hasAccess(viewClass)) {
+                    UI.getCurrent().navigate(viewClass);
+                } else {
+                    // Handle access denied or unknown view
+                    Notification.show("Access denied for this page.", 3000, Notification.Position.MIDDLE);
+                }
+            }
         });
         tree.setAllRowsVisible(true);
         //tree.setSizeFull();
         tree.setWidth("350px");
         //add(tree);
         return tree;
-
+    }
+    private void navigateToView(String url) {
+        if (url != null) {
+            getUI().ifPresent(ui -> {
+                String route = "/" + url; // Assuming your route names match the URLs
+                ui.navigate(route);
+            });
+        }
     }
 
-    private SideNav createNavigation() {
+    private SideNav createNavigation(String url) {
         SideNav nav = new SideNav();
-
-        if (accessChecker.hasAccess(PFGProductMappingView.class)) {
+        System.out.println(url);
+        if (url.equals("PFG-Mapping") && accessChecker.hasAccess(PFGProductMappingView.class)) {
             nav.addItem(new SideNavItem("PFG Product-Mapping", PFGProductMappingView.class,
                     LineAwesomeIcon.ARROWS_ALT_H_SOLID.create()));
 
         }
-        if (accessChecker.hasAccess(HWMappingView.class)) {
+        if (url.equals("HW-Mapping") &&  accessChecker.hasAccess(HWMappingView.class)) {
             nav.addItem(new SideNavItem("HW Mapping", HWMappingView.class, LineAwesomeIcon.TH_SOLID.create()));
 
         }
 
-        if (accessChecker.hasAccess(KnowledgeBaseView.class)) {
+        if (url.equals("kb") && accessChecker.hasAccess(KnowledgeBaseView.class)) {
             nav.addItem(new SideNavItem("KB", KnowledgeBaseView.class, LineAwesomeIcon.INFO_CIRCLE_SOLID.create()));
 
         }
