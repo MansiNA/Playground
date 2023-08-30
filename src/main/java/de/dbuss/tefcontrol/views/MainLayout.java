@@ -19,15 +19,17 @@ import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.sidenav.SideNav;
 import com.vaadin.flow.component.sidenav.SideNavItem;
 import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.router.RouteParameters;
 import com.vaadin.flow.router.RouterLink;
 import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.server.auth.AccessAnnotationChecker;
 import com.vaadin.flow.theme.lumo.LumoUtility;
-import de.dbuss.tefcontrol.data.entity.Department;
+import de.dbuss.tefcontrol.data.entity.Projects;
 import de.dbuss.tefcontrol.data.entity.User;
-import de.dbuss.tefcontrol.data.service.DepartmentService;
+import de.dbuss.tefcontrol.data.service.ProjectsService;
 import de.dbuss.tefcontrol.security.AuthenticatedUser;
 import de.dbuss.tefcontrol.views.about.AboutView;
+import de.dbuss.tefcontrol.views.defaultPackage.DefaultView;
 import de.dbuss.tefcontrol.views.hwmapping.HWMappingView;
 import de.dbuss.tefcontrol.views.knowledgeBase.KnowledgeBaseView;
 import de.dbuss.tefcontrol.views.pfgproductmapping.PFGProductMappingView;
@@ -48,20 +50,21 @@ public class MainLayout extends AppLayout {
     private AuthenticatedUser authenticatedUser;
     private AccessAnnotationChecker accessChecker;
 
-    private DepartmentService departmentService;
+    private ProjectsService projectsService;
 
     // Map to associate URLs with view classes
     private Map<String, Class<? extends Component>> urlToViewMap = new HashMap<>();
 
-    public MainLayout(AuthenticatedUser authenticatedUser, AccessAnnotationChecker accessChecker, DepartmentService departmentService) {
+    public MainLayout(AuthenticatedUser authenticatedUser, AccessAnnotationChecker accessChecker, ProjectsService projectsService) {
         this.authenticatedUser = authenticatedUser;
         this.accessChecker = accessChecker;
-        this.departmentService = departmentService;
+        this.projectsService = projectsService;
 
         // Add mappings for URLs and view classes
         urlToViewMap.put("PFG-Mapping", PFGProductMappingView.class);
         urlToViewMap.put("HW-Mapping", HWMappingView.class);
         urlToViewMap.put("kb", KnowledgeBaseView.class);
+        urlToViewMap.put("Default-Mapping", DefaultView.class );
 
         setPrimarySection(Section.DRAWER);
         addDrawerContent();
@@ -94,16 +97,15 @@ public class MainLayout extends AppLayout {
     private Tree createTree() {
 
         Long id = 1L;
-        Optional<Department> department = departmentService.findById(id);
+        Optional<Projects> projects = projectsService.findById(id);
 
-        //    editor.setValue(department.get().getRichText());
-        //    DepartmentData departmentData = new DepartmentData();
-        Tree<Department> tree = new Tree<>(Department::getName);
-        tree.setItems(departmentService.getRootDepartments(),departmentService::getChildDepartments);
+        //    editor.setValue(projects.get().getRichText());
+        Tree<Projects> tree = new Tree<>(Projects::getName);
+        tree.setItems(projectsService.getRootProjects(),projectsService::getChildProjects);
 
         //    tree.setItemIconProvider(item -> getIcon(item));
         //    tree.setItemIconSrcProvider(item -> getImageIconSrc(item));
-        tree.setItemTooltipProvider(Department::getDescription);
+        tree.setItemTooltipProvider(Projects::getDescription);
 
         tree.addExpandListener(event ->
                 System.out.println(String.format("Expanded %s item(s)", event.getItems().size()))
@@ -113,16 +115,21 @@ public class MainLayout extends AppLayout {
         );
 
         tree.asSingleSelect().addValueChangeListener(event -> {
-            Department selectedDepartment = event.getValue();
-            if (selectedDepartment != null && selectedDepartment.getPage_URL() != null) {
-                Class<? extends Component> viewClass = urlToViewMap.get(selectedDepartment.getPage_URL());
+            Projects selectedProject = event.getValue();
+            if (selectedProject != null) {
+                String pageUrl = selectedProject.getPage_URL();
+                Class<? extends Component> viewClass = urlToViewMap.get(pageUrl);
+                Class<? extends Component> defaultViewClass = DefaultView.class;
+
                 if (viewClass != null && accessChecker.hasAccess(viewClass)) {
                     UI.getCurrent().navigate(viewClass);
+                } else if (accessChecker.hasAccess(defaultViewClass)) {
+                    UI.getCurrent().navigate(defaultViewClass, new RouteParameters("project_Id",selectedProject.getId().toString()));
                 } else {
-                    // Handle access denied or unknown view
-                    Notification.show("Access denied for this page.", 3000, Notification.Position.MIDDLE);
+                    Notification.show("Access denied for both views.", 3000, Notification.Position.MIDDLE);
                 }
             }
+
         });
         tree.setAllRowsVisible(true);
         //tree.setSizeFull();
@@ -141,7 +148,6 @@ public class MainLayout extends AppLayout {
 
     private SideNav createNavigation(String url) {
         SideNav nav = new SideNav();
-        System.out.println(url);
         if (url.equals("PFG-Mapping") && accessChecker.hasAccess(PFGProductMappingView.class)) {
             nav.addItem(new SideNavItem("PFG Product-Mapping", PFGProductMappingView.class,
                     LineAwesomeIcon.ARROWS_ALT_H_SOLID.create()));

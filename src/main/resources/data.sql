@@ -20,3 +20,169 @@ INSERT INTO "DEPARTMENT" (ID, NAME, PARENT_ID, DESCRIPTION, PAGE_URL) VALUES
 (32, 'Demand Generation', 3, 'Marcus', NULL),
 (33, 'Product Marketing', 3, 'Pekka', NULL),
 (34, 'Brand Experience', 3, 'Eero', NULL);
+
+
+
+CREATE TABLE [dbo].[Projects](
+
+                                 [ID] [int] NOT NULL,
+
+                                 [Parent_ID] [int] NULL,
+
+                                 [Name] [varchar](255) NOT NULL,
+
+                                 [Description] [varchar](max) NOT NULL,
+
+                                 [Page_URL] [varchar](255) NULL,
+
+                                 [AgentJobs] [varchar](255) NULL
+
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+
+
+
+INSERT INTO [dbo].[Projects]
+
+([ID]
+
+,[Name]
+
+,[Parent_ID]
+
+,[Description]
+
+,[Page_URL]
+
+,[AgentJobs])
+
+VALUES (1,'CO_ONE',NULL,'Das CO_ONE Besipielprojekt',NULL,NULL)
+
+
+
+
+
+INSERT INTO [dbo].[Projects]
+
+([ID]
+
+,[Name]
+
+,[Parent_ID]
+
+,[Description]
+
+,[Page_URL]
+
+,[AgentJobs])
+
+VALUES (2,'Teilnehmer',1,'Teilnehmer',NULL,NULL)
+
+
+
+INSERT INTO [dbo].[Projects]
+
+([ID]
+
+,[Name]
+
+,[Parent_ID]
+
+,[Description]
+
+,[Page_URL]
+
+,[AgentJobs])
+
+VALUES (3,'PFG_Cube',NULL,'Beschreibung zum PFG-Cube','PFG_Cube','Test;Load_DB1')
+
+
+
+INSERT INTO [dbo].[Projects]
+
+([ID]
+
+,[Name]
+
+,[Parent_ID]
+
+,[Description]
+
+,[Page_URL]
+
+,[AgentJobs])
+
+VALUES (4,'CLTV',NULL,'Beschreibung der CLTV Schnittstellen',NULL,NULL)
+
+
+
+INSERT INTO [dbo].[Projects]
+
+([ID]
+
+,[Name]
+
+,[Parent_ID]
+
+,[Description]
+
+,[Page_URL]
+
+,[AgentJobs])
+
+VALUES (5,'CLTV',4,'Beschreibung der CLTV Cubes',NULL,NULL)
+
+
+
+
+
+INSERT INTO [dbo].[Projects]
+
+([ID]
+
+,[Name]
+
+,[Parent_ID]
+
+,[Description]
+
+,[Page_URL]
+
+,[AgentJobs])
+
+VALUES (6,'CLTV_RAW',4,'Beschreibung der CLTV RAW Cubes',NULL,NULL)
+
+
+
+INSERT INTO [dbo].[Projects]
+
+([ID]
+
+,[Name]
+
+,[Parent_ID]
+
+,[Description]
+
+,[Page_URL]
+
+,[AgentJobs])
+
+VALUES (7,'CLTV_CHURN',4,'Beschreibung der CLTV CHURN Cubes',NULL,NULL)
+
+
+
+INSERT INTO [dbo].[Projects]
+
+([ID]
+
+,[Name]
+
+,[Parent_ID]
+
+,[Description]
+
+,[Page_URL]
+
+,[AgentJobs])
+
+VALUES (8,'CLTV_EOP',4,'Beschreibung der CLTV EOP Cubes',NULL,NULL)

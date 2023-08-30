@@ -5,8 +5,8 @@ import com.vaadin.flow.component.treegrid.TreeGrid;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
-import de.dbuss.tefcontrol.data.entity.Department;
-import de.dbuss.tefcontrol.data.service.DepartmentService;
+import de.dbuss.tefcontrol.data.entity.Projects;
+import de.dbuss.tefcontrol.data.service.ProjectsService;
 import de.dbuss.tefcontrol.views.MainLayout;
 import org.springframework.beans.factory.annotation.Value;
 
@@ -19,24 +19,21 @@ import java.util.Optional;
 @AnonymousAllowed
 public class AboutView extends VerticalLayout {
 
-    private final DepartmentService departmentService;
+    private final ProjectsService projectsService;
 
     @Value("${myuser.name}")
     private String Username;
 
-    private TreeGrid<Department> grid;
+    private TreeGrid<Projects> grid;
 
-    public AboutView(DepartmentService departmentService) {
+    public AboutView(ProjectsService projectsService) {
 
         super();
-        this.departmentService = departmentService;
+        this.projectsService = projectsService;
 
        // this.setSizeFull();
      //   createBasicTreeGridUsage();
          createTree();
-
-
-
 
        /* H2 header = new H2("Hallo " + Username);
         header.addClassNames(Margin.Top.XLARGE, Margin.Bottom.MEDIUM);
@@ -50,16 +47,15 @@ public class AboutView extends VerticalLayout {
     private void createTree() {
 
         Long id = 1L;
-        Optional<Department> department = departmentService.findById(id);
+        Optional<Projects> projects = projectsService.findById(id);
 
-    //    editor.setValue(department.get().getRichText());
-    //    DepartmentData departmentData = new DepartmentData();
-        Tree<Department> tree = new Tree<>(Department::getName);
-        tree.setItems(departmentService.getRootDepartments(),departmentService::getChildDepartments);
+    //    editor.setValue(projects.get().getRichText());
+        Tree<Projects> tree = new Tree<>(Projects::getName);
+        tree.setItems(projectsService.getRootProjects(),projectsService::getChildProjects);
 
     //    tree.setItemIconProvider(item -> getIcon(item));
     //    tree.setItemIconSrcProvider(item -> getImageIconSrc(item));
-        tree.setItemTooltipProvider(Department::getDescription);
+        tree.setItemTooltipProvider(Projects::getDescription);
 
         tree.addExpandListener(event ->
                         System.out.println(String.format("Expanded %s item(s)", event.getItems().size()))
@@ -83,13 +79,12 @@ public class AboutView extends VerticalLayout {
 
 
     private void createBasicTreeGridUsage() {
-      //  DepartmentData departmentServicedepartmentData = new DepartmentData();
 
         grid = new TreeGrid<>();
 
-        grid.setItems(departmentService.getRootDepartments(), departmentService::getChildDepartments);
-        grid.addHierarchyColumn(Department::getName).setHeader("Department Name");
-      //  grid.addColumn(Department::getManager).setHeader("Manager");
+        grid.setItems(projectsService.getRootProjects(), projectsService::getChildProjects);
+        grid.addHierarchyColumn(Projects::getName).setHeader("Projects Name");
+      //  grid.addColumn(Projects::getManager).setHeader("Manager");
 
         grid
                 .asSingleSelect()
@@ -101,10 +96,10 @@ public class AboutView extends VerticalLayout {
                 );
 
         grid.setClassNameGenerator(
-                department -> {
+                projects -> {
                     if (
                             grid.asSingleSelect().getValue() != null &&
-                                    grid.asSingleSelect().getValue().equals(department.getParent_id())
+                                    grid.asSingleSelect().getValue().equals(projects.getParent_id())
                     ) {
                         return "parent-selected";
                     } else return null;
@@ -116,9 +111,9 @@ public class AboutView extends VerticalLayout {
         add(grid);
     }
 
-    private void refreshChildItems(Department department) {
-        if (department != null) {
-            grid.getTreeData().getChildren(department).forEach(child -> {
+    private void refreshChildItems(Projects projects) {
+        if (projects != null) {
+            grid.getTreeData().getChildren(projects).forEach(child -> {
                 grid.getDataProvider().refreshItem(child, false);
             });
         }
