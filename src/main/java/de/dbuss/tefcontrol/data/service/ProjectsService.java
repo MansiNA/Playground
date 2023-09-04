@@ -1,5 +1,6 @@
 package de.dbuss.tefcontrol.data.service;
 
+import de.dbuss.tefcontrol.data.entity.ProjectAttachments;
 import de.dbuss.tefcontrol.data.entity.Projects;
 import de.dbuss.tefcontrol.data.repository.ProjectsRepository;
 import org.springframework.stereotype.Service;
@@ -22,9 +23,7 @@ public class ProjectsService {
         return repository.findById(id);
     }
 
-        public Projects update(Projects entity) {
-        return repository.save(entity);
-    }
+        public Projects update(Projects entity) { return repository.save(entity);}
 
         public void delete(Long id) {
         repository.deleteById(id);
@@ -40,6 +39,10 @@ public class ProjectsService {
 
         public Optional<Projects> findById(long id) {
         return repository.findById(id);
+    }
+
+    public List<ProjectAttachments> getProjectAttachments(Projects projects) {
+        return projects.getProjectAttachments();
     }
 
         public List<Projects> getRootProjects() {

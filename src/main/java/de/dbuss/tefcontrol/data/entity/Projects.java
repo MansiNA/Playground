@@ -1,9 +1,10 @@
 package de.dbuss.tefcontrol.data.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(schema = "dbo", name = "Projects")
@@ -23,6 +24,10 @@ public class Projects {
     private String page_URL;
 
     private String agent_Jobs;
+
+    // Define a one-to-many relationship between Project and ProjectAttachments
+    @OneToMany(mappedBy = "project", fetch = FetchType.EAGER, orphanRemoval = true)
+    private List<ProjectAttachments> listOfAttachments = new ArrayList<>();
 
     public Long getId() {
         return id;
@@ -70,5 +75,13 @@ public class Projects {
 
     public void setAgentJobs(String agentJobs) {
         this.agent_Jobs = agentJobs;
+    }
+
+    public List<ProjectAttachments> getProjectAttachments() {
+        return listOfAttachments;
+    }
+
+    public void setAttachments(List<ProjectAttachments> attachments) {
+        this.listOfAttachments = attachments;
     }
 }
