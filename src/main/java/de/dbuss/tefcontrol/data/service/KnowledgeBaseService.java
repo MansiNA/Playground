@@ -1,6 +1,5 @@
 package de.dbuss.tefcontrol.data.service;
 
-
 import de.dbuss.tefcontrol.data.entity.KnowledgeBase;
 import de.dbuss.tefcontrol.data.repository.KnowledgeBaseRepository;
 import org.springframework.stereotype.Service;
