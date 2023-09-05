@@ -5,6 +5,7 @@ import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.contextmenu.MenuItem;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.contextmenu.GridContextMenu;
 import com.vaadin.flow.component.grid.contextmenu.GridMenuItem;
@@ -13,6 +14,8 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.TabSheet;
+import com.vaadin.flow.component.textfield.TextArea;
+import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MultiFileMemoryBuffer;
 import com.vaadin.flow.router.*;
@@ -80,9 +83,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
             projects = projectsService.findById(Long.parseLong(projectId));
         }
 
-        if (projects.isPresent()) {
-            listOfProjectAttachments = projectsService.getProjectAttachments(projects.get());
-        }
+        projects.ifPresent(value -> listOfProjectAttachments = projectsService.getProjectAttachments(value));
 
         updateComponents();
         updateAttachmentGrid(listOfProjectAttachments);
@@ -138,6 +139,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
     }
 
     private VerticalLayout getProjectAttachements() {
+
         VerticalLayout content = new VerticalLayout();
         Div attachmentsTabContent = new Div();
         attachmentsTabContent.setSizeFull();
@@ -181,11 +183,17 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
             }
         });
 
-        GridContextMenu<ProjectAttachments> contextMenu = attachmentGrid.addContextMenu();
+        // Create a confirmation dialog for removing files
+        Dialog confirmationDialog = new Dialog();
+        confirmationDialog.setCloseOnOutsideClick(false);
+        confirmationDialog.setCloseOnEsc(false);
+        confirmationDialog.add(new Text("Are you sure you want to delete this file?"));
+        Button confirmButton = new Button("Confirm");
+        Button cancelButton = new Button("Cancel");
+        confirmButton.getStyle().set("margin-right", "10px");
 
-        // Create a menu item for removing items
-        GridMenuItem<ProjectAttachments> removeItem = contextMenu.addItem("Remove", event -> {
-            Optional<ProjectAttachments> selectedAttachmentOptional = event.getItem();
+        confirmButton.addClickListener(confirmEvent -> {
+            Optional<ProjectAttachments> selectedAttachmentOptional = attachmentGrid.getSelectionModel().getFirstSelectedItem();
             if (selectedAttachmentOptional.isPresent()) {
                 ProjectAttachments selectedAttachment = selectedAttachmentOptional.get();
                 projectAttachmentsService.delete(selectedAttachment.getId());
@@ -193,7 +201,18 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
                 projects = projectsService.findById(projects.get().getId());
                 attachmentGrid.setItems(projectsService.getProjectAttachments(projects.get()));
             }
+            confirmationDialog.close(); // Close the confirmation dialog
         });
+
+        cancelButton.addClickListener(cancelEvent -> {
+            confirmationDialog.close(); // Close the confirmation dialog
+        });
+
+        GridContextMenu<ProjectAttachments> contextMenu = attachmentGrid.addContextMenu();
+        GridMenuItem<ProjectAttachments> removeItem = contextMenu.addItem("Remove", event -> {
+            confirmationDialog.open();
+        });
+        confirmationDialog.add(new Div(confirmButton, cancelButton));
 
         fileUpload.addSucceededListener(event -> {
             String fileName = event.getFileName();
