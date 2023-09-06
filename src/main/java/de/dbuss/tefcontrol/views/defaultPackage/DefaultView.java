@@ -145,7 +145,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
         // Create a file upload component
         buffer = new MultiFileMemoryBuffer();
         fileUpload = new Upload(buffer);
-        fileUpload.setAcceptedFileTypes(".doc", ".xlsx", ".ppt", ".msg");
+        fileUpload.setAcceptedFileTypes(".doc", ".xlsx",".xls" , ".ppt", ".msg");
 
         // Create a grid to display attachments
         attachmentGrid = new Grid<>();
