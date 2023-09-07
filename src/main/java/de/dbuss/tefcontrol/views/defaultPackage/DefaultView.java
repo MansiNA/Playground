@@ -88,6 +88,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
     public void beforeEnter(BeforeEnterEvent event) {
         RouteParameters parameters = event.getRouteParameters();
         String projectId = parameters.get("project_Id").orElse(null);
+
         if (projectId != null) {
             projects = projectsService.findById(Long.parseLong(projectId));
         }
@@ -235,9 +236,10 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
                 crud.edit(selectedAttachment, Crud.EditMode.EXISTING_ITEM);
 
                 crud.getDeleteButton().getElement().getStyle().set("display", "none");
+                crud.setToolbarVisible(false);
 
-                // crud.getGrid().getElement().getStyle().set("display", "none");
-                // crud.getNewButton().getElement().getStyle().set("display", "none");
+                crud.getGrid().getElement().getStyle().set("display", "none");
+                crud.getNewButton().getElement().getStyle().set("display", "none");
 
                 add(crud);
             }
@@ -260,7 +262,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
                 throw new RuntimeException(e);
             }
             // Extract description from the user input (you might need a separate input field for this)
-            String description = "this file..."; // Get description from user input
+            String description = "this file...";
 
             ProjectAttachments projectAttachments = new ProjectAttachments();
             projectAttachments.setFilename(fileName);
@@ -322,11 +324,6 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
             editor.setValue(projects.map(Projects::getDescription).orElse(""));
         }
 
-        //content.add(saveBtn);
-
-        //content.setSizeFull();
-        //content.setHeightFull();
-
         return content;
 
     }
@@ -342,7 +339,6 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
                 ProjectAttachments::setFilename);
         editBinder.forField(description).asRequired().bind(ProjectAttachments::getDescription,
                 ProjectAttachments::setDescription);
-        System.out.println(editBinder+".........");
         return new BinderCrudEditor<>(editBinder, editFormLayout);
     }
 
