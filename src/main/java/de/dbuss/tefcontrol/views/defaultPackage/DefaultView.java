@@ -5,7 +5,11 @@ import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.contextmenu.MenuItem;
+import com.vaadin.flow.component.crud.BinderCrudEditor;
+import com.vaadin.flow.component.crud.Crud;
+import com.vaadin.flow.component.crud.CrudEditor;
 import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.contextmenu.GridContextMenu;
 import com.vaadin.flow.component.grid.contextmenu.GridMenuItem;
@@ -18,6 +22,10 @@ import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MultiFileMemoryBuffer;
+import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.data.binder.PropertyId;
+import com.vaadin.flow.dom.Element;
+import com.vaadin.flow.dom.Node;
 import com.vaadin.flow.router.*;
 import com.vaadin.flow.server.StreamResource;
 import com.wontlost.ckeditor.Config;
@@ -35,6 +43,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 @PageTitle("Default Mapping")
 @Route(value = "Default-Mapping/:project_Id", layout = MainLayout.class)
@@ -214,6 +223,32 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
         });
         confirmationDialog.add(new Div(confirmButton, cancelButton));
 
+        // Create a CRUD editor for editing the file data
+        Crud<ProjectAttachments> crud = new Crud<>(ProjectAttachments.class, createEditor());
+
+        // Add an "Edit" menu item
+        GridMenuItem<ProjectAttachments> editItem = contextMenu.addItem("Edit", event -> {
+            Optional<ProjectAttachments> selectedAttachmentOptional = event.getItem();
+            if (selectedAttachmentOptional.isPresent()) {
+                ProjectAttachments selectedAttachment = selectedAttachmentOptional.get();
+                System.out.println("edit menu click..");
+                crud.edit(selectedAttachment, Crud.EditMode.EXISTING_ITEM);
+
+                crud.getDeleteButton().getElement().getStyle().set("display", "none");
+                // crud.getGrid().getElement().getStyle().set("display", "none");
+                // crud.getNewButton().getElement().getStyle().set("display", "none");
+
+                add(crud);
+            }
+        });
+
+        //editItem.add(crud);
+        crud.addSaveListener(event -> {
+            ProjectAttachments editedAttachment = event.getItem();
+            projectAttachmentsService.update(editedAttachment);
+            attachmentGrid.getDataProvider().refreshItem(editedAttachment);
+        });
+
         fileUpload.addSucceededListener(event -> {
             String fileName = event.getFileName();
             String fileType = event.getMIMEType();
@@ -293,6 +328,21 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
 
         return content;
 
+    }
+
+    private CrudEditor<ProjectAttachments> createEditor() {
+        TextField filename = new TextField("Edit Filename");
+        TextArea description = new TextArea("Edit Description");
+        description.setSizeFull();
+        FormLayout editFormLayout = new FormLayout(filename, description);
+        Binder<ProjectAttachments> editBinder = new Binder<>(ProjectAttachments.class);
+        //editBinder.bindInstanceFields(editFormLayout);
+        editBinder.forField(filename).asRequired().bind(ProjectAttachments::getFilename,
+                ProjectAttachments::setFilename);
+        editBinder.forField(description).asRequired().bind(ProjectAttachments::getDescription,
+                ProjectAttachments::setDescription);
+        System.out.println(editBinder+".........");
+        return new BinderCrudEditor<>(editBinder, editFormLayout);
     }
 
 }
