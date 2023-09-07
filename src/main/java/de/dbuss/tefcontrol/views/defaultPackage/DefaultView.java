@@ -235,6 +235,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
                 crud.edit(selectedAttachment, Crud.EditMode.EXISTING_ITEM);
 
                 crud.getDeleteButton().getElement().getStyle().set("display", "none");
+
                 // crud.getGrid().getElement().getStyle().set("display", "none");
                 // crud.getNewButton().getElement().getStyle().set("display", "none");
 
