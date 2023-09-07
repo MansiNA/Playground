@@ -14,6 +14,7 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.contextmenu.GridContextMenu;
 import com.vaadin.flow.component.grid.contextmenu.GridMenuItem;
 import com.vaadin.flow.component.html.Anchor;
+import com.vaadin.flow.component.html.Article;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -45,7 +46,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-@PageTitle("Default Mapping")
+//@PageTitle("Default Mapping")
 @Route(value = "Default-Mapping/:project_Id", layout = MainLayout.class)
 @RolesAllowed("USER")
 public class DefaultView extends VerticalLayout  implements BeforeEnterObserver  {
@@ -57,7 +58,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
     private Button editBtn;
     private VaadinCKEditor editor;
     private Optional<Projects> projects;
-    private HorizontalLayout hl;
+    private VerticalLayout vl;
 
     private Upload fileUpload;
     private Grid<ProjectAttachments> attachmentGrid;
@@ -76,13 +77,16 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
         saveBtn.setVisible(false);
         editBtn.setVisible(true);
 
-        hl = new HorizontalLayout();
-        hl.add(getTabsheet());
+        vl = new VerticalLayout();
+        Article text = new Article();
+        //text.add(projects.get().getName());
+        text.add("Hier möglichst noch den jeweils ausgewählten Projekt-Namen mit Pfad ausgeben...(breadcrump like)");
+        vl.add(text,getTabsheet());
 
-        hl.setHeightFull();
-        hl.setSizeFull();
+        vl.setHeightFull();
+        vl.setSizeFull();
 
-        add(hl);
+        add(vl);
     }
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
@@ -127,14 +131,16 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
 
             editBtn.setVisible(true);
             saveBtn.setVisible(false);
-            editor.setReadOnly(true);
+            //editor.setReadOnly(true);
+            editor.setReadOnlyWithToolbarAction(!editor.isReadOnly());
 
         }));
 
         editBtn.addClickListener(e->{
+            editor.setReadOnlyWithToolbarAction(!editor.isReadOnly());
             editBtn.setVisible(false);
             saveBtn.setVisible(true);
-            editor.setReadOnly(false);
+            //editor.setReadOnly(false);
         });
 
             tabSheet.add("Description", getProjectsDescription());
@@ -291,11 +297,6 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
         editBtn.setVisible(true);
         VerticalLayout content = new VerticalLayout();
 
-        Button changeReadonlyMode = new Button("change readonly mode");
-
-        changeReadonlyMode.addClickListener((event -> {
-            editor.setReadOnlyWithToolbarAction(!editor.isReadOnly());
-        }));
 
         Config config = new Config();
         config.setBalloonToolBar(Constants.Toolbar.values());
@@ -318,7 +319,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
 
         editor.setReadOnly(true);
 
-        content.add(changeReadonlyMode,editor,editBtn,saveBtn);
+        content.add(editor,editBtn,saveBtn);
 
         if(projects != null) {
             editor.setValue(projects.map(Projects::getDescription).orElse(""));
