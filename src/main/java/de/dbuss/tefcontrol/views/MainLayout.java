@@ -62,7 +62,7 @@ public class MainLayout extends AppLayout {
 
         // Add mappings for URLs and view classes
         urlToViewMap.put("PFG-Mapping", PFGProductMappingView.class);
-        urlToViewMap.put("HW-Mapping", HWMappingView.class);
+        urlToViewMap.put("HWMapping", HWMappingView.class);
         urlToViewMap.put("kb", KnowledgeBaseView.class);
         urlToViewMap.put("Default-Mapping", DefaultView.class );
 
@@ -120,7 +120,7 @@ public class MainLayout extends AppLayout {
                 String pageUrl = selectedProject.getPage_URL();
                 Class<? extends Component> viewClass = urlToViewMap.get(pageUrl);
                 Class<? extends Component> defaultViewClass = DefaultView.class;
-
+                System.out.println(pageUrl+"----------------------");
                 if (viewClass != null && accessChecker.hasAccess(viewClass)) {
                     UI.getCurrent().navigate(viewClass);
                 } else if (accessChecker.hasAccess(defaultViewClass)) {
