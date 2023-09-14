@@ -1,18 +1,18 @@
 package de.dbuss.tefcontrol.data.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 
 @Entity
 @Table(schema = "dbo", name = "CLTV_HW_MEASURES")
 public class CLTV_HW_Measures {
 
     @Id
-    private Long id;
+    //@GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
 
-    @NotEmpty
+    @NotNull
     private Integer monat_ID ;
 
     @NotEmpty
@@ -24,14 +24,27 @@ public class CLTV_HW_Measures {
     @NotEmpty
     private String channel = "";
     @NotEmpty
-    private Long value;
+    private String value;
+
+    public CLTV_HW_Measures(Integer id, Integer monat_id, String device, String measure_Name, String channel, String value) {
+        this.id = id;
+        this.monat_ID = monat_id;
+        this.device = device;
+        this.measure_Name = measure_Name;
+        this.channel = channel;
+        this.value = value;
+    }
+
+    public CLTV_HW_Measures() {
+
+    }
 
     public Integer getMonat_ID() {
         return monat_ID;
     }
 
-    public void setMonat_ID(Integer monat_ID) {
-        monat_ID = monat_ID;
+    public void setMonat_ID(Integer monat_id) {
+        this.monat_ID = monat_id;
     }
 
     public String getDevice() {
@@ -39,7 +52,7 @@ public class CLTV_HW_Measures {
     }
 
     public void setDevice(String device) {
-        device = device;
+        this.device = device;
     }
 
     public String getMeasure_Name() {
@@ -47,7 +60,7 @@ public class CLTV_HW_Measures {
     }
 
     public void setMeasure_Name(String measure_Name) {
-        measure_Name = measure_Name;
+        this.measure_Name = measure_Name;
     }
 
     public String getChannel() {
@@ -55,24 +68,24 @@ public class CLTV_HW_Measures {
     }
 
     public void setChannel(String channel) {
-        channel = channel;
+        this.channel = channel;
     }
 
     public String getValue() {
-        return value.toString();
+        //return value.toString();
+        return value;
     }
 
     public void setValue(String value) {
-        value = String.valueOf(Long.valueOf(value));
+        //      value = String.valueOf(Long.valueOf(value));
+        this.value=value;
     }
 
-    public void setId(Long id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
-    public Long getId() {
+    public Integer getId() {
         return id;
     }
-
-
 }

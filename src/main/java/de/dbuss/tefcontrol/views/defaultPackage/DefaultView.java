@@ -1,10 +1,8 @@
 package de.dbuss.tefcontrol.views.defaultPackage;
 
-import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.crud.BinderCrudEditor;
 import com.vaadin.flow.component.crud.Crud;
 import com.vaadin.flow.component.crud.CrudEditor;
@@ -16,7 +14,6 @@ import com.vaadin.flow.component.grid.contextmenu.GridMenuItem;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Article;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.component.textfield.TextArea;
@@ -24,15 +21,13 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MultiFileMemoryBuffer;
 import com.vaadin.flow.data.binder.Binder;
-import com.vaadin.flow.data.binder.PropertyId;
-import com.vaadin.flow.dom.Element;
-import com.vaadin.flow.dom.Node;
 import com.vaadin.flow.router.*;
 import com.vaadin.flow.server.StreamResource;
 import com.wontlost.ckeditor.Config;
 import com.wontlost.ckeditor.Constants;
 import com.wontlost.ckeditor.VaadinCKEditor;
 import com.wontlost.ckeditor.VaadinCKEditorBuilder;
+import de.dbuss.tefcontrol.data.entity.CLTV_HW_Measures;
 import de.dbuss.tefcontrol.data.entity.ProjectAttachments;
 import de.dbuss.tefcontrol.data.entity.Projects;
 import de.dbuss.tefcontrol.data.service.ProjectAttachmentsService;
@@ -44,7 +39,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 //@PageTitle("Default Mapping")
 @Route(value = "Default-Mapping/:project_Id", layout = MainLayout.class)
@@ -59,7 +53,6 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
     private VaadinCKEditor editor;
     private Optional<Projects> projects;
     private VerticalLayout vl;
-
     private Upload fileUpload;
     private Grid<ProjectAttachments> attachmentGrid;
     private MultiFileMemoryBuffer buffer;
