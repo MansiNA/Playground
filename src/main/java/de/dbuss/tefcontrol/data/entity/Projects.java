@@ -25,6 +25,8 @@ public class Projects {
 
     private String agent_Jobs;
 
+    private String agent_db;
+
     // Define a one-to-many relationship between Project and ProjectAttachments
     @OneToMany(mappedBy = "project", fetch = FetchType.EAGER, orphanRemoval = true)
     private List<ProjectAttachments> listOfAttachments = new ArrayList<>();
@@ -75,6 +77,14 @@ public class Projects {
 
     public void setAgentJobs(String agentJobs) {
         this.agent_Jobs = agentJobs;
+    }
+
+    public String getAgent_db() {
+        return agent_db;
+    }
+
+    public void setAgent_db(String agent_db) {
+        this.agent_db = agent_db;
     }
 
     public List<ProjectAttachments> getProjectAttachments() {

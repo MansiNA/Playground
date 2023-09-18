@@ -37,7 +37,12 @@ public class ProjectsService {
         return repository.findAll();
     }
 
-        public Optional<Projects> findById(long id) {
+    public Projects search(String jobName) {
+        return repository.search(jobName);
+    }
+
+
+    public Optional<Projects> findById(long id) {
         return repository.findById(id);
     }
 
