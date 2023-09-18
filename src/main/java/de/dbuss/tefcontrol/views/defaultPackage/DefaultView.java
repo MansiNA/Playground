@@ -331,12 +331,21 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
         // Create a file upload component
         buffer = new MultiFileMemoryBuffer();
         fileUpload = new Upload(buffer);
-        fileUpload.setAcceptedFileTypes(".doc", ".xlsx",".xls" , ".ppt", ".msg");
+        fileUpload.setAcceptedFileTypes(".doc", ".xlsx",".xls" , ".ppt", ".msg", ".pdf");
+        fileUpload.setUploadButton(new Button("Search file"));
+
+
+        Div dropLabel = new Div();
+        dropLabel.setText("or drop new File(s) here");
+
+        fileUpload.setDropLabel(dropLabel);
+
+        fileUpload.setDropLabelIcon(new Div());
 
         // Create a grid to display attachments
         attachmentGrid = new Grid<>();
-        attachmentGrid.addColumn(ProjectAttachments::getFilename).setHeader("File Name");
-        attachmentGrid.addColumn(attachment -> {
+        attachmentGrid.addColumn(ProjectAttachments::getFilename).setResizable(true).setSortable(true).setHeader("File Name");
+        /*attachmentGrid.addColumn(attachment -> {
             String fileName = attachment.getFilename();
             String[] parts = fileName.split("\\.");
             if (parts.length > 0) {
@@ -344,8 +353,9 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
             } else {
                 return "";
             }
-        }).setHeader("File Type");
-        attachmentGrid.addColumn(ProjectAttachments::getDescription).setHeader("Description");
+        }).setHeader("File Type");*/
+        attachmentGrid.addColumn(ProjectAttachments::getDescription).setResizable(true).setHeader("Description");
+        attachmentGrid.addColumn(ProjectAttachments::getUpload_date).setResizable(true).setSortable(true).setHeader("Date");
 
         attachmentGrid.addItemDoubleClickListener(event -> {
             ProjectAttachments selectedAttachment = event.getItem();
@@ -436,12 +446,13 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
                 throw new RuntimeException(e);
             }
             // Extract description from the user input (you might need a separate input field for this)
-            String description = "this file...";
+            String description = "no description yet";
 
             ProjectAttachments projectAttachments = new ProjectAttachments();
             projectAttachments.setFilename(fileName);
             projectAttachments.setDescription(description);
             projectAttachments.setFilecontent(fileContent);
+            projectAttachments.setUpload_date(new Date());
             projectAttachments.setProject(projects.get());
 
             projectAttachmentsService.update(projectAttachments);
@@ -450,12 +461,13 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
             projects = projectsService.findById(projects.get().getId());
 
             attachmentGrid.setItems(projectsService.getProjectAttachments(projects.get()));
+            fileUpload.clearFileList();
 
         });
         if(projects != null) {
             attachmentGrid.setItems(projectsService.getProjectAttachments(projects.get()));
         }
-        attachmentsTabContent.add(fileUpload, attachmentGrid);
+        attachmentsTabContent.add(attachmentGrid,fileUpload);
         content.add(attachmentsTabContent);
         return content;
     }

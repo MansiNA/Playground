@@ -3,6 +3,8 @@ package de.dbuss.tefcontrol.data.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotEmpty;
 
+import java.util.Date;
+
 @Entity
 @Table(schema = "dbo", name = "ProjectAttachments")
 public class ProjectAttachments {
@@ -15,6 +17,9 @@ public class ProjectAttachments {
 
     @NotEmpty
     private String filename;
+
+    private Date upload_date;
+
 
     @Lob
     private byte[] filecontent;
@@ -57,6 +62,14 @@ public class ProjectAttachments {
     }
     public void setProject(Projects project) {
         this.project = project;
+    }
+
+    public Date getUpload_date() {
+        return upload_date;
+    }
+
+    public void setUpload_date(Date upload_date) {
+        this.upload_date = upload_date;
     }
 
 }
