@@ -90,7 +90,6 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
         this.agentJobsService = agentJobsService;
         this.msmService = msmService;
 
-
         tabSheet = new TabSheet();
         saveBtn = new Button("save");
         editBtn = new Button("edit");
@@ -357,6 +356,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
         }).setHeader("File Type");*/
         attachmentGrid.addColumn(ProjectAttachments::getDescription).setResizable(true).setHeader("Description");
         attachmentGrid.addColumn(ProjectAttachments::getUpload_date).setResizable(true).setSortable(true).setHeader("Date");
+        attachmentGrid.addColumn(ProjectAttachments::getFilesizekb).setResizable(true).setHeader("FileSize");
 
         attachmentGrid.addItemDoubleClickListener(event -> {
             ProjectAttachments selectedAttachment = event.getItem();
@@ -440,6 +440,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
         fileUpload.addSucceededListener(event -> {
             String fileName = event.getFileName();
             String fileType = event.getMIMEType();
+            int fileSizeKB = (int) (event.getContentLength() / 1024.0);  // Divide by 1024 to get KB;
             byte[] fileContent = new byte[0];
             try {
                 fileContent = buffer.getInputStream(fileName).readAllBytes();
@@ -455,6 +456,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
             projectAttachments.setFilecontent(fileContent);
             projectAttachments.setUpload_date(new Date());
             projectAttachments.setProject(projects.get());
+            projectAttachments.setFilesizekb(fileSizeKB);
 
             projectAttachmentsService.update(projectAttachments);
 
@@ -562,7 +564,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
             return agentJobsService.findbyJobName(jobName);
         }
         else {
-            Projects projects = projectsService.search("PFG_Cube");
+            Projects projects = projectsService.findByName("PFG_Cube");
             System.out.println("getAgentJobs.....end");
             System.out.println("@@@ ....optional................"+projects.getAgentJobs());
             return agentJobsService.findbyJobName(projects.getAgentJobs());

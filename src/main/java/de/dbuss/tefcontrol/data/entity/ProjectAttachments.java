@@ -28,6 +28,8 @@ public class ProjectAttachments {
     @JoinColumn(name = "project_id")
     private Projects project;
 
+    private Integer filesizekb;
+
     public Long getId() {
         return id;
     }
@@ -72,5 +74,12 @@ public class ProjectAttachments {
         this.upload_date = upload_date;
     }
 
+    public Integer getFilesizekb() {
+        return filesizekb;
+    }
+
+    public void setFilesizekb(Integer filesizekb) {
+        this.filesizekb = filesizekb;
+    }
 }
 
