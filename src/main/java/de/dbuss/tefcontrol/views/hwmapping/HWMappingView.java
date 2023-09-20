@@ -38,6 +38,7 @@ import de.dbuss.tefcontrol.data.service.CLTV_HW_MeasureService;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
 import de.dbuss.tefcontrol.views.MainLayout;
 import jakarta.annotation.security.RolesAllowed;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
@@ -53,38 +54,28 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @PageTitle("HW Mapping")
 @Route(value = "HWMapping", layout = MainLayout.class)
 @RolesAllowed("ADMIN")
 public class HWMappingView extends VerticalLayout {
-    private String exportPath;
-    private String exportFileName = "HW_Mapping.xls";
     private final CLTV_HW_MeasureService cltvHwMeasureService;
     private final ProjectConnectionService projectConnectionService;
-    private final JdbcTemplate jdbcTemplate;
-    private List<CLTV_HW_Measures> listOfCLTVMeasures = new ArrayList<CLTV_HW_Measures>();
+    private List<CLTV_HW_Measures> listOfCLTVMeasures;
     private Crud<CLTV_HW_Measures> crud;
     private Grid<CLTV_HW_Measures> grid;
     MemoryBuffer memoryBuffer = new MemoryBuffer();
     Upload singleFileUpload = new Upload(memoryBuffer);
-    InputStream fileData;
-    String fileName = "";
     long contentLength = 0;
     String mimeType = "";
     private String selectedDbName;
     Button addRowsBT = new Button("Add Rows");
     Button replaceRowsBT = new Button("Replace Rows");
     Div textArea = new Div();
-    //TextArea detailsText = new TextArea();
-    Icon icon;
     ProgressBar spinner = new ProgressBar();
-    //  Details details = new Details();
-    Button countRows = new Button("Count Rows");
     Article article = new Article();
-    String ret = "ok";
     private Button exportButton = new Button("Export");
-    private Button downloadButton = new Button("Download");
-    private Button uploadButton = new Button("Save");
+    private String exportPath;
     private Anchor anchor = new Anchor(getStreamResource("CLTV_HW_Mapping.xls", "default content"), "click to download");
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
 
@@ -93,9 +84,12 @@ public class HWMappingView extends VerticalLayout {
         this.exportPath = p_exportPath;
         this.cltvHwMeasureService = cltvHwMeasureService;
         this.projectConnectionService = projectConnectionService;
-        this.jdbcTemplate = jdbcTemplate;
 
         crud = new Crud<>(CLTV_HW_Measures.class, createEditor());
+        listOfCLTVMeasures = new ArrayList<CLTV_HW_Measures>();
+
+        Button downloadButton = new Button("Download");
+        Button uploadButton = new Button("Save");
 
         setupGrid();
         setupUploader();
@@ -108,7 +102,6 @@ public class HWMappingView extends VerticalLayout {
 
         VerticalLayout verl = new VerticalLayout();
         verl.add(addRowsBT, replaceRowsBT, spinner);
-
 
         ComboBox<String> databaseConnectionCB = new ComboBox<>();
         databaseConnectionCB.setAllowCustomValue(true);
@@ -125,7 +118,7 @@ public class HWMappingView extends VerticalLayout {
         horl.add(databaseConnectionCB, downloadButton, uploadButton, singleFileUpload, verl, exportButton, anchor);
         horl.setAlignItems(Alignment.CENTER);
 
-        icon = VaadinIcon.EXCLAMATION_CIRCLE.create();
+        Icon icon = VaadinIcon.EXCLAMATION_CIRCLE.create();
         icon.getStyle().set("width", "var(--lumo-icon-size-s)");
         icon.getStyle().set("height", "var(--lumo-icon-size-s)");
 
@@ -145,13 +138,13 @@ public class HWMappingView extends VerticalLayout {
         replaceRowsBT.addThemeVariants(ButtonVariant.LUMO_SUCCESS);
 
         databaseConnectionCB.addValueChangeListener(event -> {
+            log.info("executing databaseConnectionCB.addValueChangeListener for database selection "+ event.getValue());
             selectedDbName = event.getValue();
-            System.out.println("--------------selectedDbName "+ selectedDbName);
         });
 
         downloadButton.addClickListener(clickEvent -> {
             // Get the selected database connection from the ComboBox
-
+            log.info("executing downloadButton.addClickListener for fetch data from DB");
             if (selectedDbName == null || selectedDbName.isEmpty()) {
                 Notification notification = Notification.show("Please select a database connection", 3000, Notification.Position.MIDDLE);
                 notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
@@ -182,7 +175,7 @@ public class HWMappingView extends VerticalLayout {
         });
 
         uploadButton.addClickListener(clickEvent -> {
-
+            log.info("executing uploadButton.addClickListener for Save data in DB");
             List<CLTV_HW_Measures>allItems = getDataProviderAllItems();
 
             DataSource dataSource = projectConnectionService.getDataSource(selectedDbName);
@@ -206,6 +199,7 @@ public class HWMappingView extends VerticalLayout {
         });
 
         addRowsBT.addClickListener(clickEvent -> {
+            log.info("executing addRowsBT.addClickListener for Append data in Crud Grid");
             List<CLTV_HW_Measures> oldListOfCLTVMeasures = getDataProviderAllItems();
 
             if (listOfCLTVMeasures != null && !listOfCLTVMeasures.isEmpty()) {
@@ -230,6 +224,7 @@ public class HWMappingView extends VerticalLayout {
         });
 
         replaceRowsBT.addClickListener(clickEvent -> {
+            log.info("executing replaceRowsBT.addClickListener for Replace data in Crud Grid");
             if (listOfCLTVMeasures != null && !listOfCLTVMeasures.isEmpty()) {
                 CLTV_HW_MeasuresDataProvider dataProvider = new CLTV_HW_MeasuresDataProvider(listOfCLTVMeasures);
                 crud.setDataProvider(dataProvider);
@@ -253,11 +248,14 @@ public class HWMappingView extends VerticalLayout {
     }
 
     public StreamResource getStreamResource(String filename, String content) {
+        log.info("executing getStreamResource() for file");
         return new StreamResource(filename,
                 () -> new ByteArrayInputStream(content.getBytes()));
     }
 
     private void setUpExportButton() {
+        log.info("Starting setUpExportButton() prepare excel file for export");
+        String exportFileName = "HW_Mapping.xls";
         exportButton.addThemeVariants(ButtonVariant.LUMO_SMALL);
         exportButton.addThemeVariants(ButtonVariant.LUMO_SUCCESS);
         exportButton.addClickListener(clickEvent -> {
@@ -278,8 +276,10 @@ public class HWMappingView extends VerticalLayout {
         });
         anchor.getElement().setAttribute("download", true);
         anchor.setEnabled(false);
+        log.info("Ending setUpExportButton() prepare excel file for export");
     }
     public void generateAndExportExcel(String file) {
+        log.info("Starting generateAndExportExcel() generate excel file");
         try {
             // List<CLTV_HW_Measures> dataToExport = projectConnectionService.fetchDataFromDatabase(selectedDbName);
             List<CLTV_HW_Measures> dataToExport = getDataProviderAllItems();
@@ -326,21 +326,23 @@ public class HWMappingView extends VerticalLayout {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        log.info("Ending generateAndExportExcel() generate excel file");
     }
 
     private InputStream getStream(File file) {
+        log.info("Starting getStream() for excel file");
         FileInputStream stream = null;
         try {
             stream = new FileInputStream(file);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
-
+        log.info("Starting getStream() for excel file");
         return stream;
     }
 
     private Double checkCellDouble(Cell cell, Integer zeile, String spalte) {
-
+        log.info("Executing checkCellDouble() for excel file");
         if (cell.getCellType()!=Cell.CELL_TYPE_NUMERIC)
         {
             System.out.println("Zeile " + zeile.toString() + ", Spalte " + spalte + " konnte nicht gelesen werden, da ExcelTyp nicht numerisch!");
@@ -354,11 +356,10 @@ public class HWMappingView extends VerticalLayout {
             //System.out.println("Spalte: " + spalte + " Zeile: " + zeile.toString() + " Wert: " + cell.getNumericCellValue());
             return  (double) cell.getNumericCellValue();
         }
-
     }
 
     private String checkCellString(Cell cell, Integer zeile, String spalte) {
-
+        log.info("Executing checkCellString() for excel file");
         try{
 
             if (cell.getCellType()!=Cell.CELL_TYPE_STRING && !cell.getStringCellValue().isEmpty())
@@ -394,7 +395,7 @@ public class HWMappingView extends VerticalLayout {
     }
 
     private Integer checkCellNumeric(Cell cell, Integer zeile, String spalte) {
-
+        log.info("Executing checkCellNumeric() for excel file");
         if (cell.getCellType()!=Cell.CELL_TYPE_NUMERIC)
         {
             System.out.println("Zeile " + zeile.toString() + ", Spalte " + spalte + " konnte nicht gelesen werden, da ExcelTyp nicht numerisch!");
@@ -414,12 +415,12 @@ public class HWMappingView extends VerticalLayout {
 
 
     private void setupUploader() {
-        System.out.println("setup uploader................start");
+        log.info("Starting setupUploader() for upload excel file");
         singleFileUpload.setWidth("600px");
         singleFileUpload.addSucceededListener(event -> {
             // Get information about the uploaded file
-            fileData = memoryBuffer.getInputStream();
-            fileName = event.getFileName();
+            InputStream fileData = memoryBuffer.getInputStream();
+            String fileName = event.getFileName();
             contentLength = event.getContentLength();
             mimeType = event.getMIMEType();
             addRowsBT.setEnabled(true);
@@ -427,12 +428,12 @@ public class HWMappingView extends VerticalLayout {
             textArea.setText("Warten auf Button \"Hochladen\"");
 
             listOfCLTVMeasures = parseExcelFile(fileData, fileName);
-
         });
-        System.out.println("setup uploader................over");
+        log.info("Ending setupUploader() for upload excel file");
     }
 
     public List<CLTV_HW_Measures> parseExcelFile(InputStream fileData, String fileName) {
+        log.info("Starting parseExcelFile() for parse excel file");
         List<CLTV_HW_Measures> listOfCLTVMeasures = new ArrayList<>();
         try {
             if(fileName.isEmpty() || fileName.length()==0)
@@ -574,7 +575,7 @@ public class HWMappingView extends VerticalLayout {
                 spinner.setVisible(false);
                 fileName="";
             }
-
+            log.info("Ending parseExcelFile() for parse excel file");
             article=new Article();
             article.getStyle().set("white-space","pre-line");
             article.add(LocalDateTime.now().format(formatter) + ": Info: Anzahl Zeilen: " + listOfCLTVMeasures.size());
@@ -586,6 +587,7 @@ public class HWMappingView extends VerticalLayout {
 
             return listOfCLTVMeasures;
         } catch (Exception e) {
+            log.error("error...Ending parseExcelFile() for parse excel file");
             e.printStackTrace();
             return null;
         }
@@ -593,7 +595,7 @@ public class HWMappingView extends VerticalLayout {
     }
 
     private CrudEditor<CLTV_HW_Measures> createEditor() {
-
+        log.info("Starting createEditor() for crude editor");
         IntegerField id = new IntegerField  ("Id");
         TextField monat_ID = new TextField ("Monat_ID");
         TextField device = new TextField("Device");
@@ -616,11 +618,12 @@ public class HWMappingView extends VerticalLayout {
                 CLTV_HW_Measures::setValue);
         binder.forField(id).asRequired().bind(CLTV_HW_Measures::getId,
                 CLTV_HW_Measures::setId);
-
+        log.info("Ending createEditor() for crude editor");
         return new BinderCrudEditor<>(binder, editForm);
     }
 
     private void setupGrid() {
+        log.info("Starting setupGrid() for crude editor");
         String ID = "Id";
 
         String MONAT_ID = "monat_ID";
@@ -642,9 +645,11 @@ public class HWMappingView extends VerticalLayout {
                 , grid.getColumnByKey(VALUE)
                 , grid.getColumnByKey(EDIT_COLUMN));
 
+        log.info("Ending setupGrid() for crude editor");
     }
 
     private void setupDataProviderEvent() {
+        log.info("Starting setupDataProviderEvent() for crude editor save, delete events");
         CLTV_HW_MeasuresDataProvider dataProvider = new CLTV_HW_MeasuresDataProvider(getDataProviderAllItems());
 
         article=new Article();
@@ -653,18 +658,23 @@ public class HWMappingView extends VerticalLayout {
 
         crud.addDeleteListener(
                 deleteEvent -> {dataProvider.delete(deleteEvent.getItem());
+                    log.info("Executing crud.addDeleteListener for crude editor delete events");
                     crud.setDataProvider(dataProvider);
                 });
         crud.addSaveListener(
                 saveEvent -> {
                     dataProvider.persist(saveEvent.getItem());
+                    log.info("Executing crud.addDeleteListener for crude editor save events");
                     crud.setDataProvider(dataProvider);
                 });
+        log.info("Ending setupDataProviderEvent() for crude editor save, delete events");
     }
 
     private List<CLTV_HW_Measures> getDataProviderAllItems() {
+        log.info("Starting getDataProviderAllItems for grid dataprovider list");
         DataProvider<CLTV_HW_Measures, Void> existDataProvider = (DataProvider<CLTV_HW_Measures, Void>) grid.getDataProvider();
         List<CLTV_HW_Measures> listOfCLTVMeasures = existDataProvider.fetch(new Query<>()).collect(Collectors.toList());
+        log.info("Ending getDataProviderAllItems for grid dataprovider list");
         return listOfCLTVMeasures;
     }
 }

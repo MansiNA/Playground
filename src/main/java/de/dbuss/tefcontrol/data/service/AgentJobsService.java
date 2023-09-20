@@ -21,16 +21,13 @@ public class AgentJobsService {
 
     public List<AgentJobs> findbyJobName(String jobNames) {
 
-        List<AgentJobs> angentJobs = new ArrayList<>();
-
+        List<AgentJobs> agentJobs = new ArrayList<>();
         if (jobNames != null) {
-            String[] teile = jobNames.split(";");
-            for (String teil : teile) {
-                angentJobs.add(repository.search(teil));
+            String[] jobs = jobNames.split(";");
+            for (String job : jobs) {
+                agentJobs.add(repository.findByName(job).get());
             }
         }
-
-        return angentJobs;
+        return agentJobs;
     }
-
 }
