@@ -23,8 +23,6 @@ public class MSMService {
 
     public List<ProductHierarchie> findAllProducts(String stringFilter) {
         if (stringFilter == null || stringFilter.isEmpty()) {
-
-
             return productHierarchieRepository.findAll();
         } else {
             return productHierarchieRepository.search(stringFilter);
