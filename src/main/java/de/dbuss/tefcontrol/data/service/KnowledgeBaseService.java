@@ -27,14 +27,6 @@ public class KnowledgeBaseService {
         repository.deleteById(id);
     }
 
-    public int count() {
-        return (int) repository.count();
-    }
-
-    public List<KnowledgeBase> findAll() {
-        return repository.findAll();
-    }
-
     public Optional<KnowledgeBase> findById(long id) {
         return repository.findById(id);
     }

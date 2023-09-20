@@ -37,12 +37,16 @@ import java.io.ByteArrayInputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+
+import lombok.extern.slf4j.Slf4j;
 import org.vaadin.lineawesome.LineAwesomeIcon;
 import org.vaadin.tatu.Tree;
+
 
 /**
  * The main view is a top-level placeholder for other views.
  */
+@Slf4j
 public class MainLayout extends AppLayout {
 
     private H2 viewTitle;
@@ -72,6 +76,7 @@ public class MainLayout extends AppLayout {
     }
 
     private void addHeaderContent() {
+        log.info("Starting addHeaderContent() in mainlayout");
         DrawerToggle toggle = new DrawerToggle();
         toggle.setAriaLabel("Menu toggle");
 
@@ -79,9 +84,11 @@ public class MainLayout extends AppLayout {
         viewTitle.addClassNames(LumoUtility.FontSize.LARGE, LumoUtility.Margin.NONE);
 
         addToNavbar(true, toggle, viewTitle);
+        log.info("Ending addHeaderContent() in mainlayout");
     }
 
     private void addDrawerContent() {
+        log.info("Starting addDrawerContent() in mainlayout");
         H1 appName = new H1("TEF Control");
         appName.addClassNames(LumoUtility.FontSize.LARGE, LumoUtility.Margin.NONE);
         Header header = new Header(appName);
@@ -92,21 +99,19 @@ public class MainLayout extends AppLayout {
         //scroller.addClassNames("AboutView");
 
         addToDrawer(header, scroller,createFooter());
+        log.info("Ending addDrawerContent() in mainlayout");
     }
 
     private Tree createTree() {
+        log.info("Starting createTree() in mainlayout");
 
-        Long id = 1L;
-        Optional<Projects> projects = projectsService.findById(id);
-
-        //    editor.setValue(projects.get().getRichText());
         Tree<Projects> tree = new Tree<>(Projects::getName);
         tree.setItems(projectsService.getRootProjects(),projectsService::getChildProjects);
-
+        log.info("setItems createTree() in getRootProjects");
         //    tree.setItemIconProvider(item -> getIcon(item));
         //    tree.setItemIconSrcProvider(item -> getImageIconSrc(item));
         tree.setItemTooltipProvider(Projects::getDescription);
-
+        log.info("setItemTooltipProvider createTree() in getDescription");
         tree.addExpandListener(event ->
                 System.out.println(String.format("Expanded %s item(s)", event.getItems().size()))
         );
@@ -115,12 +120,12 @@ public class MainLayout extends AppLayout {
         );
 
         tree.asSingleSelect().addValueChangeListener(event -> {
+            log.info("Executing tree.asSingleSelect().addValueChangeListener in mainlayout");
             Projects selectedProject = event.getValue();
             if (selectedProject != null) {
                 String pageUrl = selectedProject.getPage_URL();
                 Class<? extends Component> viewClass = urlToViewMap.get(pageUrl);
                 Class<? extends Component> defaultViewClass = DefaultView.class;
-                System.out.println(pageUrl+"----------------------");
                 if (viewClass != null && accessChecker.hasAccess(viewClass)) {
                     UI.getCurrent().navigate(viewClass);
                 } else if (accessChecker.hasAccess(defaultViewClass)) {
@@ -129,24 +134,25 @@ public class MainLayout extends AppLayout {
                     Notification.show("Access denied for both views.", 3000, Notification.Position.MIDDLE);
                 }
             }
-
         });
         tree.setAllRowsVisible(true);
-        //tree.setSizeFull();
         tree.setWidth("350px");
-        //add(tree);
+        log.info("Ending createTree() in mainlayout");
         return tree;
     }
     private void navigateToView(String url) {
+        log.info("Starting navigateToView() in mainlayout");
         if (url != null) {
             getUI().ifPresent(ui -> {
                 String route = "/" + url; // Assuming your route names match the URLs
                 ui.navigate(route);
             });
         }
+        log.info("Ending navigateToView() in mainlayout");
     }
 
     private SideNav createNavigation(String url) {
+        log.info("Starting createNavigation() in mainlayout");
         SideNav nav = new SideNav();
         if (url.equals("PFG-Mapping") && accessChecker.hasAccess(PFGProductMappingView.class)) {
             nav.addItem(new SideNavItem("PFG Product-Mapping", PFGProductMappingView.class,
@@ -169,11 +175,12 @@ public class MainLayout extends AppLayout {
 
         }
 
-
+        log.info("Ending createNavigation() in mainlayout");
         return nav;
     }
 
     private Footer createFooter() {
+        log.info("Starting createFooter() in mainlayout");
         Footer layout = new Footer();
 
         Optional<User> maybeUser = authenticatedUser.get();
@@ -181,9 +188,13 @@ public class MainLayout extends AppLayout {
             User user = maybeUser.get();
 
             Avatar avatar = new Avatar(user.getName());
-            StreamResource resource = new StreamResource("profile-pic",
-                    () -> new ByteArrayInputStream(user.getProfilePicture()));
-            avatar.setImageResource(resource);
+
+            byte[] profilePictureData = user.getProfilePicture();
+            if (profilePictureData != null && profilePictureData.length > 0) {
+                StreamResource resource = new StreamResource("profile-pic",
+                        () -> new ByteArrayInputStream(profilePictureData));
+                avatar.setImageResource(resource);
+            }
             avatar.setThemeName("xsmall");
             avatar.getElement().setAttribute("tabindex", "-1");
 
@@ -208,18 +219,22 @@ public class MainLayout extends AppLayout {
             Anchor loginLink = new Anchor("login", "Sign in");
             layout.add(loginLink);
         }
-
+        log.info("Ending createFooter() in mainlayout");
         return layout;
     }
 
     @Override
     protected void afterNavigation() {
+        log.info("Staring afterNavigation() in mainlayout");
         super.afterNavigation();
         viewTitle.setText(getCurrentPageTitle());
+        log.info("Ending afterNavigation() in mainlayout");
     }
 
     private String getCurrentPageTitle() {
+        log.info("Staring getCurrentPageTitle() in mainlayout");
         PageTitle title = getContent().getClass().getAnnotation(PageTitle.class);
+        log.info("Ending getCurrentPageTitle() in mainlayout");
         return title == null ? "" : title.value();
     }
 }

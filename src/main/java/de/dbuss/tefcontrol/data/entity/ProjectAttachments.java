@@ -2,9 +2,13 @@ package de.dbuss.tefcontrol.data.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotEmpty;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.Date;
 
+@Getter
+@Setter
 @Entity
 @Table(schema = "dbo", name = "ProjectAttachments")
 public class ProjectAttachments {
@@ -20,7 +24,6 @@ public class ProjectAttachments {
 
     private Date upload_date;
 
-
     @Lob
     private byte[] filecontent;
 
@@ -28,49 +31,6 @@ public class ProjectAttachments {
     @JoinColumn(name = "project_id")
     private Projects project;
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public String getFilename() {
-        return filename;
-    }
-
-    public void setFilename(String filename) {
-        this.filename = filename;
-    }
-    public byte[] getFilecontent() {
-        return filecontent;
-    }
-    public void setFilecontent(byte[] filecontent) {
-        this.filecontent = filecontent;
-    }
-    public Projects getProject() {
-        return project;
-    }
-    public void setProject(Projects project) {
-        this.project = project;
-    }
-
-    public Date getUpload_date() {
-        return upload_date;
-    }
-
-    public void setUpload_date(Date upload_date) {
-        this.upload_date = upload_date;
-    }
-
+    private Integer filesizekb;
 }
 

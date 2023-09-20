@@ -1,4 +1,4 @@
-package de.dbuss.tefcontrol.data.service;
+package de.dbuss.tefcontrol.data.repository;
 
 import de.dbuss.tefcontrol.data.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;

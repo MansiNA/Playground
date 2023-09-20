@@ -2,6 +2,8 @@ package de.dbuss.tefcontrol.data.service;
 
 import de.dbuss.tefcontrol.data.entity.User;
 import java.util.Optional;
+
+import de.dbuss.tefcontrol.data.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;

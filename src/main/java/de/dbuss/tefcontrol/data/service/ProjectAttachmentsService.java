@@ -18,9 +18,7 @@ public class ProjectAttachmentsService {
         this.repository = repository;
     }
 
-    public Optional<ProjectAttachments> get(Long id) {
-        return repository.findById(id);
-    }
+    public Optional<ProjectAttachments> get(Long id) { return repository.findById(id); }
 
     public ProjectAttachments update(ProjectAttachments entity) { return repository.save(entity);}
     public void delete(Long id) {

@@ -1,7 +1,7 @@
 package de.dbuss.tefcontrol.security;
 
 import de.dbuss.tefcontrol.data.entity.User;
-import de.dbuss.tefcontrol.data.service.UserRepository;
+import de.dbuss.tefcontrol.data.repository.UserRepository;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.security.core.GrantedAuthority;
@@ -36,7 +36,6 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     private static List<GrantedAuthority> getAuthorities(User user) {
         return user.getRoles().stream().map(role -> new SimpleGrantedAuthority("ROLE_" + role))
                 .collect(Collectors.toList());
-
     }
 
 }

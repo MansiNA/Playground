@@ -7,6 +7,5 @@ import java.util.Optional;
 
 public interface ProjectConnectionRepository extends JpaRepository<ProjectConnection, Long> {
     Optional<ProjectConnection> findByName(String name);
-
 }
 

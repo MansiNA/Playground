@@ -2,7 +2,7 @@ package de.dbuss.tefcontrol.security;
 
 import com.vaadin.flow.spring.security.AuthenticationContext;
 import de.dbuss.tefcontrol.data.entity.User;
-import de.dbuss.tefcontrol.data.service.UserRepository;
+import de.dbuss.tefcontrol.data.repository.UserRepository;
 import java.util.Optional;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
