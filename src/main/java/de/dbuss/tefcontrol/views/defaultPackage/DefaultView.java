@@ -5,6 +5,9 @@ import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
+
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.charts.model.Label;
 import com.vaadin.flow.component.crud.BinderCrudEditor;
 import com.vaadin.flow.component.crud.Crud;
 import com.vaadin.flow.component.crud.CrudEditor;
@@ -13,19 +16,29 @@ import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.contextmenu.GridContextMenu;
 import com.vaadin.flow.component.grid.contextmenu.GridMenuItem;
+
 import com.vaadin.flow.component.html.*;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.html.Anchor;
+import com.vaadin.flow.component.html.Article;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.select.Select;
+import com.vaadin.flow.component.splitlayout.SplitLayout;
+import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.TabSheet;
+import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MultiFileMemoryBuffer;
 import com.vaadin.flow.data.binder.Binder;
+
 import com.vaadin.flow.data.renderer.NativeButtonRenderer;
+import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.*;
 import com.vaadin.flow.server.StreamResource;
 import com.wontlost.ckeditor.Config;
@@ -135,7 +148,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
         tabSheet.add("Description", getProjectsDescription());
         tabSheet.add("Attachments", getProjectAttachements());
         tabSheet.add("DB-Jobs", getAgentJobTab());
-        tabSheet.add("QS", new Div(new Text("This is the QS tab content")));
+        tabSheet.add("QS", getProjectSQL());
 
         tabSheet.setSizeFull();
         tabSheet.setHeightFull();
@@ -238,6 +251,113 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
             ui.notify();
         }, 0, 1, java.util.concurrent.TimeUnit.SECONDS);
         log.info("Ending startCountdown() for DB-jobs tab");
+    }
+  
+    private Component getProjectSQL() {
+
+        VerticalLayout content = new VerticalLayout();
+        Div sqlTabContent = new Div();
+        sqlTabContent.setSizeFull();
+
+        Select<String> select = new Select<>();
+        select.setLabel("Choose Query SQL");
+        select.setItems("Abfrage in der Quelle", "Abfrage im Ziel, mit vielen Informationen in dieser Beschreibung" );
+        select.setPlaceholder("name from table project_sqls for selected project_id");
+        select.setWidthFull();
+
+
+
+        TabSheet tabSheet = new TabSheet();
+        tabSheet.add("Description",getSqlDescription());
+        tabSheet.add("Connection",getsqllConnection());
+        tabSheet.add("Query",getSqlQuery());
+
+        sqlTabContent.add(select,tabSheet);
+        sqlTabContent.setHeightFull();
+        content.setHeightFull();
+        content.add(sqlTabContent);
+        return content;
+
+    }
+
+    private Component getsqllConnection() {
+        VerticalLayout content = new VerticalLayout();
+        Select<String> select = new Select<>();
+
+        select.setItems("demuc5ak26", "dewsttwak11", "Test" );
+        select.setPlaceholder("name from project_connections");
+        select.setWidth("650 px");
+
+        TextArea textArea = new TextArea();
+        textArea.setWidthFull();
+        textArea.setHeight("400 px");
+        textArea.setValue("Description for selected connection (from Table [project_connections] for selected id");
+        textArea.setReadOnly(true);
+
+        content.add(select, textArea);
+        content.setWidth("650 px");
+        return content;
+    }
+
+    private Component getSqlQuery() {
+        VerticalLayout content = new VerticalLayout();
+
+        Div sqlTabContent = new Div();
+        sqlTabContent.setSizeFull();
+
+        VerticalLayout vl = new VerticalLayout();
+
+        HorizontalLayout hl = new HorizontalLayout();
+
+        Button executeButton = new Button("Execute");
+        executeButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_SUCCESS);
+
+        Button exportButton = new Button("Export");
+        exportButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_SUCCESS);
+
+        hl.add(executeButton, exportButton);
+
+        TextArea textArea = new TextArea();
+        textArea.setWidthFull();
+        textArea.setHeight("300 px");
+        textArea.setValue("SQL from Table [project_sqls] Column sql for selected id");
+
+        vl.add(textArea,hl);
+
+        TextArea gridArea = new TextArea();
+        gridArea.setWidthFull();
+        gridArea.setHeight("600 px");
+        gridArea.setValue("Show Result of Query in Dynamic-Grid");
+
+
+
+        SplitLayout splitLayout = new SplitLayout(vl, gridArea);
+        splitLayout.setOrientation(SplitLayout.Orientation.VERTICAL);
+
+
+        splitLayout.setHeightFull();
+        splitLayout.setWidthFull();
+
+
+     //   content.setHeightFull();
+
+        sqlTabContent.add(splitLayout);
+
+        content.add(sqlTabContent);
+        return content;
+
+    }
+
+    private VerticalLayout getSqlDescription() {
+
+        VerticalLayout content = new VerticalLayout();
+        TextArea textArea = new TextArea();
+        textArea.setWidthFull();
+        textArea.setHeight("250px");
+        textArea.setValue("Description from Table [project_sqls] Column description for selected id");
+
+        content.add(textArea);
+        return content;
     }
 
     private void stopCountdown() {
