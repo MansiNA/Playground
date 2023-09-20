@@ -37,8 +37,8 @@ public class ProjectsService {
         return repository.findAll();
     }
 
-    public Projects search(String jobName) {
-        return repository.search(jobName);
+    public Projects findByName(String jobName) {
+        return repository.findByName(jobName).get();
     }
 
 
