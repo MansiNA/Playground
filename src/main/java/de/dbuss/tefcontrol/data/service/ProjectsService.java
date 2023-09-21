@@ -1,5 +1,6 @@
 package de.dbuss.tefcontrol.data.service;
 
+import de.dbuss.tefcontrol.data.dto.ProjectAttachmentsDTO;
 import de.dbuss.tefcontrol.data.entity.ProjectAttachments;
 import de.dbuss.tefcontrol.data.entity.Projects;
 import de.dbuss.tefcontrol.data.repository.ProjectsRepository;
@@ -71,4 +72,7 @@ public class ProjectsService {
                 .collect(Collectors.toList());
     }
 
+    public List<ProjectAttachmentsDTO> getProjectAttachmentsWithoutFileContent(Projects projects) {
+        return repository.getProjectAttachmentsWithoutFileContent(projects);
+    }
 }
