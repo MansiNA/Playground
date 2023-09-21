@@ -7,7 +7,6 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
 
 import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.charts.model.Label;
 import com.vaadin.flow.component.crud.BinderCrudEditor;
 import com.vaadin.flow.component.crud.Crud;
 import com.vaadin.flow.component.crud.CrudEditor;
@@ -45,6 +44,7 @@ import com.wontlost.ckeditor.Config;
 import com.wontlost.ckeditor.Constants;
 import com.wontlost.ckeditor.VaadinCKEditor;
 import com.wontlost.ckeditor.VaadinCKEditorBuilder;
+import de.dbuss.tefcontrol.data.dto.ProjectAttachmentsDTO;
 import de.dbuss.tefcontrol.data.entity.AgentJobs;
 import de.dbuss.tefcontrol.data.entity.CLTV_HW_Measures;
 import de.dbuss.tefcontrol.data.entity.ProjectAttachments;
@@ -83,8 +83,8 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
     private final MSMService msmService;
     private VaadinCKEditor editor;
     private Optional<Projects> projects;
-    private Grid<ProjectAttachments> attachmentGrid;
-    private List<ProjectAttachments> listOfProjectAttachments;
+    private Grid<ProjectAttachmentsDTO> attachmentGrid;
+    private List<ProjectAttachmentsDTO> listOfProjectAttachments;
     private Grid<AgentJobs> gridAgentJobs;
     private Label lastRefreshLabel;
     private Label countdownLabel;
@@ -121,7 +121,8 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
             projects = projectsService.findById(Long.parseLong(projectId));
         }
 
-        projects.ifPresent(value -> listOfProjectAttachments = projectsService.getProjectAttachments(value));
+        //projects.ifPresent(value -> listOfProjectAttachments = projectsService.getProjectAttachments(value));
+        projects.ifPresent(value -> listOfProjectAttachments = projectsService.getProjectAttachmentsWithoutFileContent(value));
 
         updateDescription();
         updateAttachmentGrid(listOfProjectAttachments);
@@ -132,9 +133,9 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
         log.info("executing updateDescription() for project description");
         editor.setValue(projects.map(Projects::getDescription).orElse(""));
     }
-    private void updateAttachmentGrid(List<ProjectAttachments> projectAttachments) {
+    private void updateAttachmentGrid(List<ProjectAttachmentsDTO> projectAttachmentsDTOS) {
         log.info("executing updateAttachmentGrid() for project attachments");
-        attachmentGrid.setItems(projectAttachments);
+        attachmentGrid.setItems(projectAttachmentsDTOS);
     }
     private void updateAgentJobGrid() {
         log.info("executing updateAgentJobGrid() for Agent Job grid");
@@ -406,7 +407,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
 
         // Create a grid to display attachments
         attachmentGrid = new Grid<>();
-        attachmentGrid.addColumn(ProjectAttachments::getFilename).setResizable(true).setSortable(true).setHeader("File Name");
+        attachmentGrid.addColumn(ProjectAttachmentsDTO::getFilename).setResizable(true).setSortable(true).setHeader("File Name");
         /*attachmentGrid.addColumn(attachment -> {
             String fileName = attachment.getFilename();
             String[] parts = fileName.split("\\.");
@@ -416,16 +417,17 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
                 return "";
             }
         }).setHeader("File Type");*/
-        attachmentGrid.addColumn(ProjectAttachments::getDescription).setResizable(true).setHeader("Description");
-        attachmentGrid.addColumn(ProjectAttachments::getUpload_date).setResizable(true).setSortable(true).setHeader("Date");
-        attachmentGrid.addColumn(ProjectAttachments::getFilesizekb).setResizable(true).setHeader("FileSize");
+        attachmentGrid.addColumn(ProjectAttachmentsDTO::getDescription).setResizable(true).setHeader("Description");
+        attachmentGrid.addColumn(ProjectAttachmentsDTO::getUploadDate).setResizable(true).setSortable(true).setHeader("Date");
+        attachmentGrid.addColumn(ProjectAttachmentsDTO::getFilesizeKb).setResizable(true).setHeader("FileSize");
 
         attachmentGrid.addItemDoubleClickListener(event -> {
             log.info("executing attachmentGrid.addItemDoubleClickListener for file download in Attachment tab");
-            ProjectAttachments selectedAttachment = event.getItem();
+            ProjectAttachmentsDTO selectedAttachment = event.getItem();
+            ProjectAttachments projectAttachments = projectAttachmentsService.findById(event.getItem().getId());
             if (selectedAttachment != null) {
-                byte[] fileContent = selectedAttachment.getFilecontent();
-                String fileName = selectedAttachment.getFilename();
+                byte[] fileContent = projectAttachments.getFilecontent();
+                String fileName = projectAttachments.getFilename();
 
                 // Create a StreamResource with a unique key to avoid caching issues
                 StreamResource streamResource = new StreamResource(fileName, () -> new ByteArrayInputStream(fileContent));
@@ -452,13 +454,15 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
 
         confirmButton.addClickListener(confirmEvent -> {
             log.info("executing confirmButton.addClickListener for delete selected file in Attachment tab");
-            Optional<ProjectAttachments> selectedAttachmentOptional = attachmentGrid.getSelectionModel().getFirstSelectedItem();
+            Optional<ProjectAttachmentsDTO> selectedAttachmentOptional = attachmentGrid.getSelectionModel().getFirstSelectedItem();
             if (selectedAttachmentOptional.isPresent()) {
-                ProjectAttachments selectedAttachment = selectedAttachmentOptional.get();
+                ProjectAttachmentsDTO selectedAttachment = selectedAttachmentOptional.get();
+                System.out.println(selectedAttachment.getId());
                 projectAttachmentsService.delete(selectedAttachment.getId());
                 // Refresh the 'projects' entity to reflect the changes
                 projects = projectsService.findById(projects.get().getId());
-                attachmentGrid.setItems(projectsService.getProjectAttachments(projects.get()));
+                List<ProjectAttachmentsDTO> listOfAttachments = projectsService.getProjectAttachmentsWithoutFileContent(projects.get());
+                attachmentGrid.setItems(listOfAttachments);
             }
             confirmationDialog.close(); // Close the confirmation dialog
         });
@@ -468,22 +472,22 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
             confirmationDialog.close(); // Close the confirmation dialog
         });
 
-        GridContextMenu<ProjectAttachments> contextMenu = attachmentGrid.addContextMenu();
-        GridMenuItem<ProjectAttachments> removeItem = contextMenu.addItem("Remove", event -> {
+        GridContextMenu<ProjectAttachmentsDTO> contextMenu = attachmentGrid.addContextMenu();
+        GridMenuItem<ProjectAttachmentsDTO> removeItem = contextMenu.addItem("Remove", event -> {
             log.info("executing removeItem contextMenu open when right click in Attachment grid");
             confirmationDialog.open();
         });
         confirmationDialog.add(new Div(confirmButton, cancelButton));
 
         // Create a CRUD editor for editing the file data
-        Crud<ProjectAttachments> crud = new Crud<>(ProjectAttachments.class, createEditor());
+        Crud<ProjectAttachmentsDTO> crud = new Crud<>(ProjectAttachmentsDTO.class, createEditor());
 
         // Add an "Edit" menu item
-        GridMenuItem<ProjectAttachments> editItem = contextMenu.addItem("Edit", event -> {
+        GridMenuItem<ProjectAttachmentsDTO> editItem = contextMenu.addItem("Edit", event -> {
             log.info("executing editItem contextMenu open when right click in Attachment grid");
-            Optional<ProjectAttachments> selectedAttachmentOptional = event.getItem();
+            Optional<ProjectAttachmentsDTO> selectedAttachmentOptional = event.getItem();
             if (selectedAttachmentOptional.isPresent()) {
-                ProjectAttachments selectedAttachment = selectedAttachmentOptional.get();
+                ProjectAttachmentsDTO selectedAttachment = selectedAttachmentOptional.get();
                 crud.edit(selectedAttachment, Crud.EditMode.EXISTING_ITEM);
 
                 crud.getDeleteButton().getElement().getStyle().set("display", "none");
@@ -497,8 +501,9 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
 
         crud.addSaveListener(event -> {
             log.info("executing crud.addSaveListener for save editedAttachment in Attachment grid");
-            ProjectAttachments editedAttachment = event.getItem();
-            projectAttachmentsService.update(editedAttachment);
+            ProjectAttachmentsDTO editedAttachment = event.getItem();
+            System.out.println(editedAttachment.getId()+"....."+editedAttachment.getFilename()+"..."+editedAttachment.getProjectId()+"..."+editedAttachment.getDescription()+"..."+editedAttachment.getFilesizeKb()+"..."+editedAttachment.getFileContent());
+            projectAttachmentsService.updateGridValues(editedAttachment);
             attachmentGrid.getDataProvider().refreshItem(editedAttachment);
         });
 
@@ -516,25 +521,25 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
             // Extract description from the user input (you might need a separate input field for this)
             String description = "no description yet";
 
-            ProjectAttachments projectAttachments = new ProjectAttachments();
-            projectAttachments.setFilename(fileName);
-            projectAttachments.setDescription(description);
-            projectAttachments.setFilecontent(fileContent);
-            projectAttachments.setUpload_date(new Date());
-            projectAttachments.setProject(projects.get());
-            projectAttachments.setFilesizekb(fileSizeKB);
+            ProjectAttachmentsDTO projectAttachmentsDTO = new ProjectAttachmentsDTO();
+            projectAttachmentsDTO.setFilename(fileName);
+            projectAttachmentsDTO.setDescription(description);
+            projectAttachmentsDTO.setFileContent(fileContent);
+            projectAttachmentsDTO.setUploadDate(new Date());
+            projectAttachmentsDTO.setProjectId(projects.get().getId());
+            projectAttachmentsDTO.setFilesizeKb(fileSizeKB);
 
-            projectAttachmentsService.update(projectAttachments);
+            projectAttachmentsService.update(projectAttachmentsDTO);
 
             // Refresh the 'projects' entity to reflect the changes
             projects = projectsService.findById(projects.get().getId());
 
-            attachmentGrid.setItems(projectsService.getProjectAttachments(projects.get()));
+            attachmentGrid.setItems(projectsService.getProjectAttachmentsWithoutFileContent(projects.get()));
             fileUpload.clearFileList();
 
         });
         if(projects != null) {
-            attachmentGrid.setItems(projectsService.getProjectAttachments(projects.get()));
+            attachmentGrid.setItems(projectsService.getProjectAttachmentsWithoutFileContent(projects.get()));
         }
         attachmentsTabContent.add(attachmentGrid,fileUpload);
         content.add(attachmentsTabContent);
@@ -663,20 +668,21 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
             return agentJobsService.findbyJobName(projects.getAgent_Jobs());
         }
     }
-    private CrudEditor<ProjectAttachments> createEditor() {
+    private CrudEditor<ProjectAttachmentsDTO> createEditor() {
         log.info("Starting createEditor() for ProjectAttachments Attachment tab");
         TextField filename = new TextField("Edit Filename");
         TextArea description = new TextArea("Edit Description");
         description.setSizeFull();
         FormLayout editFormLayout = new FormLayout(filename, description);
-        Binder<ProjectAttachments> editBinder = new Binder<>(ProjectAttachments.class);
+        Binder<ProjectAttachmentsDTO> editBinder = new Binder<>(ProjectAttachmentsDTO.class);
         //editBinder.bindInstanceFields(editFormLayout);
-        editBinder.forField(filename).asRequired().bind(ProjectAttachments::getFilename,
-                ProjectAttachments::setFilename);
-        editBinder.forField(description).asRequired().bind(ProjectAttachments::getDescription,
-                ProjectAttachments::setDescription);
+        editBinder.forField(filename).asRequired().bind(ProjectAttachmentsDTO::getFilename,
+                ProjectAttachmentsDTO::setFilename);
+        editBinder.forField(description).asRequired().bind(ProjectAttachmentsDTO::getDescription,
+                ProjectAttachmentsDTO::setDescription);
         log.info("Ending createEditor() for ProjectAttachments Attachment tab");
         return new BinderCrudEditor<>(editBinder, editFormLayout);
     }
+
 
 }
