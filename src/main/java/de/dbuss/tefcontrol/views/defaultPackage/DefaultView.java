@@ -50,6 +50,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -74,6 +75,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
     private final AgentJobsService agentJobsService;
     private final MSMService msmService;
     private final ProjectSqlService projectSqlService;
+    private final ProjectConnectionService projectConnectionService;
     private VaadinCKEditor editor;
     private Optional<Projects> projects;
 
@@ -89,12 +91,13 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
     private Select<String> selectConnection;
     private TextArea sqlDescriptionTextArea;
     private UI ui ;
-    public DefaultView(ProjectsService projectsService, ProjectAttachmentsService projectAttachmentsService, AgentJobsService agentJobsService, MSMService msmService, ProjectSqlService projectSqlService) {
+    public DefaultView(ProjectsService projectsService, ProjectAttachmentsService projectAttachmentsService, AgentJobsService agentJobsService, MSMService msmService, ProjectSqlService projectSqlService, ProjectConnectionService projectConnectionService) {
         this.projectsService = projectsService;
         this.projectAttachmentsService = projectAttachmentsService;
         this.agentJobsService = agentJobsService;
         this.msmService = msmService;
         this.projectSqlService = projectSqlService;
+        this.projectConnectionService = projectConnectionService;
 
         countdownLabel = new Label();
         lastRefreshLabel=new Label();
@@ -261,7 +264,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
     }
   
     private Component getProjectSQL() {
-
+        log.info("Starting getProjectSQL() for QS tab");
         VerticalLayout content = new VerticalLayout();
         Div sqlTabContent = new Div();
         sqlTabContent.setSizeFull();
@@ -280,7 +283,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
             selectedProjectSql = projectSqlService.findByName(event.getValue());
             updatesqlDescription(selectedProjectSql);
             setItemsForConnection(selectedProjectSql);
-            sqlQuerytextArea.setValue(selectedProjectSql.get().getSql());
+            sqlQuerytextArea.setValue(selectedProjectSql.isPresent()? selectedProjectSql.get().getSql():"");
         });
 
         TabSheet tabSheet = new TabSheet();
@@ -292,6 +295,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
         sqlTabContent.setHeightFull();
         content.setHeightFull();
         content.add(sqlTabContent);
+        log.info("Ending getProjectSQL() for QS tab");
         return content;
 
     }
@@ -328,6 +332,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
     }
 
     private Component getsqllConnection() {
+        log.info("Starting getsqllConnection() for data get based on sql");
         VerticalLayout content = new VerticalLayout();
 
         selectConnection.setPlaceholder("name from project_connections");
@@ -349,10 +354,12 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
 
         content.add(selectConnection, textArea);
         content.setWidth("650 px");
+        log.info("Ending getsqllConnection() for data get based on sql");
         return content;
     }
 
     private Component getSqlQuery(TextArea sqlQuerytextArea) {
+        log.info("Starting getSqlQuery() for data get based on sql");
         VerticalLayout content = new VerticalLayout();
 
         Div sqlTabContent = new Div();
@@ -367,6 +374,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
 
         Button exportButton = new Button("Export");
         exportButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_SUCCESS);
+
 
         hl.add(executeButton, exportButton);
 
@@ -387,11 +395,42 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
         splitLayout.setHeightFull();
         splitLayout.setWidthFull();
 
-     //   content.setHeightFull();
+        executeButton.addClickListener( event -> {
+            selectedProjectSql.ifPresent(sql -> {
+                log.info("executing executeButton.addClickListener for data get based on sql");
+                String query = sql.getSql();
+                String selectedDbName = sql.getProjectConnection().getName();
+                String data = projectConnectionService.getDataFromDatabase(selectedDbName, query);
+                gridArea.setValue(data);
+            });
+        });
 
+        exportButton.addClickListener(event -> {
+            log.info("executing exportButton.addClickListener for data get based on sql");
+            String dataToExport = gridArea.getValue();
+            if (!dataToExport.isEmpty()) {
+                String fileName = "exported_data.txt";
+
+                StreamResource streamResource = new StreamResource(fileName, () -> {
+                    byte[] dataBytes = dataToExport.getBytes(StandardCharsets.UTF_8);
+                    return new ByteArrayInputStream(dataBytes);
+                });
+
+                Anchor anchor = new Anchor(streamResource, "");
+                anchor.getElement().setAttribute("download", true);
+                anchor.getElement().getStyle().set("display", "none");
+                add(anchor);
+                UI.getCurrent().getPage().executeJs("arguments[0].click()", anchor);
+            } else {
+                // Show a message if there's no data to export
+                Notification.show("No data to export.");
+            }
+        });
+     //   content.setHeightFull();
         sqlTabContent.add(splitLayout);
 
         content.add(sqlTabContent);
+        log.info("Ending getSqlQuery() for data get based on sql");
         return content;
 
     }
