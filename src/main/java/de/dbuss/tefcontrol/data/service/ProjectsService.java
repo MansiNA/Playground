@@ -2,6 +2,7 @@ package de.dbuss.tefcontrol.data.service;
 
 import de.dbuss.tefcontrol.data.dto.ProjectAttachmentsDTO;
 import de.dbuss.tefcontrol.data.entity.ProjectAttachments;
+import de.dbuss.tefcontrol.data.entity.ProjectSql;
 import de.dbuss.tefcontrol.data.entity.Projects;
 import de.dbuss.tefcontrol.data.repository.ProjectsRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -46,7 +47,6 @@ public class ProjectsService {
         return repository.findByName(jobName).get();
     }
 
-
     public Optional<Projects> findById(long id) {
         return repository.findById(id);
     }
@@ -54,6 +54,11 @@ public class ProjectsService {
     public List<ProjectAttachments> getProjectAttachments(Projects projects) {
         log.info("Executing getProjectAttachments() in projectsService");
         return projects.getListOfAttachments();
+    }
+
+    public List<ProjectSql> getProjectSqls(Projects projects) {
+        log.info("Executing getProjectAttachments() in projectsService");
+        return projects.getListOfSqls();
     }
 
     public List<Projects> getRootProjects() {

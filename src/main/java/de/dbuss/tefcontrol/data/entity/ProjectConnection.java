@@ -6,6 +6,8 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
+
 @Getter
 @Setter
 @Entity
@@ -26,4 +28,8 @@ public class ProjectConnection {
     private String username;
     @NotEmpty
     private String password;
+
+    // Define a one-to-many relationship between ProjectConnection and ProjectSql
+    @OneToMany(mappedBy = "projectConnection", fetch = FetchType.LAZY, orphanRemoval = true)
+    private List<ProjectSql> listOfSqls;
 }

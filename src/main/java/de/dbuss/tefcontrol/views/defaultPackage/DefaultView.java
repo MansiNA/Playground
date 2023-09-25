@@ -27,9 +27,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
-import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.TabSheet;
-import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.upload.Upload;
@@ -37,7 +35,6 @@ import com.vaadin.flow.component.upload.receivers.MultiFileMemoryBuffer;
 import com.vaadin.flow.data.binder.Binder;
 
 import com.vaadin.flow.data.renderer.NativeButtonRenderer;
-import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.*;
 import com.vaadin.flow.server.StreamResource;
 import com.wontlost.ckeditor.Config;
@@ -45,14 +42,8 @@ import com.wontlost.ckeditor.Constants;
 import com.wontlost.ckeditor.VaadinCKEditor;
 import com.wontlost.ckeditor.VaadinCKEditorBuilder;
 import de.dbuss.tefcontrol.data.dto.ProjectAttachmentsDTO;
-import de.dbuss.tefcontrol.data.entity.AgentJobs;
-import de.dbuss.tefcontrol.data.entity.CLTV_HW_Measures;
-import de.dbuss.tefcontrol.data.entity.ProjectAttachments;
-import de.dbuss.tefcontrol.data.entity.Projects;
-import de.dbuss.tefcontrol.data.service.AgentJobsService;
-import de.dbuss.tefcontrol.data.service.MSMService;
-import de.dbuss.tefcontrol.data.service.ProjectAttachmentsService;
-import de.dbuss.tefcontrol.data.service.ProjectsService;
+import de.dbuss.tefcontrol.data.entity.*;
+import de.dbuss.tefcontrol.data.service.*;
 import de.dbuss.tefcontrol.views.MainLayout;
 import jakarta.annotation.security.RolesAllowed;
 import lombok.extern.slf4j.Slf4j;
@@ -69,6 +60,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.stream.Collectors;
 
 
 //@PageTitle("Default Mapping")
@@ -81,20 +73,28 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
     private final ProjectAttachmentsService projectAttachmentsService;
     private final AgentJobsService agentJobsService;
     private final MSMService msmService;
+    private final ProjectSqlService projectSqlService;
     private VaadinCKEditor editor;
     private Optional<Projects> projects;
+
+    Optional<ProjectSql> selectedProjectSql;
     private Grid<ProjectAttachmentsDTO> attachmentGrid;
     private List<ProjectAttachmentsDTO> listOfProjectAttachments;
     private Grid<AgentJobs> gridAgentJobs;
     private Label lastRefreshLabel;
     private Label countdownLabel;
     private ScheduledExecutorService executor;
+    private Select<String> select;
+
+    private Select<String> selectConnection;
+    private TextArea sqlDescriptionTextArea;
     private UI ui ;
-    public DefaultView(ProjectsService projectsService, ProjectAttachmentsService projectAttachmentsService, AgentJobsService agentJobsService, MSMService msmService) {
+    public DefaultView(ProjectsService projectsService, ProjectAttachmentsService projectAttachmentsService, AgentJobsService agentJobsService, MSMService msmService, ProjectSqlService projectSqlService) {
         this.projectsService = projectsService;
         this.projectAttachmentsService = projectAttachmentsService;
         this.agentJobsService = agentJobsService;
         this.msmService = msmService;
+        this.projectSqlService = projectSqlService;
 
         countdownLabel = new Label();
         lastRefreshLabel=new Label();
@@ -127,6 +127,12 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
         updateDescription();
         updateAttachmentGrid(listOfProjectAttachments);
         updateAgentJobGrid();
+        setSelectedSql();
+    }
+
+    private void updatesqlDescription(Optional<ProjectSql> selectedProjectSql) {
+        log.info("executing updatesqlDescription() for project description....."+selectedProjectSql);
+        sqlDescriptionTextArea.setValue(selectedProjectSql.isPresent() ? selectedProjectSql.get().getDescription() : "No description available");
     }
 
     private void updateDescription() {
@@ -260,18 +266,27 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
         Div sqlTabContent = new Div();
         sqlTabContent.setSizeFull();
 
-        Select<String> select = new Select<>();
+        selectConnection = new Select<>();
+        select = new Select<>();
         select.setLabel("Choose Query SQL");
-        select.setItems("Abfrage in der Quelle", "Abfrage im Ziel, mit vielen Informationen in dieser Beschreibung" );
+        setSelectedSql();
         select.setPlaceholder("name from table project_sqls for selected project_id");
         select.setWidthFull();
 
+        TextArea sqlQuerytextArea = new TextArea();
 
+        select.addValueChangeListener(event -> {
+            log.info("executing select.addValueChangeListener for database selection " + event.getValue());
+            selectedProjectSql = projectSqlService.findByName(event.getValue());
+            updatesqlDescription(selectedProjectSql);
+            setItemsForConnection(selectedProjectSql);
+            sqlQuerytextArea.setValue(selectedProjectSql.get().getSql());
+        });
 
         TabSheet tabSheet = new TabSheet();
         tabSheet.add("Description",getSqlDescription());
         tabSheet.add("Connection",getsqllConnection());
-        tabSheet.add("Query",getSqlQuery());
+        tabSheet.add("Query",getSqlQuery(sqlQuerytextArea));
 
         sqlTabContent.add(select,tabSheet);
         sqlTabContent.setHeightFull();
@@ -281,26 +296,63 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
 
     }
 
+    private void setItemsForConnection(Optional<ProjectSql> selectedProjectSql) {
+        log.info("Executing setItemsForConnection() for connection of sql"+ selectedProjectSql);
+        selectConnection.setPlaceholder("name from project_connections");
+        selectConnection.setItems(selectedProjectSql.isPresent() ? selectedProjectSql.get().getProjectConnection().getName() : "No connection");
+    }
+
+    private void setSelectedSql() {
+        if(projects != null) {
+            List<ProjectSql> listOfSql = projectsService.getProjectSqls(projects.get());
+            if(listOfSql.size() != 0) {
+                select.setItems(listOfSql.stream()
+                        .map(ProjectSql::getName)
+                        .collect(Collectors.toList()));
+            } else {
+                select.setItems("No sql present");
+            }
+        }
+    }
+
+    private VerticalLayout getSqlDescription() {
+        log.info("Starting getSqlDescription() for QS tab");
+        VerticalLayout content = new VerticalLayout();
+        sqlDescriptionTextArea = new TextArea();
+        sqlDescriptionTextArea.setWidthFull();
+        sqlDescriptionTextArea.setHeight("250px");
+        sqlDescriptionTextArea.setValue("No description available");
+        content.add(sqlDescriptionTextArea);
+        log.info("Ending getSqlDescription() for QS tab");
+        return content;
+    }
+
     private Component getsqllConnection() {
         VerticalLayout content = new VerticalLayout();
-        Select<String> select = new Select<>();
 
-        select.setItems("demuc5ak26", "dewsttwak11", "Test" );
-        select.setPlaceholder("name from project_connections");
-        select.setWidth("650 px");
+        selectConnection.setPlaceholder("name from project_connections");
+        selectConnection.setWidth("650 px");
 
         TextArea textArea = new TextArea();
         textArea.setWidthFull();
-        textArea.setHeight("400 px");
         textArea.setValue("Description for selected connection (from Table [project_connections] for selected id");
+        textArea.setHeight("400 px");
         textArea.setReadOnly(true);
 
-        content.add(select, textArea);
+        selectConnection.addValueChangeListener(event -> {
+            log.info("executing selectConnection.addValueChangeListener for database selection " + event.getValue());
+            if(event.getValue() != null) {
+                ProjectConnection connection = selectedProjectSql.get().getProjectConnection();
+                textArea.setValue(connection.getDescription());
+            }
+        });
+
+        content.add(selectConnection, textArea);
         content.setWidth("650 px");
         return content;
     }
 
-    private Component getSqlQuery() {
+    private Component getSqlQuery(TextArea sqlQuerytextArea) {
         VerticalLayout content = new VerticalLayout();
 
         Div sqlTabContent = new Div();
@@ -318,27 +370,22 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
 
         hl.add(executeButton, exportButton);
 
-        TextArea textArea = new TextArea();
-        textArea.setWidthFull();
-        textArea.setHeight("300 px");
-        textArea.setValue("SQL from Table [project_sqls] Column sql for selected id");
+        sqlQuerytextArea.setWidthFull();
+        sqlQuerytextArea.setHeight("300 px");
+        sqlQuerytextArea.setValue("SQL from Table [project_sqls] Column sql for selected id");
 
-        vl.add(textArea,hl);
+        vl.add(sqlQuerytextArea,hl);
 
         TextArea gridArea = new TextArea();
         gridArea.setWidthFull();
         gridArea.setHeight("600 px");
         gridArea.setValue("Show Result of Query in Dynamic-Grid");
 
-
-
         SplitLayout splitLayout = new SplitLayout(vl, gridArea);
         splitLayout.setOrientation(SplitLayout.Orientation.VERTICAL);
 
-
         splitLayout.setHeightFull();
         splitLayout.setWidthFull();
-
 
      //   content.setHeightFull();
 
@@ -347,18 +394,6 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
         content.add(sqlTabContent);
         return content;
 
-    }
-
-    private VerticalLayout getSqlDescription() {
-
-        VerticalLayout content = new VerticalLayout();
-        TextArea textArea = new TextArea();
-        textArea.setWidthFull();
-        textArea.setHeight("250px");
-        textArea.setValue("Description from Table [project_sqls] Column description for selected id");
-
-        content.add(textArea);
-        return content;
     }
 
     private void stopCountdown() {
@@ -397,12 +432,10 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
         fileUpload.setAcceptedFileTypes(".doc", ".xlsx",".xls" , ".ppt", ".msg", ".pdf");
         fileUpload.setUploadButton(new Button("Search file"));
 
-
         Div dropLabel = new Div();
         dropLabel.setText("or drop new File(s) here");
 
         fileUpload.setDropLabel(dropLabel);
-
         fileUpload.setDropLabelIcon(new Div());
 
         // Create a grid to display attachments
