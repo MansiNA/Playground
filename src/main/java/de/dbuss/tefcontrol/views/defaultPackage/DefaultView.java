@@ -13,12 +13,14 @@ import com.vaadin.flow.component.crud.CrudEditor;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.contextmenu.GridContextMenu;
 import com.vaadin.flow.component.grid.contextmenu.GridMenuItem;
 
 import com.vaadin.flow.component.html.*;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.component.orderedlayout.BoxSizing;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Article;
@@ -34,6 +36,7 @@ import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MultiFileMemoryBuffer;
 import com.vaadin.flow.data.binder.Binder;
 
+import com.vaadin.flow.data.provider.DataProvider;
 import com.vaadin.flow.data.renderer.NativeButtonRenderer;
 import com.vaadin.flow.router.*;
 import com.vaadin.flow.server.StreamResource;
@@ -47,18 +50,21 @@ import de.dbuss.tefcontrol.data.service.*;
 import de.dbuss.tefcontrol.views.MainLayout;
 import jakarta.annotation.security.RolesAllowed;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Collectors;
@@ -78,19 +84,20 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
     private final ProjectConnectionService projectConnectionService;
     private VaadinCKEditor editor;
     private Optional<Projects> projects;
-
     Optional<ProjectSql> selectedProjectSql;
     private Grid<ProjectAttachmentsDTO> attachmentGrid;
     private List<ProjectAttachmentsDTO> listOfProjectAttachments;
+    private List<LinkedHashMap<String, Object>> rows;
     private Grid<AgentJobs> gridAgentJobs;
     private Label lastRefreshLabel;
     private Label countdownLabel;
     private ScheduledExecutorService executor;
     private Select<String> select;
-
     private Select<String> selectConnection;
     private TextArea sqlDescriptionTextArea;
     private UI ui ;
+    private String selectedDbName;
+
     public DefaultView(ProjectsService projectsService, ProjectAttachmentsService projectAttachmentsService, AgentJobsService agentJobsService, MSMService msmService, ProjectSqlService projectSqlService, ProjectConnectionService projectConnectionService) {
         this.projectsService = projectsService;
         this.projectAttachmentsService = projectAttachmentsService;
@@ -281,8 +288,11 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
         select.addValueChangeListener(event -> {
             log.info("executing select.addValueChangeListener for database selection " + event.getValue());
             selectedProjectSql = projectSqlService.findByName(event.getValue());
+            if(selectedProjectSql.isPresent()){
+                selectedDbName = selectedProjectSql.get().getProjectConnection().getName();
+            }
             updatesqlDescription(selectedProjectSql);
-            setItemsForConnection(selectedProjectSql);
+            setValueForConnection(selectedProjectSql);
             sqlQuerytextArea.setValue(selectedProjectSql.isPresent()? selectedProjectSql.get().getSql():"");
         });
 
@@ -300,10 +310,13 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
 
     }
 
-    private void setItemsForConnection(Optional<ProjectSql> selectedProjectSql) {
+    private void setValueForConnection(Optional<ProjectSql> selectedProjectSql) {
         log.info("Executing setItemsForConnection() for connection of sql"+ selectedProjectSql);
-        selectConnection.setPlaceholder("name from project_connections");
-        selectConnection.setItems(selectedProjectSql.isPresent() ? selectedProjectSql.get().getProjectConnection().getName() : "No connection");
+        if(selectedProjectSql.isPresent()){
+            selectConnection.setValue(selectedProjectSql.get().getProjectConnection().getName());
+        }
+
+      //  selectConnection.setItems(selectedProjectSql.isPresent() ? selectedProjectSql.get().getProjectConnection().getName() : "No connection");
     }
 
     private void setSelectedSql() {
@@ -337,6 +350,13 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
 
         selectConnection.setPlaceholder("name from project_connections");
         selectConnection.setWidth("650 px");
+        List<ProjectConnection> projectConnections = projectConnectionService.findAll();
+        selectConnection.setItems(
+                projectConnections
+                        .stream()
+                        .map(ProjectConnection::getName)
+                        .collect(Collectors.toList())
+        );
 
         TextArea textArea = new TextArea();
         textArea.setWidthFull();
@@ -347,7 +367,8 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
         selectConnection.addValueChangeListener(event -> {
             log.info("executing selectConnection.addValueChangeListener for database selection " + event.getValue());
             if(event.getValue() != null) {
-                ProjectConnection connection = selectedProjectSql.get().getProjectConnection();
+                selectedDbName = event.getValue();
+                ProjectConnection connection = projectConnectionService.findByName(selectedDbName).get();
                 textArea.setValue(connection.getDescription());
             }
         });
@@ -384,45 +405,57 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
 
         vl.add(sqlQuerytextArea,hl);
 
-        TextArea gridArea = new TextArea();
-        gridArea.setWidthFull();
-        gridArea.setHeight("600 px");
-        gridArea.setValue("Show Result of Query in Dynamic-Grid");
+        Grid<LinkedHashMap<String, Object>> resultGrid = new Grid<>();
+        resultGrid.removeAllColumns();
 
-        SplitLayout splitLayout = new SplitLayout(vl, gridArea);
+        SplitLayout splitLayout = new SplitLayout(vl, resultGrid);
         splitLayout.setOrientation(SplitLayout.Orientation.VERTICAL);
 
         splitLayout.setHeightFull();
         splitLayout.setWidthFull();
 
         executeButton.addClickListener( event -> {
+            resultGrid.removeAllColumns();
+
+            resultGrid.setPageSize(50);
+            resultGrid.setHeight("800px");
+
+            resultGrid.getStyle().set("resize", "vertical");
+            resultGrid.getStyle().set("overflow", "auto");
             selectedProjectSql.ifPresent(sql -> {
                 log.info("executing executeButton.addClickListener for data get based on sql");
                 String query = sql.getSql();
-                String selectedDbName = sql.getProjectConnection().getName();
-                String data = projectConnectionService.getDataFromDatabase(selectedDbName, query);
-                gridArea.setValue(data);
+                //selectedDbName = sql.getProjectConnection().getName();
+                rows = projectConnectionService.getDataFromDatabase(selectedDbName, query);
+                if(!rows.isEmpty()){
+                    resultGrid.setItems( rows); // rows is the result of retrieveRows
+                    // Add the columns based on the first row
+                    LinkedHashMap<String, Object> s = rows.get(0);
+                    for (Map.Entry<String, Object> entry : s.entrySet()) {
+                        resultGrid.addColumn(h -> truncateText((String) h.get(entry.getKey()))).setHeader(entry.getKey()).setAutoWidth(true).setResizable(true).setSortable(true);
+                    }
+
+                    resultGrid.addThemeVariants(GridVariant.LUMO_WRAP_CELL_CONTENT);
+                    resultGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+                    resultGrid.addThemeVariants(GridVariant.LUMO_COMPACT);
+
+                    this.setPadding(false);
+                    this.setSpacing(false);
+                    this.setBoxSizing(BoxSizing.CONTENT_BOX);
+                }
+                else {
+                    Text txt = new Text("Es konnten keine Daten  abgerufen werden!");
+                    add(txt);
+                }
+
             });
         });
 
         exportButton.addClickListener(event -> {
             log.info("executing exportButton.addClickListener for data get based on sql");
-            String dataToExport = gridArea.getValue();
-            if (!dataToExport.isEmpty()) {
-                String fileName = "exported_data.txt";
-
-                StreamResource streamResource = new StreamResource(fileName, () -> {
-                    byte[] dataBytes = dataToExport.getBytes(StandardCharsets.UTF_8);
-                    return new ByteArrayInputStream(dataBytes);
-                });
-
-                Anchor anchor = new Anchor(streamResource, "");
-                anchor.getElement().setAttribute("download", true);
-                anchor.getElement().getStyle().set("display", "none");
-                add(anchor);
-                UI.getCurrent().getPage().executeJs("arguments[0].click()", anchor);
+            if (!rows.isEmpty()) {
+                generateExcelFile(rows);
             } else {
-                // Show a message if there's no data to export
                 Notification.show("No data to export.");
             }
         });
@@ -433,6 +466,64 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
         log.info("Ending getSqlQuery() for data get based on sql");
         return content;
 
+    }
+
+    private void generateExcelFile(List<LinkedHashMap<String, Object>> rows) {
+            // Create a new Excel workbook and sheet
+            Workbook workbook = new XSSFWorkbook();
+            Sheet sheet = workbook.createSheet("Exported Data");
+
+            // Create a header row with column names
+            Row headerRow = sheet.createRow(0);
+            int cellIndex = 0;
+            for (String columnName : rows.get(0).keySet()) {
+                Cell cell = headerRow.createCell(cellIndex++);
+                cell.setCellValue(columnName);
+            }
+
+            // Populate the data rows
+            int rowIndex = 1;
+            for (LinkedHashMap<String, Object> row : rows) {
+                Row dataRow = sheet.createRow(rowIndex++);
+                cellIndex = 0;
+                for (Object value : row.values()) {
+                    Cell cell = dataRow.createCell(cellIndex++);
+                    if (value != null) {
+                        if (value instanceof Number) {
+                            cell.setCellValue(((Number) value).doubleValue());
+                        } else if (value instanceof String) {
+                            cell.setCellValue((String) value);
+                        } else if (value instanceof Boolean) {
+                            cell.setCellValue((Boolean) value);
+                        } else {
+                            // Handle other data types as needed
+                            cell.setCellValue(value.toString());
+                        }
+                    } else {
+                        cell.setCellValue(""); // Handle null values as empty strings
+                    }
+                }
+            }
+
+            // Set up the download
+            String fileName = "exported_data.xlsx";
+            StreamResource streamResource = new StreamResource(fileName, () -> {
+                try {
+                    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                    workbook.write(outputStream);
+                    byte[] dataBytes = outputStream.toByteArray();
+                    return new ByteArrayInputStream(dataBytes);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    return null;
+                }
+            });
+
+            Anchor anchor = new Anchor(streamResource, "");
+            anchor.getElement().setAttribute("download", true);
+            anchor.getElement().getStyle().set("display", "none");
+            add(anchor);
+            UI.getCurrent().getPage().executeJs("arguments[0].click()", anchor);
     }
 
     private void stopCountdown() {
@@ -755,6 +846,15 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
         log.info("Ending createEditor() for ProjectAttachments Attachment tab");
         return new BinderCrudEditor<>(editBinder, editFormLayout);
     }
-
+    private String truncateText(String columnValue) {
+        int maxDisplayLength = 50; // Adjust this as needed
+        if (columnValue != null && columnValue.length() > maxDisplayLength) {
+            // If the text is too long, truncate it and add "..."
+            return columnValue.substring(0, maxDisplayLength) + "...";
+        } else {
+            // If the text is within the limit, display it as is
+            return columnValue;
+        }
+    }
 
 }

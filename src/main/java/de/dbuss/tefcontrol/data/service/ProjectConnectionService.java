@@ -15,9 +15,7 @@ import javax.sql.DataSource;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -110,34 +108,36 @@ public class ProjectConnectionService {
         }
     }
 
-    public String getDataFromDatabase(String selectedDatabase, String query) {
+    public List<LinkedHashMap<String, Object>> getDataFromDatabase(String selectedDatabase, String query) {
         log.info("Starting getDataFromDatabase() for SQL: {}", query);
+        List<LinkedHashMap<String, Object>> rows = new LinkedList<>();
         DataSource dataSource = getDataSource(selectedDatabase);
         jdbcTemplate = new JdbcTemplate(dataSource);
-        ResultSetExtractor<String> resultSetExtractor = new ResultSetExtractor<String>() {
-            @Override
-            public String extractData(ResultSet resultSet) throws SQLException {
-                StringBuilder result = new StringBuilder();
-                ResultSetMetaData metaData = resultSet.getMetaData();
-                int columnCount = metaData.getColumnCount();
-                List<String> columnNames = new ArrayList<>();
 
-                for (int index = 1; index <= columnCount; index++) {
-                    columnNames.add(metaData.getColumnName(index));
-                }
+        ResultSetExtractor<List<LinkedHashMap<String, Object>>> resultSetExtractor = resultSet -> {
+            ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
+            int columnCount = resultSetMetaData.getColumnCount();
+            List<String> columnNames = new ArrayList<>();
 
-                while (resultSet.next()) {
-                    for (String columnName : columnNames) {
-                        String columnValue = resultSet.getString(columnName);
-                        result.append(columnValue).append("  ");
-                    }
-                    result.append("\n");
-                }
-                return result.toString();
+            for (int index = 1; index <= columnCount; index++) {
+                columnNames.add(resultSetMetaData.getColumnName(index));
             }
+
+            while (resultSet.next()) {
+                LinkedHashMap<String, Object> row = new LinkedHashMap<>();
+                for (String columnName : columnNames) {
+                    Object columnValue = resultSet.getObject(columnName) == null ? "" : String.valueOf(resultSet.getObject(columnName));
+                    row.put(columnName, columnValue);
+                }
+                rows.add(row);
+            }
+            return rows;
         };
-        log.info("Ending getDataFromDatabase() for SQL");
-        return jdbcTemplate.query(query, resultSetExtractor);
+
+        List<LinkedHashMap<String, Object>> result = jdbcTemplate.query(query, resultSetExtractor);
+
+        log.info("Ending getDataFromDatabase() for SQL "+ rows.size());
+        return result;
     }
 
 }
