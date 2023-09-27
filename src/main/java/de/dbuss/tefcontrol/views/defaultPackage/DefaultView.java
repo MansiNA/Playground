@@ -36,7 +36,6 @@ import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MultiFileMemoryBuffer;
 import com.vaadin.flow.data.binder.Binder;
 
-import com.vaadin.flow.data.provider.DataProvider;
 import com.vaadin.flow.data.renderer.NativeButtonRenderer;
 import com.vaadin.flow.router.*;
 import com.vaadin.flow.server.StreamResource;
@@ -97,6 +96,8 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
     private TextArea sqlDescriptionTextArea;
     private UI ui ;
     private String selectedDbName;
+    Button executeButton;
+    Button exportButton;
 
     public DefaultView(ProjectsService projectsService, ProjectAttachmentsService projectAttachmentsService, AgentJobsService agentJobsService, MSMService msmService, ProjectSqlService projectSqlService, ProjectConnectionService projectConnectionService) {
         this.projectsService = projectsService;
@@ -109,6 +110,10 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
         countdownLabel = new Label();
         lastRefreshLabel=new Label();
         countdownLabel.setVisible(false);
+
+        executeButton = new Button("Execute");
+        exportButton = new Button("Export");
+        //executeButton.setEnabled(false);
 
         ui= UI.getCurrent();
 
@@ -129,6 +134,8 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
 
         if (projectId != null) {
             projects = projectsService.findById(Long.parseLong(projectId));
+            executeButton.setEnabled(false);
+            exportButton.setEnabled(false);
         }
 
         //projects.ifPresent(value -> listOfProjectAttachments = projectsService.getProjectAttachments(value));
@@ -285,21 +292,26 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
 
         TextArea sqlQuerytextArea = new TextArea();
 
+        Grid<LinkedHashMap<String, Object>> resultGrid = new Grid<>();
+        resultGrid.removeAllColumns();
+
         select.addValueChangeListener(event -> {
             log.info("executing select.addValueChangeListener for database selection " + event.getValue());
             selectedProjectSql = projectSqlService.findByName(event.getValue());
             if(selectedProjectSql.isPresent()){
                 selectedDbName = selectedProjectSql.get().getProjectConnection().getName();
+                executeButton.setEnabled(true);
             }
             updatesqlDescription(selectedProjectSql);
             setValueForConnection(selectedProjectSql);
             sqlQuerytextArea.setValue(selectedProjectSql.isPresent()? selectedProjectSql.get().getSql():"");
+            resultGrid.removeAllColumns();
         });
 
         TabSheet tabSheet = new TabSheet();
         tabSheet.add("Description",getSqlDescription());
         tabSheet.add("Connection",getsqllConnection());
-        tabSheet.add("Query",getSqlQuery(sqlQuerytextArea));
+        tabSheet.add("Query",getSqlQuery(sqlQuerytextArea, resultGrid));
 
         sqlTabContent.add(select,tabSheet);
         sqlTabContent.setHeightFull();
@@ -311,7 +323,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
     }
 
     private void setValueForConnection(Optional<ProjectSql> selectedProjectSql) {
-        log.info("Executing setItemsForConnection() for connection of sql"+ selectedProjectSql);
+        log.info("Executing setValueForConnection() for connection of sql"+ selectedProjectSql);
         if(selectedProjectSql.isPresent()){
             selectConnection.setValue(selectedProjectSql.get().getProjectConnection().getName());
         }
@@ -379,7 +391,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
         return content;
     }
 
-    private Component getSqlQuery(TextArea sqlQuerytextArea) {
+    private Component getSqlQuery(TextArea sqlQuerytextArea, Grid<LinkedHashMap<String, Object>> resultGrid) {
         log.info("Starting getSqlQuery() for data get based on sql");
         VerticalLayout content = new VerticalLayout();
 
@@ -387,26 +399,22 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
         sqlTabContent.setSizeFull();
 
         VerticalLayout vl = new VerticalLayout();
-
         HorizontalLayout hl = new HorizontalLayout();
 
-        Button executeButton = new Button("Execute");
         executeButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_SUCCESS);
 
-        Button exportButton = new Button("Export");
         exportButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_SUCCESS);
-
+        exportButton.setEnabled(false);
 
         hl.add(executeButton, exportButton);
 
         sqlQuerytextArea.setWidthFull();
         sqlQuerytextArea.setHeight("300 px");
-        sqlQuerytextArea.setValue("SQL from Table [project_sqls] Column sql for selected id");
+        sqlQuerytextArea.setPlaceholder("SQL from Table [project_sqls] Column sql for selected id");
+        //sqlQuerytextArea.setValue("SQL from Table [project_sqls] Column sql for selected id");
 
         vl.add(sqlQuerytextArea,hl);
 
-        Grid<LinkedHashMap<String, Object>> resultGrid = new Grid<>();
-        resultGrid.removeAllColumns();
 
         SplitLayout splitLayout = new SplitLayout(vl, resultGrid);
         splitLayout.setOrientation(SplitLayout.Orientation.VERTICAL);
@@ -424,30 +432,35 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
             resultGrid.getStyle().set("overflow", "auto");
             selectedProjectSql.ifPresent(sql -> {
                 log.info("executing executeButton.addClickListener for data get based on sql");
-                String query = sql.getSql();
-                //selectedDbName = sql.getProjectConnection().getName();
-                rows = projectConnectionService.getDataFromDatabase(selectedDbName, query);
-                if(!rows.isEmpty()){
-                    resultGrid.setItems( rows); // rows is the result of retrieveRows
-                    // Add the columns based on the first row
-                    LinkedHashMap<String, Object> s = rows.get(0);
-                    for (Map.Entry<String, Object> entry : s.entrySet()) {
-                        resultGrid.addColumn(h -> truncateText((String) h.get(entry.getKey()))).setHeader(entry.getKey()).setAutoWidth(true).setResizable(true).setSortable(true);
+                //String query = sql.getSql();
+                String query = sqlQuerytextArea.getValue();
+                try {
+                    //selectedDbName = sql.getProjectConnection().getName();
+                    rows = projectConnectionService.getDataFromDatabase(selectedDbName, query);
+                    if(!rows.isEmpty()){
+                        resultGrid.setItems(rows); // rows is the result of retrieveRows
+                        // Add the columns based on the first row
+                        LinkedHashMap<String, Object> s = rows.get(0);
+                        for (Map.Entry<String, Object> entry : s.entrySet()) {
+                            resultGrid.addColumn(h -> truncateText((String) h.get(entry.getKey()))).setHeader(entry.getKey()).setAutoWidth(true).setResizable(true).setSortable(true);
+                        }
+
+                        resultGrid.addThemeVariants(GridVariant.LUMO_WRAP_CELL_CONTENT);
+                        resultGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+                        resultGrid.addThemeVariants(GridVariant.LUMO_COMPACT);
+
+                        exportButton.setEnabled(true);
+                        this.setPadding(false);
+                        this.setSpacing(false);
+                        this.setBoxSizing(BoxSizing.CONTENT_BOX);
+                    } else {
+                        Notification.show("No rows in selected database").addThemeVariants(NotificationVariant.LUMO_SUCCESS);
                     }
-
-                    resultGrid.addThemeVariants(GridVariant.LUMO_WRAP_CELL_CONTENT);
-                    resultGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
-                    resultGrid.addThemeVariants(GridVariant.LUMO_COMPACT);
-
-                    this.setPadding(false);
-                    this.setSpacing(false);
-                    this.setBoxSizing(BoxSizing.CONTENT_BOX);
+                } catch (Exception e) {
+                    // Handle the exception here
+                    log.error("Error while retrieving data from the database: " + e.getMessage(), e);
+                    Notification.show("An error occurred while retrieving data from the database.").addThemeVariants(NotificationVariant.LUMO_ERROR);
                 }
-                else {
-                    Text txt = new Text("Es konnten keine Daten  abgerufen werden!");
-                    add(txt);
-                }
-
             });
         });
 
