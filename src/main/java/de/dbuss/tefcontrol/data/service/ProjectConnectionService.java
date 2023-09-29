@@ -3,16 +3,21 @@ package de.dbuss.tefcontrol.data.service;
 import de.dbuss.tefcontrol.data.entity.CLTV_HW_Measures;
 import de.dbuss.tefcontrol.data.entity.ProjectConnection;
 import de.dbuss.tefcontrol.data.repository.ProjectConnectionRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Service;
 
 import javax.sql.DataSource;
-import java.util.List;
-import java.util.Optional;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.util.*;
 
+@Slf4j
 @Service
 public class ProjectConnectionService {
     private final ProjectConnectionRepository repository;
@@ -101,6 +106,38 @@ public class ProjectConnectionService {
             e.printStackTrace();
             return "Error during update: " + e.getMessage();
         }
+    }
+
+    public List<LinkedHashMap<String, Object>> getDataFromDatabase(String selectedDatabase, String query) {
+        log.info("Starting getDataFromDatabase() for SQL: {}", query);
+        List<LinkedHashMap<String, Object>> rows = new LinkedList<>();
+        DataSource dataSource = getDataSource(selectedDatabase);
+        jdbcTemplate = new JdbcTemplate(dataSource);
+
+        ResultSetExtractor<List<LinkedHashMap<String, Object>>> resultSetExtractor = resultSet -> {
+            ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
+            int columnCount = resultSetMetaData.getColumnCount();
+            List<String> columnNames = new ArrayList<>();
+
+            for (int index = 1; index <= columnCount; index++) {
+                columnNames.add(resultSetMetaData.getColumnName(index));
+            }
+
+            while (resultSet.next()) {
+                LinkedHashMap<String, Object> row = new LinkedHashMap<>();
+                for (String columnName : columnNames) {
+                    Object columnValue = resultSet.getObject(columnName) == null ? "" : String.valueOf(resultSet.getObject(columnName));
+                    row.put(columnName, columnValue);
+                }
+                rows.add(row);
+            }
+            return rows;
+        };
+
+        List<LinkedHashMap<String, Object>> result = jdbcTemplate.query(query, resultSetExtractor);
+
+        log.info("Ending getDataFromDatabase() for SQL "+ rows.size());
+        return result;
     }
 
 }

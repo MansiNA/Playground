@@ -34,4 +34,8 @@ public class Projects {
     // Define a one-to-many relationship between Project and ProjectAttachments
     @OneToMany(mappedBy = "project", fetch = FetchType.LAZY, orphanRemoval = true)
     private List<ProjectAttachments> listOfAttachments = new ArrayList<>();
+
+    // Define a one-to-many relationship between Projects and ProjectSql
+    @OneToMany(mappedBy = "project", fetch = FetchType.EAGER, orphanRemoval = true)
+    private List<ProjectSql> listOfSqls = new ArrayList<>();
 }
