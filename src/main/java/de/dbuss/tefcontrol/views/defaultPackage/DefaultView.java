@@ -572,7 +572,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
         // Create a file upload component
         MultiFileMemoryBuffer buffer = new MultiFileMemoryBuffer();
         Upload fileUpload = new Upload(buffer);
-        fileUpload.setAcceptedFileTypes(".doc", ".xlsx",".xls" , ".ppt", ".msg", ".pdf");
+        fileUpload.setAcceptedFileTypes(".doc", ".xlsx",".xls" , ".ppt", ".msg", ".pdf", ".pptx", ".ppt");
         fileUpload.setUploadButton(new Button("Search file"));
 
         Div dropLabel = new Div();

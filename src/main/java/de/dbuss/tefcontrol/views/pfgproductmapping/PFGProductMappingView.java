@@ -4,6 +4,7 @@ import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.*;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -17,13 +18,17 @@ import com.vaadin.flow.router.RouteAlias;
 import com.vaadin.flow.theme.lumo.LumoUtility.Margin;
 import com.wontlost.ckeditor.VaadinCKEditor;
 import de.dbuss.tefcontrol.data.entity.ProductHierarchie;
+import de.dbuss.tefcontrol.data.entity.ProjectConnection;
 import de.dbuss.tefcontrol.data.service.ProductHierarchieService;
+import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
 import de.dbuss.tefcontrol.views.MainLayout;
 import jakarta.annotation.security.RolesAllowed;
 
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.stream.Collectors;
 
 @PageTitle("PFG Product-Mapping")
 @Route(value = "PFG-Mapping", layout = MainLayout.class)
@@ -56,8 +61,8 @@ public class PFGProductMappingView extends VerticalLayout {
     private UI ui ;
     Instant startTime;
 
-
-    public PFGProductMappingView(ProductHierarchieService service) {
+    private String selectedDbName;
+    public PFGProductMappingView(ProductHierarchieService service, ProjectConnectionService projectConnectionService) {
         this.service = service;
 
         // System.out.println("UI-ID im Konstruktor: " + ui.toString());
@@ -82,7 +87,22 @@ public class PFGProductMappingView extends VerticalLayout {
         hl.setHeightFull();
         hl.setSizeFull();
 
-        add(hl);
+
+        ComboBox<String> databaseConnectionCB = new ComboBox<>();
+        databaseConnectionCB.setAllowCustomValue(true);
+
+        List<ProjectConnection> listOfProjectConnections = projectConnectionService.findAll();
+        databaseConnectionCB.setItems(listOfProjectConnections.stream()
+                .map(ProjectConnection::getName)
+                .collect(Collectors.toList())
+        );
+        databaseConnectionCB.setTooltipText("Select Database Connection");
+        databaseConnectionCB.setValue(listOfProjectConnections.get(0).getName());
+        selectedDbName = listOfProjectConnections.get(0).getName();
+
+
+
+        add(databaseConnectionCB, hl);
 
         updateList();
         closeEditor();

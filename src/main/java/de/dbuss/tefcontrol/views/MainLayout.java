@@ -6,12 +6,7 @@ import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
 import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.contextmenu.MenuItem;
-import com.vaadin.flow.component.html.Anchor;
-import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.Footer;
-import com.vaadin.flow.component.html.H1;
-import com.vaadin.flow.component.html.H2;
-import com.vaadin.flow.component.html.Header;
+import com.vaadin.flow.component.html.*;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.notification.Notification;
@@ -59,6 +54,8 @@ public class MainLayout extends AppLayout {
     // Map to associate URLs with view classes
     private Map<String, Class<? extends Component>> urlToViewMap = new HashMap<>();
 
+    Image image = new Image("images/dataport.png", "Dataport Image");
+
     public MainLayout(AuthenticatedUser authenticatedUser, AccessAnnotationChecker accessChecker, ProjectsService projectsService) {
         this.authenticatedUser = authenticatedUser;
         this.accessChecker = accessChecker;
@@ -69,10 +66,14 @@ public class MainLayout extends AppLayout {
         urlToViewMap.put("HWMapping", HWMappingView.class);
         urlToViewMap.put("kb", KnowledgeBaseView.class);
         urlToViewMap.put("Default-Mapping", DefaultView.class );
+        urlToViewMap.put("InputPBIComments", InputPBIComments.class );
 
         setPrimarySection(Section.DRAWER);
         addDrawerContent();
         addHeaderContent();
+
+
+
     }
 
     private void addHeaderContent() {
@@ -80,11 +81,16 @@ public class MainLayout extends AppLayout {
         DrawerToggle toggle = new DrawerToggle();
         toggle.setAriaLabel("Menu toggle");
 
-        viewTitle = new H2();
+        viewTitle = new H2("dddd");
         viewTitle.addClassNames(LumoUtility.FontSize.LARGE, LumoUtility.Margin.NONE);
+
+
+
 
         addToNavbar(true, toggle, viewTitle);
         log.info("Ending addHeaderContent() in mainlayout");
+
+
     }
 
     private void addDrawerContent() {
@@ -93,13 +99,14 @@ public class MainLayout extends AppLayout {
         appName.addClassNames(LumoUtility.FontSize.LARGE, LumoUtility.Margin.NONE);
         Header header = new Header(appName);
 
-        //Scroller scroller = new Scroller(createNavigation());
-
         Scroller scroller = new Scroller(createTree());
         //scroller.addClassNames("AboutView");
 
         addToDrawer(header, scroller,createFooter());
         log.info("Ending addDrawerContent() in mainlayout");
+
+
+
     }
 
     private Tree createTree() {
