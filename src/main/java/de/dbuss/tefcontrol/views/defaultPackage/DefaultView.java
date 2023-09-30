@@ -3,6 +3,7 @@ package de.dbuss.tefcontrol.views.defaultPackage;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.applayout.DrawerToggle;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
 
@@ -118,18 +119,20 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
 
         ui= UI.getCurrent();
 
-        VerticalLayout vl = new VerticalLayout();
+        HorizontalLayout vl = new HorizontalLayout();
         vl.add(getTabsheet());
 
         vl.setHeightFull();
         vl.setSizeFull();
 
-     //   Span info= new Span();
-     //   var xx = GlobalProperties.getCache().get("ProjektName");
-     //   info.setText(xx);
-     //   info.setTitle("Pfad");
 
-    //    add(info, vl);
+
+      //  Span info= new Span();
+      //  var xx = GlobalProperties.getCache().get("ProjektName");
+      //  info.setText(xx);
+      //  info.setTitle("Pfad");
+
+       // add(info, vl);
         add(vl);
     }
     @Override
@@ -162,6 +165,9 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
 
     private void updateDescription() {
         log.info("executing updateDescription() for project description");
+        GlobalProperties.putCache("ProjektName",projects.get().getName());
+        //GlobalProperties.cache
+
         editor.setValue(projects.map(Projects::getDescription).orElse(""));
     }
     private void updateAttachmentGrid(List<ProjectAttachmentsDTO> projectAttachmentsDTOS) {

@@ -153,7 +153,7 @@ public class MainLayout extends AppLayout {
 
     private void addDrawerContent() {
         log.info("Starting addDrawerContent() in mainlayout");
-        H2 appName = new H2("Auswahl:");
+        H2 appName = new H2("Choose Project");
         appName.addClassNames(LumoUtility.FontSize.LARGE, LumoUtility.Margin.NONE);
         Header header = new Header(appName);
 
