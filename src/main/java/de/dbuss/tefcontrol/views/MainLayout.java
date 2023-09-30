@@ -5,11 +5,14 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
 import com.vaadin.flow.component.avatar.Avatar;
+import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.html.*;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.sidenav.SideNav;
 import com.vaadin.flow.component.sidenav.SideNavItem;
@@ -19,6 +22,7 @@ import com.vaadin.flow.router.RouterLink;
 import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.server.auth.AccessAnnotationChecker;
 import com.vaadin.flow.theme.lumo.LumoUtility;
+import de.dbuss.tefcontrol.GlobalProperties;
 import de.dbuss.tefcontrol.data.entity.Projects;
 import de.dbuss.tefcontrol.data.entity.User;
 import de.dbuss.tefcontrol.data.service.ProjectsService;
@@ -34,6 +38,8 @@ import java.util.Map;
 import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.vaadin.lineawesome.LineAwesomeIcon;
 import org.vaadin.tatu.Tree;
 
@@ -45,7 +51,7 @@ import org.vaadin.tatu.Tree;
 public class MainLayout extends AppLayout {
 
     private H2 viewTitle;
-
+    Projects selectedProject=new Projects();
     private AuthenticatedUser authenticatedUser;
     private AccessAnnotationChecker accessChecker;
 
@@ -54,7 +60,7 @@ public class MainLayout extends AppLayout {
     // Map to associate URLs with view classes
     private Map<String, Class<? extends Component>> urlToViewMap = new HashMap<>();
 
-    Image image = new Image("images/dataport.png", "Dataport Image");
+    Image image = new Image("images/telefonica.svg", "Telefonica Image");
 
     public MainLayout(AuthenticatedUser authenticatedUser, AccessAnnotationChecker accessChecker, ProjectsService projectsService) {
         this.authenticatedUser = authenticatedUser;
@@ -71,23 +77,75 @@ public class MainLayout extends AppLayout {
         setPrimarySection(Section.DRAWER);
         addDrawerContent();
         addHeaderContent();
+     //   createHeader();
 
 
 
     }
 
+    private void createHeader() {
+        H1 logo = new H1("eKP Web-Admin");
+        logo.addClassNames("text-l","m-m");
+
+      /*  String principal = "Michael@dbuss.de";
+        String credentials ="gfdgfd";
+        Authentication user= new UsernamePasswordAuthenticationToken(principal, credentials);
+        SecurityContextHolder.getContext().setAuthentication(user);*/
+
+
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUserName = authentication.getName();
+
+
+        Image image = new Image("images/telefonica.svg", "Telefonica Image");
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        System.out.println("angemeldeter User: " + auth.getName());
+
+
+        HorizontalLayout header= new HorizontalLayout(new DrawerToggle(),logo);
+
+        Span sp= new Span("V1.02");
+
+        header.add(image,sp);
+
+
+        header.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.CENTER);
+        header.expand(logo);
+        header.setWidthFull();
+        header.addClassNames("py-0", "px-m");
+        addToNavbar(header);
+    }
+
+
     private void addHeaderContent() {
         log.info("Starting addHeaderContent() in mainlayout");
+
+        H1 logo = new H1("PIT (ProjectInformationTool)");
+        logo.addClassNames("text-l","m-m");
+
         DrawerToggle toggle = new DrawerToggle();
         toggle.setAriaLabel("Menu toggle");
 
         viewTitle = new H2("dddd");
-        viewTitle.addClassNames(LumoUtility.FontSize.LARGE, LumoUtility.Margin.NONE);
+        viewTitle.setText("Huhu");
+        //viewTitle.addClassNames(LumoUtility.FontSize.LARGE, LumoUtility.Margin.NONE);
+
+        Span sp= new Span("V1.01");
+
+        image.setHeight("60px");
+        image.setWidth("150px");
+
+        HorizontalLayout header= new HorizontalLayout(logo,viewTitle,image, sp);
+        header.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.CENTER);
+        header.expand(viewTitle);
+        header.setWidthFull();
+        header.addClassNames("py-0", "px-m");
 
 
-
-
-        addToNavbar(true, toggle, viewTitle);
+        addToNavbar(true, toggle, header);
         log.info("Ending addHeaderContent() in mainlayout");
 
 
@@ -95,7 +153,7 @@ public class MainLayout extends AppLayout {
 
     private void addDrawerContent() {
         log.info("Starting addDrawerContent() in mainlayout");
-        H1 appName = new H1("TEF Control");
+        H2 appName = new H2("Auswahl:");
         appName.addClassNames(LumoUtility.FontSize.LARGE, LumoUtility.Margin.NONE);
         Header header = new Header(appName);
 
@@ -117,7 +175,9 @@ public class MainLayout extends AppLayout {
         log.info("setItems createTree() in getRootProjects");
         //    tree.setItemIconProvider(item -> getIcon(item));
         //    tree.setItemIconSrcProvider(item -> getImageIconSrc(item));
-        tree.setItemTooltipProvider(Projects::getDescription);
+
+      //  tree.setItemTooltipProvider(Projects::getDescription);
+
         log.info("setItemTooltipProvider createTree() in getDescription");
         tree.addExpandListener(event ->
                 System.out.println(String.format("Expanded %s item(s)", event.getItems().size()))
@@ -128,8 +188,9 @@ public class MainLayout extends AppLayout {
 
         tree.asSingleSelect().addValueChangeListener(event -> {
             log.info("Executing tree.asSingleSelect().addValueChangeListener in mainlayout");
-            Projects selectedProject = event.getValue();
+            selectedProject = event.getValue();
             if (selectedProject != null) {
+
                 String pageUrl = selectedProject.getPage_URL();
                 Class<? extends Component> viewClass = urlToViewMap.get(pageUrl);
                 Class<? extends Component> defaultViewClass = DefaultView.class;
@@ -233,15 +294,23 @@ public class MainLayout extends AppLayout {
     @Override
     protected void afterNavigation() {
         log.info("Staring afterNavigation() in mainlayout");
-        super.afterNavigation();
         viewTitle.setText(getCurrentPageTitle());
+        super.afterNavigation();
+
+      //  viewTitle.setText(selectedProject.getName());
+
+
         log.info("Ending afterNavigation() in mainlayout");
     }
 
     private String getCurrentPageTitle() {
         log.info("Staring getCurrentPageTitle() in mainlayout");
-        PageTitle title = getContent().getClass().getAnnotation(PageTitle.class);
+     //   PageTitle title = getContent().getClass().getAnnotation(PageTitle.class);
+        String title ="choose Project";
+        title = selectedProject.getName();
+
         log.info("Ending getCurrentPageTitle() in mainlayout");
-        return title == null ? "" : title.value();
+        //return title == null ? "" : title.value();
+        return title == null ? "" : title;
     }
 }

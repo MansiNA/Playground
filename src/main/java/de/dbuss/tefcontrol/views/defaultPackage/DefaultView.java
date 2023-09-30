@@ -43,6 +43,7 @@ import com.wontlost.ckeditor.Config;
 import com.wontlost.ckeditor.Constants;
 import com.wontlost.ckeditor.VaadinCKEditor;
 import com.wontlost.ckeditor.VaadinCKEditorBuilder;
+import de.dbuss.tefcontrol.GlobalProperties;
 import de.dbuss.tefcontrol.data.dto.ProjectAttachmentsDTO;
 import de.dbuss.tefcontrol.data.entity.*;
 import de.dbuss.tefcontrol.data.service.*;
@@ -118,13 +119,17 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
         ui= UI.getCurrent();
 
         VerticalLayout vl = new VerticalLayout();
-        Article text = new Article();
-        text.add("Hier möglichst noch den jeweils ausgewählten Projekt-Namen mit Pfad ausgeben...(breadcrump like)");
-        vl.add(text,getTabsheet());
+        vl.add(getTabsheet());
 
         vl.setHeightFull();
         vl.setSizeFull();
 
+     //   Span info= new Span();
+     //   var xx = GlobalProperties.getCache().get("ProjektName");
+     //   info.setText(xx);
+     //   info.setTitle("Pfad");
+
+    //    add(info, vl);
         add(vl);
     }
     @Override
@@ -134,6 +139,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
 
         if (projectId != null) {
             projects = projectsService.findById(Long.parseLong(projectId));
+            GlobalProperties.putCache("ProjektName",projects.get().getName());
             executeButton.setEnabled(false);
             exportButton.setEnabled(false);
         }
@@ -145,6 +151,8 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
         updateAttachmentGrid(listOfProjectAttachments);
         updateAgentJobGrid();
         setSelectedSql();
+
+
     }
 
     private void updatesqlDescription(Optional<ProjectSql> selectedProjectSql) {
