@@ -18,6 +18,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.component.textfield.IntegerField;
+import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
@@ -134,11 +135,13 @@ public class InputPBIComments extends VerticalLayout {
         IntegerField zeile = new IntegerField  ("Zeile");
         IntegerField month = new IntegerField ("Month");
         TextField category = new TextField("Category");
-        TextField comment = new TextField("Comment");
+        TextArea comment = new TextArea("Comment");
         TextField scenario = new TextField("Scenario");
         TextField xtd = new TextField("XTD");
 
-        FormLayout editForm = new FormLayout(zeile, month, category, comment, scenario, xtd);
+        FormLayout editForm = new FormLayout(zeile, month, category, scenario, xtd, comment);
+
+        editForm.setColspan(comment, 2);
 
         Binder<Financials> binder = new Binder<>(Financials.class);
         //binder.forField(month).withNullRepresentation("202301"").withConverter(new StringToIntegerConverter("Not a Number")).asRequired().bind(Financials::setMonth, Financials::setMonth);
@@ -162,7 +165,8 @@ public class InputPBIComments extends VerticalLayout {
         TextField paymentType = new TextField("Payment Type");
         TextField segment = new TextField("Segment");
 
-        FormLayout editForm = new FormLayout(zeile, month, category, comment, paymentType, segment);
+        FormLayout editForm = new FormLayout(zeile, month, category, paymentType, segment, comment);
+        editForm.setColspan(comment, 2);
 
         Binder<Subscriber> binder = new Binder<>(Subscriber.class);
         binder.forField(month).asRequired().bind(Subscriber::getMonth, Subscriber::setMonth);
@@ -183,7 +187,8 @@ public class InputPBIComments extends VerticalLayout {
         TextField comment = new TextField("Comment");
         TextField segment = new TextField("Segment");
 
-        FormLayout editForm = new FormLayout(zeile, month, category, comment, segment);
+        FormLayout editForm = new FormLayout(zeile, month, category, segment, comment);
+        editForm.setColspan(comment, 2);
 
         Binder<UnitsDeepDive> binder = new Binder<>(UnitsDeepDive.class);
         binder.forField(month).asRequired().bind(UnitsDeepDive::getMonth, UnitsDeepDive::setMonth);

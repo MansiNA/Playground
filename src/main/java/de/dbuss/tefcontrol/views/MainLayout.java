@@ -73,6 +73,9 @@ public class MainLayout extends AppLayout {
         urlToViewMap.put("kb", KnowledgeBaseView.class);
         urlToViewMap.put("Default-Mapping", DefaultView.class );
         urlToViewMap.put("InputPBIComments", InputPBIComments.class );
+        urlToViewMap.put("Tech_KPI", Tech_KPIView.class );
+
+
 
         setPrimarySection(Section.DRAWER);
         addDrawerContent();
