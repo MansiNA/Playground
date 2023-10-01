@@ -142,7 +142,6 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
 
         if (projectId != null) {
             projects = projectsService.findById(Long.parseLong(projectId));
-            GlobalProperties.putCache("ProjektName",projects.get().getName());
             executeButton.setEnabled(false);
             exportButton.setEnabled(false);
         }
@@ -165,7 +164,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
 
     private void updateDescription() {
         log.info("executing updateDescription() for project description");
-        GlobalProperties.putCache("ProjektName",projects.get().getName());
+      //  GlobalProperties.putCache("ProjektName",projects.get().getName());
         //GlobalProperties.cache
 
         editor.setValue(projects.map(Projects::getDescription).orElse(""));

@@ -50,7 +50,7 @@ import org.vaadin.tatu.Tree;
 @Slf4j
 public class MainLayout extends AppLayout {
 
-    private H2 viewTitle;
+    private H3 viewTitle;
     Projects selectedProject=new Projects();
     private AuthenticatedUser authenticatedUser;
     private AccessAnnotationChecker accessChecker;
@@ -123,22 +123,19 @@ public class MainLayout extends AppLayout {
     private void addHeaderContent() {
         log.info("Starting addHeaderContent() in mainlayout");
 
-        H1 logo = new H1("PIT (ProjectInformationTool)");
-        logo.addClassNames("text-l","m-m");
-
         DrawerToggle toggle = new DrawerToggle();
         toggle.setAriaLabel("Menu toggle");
 
-        viewTitle = new H2("dddd");
-        viewTitle.setText("Huhu");
+        viewTitle = new H3();
+        viewTitle.setText("No Project selected");
         //viewTitle.addClassNames(LumoUtility.FontSize.LARGE, LumoUtility.Margin.NONE);
 
-        Span sp= new Span("V1.01");
+        Span version= new Span("V1.01");
 
         image.setHeight("60px");
         image.setWidth("150px");
 
-        HorizontalLayout header= new HorizontalLayout(logo,viewTitle,image, sp);
+        HorizontalLayout header= new HorizontalLayout(viewTitle,image, version);
         header.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.CENTER);
         header.expand(viewTitle);
         header.setWidthFull();
@@ -153,7 +150,8 @@ public class MainLayout extends AppLayout {
 
     private void addDrawerContent() {
         log.info("Starting addDrawerContent() in mainlayout");
-        H2 appName = new H2("Choose Project");
+        H2 appName = new H2("PIT");
+        appName.addClassNames("text-l","m-m");
         appName.addClassNames(LumoUtility.FontSize.LARGE, LumoUtility.Margin.NONE);
         Header header = new Header(appName);
 
@@ -188,8 +186,11 @@ public class MainLayout extends AppLayout {
 
         tree.asSingleSelect().addValueChangeListener(event -> {
             log.info("Executing tree.asSingleSelect().addValueChangeListener in mainlayout");
+
             selectedProject = event.getValue();
             if (selectedProject != null) {
+
+                viewTitle.setText(getProjectPath(selectedProject));
 
                 String pageUrl = selectedProject.getPage_URL();
                 Class<? extends Component> viewClass = urlToViewMap.get(pageUrl);
@@ -204,10 +205,32 @@ public class MainLayout extends AppLayout {
             }
         });
         tree.setAllRowsVisible(true);
-        tree.setWidth("350px");
+    //    tree.setWidth("150px");
+
+
+        //tree.addClassNames("text-l","m-m");
+        tree.addClassNames(LumoUtility.FontSize.XXSMALL, LumoUtility.Margin.NONE);
+
+
         log.info("Ending createTree() in mainlayout");
         return tree;
     }
+
+    private String getProjectPath(Projects selectedProject) {
+
+        if(selectedProject.getParent_id() != null )
+        {
+            String parent = projectsService.findById(selectedProject.getParent_id()).get().getName();
+            return "Project: " + parent + "/" +  selectedProject.getName();
+        }
+        else {
+
+            return "Project: " + selectedProject.getName();
+        }
+
+
+    }
+
     private void navigateToView(String url) {
         log.info("Starting navigateToView() in mainlayout");
         if (url != null) {
@@ -294,7 +317,7 @@ public class MainLayout extends AppLayout {
     @Override
     protected void afterNavigation() {
         log.info("Staring afterNavigation() in mainlayout");
-        viewTitle.setText(getCurrentPageTitle());
+      //  viewTitle.setText(getCurrentPageTitle());
         super.afterNavigation();
 
       //  viewTitle.setText(selectedProject.getName());
