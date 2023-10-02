@@ -9,6 +9,7 @@ import com.vaadin.flow.component.crud.BinderCrudEditor;
 import com.vaadin.flow.component.crud.Crud;
 import com.vaadin.flow.component.crud.CrudEditor;
 import com.vaadin.flow.component.crud.CrudFilter;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Article;
@@ -111,6 +112,50 @@ public class InputPBIComments extends VerticalLayout {
         crudFinancials = new Crud<>(Financials.class, createFinancialsEditor());
         setupFinancialsGrid();
         content.add(crudFinancials);
+
+        VerticalLayout vlDialog = new VerticalLayout();
+        Dialog commentEditDialog = new Dialog();
+        TextArea commentTextArea = new TextArea("Comment");
+        commentTextArea.setSizeFull();
+
+        HorizontalLayout hlDialog = new HorizontalLayout();
+        Button saveButton = new Button("Save");
+        Button cancelButton = new Button("Cancel");
+        hlDialog.add(cancelButton, saveButton);
+
+        vlDialog.setSizeFull();
+        vlDialog.add(commentTextArea, hlDialog);
+        commentEditDialog.add(vlDialog);
+        commentEditDialog.setWidth("600");
+        commentEditDialog.setHeight("300");
+
+        gridFinancials.addItemDoubleClickListener(event -> {
+            Financials selectedFinancials = event.getItem();
+
+            if (selectedFinancials != null) {
+                System.out.println(selectedFinancials.row+"......doble click");
+                GenericDataProvider  financialsdataProvider = new GenericDataProvider(getFinancialsDataProviderAllItems());
+                String initialComment = selectedFinancials.getComment() != null ? selectedFinancials.getComment() : "";
+                commentTextArea.setValue(initialComment);
+                commentTextArea.setSizeFull();
+                commentTextArea.setEnabled(true);
+
+                saveButton.addClickListener(e -> {
+                    String editedComment = commentTextArea.getValue();
+                    System.out.println(selectedFinancials.row+"......save");
+                    selectedFinancials.setComment(editedComment);
+                   // financialsdataProvider.refreshItem(selectedFinancials);
+                    gridFinancials.setDataProvider(financialsdataProvider);
+                    commentEditDialog.close();
+                });
+
+                commentEditDialog.open();
+
+                cancelButton.addClickListener(e -> {
+                    commentEditDialog.close();
+                });
+            }
+        });
         return content;
     }
 
@@ -282,9 +327,9 @@ public class InputPBIComments extends VerticalLayout {
         // Reorder the columns (alphabetical by default)
         gridFinancials.setColumnOrder( gridFinancials.getColumnByKey(ZEILE)
                 , gridFinancials.getColumnByKey(MONTH)
+                , gridFinancials.getColumnByKey(CATEGORY)
                 , gridFinancials.getColumnByKey(COMMENT)
                 , gridFinancials.getColumnByKey(SCENARIO)
-                , gridFinancials.getColumnByKey(CATEGORY)
                 , gridFinancials.getColumnByKey(XTD)
                 , gridFinancials.getColumnByKey(EDIT_COLUMN));
 
@@ -317,10 +362,10 @@ public class InputPBIComments extends VerticalLayout {
         // Reorder the columns (alphabetical by default)
         gridSubscriber.setColumnOrder( gridSubscriber.getColumnByKey(ZEILE)
                 , gridSubscriber.getColumnByKey(MONTH)
-                , gridSubscriber.getColumnByKey(COMMENT)
                 , gridSubscriber.getColumnByKey(CATEGORY)
                 , gridSubscriber.getColumnByKey(PAYMENTTYPE)
                 , gridSubscriber.getColumnByKey(SEGMENT)
+                , gridSubscriber.getColumnByKey(COMMENT)
                 , gridSubscriber.getColumnByKey(EDIT_COLUMN));
 
         gridSubscriber.addItemDoubleClickListener(e->{
@@ -349,9 +394,9 @@ public class InputPBIComments extends VerticalLayout {
         // Reorder the columns (alphabetical by default)
         gridUnitsDeepDive.setColumnOrder( gridUnitsDeepDive.getColumnByKey(ZEILE)
                 , gridUnitsDeepDive.getColumnByKey(MONTH)
-                , gridUnitsDeepDive.getColumnByKey(COMMENT)
-                , gridUnitsDeepDive.getColumnByKey(CATEGORY)
                 , gridUnitsDeepDive.getColumnByKey(SEGMENT)
+                , gridUnitsDeepDive.getColumnByKey(CATEGORY)
+                , gridUnitsDeepDive.getColumnByKey(COMMENT)
                 , gridUnitsDeepDive.getColumnByKey(EDIT_COLUMN));
 
         gridSubscriber.addItemDoubleClickListener(e->{
@@ -487,11 +532,11 @@ public class InputPBIComments extends VerticalLayout {
 
         private String category;
 
-        private String comment;
-
         private String paymentType;
 
         private String segment;
+
+        private String comment;
 
         public Integer getRow() {
             return row;
@@ -551,11 +596,11 @@ public class InputPBIComments extends VerticalLayout {
 
         private Integer month;
 
+        private String segment;
+
         private String category;
 
         private String comment;
-
-        private String segment;
 
         public Integer getRow() {
             return row;
