@@ -45,9 +45,11 @@ import com.wontlost.ckeditor.Constants;
 import com.wontlost.ckeditor.VaadinCKEditor;
 import com.wontlost.ckeditor.VaadinCKEditorBuilder;
 import de.dbuss.tefcontrol.GlobalProperties;
+import de.dbuss.tefcontrol.data.Role;
 import de.dbuss.tefcontrol.data.dto.ProjectAttachmentsDTO;
 import de.dbuss.tefcontrol.data.entity.*;
 import de.dbuss.tefcontrol.data.service.*;
+import de.dbuss.tefcontrol.security.AuthenticatedUser;
 import de.dbuss.tefcontrol.views.MainLayout;
 import jakarta.annotation.security.RolesAllowed;
 import lombok.extern.slf4j.Slf4j;
@@ -83,6 +85,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
     private final MSMService msmService;
     private final ProjectSqlService projectSqlService;
     private final ProjectConnectionService projectConnectionService;
+    private AuthenticatedUser authenticatedUser;
     private VaadinCKEditor editor;
     private Optional<Projects> projects;
     Optional<ProjectSql> selectedProjectSql;
@@ -101,13 +104,14 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
     Button executeButton;
     Button exportButton;
 
-    public DefaultView(ProjectsService projectsService, ProjectAttachmentsService projectAttachmentsService, AgentJobsService agentJobsService, MSMService msmService, ProjectSqlService projectSqlService, ProjectConnectionService projectConnectionService) {
+    public DefaultView(ProjectsService projectsService, ProjectAttachmentsService projectAttachmentsService, AgentJobsService agentJobsService, MSMService msmService, ProjectSqlService projectSqlService, ProjectConnectionService projectConnectionService, AuthenticatedUser authenticatedUser) {
         this.projectsService = projectsService;
         this.projectAttachmentsService = projectAttachmentsService;
         this.agentJobsService = agentJobsService;
         this.msmService = msmService;
         this.projectSqlService = projectSqlService;
         this.projectConnectionService = projectConnectionService;
+        this.authenticatedUser = authenticatedUser;
 
         countdownLabel = new Label();
         lastRefreshLabel=new Label();
@@ -744,7 +748,14 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
         Button editBtn = new Button("edit");
         saveBtn.setVisible(false);
         editBtn.setVisible(true);
-        editBtn.setVisible(true);
+        Optional<User> maybeUser = authenticatedUser.get();
+        if (maybeUser.isPresent()) {
+            User user = maybeUser.get();
+            Set<Role> roles = user.getRoles();
+            boolean isAdmin = roles.stream()
+                    .anyMatch(role -> role == Role.ADMIN);
+            editBtn.setVisible(isAdmin);
+        }
         VerticalLayout content = new VerticalLayout();
 
         Config config = new Config();
