@@ -751,6 +751,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
         Optional<User> maybeUser = authenticatedUser.get();
         if (maybeUser.isPresent()) {
             User user = maybeUser.get();
+            System.out.println("User: " + user.getName());
             Set<Role> roles = user.getRoles();
             boolean isAdmin = roles.stream()
                     .anyMatch(role -> role == Role.ADMIN);

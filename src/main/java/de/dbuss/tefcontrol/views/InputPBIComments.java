@@ -1,34 +1,35 @@
 package de.dbuss.tefcontrol.views;
 
 import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.Text;
-import com.vaadin.flow.component.UI;
-import com.vaadin.flow.component.accordion.AccordionPanel;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.crud.BinderCrudEditor;
 import com.vaadin.flow.component.crud.Crud;
 import com.vaadin.flow.component.crud.CrudEditor;
 import com.vaadin.flow.component.crud.CrudFilter;
-import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.HeaderRow;
+import com.vaadin.flow.component.grid.contextmenu.GridContextMenu;
+import com.vaadin.flow.component.grid.contextmenu.GridMenuItem;
+import com.vaadin.flow.component.grid.dataview.GridListDataView;
 import com.vaadin.flow.component.html.Article;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.html.NativeLabel;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.component.textfield.TextFieldVariant;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.data.binder.Binder;
-import com.vaadin.flow.data.converter.StringToIntegerConverter;
 import com.vaadin.flow.data.provider.*;
+import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.router.RouteAlias;
+import de.dbuss.tefcontrol.data.dto.ProjectAttachmentsDTO;
 import jakarta.annotation.security.RolesAllowed;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -45,8 +46,6 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static java.util.Comparator.naturalOrder;
-
 
 @PageTitle("PowerBI Comments")
 @Route(value = "InputPBIComments", layout = MainLayout.class)
@@ -57,6 +56,7 @@ public class InputPBIComments extends VerticalLayout {
     Upload singleFileUpload = new Upload(memoryBuffer);
     Button importButton = new Button("Freigabe");
 
+    GenericDataProvider dataFinancialsProvider;
     Article article = new Article();
     Div textArea = new Div();
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
@@ -68,8 +68,8 @@ public class InputPBIComments extends VerticalLayout {
     private List<Subscriber> listOfSubscriber = new ArrayList<Subscriber>();
     private List<UnitsDeepDive> listOfUnitsDeepDive = new ArrayList<UnitsDeepDive>();
 
-    private Crud<Financials> crudFinancials;
-    private Grid<Financials> gridFinancials = new Grid<>(Financials.class);
+  //  private Crud<Financials> crudFinancials;
+    private Grid<Financials> gridFinancials = new Grid<>(Financials.class, false);
     private Crud<Subscriber> crudSubscriber;
     private Grid<Subscriber> gridSubscriber = new Grid<>(Subscriber.class);
     private Crud<UnitsDeepDive> crudUnitsDeepDive;
@@ -86,6 +86,10 @@ public class InputPBIComments extends VerticalLayout {
         HorizontalLayout hl = new HorizontalLayout();
         hl.setAlignItems(Alignment.CENTER);
 
+        List<Financials> financialsList = new ArrayList<>() ;
+
+        gridFinancials.setItems(financialsList);
+
         hl.add(singleFileUpload,importButton);
         add(hl);
         add(textArea);
@@ -98,6 +102,7 @@ public class InputPBIComments extends VerticalLayout {
     private TabSheet getTabsheet() {
         TabSheet tabSheet = new TabSheet();
 
+        //tabSheet.add("Financials", getFinancialsCRUDGrid());
         tabSheet.add("Financials", getFinancialsGrid());
         tabSheet.add("Subscriber", getSubscriberGrid());
         tabSheet.add("UnitsDeepDive", getUnitsDeepDiveGrid());
@@ -108,15 +113,119 @@ public class InputPBIComments extends VerticalLayout {
     }
 
     private Component getFinancialsGrid() {
-        VerticalLayout content = new VerticalLayout();
-        crudFinancials = new Crud<>(Financials.class, createFinancialsEditor());
-        setupFinancialsGrid();
-        content.add(crudFinancials);
 
-        VerticalLayout vlDialog = new VerticalLayout();
+        VerticalLayout content = new VerticalLayout();
+
+
+        GridListDataView<Financials> dataView = gridFinancials.getListDataView();
+
+        FinancialsFilter financialsFilterFilter = new FinancialsFilter(dataView);
+
+        gridFinancials.getHeaderRows().clear();
+        GridContextMenu<Financials> contextMenu = gridFinancials.addContextMenu();
+
+        Grid.Column<Financials> rowColumn = gridFinancials.addColumn(Financials::getRow).setWidth("60px").setFlexGrow(0);
+        Grid.Column<Financials> monthColumn = gridFinancials.addColumn(Financials::getMonth);
+        Grid.Column<Financials> categoryColumn = gridFinancials.addColumn(Financials::getCategory);
+        Grid.Column<Financials> commentColumn = gridFinancials.addColumn(Financials::getComment);
+        Grid.Column<Financials> scenarioColumn = gridFinancials.addColumn(Financials::getScenario);
+        Grid.Column<Financials> xtdColumn = gridFinancials.addColumn(Financials::getXtd);
+
+        HeaderRow headerRow = gridFinancials.appendHeaderRow();
+
+
+        headerRow.getCell(rowColumn).setComponent(createFilterHeader("Zeile", financialsFilterFilter::setRow));
+        headerRow.getCell(monthColumn).setComponent(createFilterHeader("Month", financialsFilterFilter::setMonth));
+        headerRow.getCell(commentColumn).setComponent(createFilterHeader("Comment", financialsFilterFilter::setComment));
+        headerRow.getCell(categoryColumn).setComponent(createFilterHeader("Category", financialsFilterFilter::setCategory));
+        headerRow.getCell(scenarioColumn).setComponent(createFilterHeader("Scenario", financialsFilterFilter::setScenario));
+        headerRow.getCell(xtdColumn).setComponent(createFilterHeader("XTD", financialsFilterFilter::setXtd));
+
+
+        // Create a CRUD editor for editing the file data
+        Crud<Financials> crud = new Crud<>(Financials.class, createEditor());
+
+        // Add an "Edit" menu item
+        GridMenuItem<Financials> editItem = contextMenu.addItem("Edit", event -> {
+            Optional<Financials> selectedAttachmentOptional = event.getItem();
+            if (selectedAttachmentOptional.isPresent()) {
+                Financials selectedAttachment = selectedAttachmentOptional.get();
+                crud.edit(selectedAttachment, Crud.EditMode.EXISTING_ITEM);
+
+                crud.getDeleteButton().getElement().getStyle().set("display", "none");
+                crud.setToolbarVisible(false);
+                crud.getGrid().getElement().getStyle().set("display", "none");
+                crud.getNewButton().getElement().getStyle().set("display", "none");
+
+                add(crud);
+            }
+        });
+
+        crud.addSaveListener(event -> {
+         //   log.info("executing crud.addSaveListener for save editedAttachment in Attachment grid");
+            Financials editedFinancials = event.getItem();
+
+            gridFinancials.getDataProvider().refreshItem(editedFinancials);
+        });
+
+
+        content.add(gridFinancials);
+
+        return content;
+
+    }
+
+    private CrudEditor<Financials> createEditor() {
+    //    log.info("Starting createEditor() for ProjectAttachments Attachment tab");
+        TextArea description = new TextArea("Edit Description");
+        description.setSizeFull();
+        FormLayout editFormLayout = new FormLayout(description);
+        Binder<Financials> editBinder = new Binder<>(Financials.class);
+        //editBinder.bindInstanceFields(editFormLayout);
+        editBinder.forField(description).asRequired().bind(Financials::getComment,
+                Financials::setComment);
+
+        return new BinderCrudEditor<>(editBinder, editFormLayout);
+    }
+
+
+    private static Component createFilterHeader(String labelText,
+                                                Consumer<String> filterChangeConsumer) {
+        NativeLabel label = new NativeLabel(labelText);
+        label.getStyle().set("padding-top", "var(--lumo-space-m)")
+                .set("font-size", "var(--lumo-font-size-xs)");
+        TextField textField = new TextField();
+        textField.setValueChangeMode(ValueChangeMode.EAGER);
+        textField.setClearButtonVisible(true);
+        textField.addThemeVariants(TextFieldVariant.LUMO_SMALL);
+        textField.setWidthFull();
+        textField.getStyle().set("max-width", "100%");
+        textField.addValueChangeListener(
+                e -> filterChangeConsumer.accept(e.getValue()));
+        VerticalLayout layout = new VerticalLayout(label, textField);
+        layout.getThemeList().clear();
+        layout.getThemeList().add("spacing-xs");
+
+        return layout;
+    }
+
+
+    private Component getFinancialsCRUDGrid() {
+
+
+        VerticalLayout content = new VerticalLayout();
+        //crudFinancials = new Crud<>(Financials.class, createFinancialsEditor());
+   //     crudFinancials = new Crud<>(Financials.class, createFinancialsCommentEditor());
+
+        setupFinancialsGrid();
+//        gridFinancials.addItemDoubleClickListener(event -> crudFinancials.edit(event.getItem(), Crud.EditMode.EXISTING_ITEM));
+
+//        content.add(crudFinancials);
+
+       /* VerticalLayout vlDialog = new VerticalLayout();
         Dialog commentEditDialog = new Dialog();
         TextArea commentTextArea = new TextArea("Comment");
-        commentTextArea.setSizeFull();
+   //     commentTextArea.setSizeFull();
 
         HorizontalLayout hlDialog = new HorizontalLayout();
         Button saveButton = new Button("Save");
@@ -126,8 +235,10 @@ public class InputPBIComments extends VerticalLayout {
         vlDialog.setSizeFull();
         vlDialog.add(commentTextArea, hlDialog);
         commentEditDialog.add(vlDialog);
-        commentEditDialog.setWidth("600");
-        commentEditDialog.setHeight("300");
+    //    commentTextArea.setWidth("800px");
+    //    commentTextArea.setHeight("500px");
+
+
 
         gridFinancials.addItemDoubleClickListener(event -> {
             Financials selectedFinancials = event.getItem();
@@ -138,13 +249,16 @@ public class InputPBIComments extends VerticalLayout {
                 String initialComment = selectedFinancials.getComment() != null ? selectedFinancials.getComment() : "";
                 commentTextArea.setValue(initialComment);
                 commentTextArea.setSizeFull();
+                commentTextArea.setHeight("200px");
+                commentTextArea.setWidth("600px");
                 commentTextArea.setEnabled(true);
 
                 saveButton.addClickListener(e -> {
                     String editedComment = commentTextArea.getValue();
                     System.out.println(selectedFinancials.row+"......save");
                     selectedFinancials.setComment(editedComment);
-                   // financialsdataProvider.refreshItem(selectedFinancials);
+                    financialsdataProvider.refreshItem(selectedFinancials);
+
                     gridFinancials.setDataProvider(financialsdataProvider);
                     commentEditDialog.close();
                 });
@@ -154,8 +268,9 @@ public class InputPBIComments extends VerticalLayout {
                 cancelButton.addClickListener(e -> {
                     commentEditDialog.close();
                 });
+
             }
-        });
+        });*/
         return content;
     }
 
@@ -200,6 +315,29 @@ public class InputPBIComments extends VerticalLayout {
 
         return new BinderCrudEditor<>(binder, editForm);
     }
+
+    private CrudEditor<Financials> createFinancialsCommentEditor() {
+
+        TextArea comment = new TextArea("Comment");
+
+        comment.setHeight("300px");
+        comment.setWidth("600px");
+        FormLayout editForm = new FormLayout(comment);
+        editForm.setColspan(comment, 2);
+
+
+        editForm.setHeight("300px");
+        editForm.setWidth("800px");
+
+        Binder<Financials> binder = new Binder<>(Financials.class);
+        //binder.forField(month).withNullRepresentation("202301"").withConverter(new StringToIntegerConverter("Not a Number")).asRequired().bind(Financials::setMonth, Financials::setMonth);
+        //  binder.forField(monat_ID).asRequired().bind(CLTV_HW_Measures::getMonat_ID, CLTV_HW_Measures::setMonat_ID);
+        binder.forField(comment).asRequired().bind(Financials::getComment, Financials::setComment);
+
+
+        return new BinderCrudEditor<>(binder, editForm);
+    }
+
 
     private CrudEditor<Subscriber> createSubscriberEditor() {
 
@@ -256,8 +394,11 @@ public class InputPBIComments extends VerticalLayout {
             mimeType = event.getMIMEType();
 
             parseExcelFile(fileData,fileName);
-            GenericDataProvider dataFinancialsProvider = new GenericDataProvider(listOfFinancials);
-            crudFinancials.setDataProvider(dataFinancialsProvider);
+            dataFinancialsProvider = new GenericDataProvider(listOfFinancials);
+            //crudFinancials.setDataProvider(dataFinancialsProvider);
+
+            gridFinancials.setDataProvider(dataFinancialsProvider);
+
             GenericDataProvider dataSubscriberProvider = new GenericDataProvider(listOfSubscriber);
             crudSubscriber.setDataProvider(dataSubscriberProvider);
             GenericDataProvider dataUnitsDeepDiveProvider = new GenericDataProvider(listOfUnitsDeepDive);
@@ -265,7 +406,7 @@ public class InputPBIComments extends VerticalLayout {
             setupDataProviderEvent();
 
             singleFileUpload.clearFileList();
-            crudFinancials.setHeight("600px");
+
         });
         System.out.println("setup uploader................over");
     }
@@ -320,9 +461,12 @@ public class InputPBIComments extends VerticalLayout {
 
         String EDIT_COLUMN = "vaadin-crud-edit-column";
 
-        gridFinancials = crudFinancials.getGrid();
+    //    gridFinancials = crudFinancials.getGrid();
 
         gridFinancials.getColumnByKey("row").setHeader("Zeile").setWidth("10px");
+
+        gridFinancials.removeColumn(gridFinancials.getColumnByKey(EDIT_COLUMN));
+
 
         // Reorder the columns (alphabetical by default)
         gridFinancials.setColumnOrder( gridFinancials.getColumnByKey(ZEILE)
@@ -330,12 +474,14 @@ public class InputPBIComments extends VerticalLayout {
                 , gridFinancials.getColumnByKey(CATEGORY)
                 , gridFinancials.getColumnByKey(COMMENT)
                 , gridFinancials.getColumnByKey(SCENARIO)
-                , gridFinancials.getColumnByKey(XTD)
-                , gridFinancials.getColumnByKey(EDIT_COLUMN));
+                , gridFinancials.getColumnByKey(XTD));
+            //    , gridFinancials.getColumnByKey(EDIT_COLUMN));
 
-        gridFinancials.addItemDoubleClickListener(e->{
-            System.out.println("Zeile: " + e.getItem().getRow());
-        });
+
+
+        //gridFinancials.addItemDoubleClickListener(e->{ System.out.println("Zeile: " + e.getItem().getRow()); });
+
+
 
     }
 
@@ -468,16 +614,16 @@ public class InputPBIComments extends VerticalLayout {
         article.setText(LocalDateTime.now().format(formatter) + ": Info: Download from Database");
         textArea.add(article);
 
-        crudFinancials.addDeleteListener(
-                deleteEvent -> {financialsdataProvider.delete(deleteEvent.getItem());
-                    crudFinancials.setDataProvider(financialsdataProvider);
+    //    crudFinancials.addDeleteListener(
+    //            deleteEvent -> {financialsdataProvider.delete(deleteEvent.getItem());
+    //                crudFinancials.setDataProvider(financialsdataProvider);
 
-                });
-        crudFinancials.addSaveListener(
-                saveEvent -> {
-                    financialsdataProvider.persist(saveEvent.getItem());
-                    crudFinancials.setDataProvider(financialsdataProvider);
-                });
+    //            });
+    //    crudFinancials.addSaveListener(
+    //            saveEvent -> {
+    //                financialsdataProvider.persist(saveEvent.getItem());
+    //                crudFinancials.setDataProvider(financialsdataProvider);
+    //            });
 
         crudSubscriber.addDeleteListener(
                 deleteEvent -> {subscriberdataProvider.delete(deleteEvent.getItem());
@@ -855,4 +1001,73 @@ public class InputPBIComments extends VerticalLayout {
             }
         }
     }
+
+    private static class FinancialsFilter {
+        private final GridListDataView<Financials> dataView;
+
+        private String category;
+        private String month;
+        private String comment;
+        private String scenario;
+        private String xtd;
+        private String row;
+
+
+
+        private FinancialsFilter(GridListDataView<Financials> dataView) {
+            this.dataView = dataView;
+            this.dataView.addFilter(this::test);
+        }
+
+        public boolean test(Financials financials) {
+            boolean matchesCategory = matches(financials.getCategory(), category);
+            boolean matchesComment = matches(financials.getComment(), comment);
+            boolean matchesScenario = matches(financials.getComment(), scenario);
+            boolean matchesXTD = matches(financials.getComment(), xtd);
+
+           // return matchesFullName && matchesEmail && matchesProfession;
+            return matchesCategory && matchesComment  && matchesScenario && matchesXTD;
+        }
+
+        private boolean matches(String value, String searchTerm) {
+            return searchTerm == null || searchTerm.isEmpty()
+                    || value.toLowerCase().contains(searchTerm.toLowerCase());
+        }
+
+
+        public void setCategory(String category) {
+            this.category = category;
+            this.dataView.refreshAll();
+        }
+        public void setRow(String row) {
+            this.row = row;
+            this.dataView.refreshAll();
+        }
+
+        public void setMonth(String month) {
+            this.month = month;
+            this.dataView.refreshAll();
+        }
+
+        public void setComment(String comment) {
+            this.comment = comment;
+            this.dataView.refreshAll();
+        }
+
+        public void setScenario(String scenario) {
+            this.scenario = scenario;
+            this.dataView.refreshAll();
+        }
+
+        public void setXtd(String xtd) {
+            this.xtd = xtd;
+            this.dataView.refreshAll();
+        }
+
+
+    }
+
+
+
+
 }
