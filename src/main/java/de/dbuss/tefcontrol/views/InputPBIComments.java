@@ -8,6 +8,7 @@ import com.vaadin.flow.component.crud.CrudEditor;
 import com.vaadin.flow.component.crud.CrudFilter;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.grid.contextmenu.GridContextMenu;
 import com.vaadin.flow.component.grid.contextmenu.GridMenuItem;
@@ -15,6 +16,7 @@ import com.vaadin.flow.component.grid.dataview.GridListDataView;
 import com.vaadin.flow.component.html.Article;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.NativeLabel;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.TabSheet;
@@ -29,7 +31,10 @@ import com.vaadin.flow.data.provider.*;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import de.dbuss.tefcontrol.data.Role;
 import de.dbuss.tefcontrol.data.dto.ProjectAttachmentsDTO;
+import de.dbuss.tefcontrol.data.entity.User;
+import de.dbuss.tefcontrol.security.AuthenticatedUser;
 import jakarta.annotation.security.RolesAllowed;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -56,6 +61,8 @@ public class InputPBIComments extends VerticalLayout {
     Upload singleFileUpload = new Upload(memoryBuffer);
     Button importButton = new Button("Freigabe");
 
+    private AuthenticatedUser authenticatedUser;
+
     GenericDataProvider dataFinancialsProvider;
     Article article = new Article();
     Div textArea = new Div();
@@ -75,7 +82,9 @@ public class InputPBIComments extends VerticalLayout {
     private Crud<UnitsDeepDive> crudUnitsDeepDive;
     private Grid<UnitsDeepDive> gridUnitsDeepDive = new Grid<>(UnitsDeepDive.class);
 
-    public InputPBIComments() {
+    public InputPBIComments(AuthenticatedUser authenticatedUser) {
+
+        this.authenticatedUser=authenticatedUser;
 
         Div htmlDiv = new Div();
         htmlDiv.getElement().setProperty("innerHTML", "<h2>Input Frontend for PBI Comments");
@@ -100,12 +109,32 @@ public class InputPBIComments extends VerticalLayout {
     }
 
     private TabSheet getTabsheet() {
+        boolean isAdmin=false;
+
+        Optional<User> maybeUser = authenticatedUser.get();
+        if (maybeUser.isPresent()) {
+            User user = maybeUser.get();
+            System.out.println("User: " + user.getName());
+            Set<Role> roles = user.getRoles();
+            isAdmin = roles.stream()
+                    .anyMatch(role -> role == Role.ADMIN);
+        }
+
+        Component getFinancials=getFinancialsGrid();
+        Component getSubscriber=getSubscriberGrid();
+        Component getUnitsDeepDive = getUnitsDeepDiveGrid();
+
         TabSheet tabSheet = new TabSheet();
 
         //tabSheet.add("Financials", getFinancialsCRUDGrid());
-        tabSheet.add("Financials", getFinancialsGrid());
-        tabSheet.add("Subscriber", getSubscriberGrid());
-        tabSheet.add("UnitsDeepDive", getUnitsDeepDiveGrid());
+        tabSheet.add("Financials", getFinancials);
+        tabSheet.add("Subscriber", getSubscriber);
+        tabSheet.add("UnitsDeepDive", getUnitsDeepDive);
+
+        if(!isAdmin) {
+            tabSheet.getTab(getSubscriber).setEnabled(false);
+            tabSheet.getTab(getUnitsDeepDive).setEnabled(false);
+        }
 
         tabSheet.setSizeFull();
         tabSheet.setHeightFull();
@@ -115,6 +144,9 @@ public class InputPBIComments extends VerticalLayout {
     private Component getFinancialsGrid() {
 
         VerticalLayout content = new VerticalLayout();
+        TextArea comment = new TextArea();
+        Button saveBtn = new Button("save");
+        saveBtn.setVisible(false);
 
 
         GridListDataView<Financials> dataView = gridFinancials.getListDataView();
@@ -124,22 +156,27 @@ public class InputPBIComments extends VerticalLayout {
         gridFinancials.getHeaderRows().clear();
         GridContextMenu<Financials> contextMenu = gridFinancials.addContextMenu();
 
-        Grid.Column<Financials> rowColumn = gridFinancials.addColumn(Financials::getRow).setWidth("60px").setFlexGrow(0);
-        Grid.Column<Financials> monthColumn = gridFinancials.addColumn(Financials::getMonth);
-        Grid.Column<Financials> categoryColumn = gridFinancials.addColumn(Financials::getCategory);
-        Grid.Column<Financials> commentColumn = gridFinancials.addColumn(Financials::getComment);
-        Grid.Column<Financials> scenarioColumn = gridFinancials.addColumn(Financials::getScenario);
-        Grid.Column<Financials> xtdColumn = gridFinancials.addColumn(Financials::getXtd);
+        Grid.Column<Financials> rowColumn = gridFinancials.addColumn(Financials::getRow).setWidth("50px").setFlexGrow(0);
+        Grid.Column<Financials> monthColumn = gridFinancials.addColumn(Financials::getMonth).setWidth("80px").setFlexGrow(0);
+        Grid.Column<Financials> categoryColumn = gridFinancials.addColumn(Financials::getCategory).setAutoWidth(true).setResizable(true);
+        Grid.Column<Financials> scenarioColumn = gridFinancials.addColumn(Financials::getScenario).setAutoWidth(true).setResizable(true);
+        Grid.Column<Financials> xtdColumn = gridFinancials.addColumn(Financials::getXtd).setWidth("50px").setFlexGrow(0);
+        Grid.Column<Financials> commentColumn = gridFinancials.addColumn(Financials::getComment).setWidth("700px").setResizable(true);
+
+        gridFinancials.addThemeVariants(GridVariant.LUMO_WRAP_CELL_CONTENT);
+//        gridFinancials.addThemeVariants(GridVariant.LUMO_COMPACT);
+//        gridFinancials.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+        gridFinancials.setHeight("600px");
 
         HeaderRow headerRow = gridFinancials.appendHeaderRow();
 
 
         headerRow.getCell(rowColumn).setComponent(createFilterHeader("Zeile", financialsFilterFilter::setRow));
         headerRow.getCell(monthColumn).setComponent(createFilterHeader("Month", financialsFilterFilter::setMonth));
-        headerRow.getCell(commentColumn).setComponent(createFilterHeader("Comment", financialsFilterFilter::setComment));
         headerRow.getCell(categoryColumn).setComponent(createFilterHeader("Category", financialsFilterFilter::setCategory));
         headerRow.getCell(scenarioColumn).setComponent(createFilterHeader("Scenario", financialsFilterFilter::setScenario));
         headerRow.getCell(xtdColumn).setComponent(createFilterHeader("XTD", financialsFilterFilter::setXtd));
+        headerRow.getCell(commentColumn).setComponent(createFilterHeader("Comment", financialsFilterFilter::setComment));
 
 
         // Create a CRUD editor for editing the file data
@@ -166,10 +203,44 @@ public class InputPBIComments extends VerticalLayout {
             Financials editedFinancials = event.getItem();
 
             gridFinancials.getDataProvider().refreshItem(editedFinancials);
+
+        });
+
+        gridFinancials.addSelectionListener(selection -> {
+
+            saveBtn.setVisible(false);
+            String my_comment= selection.getFirstSelectedItem().get().getComment();
+
+            if(my_comment == null || my_comment.isEmpty())
+            {
+               my_comment="No Comment yet";
+            }
+            comment.setValue(my_comment);
+
         });
 
 
-        content.add(gridFinancials);
+
+        comment.setWidthFull();
+        comment.setHeight("400 px");
+        comment.addInputListener(e->{
+            saveBtn.setVisible(true);
+        });
+
+        Span header = new Span();
+        header.setText("Comment:");
+
+        content.add(gridFinancials, header, comment, saveBtn);
+
+        saveBtn.addClickListener(e->{
+            System.out.println("save Comment for Row: " + gridFinancials.getSelectedItems().stream().findFirst().get().getRow());
+
+            Financials editedFinancials = gridFinancials.getSelectedItems().stream().findFirst().get();
+
+            editedFinancials.setComment(comment.getValue());
+            gridFinancials.getDataCommunicator().refresh(editedFinancials);
+            });
+
 
         return content;
 
@@ -177,13 +248,23 @@ public class InputPBIComments extends VerticalLayout {
 
     private CrudEditor<Financials> createEditor() {
     //    log.info("Starting createEditor() for ProjectAttachments Attachment tab");
-        TextArea description = new TextArea("Edit Description");
-        description.setSizeFull();
-        FormLayout editFormLayout = new FormLayout(description);
+        TextArea comment = new TextArea("Edit Comment");
+        comment.setSizeFull();
+        FormLayout editFormLayout = new FormLayout(comment);
         Binder<Financials> editBinder = new Binder<>(Financials.class);
         //editBinder.bindInstanceFields(editFormLayout);
-        editBinder.forField(description).asRequired().bind(Financials::getComment,
+        editBinder.forField(comment).asRequired().bind(Financials::getComment,
                 Financials::setComment);
+
+        comment.setWidth("500px");
+        comment.setHeight("200px");
+
+
+
+        editFormLayout.setColspan(comment,2);
+        editFormLayout.setWidth("550px");
+        editFormLayout.setHeight("300px");
+
 
         return new BinderCrudEditor<>(editBinder, editFormLayout);
     }
@@ -610,9 +691,9 @@ public class InputPBIComments extends VerticalLayout {
         GenericDataProvider  subscriberdataProvider = new GenericDataProvider(getSubscriberDataProviderAllItems());
         GenericDataProvider  unitsDeepDivedataProvider = new GenericDataProvider(getUnitsDeepDiveDataProviderAllItems());
 
-        article=new Article();
-        article.setText(LocalDateTime.now().format(formatter) + ": Info: Download from Database");
-        textArea.add(article);
+//        article=new Article();
+//        article.setText(LocalDateTime.now().format(formatter) + ": Info: Download from Database");
+//        textArea.add(article);
 
     //    crudFinancials.addDeleteListener(
     //            deleteEvent -> {financialsdataProvider.delete(deleteEvent.getItem());
