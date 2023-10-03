@@ -224,7 +224,7 @@ public class MainLayout extends AppLayout {
         if(selectedProject.getParent_id() != null )
         {
             String parent = projectsService.findById(selectedProject.getParent_id()).get().getName();
-            return "Project: " + parent + "/" +  selectedProject.getName();
+            return "Project: " + parent + " => " +  selectedProject.getName();
         }
         else {
 
