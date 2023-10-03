@@ -2,6 +2,7 @@ package de.dbuss.tefcontrol.views;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.crud.BinderCrudEditor;
 import com.vaadin.flow.component.crud.Crud;
 import com.vaadin.flow.component.crud.CrudEditor;
@@ -33,6 +34,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import de.dbuss.tefcontrol.data.Role;
 import de.dbuss.tefcontrol.data.dto.ProjectAttachmentsDTO;
+import de.dbuss.tefcontrol.data.entity.ProjectConnection;
 import de.dbuss.tefcontrol.data.entity.User;
 import de.dbuss.tefcontrol.security.AuthenticatedUser;
 import jakarta.annotation.security.RolesAllowed;
@@ -59,7 +61,8 @@ public class InputPBIComments extends VerticalLayout {
 
     MemoryBuffer memoryBuffer = new MemoryBuffer();
     Upload singleFileUpload = new Upload(memoryBuffer);
-    Button importButton = new Button("Freigabe");
+    Button importButton = new Button("Save to DB");
+    ComboBox<ProjectConnection> databaseCB = new ComboBox<>("Choose Database");
 
     private AuthenticatedUser authenticatedUser;
 
@@ -93,19 +96,21 @@ public class InputPBIComments extends VerticalLayout {
         add(htmlDiv);
 
         HorizontalLayout hl = new HorizontalLayout();
-        hl.setAlignItems(Alignment.CENTER);
+        hl.setAlignItems(Alignment.BASELINE);
 
         List<Financials> financialsList = new ArrayList<>() ;
 
         gridFinancials.setItems(financialsList);
 
-        hl.add(singleFileUpload,importButton);
+        hl.add(singleFileUpload,databaseCB,importButton);
         add(hl);
         add(textArea);
 
         setupUploader();
 
         add(getTabsheet());
+
+
     }
 
     private TabSheet getTabsheet() {
@@ -164,7 +169,7 @@ public class InputPBIComments extends VerticalLayout {
         Grid.Column<Financials> commentColumn = gridFinancials.addColumn(Financials::getComment).setWidth("700px").setResizable(true);
 
         gridFinancials.addThemeVariants(GridVariant.LUMO_WRAP_CELL_CONTENT);
-//        gridFinancials.addThemeVariants(GridVariant.LUMO_COMPACT);
+        gridFinancials.addThemeVariants(GridVariant.LUMO_COMPACT);
 //        gridFinancials.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         gridFinancials.setHeight("600px");
 
