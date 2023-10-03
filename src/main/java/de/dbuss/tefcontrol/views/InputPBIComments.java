@@ -21,6 +21,7 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.TabSheet;
+import com.vaadin.flow.component.tabs.TabSheetVariant;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
@@ -143,6 +144,7 @@ public class InputPBIComments extends VerticalLayout {
 
         tabSheet.setSizeFull();
         tabSheet.setHeightFull();
+        tabSheet.addThemeVariants(TabSheetVariant.MATERIAL_BORDERED);
         return tabSheet;
     }
 
