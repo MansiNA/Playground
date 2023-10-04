@@ -7,6 +7,7 @@ import com.vaadin.flow.component.crud.BinderCrudEditor;
 import com.vaadin.flow.component.crud.Crud;
 import com.vaadin.flow.component.crud.CrudEditor;
 import com.vaadin.flow.component.crud.CrudFilter;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
@@ -79,7 +80,7 @@ public class InputPBIComments extends VerticalLayout {
     private List<Subscriber> listOfSubscriber = new ArrayList<Subscriber>();
     private List<UnitsDeepDive> listOfUnitsDeepDive = new ArrayList<UnitsDeepDive>();
 
-  //  private Crud<Financials> crudFinancials;
+    private Crud<Financials> crudFinancials;
     private Grid<Financials> gridFinancials = new Grid<>(Financials.class, false);
     private Crud<Subscriber> crudSubscriber;
     private Grid<Subscriber> gridSubscriber = new Grid<>(Subscriber.class);
@@ -126,7 +127,7 @@ public class InputPBIComments extends VerticalLayout {
                     .anyMatch(role -> role == Role.ADMIN);
         }
 
-        Component getFinancials=getFinancialsGrid();
+        Component getFinancials=getFinancialsCRUDGrid();
         Component getSubscriber=getSubscriberGrid();
         Component getUnitsDeepDive = getUnitsDeepDiveGrid();
 
@@ -288,8 +289,12 @@ public class InputPBIComments extends VerticalLayout {
         textField.addThemeVariants(TextFieldVariant.LUMO_SMALL);
         textField.setWidthFull();
         textField.getStyle().set("max-width", "100%");
-        textField.addValueChangeListener(
-                e -> filterChangeConsumer.accept(e.getValue()));
+        textField.addValueChangeListener(e -> {
+            String filterValue = e.getValue();
+            System.out.println("Filter Value: " + filterValue);
+
+            filterChangeConsumer.accept(filterValue);
+        });
         VerticalLayout layout = new VerticalLayout(label, textField);
         layout.getThemeList().clear();
         layout.getThemeList().add("spacing-xs");
@@ -302,63 +307,17 @@ public class InputPBIComments extends VerticalLayout {
 
 
         VerticalLayout content = new VerticalLayout();
-        //crudFinancials = new Crud<>(Financials.class, createFinancialsEditor());
-   //     crudFinancials = new Crud<>(Financials.class, createFinancialsCommentEditor());
-
+        crudFinancials = new Crud<>(Financials.class, createFinancialsCommentEditor());
         setupFinancialsGrid();
-//        gridFinancials.addItemDoubleClickListener(event -> crudFinancials.edit(event.getItem(), Crud.EditMode.EXISTING_ITEM));
-
-//        content.add(crudFinancials);
-
-       /* VerticalLayout vlDialog = new VerticalLayout();
-        Dialog commentEditDialog = new Dialog();
-        TextArea commentTextArea = new TextArea("Comment");
-   //     commentTextArea.setSizeFull();
-
-        HorizontalLayout hlDialog = new HorizontalLayout();
-        Button saveButton = new Button("Save");
-        Button cancelButton = new Button("Cancel");
-        hlDialog.add(cancelButton, saveButton);
-
-        vlDialog.setSizeFull();
-        vlDialog.add(commentTextArea, hlDialog);
-        commentEditDialog.add(vlDialog);
-    //    commentTextArea.setWidth("800px");
-    //    commentTextArea.setHeight("500px");
-
-
+        content.add(crudFinancials);
 
         gridFinancials.addItemDoubleClickListener(event -> {
-            Financials selectedFinancials = event.getItem();
+            System.out.println("addItemduble click....."+event.getItem().row);
+            Financials selectedEntity = event.getItem();
+            crudFinancials.edit(selectedEntity, Crud.EditMode.EXISTING_ITEM);
+            crudFinancials.getDeleteButton().getElement().getStyle().set("display", "none");
+        });
 
-            if (selectedFinancials != null) {
-                System.out.println(selectedFinancials.row+"......doble click");
-                GenericDataProvider  financialsdataProvider = new GenericDataProvider(getFinancialsDataProviderAllItems());
-                String initialComment = selectedFinancials.getComment() != null ? selectedFinancials.getComment() : "";
-                commentTextArea.setValue(initialComment);
-                commentTextArea.setSizeFull();
-                commentTextArea.setHeight("200px");
-                commentTextArea.setWidth("600px");
-                commentTextArea.setEnabled(true);
-
-                saveButton.addClickListener(e -> {
-                    String editedComment = commentTextArea.getValue();
-                    System.out.println(selectedFinancials.row+"......save");
-                    selectedFinancials.setComment(editedComment);
-                    financialsdataProvider.refreshItem(selectedFinancials);
-
-                    gridFinancials.setDataProvider(financialsdataProvider);
-                    commentEditDialog.close();
-                });
-
-                commentEditDialog.open();
-
-                cancelButton.addClickListener(e -> {
-                    commentEditDialog.close();
-                });
-
-            }
-        });*/
         return content;
     }
 
@@ -367,6 +326,13 @@ public class InputPBIComments extends VerticalLayout {
         crudSubscriber = new Crud<>(Subscriber.class, createSubscriberEditor());
         setupSubscriberGrid();
         content.add(crudSubscriber);
+
+        gridSubscriber.addItemDoubleClickListener(event -> {
+            System.out.println("addItemduble click....."+event.getItem().row);
+            Subscriber selectedEntity = event.getItem();
+            crudSubscriber.edit(selectedEntity, Crud.EditMode.EXISTING_ITEM);
+            crudSubscriber.getDeleteButton().getElement().getStyle().set("display", "none");
+        });
         return content;
     }
 
@@ -375,6 +341,13 @@ public class InputPBIComments extends VerticalLayout {
         crudUnitsDeepDive = new Crud<>(UnitsDeepDive.class, createUnitsDeepDiveEditor());
         setupUnitsDeepDiveGrid();
         content.add(crudUnitsDeepDive);
+
+        gridUnitsDeepDive.addItemDoubleClickListener(event -> {
+            System.out.println("addItemduble click....."+event.getItem().row);
+            UnitsDeepDive selectedEntity = event.getItem();
+            crudUnitsDeepDive.edit(selectedEntity, Crud.EditMode.EXISTING_ITEM);
+            crudUnitsDeepDive.getDeleteButton().getElement().getStyle().set("display", "none");
+        });
         return content;
     }
 
@@ -413,15 +386,11 @@ public class InputPBIComments extends VerticalLayout {
         FormLayout editForm = new FormLayout(comment);
         editForm.setColspan(comment, 2);
 
-
         editForm.setHeight("300px");
         editForm.setWidth("800px");
 
         Binder<Financials> binder = new Binder<>(Financials.class);
-        //binder.forField(month).withNullRepresentation("202301"").withConverter(new StringToIntegerConverter("Not a Number")).asRequired().bind(Financials::setMonth, Financials::setMonth);
-        //  binder.forField(monat_ID).asRequired().bind(CLTV_HW_Measures::getMonat_ID, CLTV_HW_Measures::setMonat_ID);
         binder.forField(comment).asRequired().bind(Financials::getComment, Financials::setComment);
-
 
         return new BinderCrudEditor<>(binder, editForm);
     }
@@ -429,44 +398,36 @@ public class InputPBIComments extends VerticalLayout {
 
     private CrudEditor<Subscriber> createSubscriberEditor() {
 
-        IntegerField zeile = new IntegerField  ("Zeile");
-        IntegerField month = new IntegerField ("Month");
-        TextField category = new TextField("Category");
         TextField comment = new TextField("Comment");
-        TextField paymentType = new TextField("Payment Type");
-        TextField segment = new TextField("Segment");
 
-        FormLayout editForm = new FormLayout(zeile, month, category, paymentType, segment, comment);
+        comment.setHeight("300px");
+        comment.setWidth("500px");
+        FormLayout editForm = new FormLayout(comment);
         editForm.setColspan(comment, 2);
 
+        editForm.setHeight("300px");
+        editForm.setWidth("800px");
+
+
         Binder<Subscriber> binder = new Binder<>(Subscriber.class);
-        binder.forField(month).asRequired().bind(Subscriber::getMonth, Subscriber::setMonth);
-        binder.forField(category).asRequired().bind(Subscriber::getCategory, Subscriber::setCategory);
         binder.forField(comment).asRequired().bind(Subscriber::getComment, Subscriber::setComment);
-        binder.forField(paymentType).asRequired().bind(Subscriber::getPaymentType, Subscriber::setPaymentType);
-        binder.forField(segment).asRequired().bind(Subscriber::getSegment, Subscriber::setSegment);
-        binder.forField(zeile).asRequired().bind(Subscriber::getRow, Subscriber::setRow);
 
         return new BinderCrudEditor<>(binder, editForm);
     }
 
     private CrudEditor<UnitsDeepDive> createUnitsDeepDiveEditor() {
-
-        IntegerField zeile = new IntegerField  ("Zeile");
-        IntegerField month = new IntegerField ("Month");
-        TextField category = new TextField("Category");
         TextField comment = new TextField("Comment");
-        TextField segment = new TextField("Segment");
 
-        FormLayout editForm = new FormLayout(zeile, month, category, segment, comment);
+        comment.setHeight("300px");
+        comment.setWidth("500px");
+        FormLayout editForm = new FormLayout(comment);
         editForm.setColspan(comment, 2);
 
+        editForm.setHeight("300px");
+        editForm.setWidth("800px");
+
         Binder<UnitsDeepDive> binder = new Binder<>(UnitsDeepDive.class);
-        binder.forField(month).asRequired().bind(UnitsDeepDive::getMonth, UnitsDeepDive::setMonth);
-        binder.forField(category).asRequired().bind(UnitsDeepDive::getCategory, UnitsDeepDive::setCategory);
         binder.forField(comment).asRequired().bind(UnitsDeepDive::getComment, UnitsDeepDive::setComment);
-        binder.forField(segment).asRequired().bind(UnitsDeepDive::getSegment, UnitsDeepDive::setSegment);
-        binder.forField(zeile).asRequired().bind(UnitsDeepDive::getRow, UnitsDeepDive::setRow);
 
         return new BinderCrudEditor<>(binder, editForm);
     }
@@ -549,7 +510,7 @@ public class InputPBIComments extends VerticalLayout {
 
         String EDIT_COLUMN = "vaadin-crud-edit-column";
 
-    //    gridFinancials = crudFinancials.getGrid();
+        gridFinancials = crudFinancials.getGrid();
 
         gridFinancials.getColumnByKey("row").setHeader("Zeile").setWidth("10px");
 
@@ -593,14 +554,16 @@ public class InputPBIComments extends VerticalLayout {
 
         gridSubscriber.getColumnByKey("row").setHeader("Zeile").setWidth("10px");
 
+        gridSubscriber.removeColumn(gridSubscriber.getColumnByKey(EDIT_COLUMN));
+
         // Reorder the columns (alphabetical by default)
         gridSubscriber.setColumnOrder( gridSubscriber.getColumnByKey(ZEILE)
                 , gridSubscriber.getColumnByKey(MONTH)
                 , gridSubscriber.getColumnByKey(CATEGORY)
                 , gridSubscriber.getColumnByKey(PAYMENTTYPE)
                 , gridSubscriber.getColumnByKey(SEGMENT)
-                , gridSubscriber.getColumnByKey(COMMENT)
-                , gridSubscriber.getColumnByKey(EDIT_COLUMN));
+                , gridSubscriber.getColumnByKey(COMMENT));
+              // , gridSubscriber.getColumnByKey(EDIT_COLUMN));
 
         gridSubscriber.addItemDoubleClickListener(e->{
             System.out.println("Zeile: " + e.getItem().getRow());
@@ -625,13 +588,15 @@ public class InputPBIComments extends VerticalLayout {
 
         gridUnitsDeepDive.getColumnByKey("row").setHeader("Zeile").setWidth("10px");
 
+        gridUnitsDeepDive.removeColumn(gridUnitsDeepDive.getColumnByKey(EDIT_COLUMN));
+
         // Reorder the columns (alphabetical by default)
         gridUnitsDeepDive.setColumnOrder( gridUnitsDeepDive.getColumnByKey(ZEILE)
                 , gridUnitsDeepDive.getColumnByKey(MONTH)
                 , gridUnitsDeepDive.getColumnByKey(SEGMENT)
                 , gridUnitsDeepDive.getColumnByKey(CATEGORY)
-                , gridUnitsDeepDive.getColumnByKey(COMMENT)
-                , gridUnitsDeepDive.getColumnByKey(EDIT_COLUMN));
+                , gridUnitsDeepDive.getColumnByKey(COMMENT));
+            //    , gridUnitsDeepDive.getColumnByKey(EDIT_COLUMN));
 
         gridSubscriber.addItemDoubleClickListener(e->{
             System.out.println("Zeile: " + e.getItem().getRow());
@@ -1108,13 +1073,15 @@ public class InputPBIComments extends VerticalLayout {
         }
 
         public boolean test(Financials financials) {
+            boolean matchesRow = matches(financials.getRow()+"", row);
+            boolean matchesMonth = matches(financials.getMonth() + "", month);
             boolean matchesCategory = matches(financials.getCategory(), category);
             boolean matchesComment = matches(financials.getComment(), comment);
-            boolean matchesScenario = matches(financials.getComment(), scenario);
-            boolean matchesXTD = matches(financials.getComment(), xtd);
+            boolean matchesScenario = matches(financials.getScenario(), scenario);
+            boolean matchesXTD = matches(financials.getXtd(), xtd);
 
            // return matchesFullName && matchesEmail && matchesProfession;
-            return matchesCategory && matchesComment  && matchesScenario && matchesXTD;
+            return matchesRow && matchesMonth && matchesCategory && matchesComment && matchesScenario && matchesXTD;
         }
 
         private boolean matches(String value, String searchTerm) {
