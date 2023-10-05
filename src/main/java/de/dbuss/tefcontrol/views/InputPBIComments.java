@@ -9,7 +9,6 @@ import com.vaadin.flow.component.crud.CrudEditor;
 import com.vaadin.flow.component.crud.CrudFilter;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.grid.dataview.GridListDataView;
 import com.vaadin.flow.component.html.Article;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -24,8 +23,7 @@ import com.vaadin.flow.data.provider.*;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import de.dbuss.tefcontrol.data.Role;
-import de.dbuss.tefcontrol.data.entity.ProjectConnection;
-import de.dbuss.tefcontrol.data.entity.User;
+import de.dbuss.tefcontrol.data.entity.*;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
 import de.dbuss.tefcontrol.security.AuthenticatedUser;
 import jakarta.annotation.security.RolesAllowed;
@@ -419,24 +417,28 @@ public class InputPBIComments extends VerticalLayout {
                 }
 
                 Field[] fields = targetType.getDeclaredFields();
-                for (int index = 0; index < (fields.length -1); index++) {
-                    Cell cell = row.getCell(index);
+                for (int index = 0; index < fields.length; index++) {
+                    Cell cell = null;
+                    if(index != 0) {
+                        cell = row.getCell(index -1);
+                    } else {
+                        cell = row.getCell(index);
+                    }
 
                     if (cell != null && !cell.toString().isEmpty()) {
                         Field field = fields[index];
-                        if( index == 0) {
-                            field.set(entity, RowNumber);
-                        }
-
-                        field = fields[index+1];
                         field.setAccessible(true);
 
-                        if (field.getType() == int.class || field.getType() == Integer.class) {
-                            field.set(entity, (int) cell.getNumericCellValue());
-                        } else if (field.getType() == double.class || field.getType() == Double.class) {
-                            field.set(entity, cell.getNumericCellValue());
-                        } else if (field.getType() == String.class) {
-                            field.set(entity, cell.getStringCellValue());
+                        if (index == 0) {
+                            field.set(entity, RowNumber);
+                        } else {
+                            if (field.getType() == int.class || field.getType() == Integer.class) {
+                                field.set(entity, (int) cell.getNumericCellValue());
+                            } else if (field.getType() == double.class || field.getType() == Double.class) {
+                                field.set(entity, cell.getNumericCellValue());
+                            } else if (field.getType() == String.class) {
+                                field.set(entity, cell.getStringCellValue());
+                            }
                         }
                     }
                 }
@@ -505,195 +507,6 @@ public class InputPBIComments extends VerticalLayout {
         DataProvider<UnitsDeepDive, Void> existDataProvider = (DataProvider<UnitsDeepDive, Void>) gridUnitsDeepDive.getDataProvider();
         List<UnitsDeepDive>  listOfUnitsDeepDive = existDataProvider.fetch(new Query<>()).collect(Collectors.toList());
         return listOfUnitsDeepDive;
-    }
-
-
-    public static class Subscriber {
-
-        public Subscriber() {
-        }
-
-        private Integer row;
-
-        private Integer month;
-
-        private String category;
-
-        private String paymentType;
-
-        private String segment;
-
-        private String comment;
-
-        public Integer getRow() {
-            return row;
-        }
-
-        public void setRow(Integer row) {
-            this.row = row;
-        }
-
-        public Integer getMonth() {
-            return month;
-        }
-
-        public void setMonth(Integer month) {
-            this.month = month;
-        }
-
-        public String getCategory() {
-            return category;
-        }
-
-        public void setCategory(String category) {
-            this.category = category;
-        }
-
-        public String getComment() {
-            return comment;
-        }
-
-        public void setComment(String comment) {
-            this.comment = comment;
-        }
-
-        public String getPaymentType() {
-            return paymentType;
-        }
-
-        public void setPaymentType(String paymentType) {
-            this.paymentType = paymentType;
-        }
-
-        public String getSegment() {
-            return segment;
-        }
-
-        public void setSegment(String segment) {
-            this.segment = segment;
-        }
-    }
-
-    public static class UnitsDeepDive {
-
-        public UnitsDeepDive() {
-        }
-
-        private Integer row;
-
-        private Integer month;
-
-        private String segment;
-
-        private String category;
-
-        private String comment;
-
-        public Integer getRow() {
-            return row;
-        }
-
-        public void setRow(Integer row) {
-            this.row = row;
-        }
-
-        public Integer getMonth() {
-            return month;
-        }
-
-        public void setMonth(Integer month) {
-            this.month = month;
-        }
-
-        public String getCategory() {
-            return category;
-        }
-
-        public void setCategory(String category) {
-            this.category = category;
-        }
-
-        public String getComment() {
-            return comment;
-        }
-
-        public void setComment(String comment) {
-            this.comment = comment;
-        }
-
-        public String getSegment() {
-            return segment;
-        }
-
-        public void setSegment(String segment) {
-            this.segment = segment;
-        }
-    }
-
-    public static class Financials {
-
-        public Financials() {
-        }
-
-        private Integer row;
-
-        private Integer month;
-
-        private String category;
-
-        private String comment;
-
-        private String scenario;
-
-        private String xtd;
-
-        public Integer getRow() {
-            return row;
-        }
-
-        public void setRow(Integer row) {
-            this.row = row;
-        }
-
-        public Integer getMonth() {
-            return month;
-        }
-
-        public void setMonth(Integer month) {
-            this.month = month;
-        }
-
-        public String getCategory() {
-            return category;
-        }
-
-        public void setCategory(String category) {
-            this.category = category;
-        }
-
-        public String getComment() {
-            return comment;
-        }
-
-        public void setComment(String comment) {
-            this.comment = comment;
-        }
-
-        public String getScenario() {
-            return scenario;
-        }
-
-        public void setScenario(String scenario) {
-            this.scenario = scenario;
-        }
-
-        public String getXtd() {
-            return xtd;
-        }
-
-        public void setXtd(String xtd) {
-            this.xtd = xtd;
-        }
     }
 
     public class GenericDataProvider<T> extends AbstractBackEndDataProvider<T, CrudFilter> {
@@ -842,71 +655,4 @@ public class InputPBIComments extends VerticalLayout {
             }
         }
     }
-
-    private static class FinancialsFilter {
-        private final GridListDataView<Financials> dataView;
-
-        private String category;
-        private String month;
-        private String comment;
-        private String scenario;
-        private String xtd;
-        private String row;
-
-
-
-        private FinancialsFilter(GridListDataView<Financials> dataView) {
-            this.dataView = dataView;
-            this.dataView.addFilter(this::test);
-        }
-
-        public boolean test(Financials financials) {
-            boolean matchesRow = matches(financials.getRow()+"", row);
-            boolean matchesMonth = matches(financials.getMonth() + "", month);
-            boolean matchesCategory = matches(financials.getCategory(), category);
-            boolean matchesComment = matches(financials.getComment(), comment);
-            boolean matchesScenario = matches(financials.getScenario(), scenario);
-            boolean matchesXTD = matches(financials.getXtd(), xtd);
-
-           // return matchesFullName && matchesEmail && matchesProfession;
-            return matchesRow && matchesMonth && matchesCategory && matchesComment && matchesScenario && matchesXTD;
-        }
-
-        private boolean matches(String value, String searchTerm) {
-            return searchTerm == null || searchTerm.isEmpty()
-                    || value.toLowerCase().contains(searchTerm.toLowerCase());
-        }
-
-
-        public void setCategory(String category) {
-            this.category = category;
-            this.dataView.refreshAll();
-        }
-        public void setRow(String row) {
-            this.row = row;
-            this.dataView.refreshAll();
-        }
-
-        public void setMonth(String month) {
-            this.month = month;
-            this.dataView.refreshAll();
-        }
-
-        public void setComment(String comment) {
-            this.comment = comment;
-            this.dataView.refreshAll();
-        }
-
-        public void setScenario(String scenario) {
-            this.scenario = scenario;
-            this.dataView.refreshAll();
-        }
-
-        public void setXtd(String xtd) {
-            this.xtd = xtd;
-            this.dataView.refreshAll();
-        }
-
-    }
-
 }
