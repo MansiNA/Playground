@@ -9,9 +9,10 @@ import com.vaadin.flow.component.crud.CrudEditor;
 import com.vaadin.flow.component.crud.CrudFilter;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.grid.dataview.GridListDataView;
 import com.vaadin.flow.component.html.Article;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.TabSheet;
@@ -24,11 +25,11 @@ import com.vaadin.flow.data.provider.*;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import de.dbuss.tefcontrol.data.Role;
-import de.dbuss.tefcontrol.data.entity.ProjectConnection;
-import de.dbuss.tefcontrol.data.entity.User;
+import de.dbuss.tefcontrol.data.entity.*;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
 import de.dbuss.tefcontrol.security.AuthenticatedUser;
 import jakarta.annotation.security.RolesAllowed;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -63,10 +64,10 @@ public class InputPBIComments extends VerticalLayout {
     private Grid<Subscriber> gridSubscriber = new Grid<>(Subscriber.class);
     private Crud<UnitsDeepDive> crudUnitsDeepDive;
     private Grid<UnitsDeepDive> gridUnitsDeepDive = new Grid<>(UnitsDeepDive.class);
-
-    private ProjectConnection selectedDbConnection;
+    private String selectedDbName;
     long contentLength = 0;
     String mimeType = "";
+    private Button saveButton;
     Div textArea = new Div();
 
     public InputPBIComments(AuthenticatedUser authenticatedUser, ProjectConnectionService projectConnectionService) {
@@ -74,33 +75,72 @@ public class InputPBIComments extends VerticalLayout {
         this.authenticatedUser = authenticatedUser;
         this.projectConnectionService = projectConnectionService;
 
-        Button saveButton = new Button("Save to DB");
+        saveButton = new Button("Save to DB");
+        saveButton.setEnabled(false);
 
         Div htmlDiv = new Div();
         htmlDiv.getElement().setProperty("innerHTML", "<h2>Input Frontend for PBI Comments");
         add(htmlDiv);
 
-        ComboBox<ProjectConnection> databaseCB = new ComboBox<>("Choose Database");
+        ComboBox<String> databaseCB = new ComboBox<>("Choose Database");
         databaseCB.setAllowCustomValue(true);
 
         List<ProjectConnection> listOfProjectConnections = projectConnectionService.findAll();
-        List<String> connectionNames = listOfProjectConnections.stream()
+        databaseCB.setItems(listOfProjectConnections.stream()
                 .map(ProjectConnection::getName)
-                .collect(Collectors.toList());
-
-        databaseCB.setItems(listOfProjectConnections);
-        databaseCB.setItemLabelGenerator(ProjectConnection::getName);
+                .collect(Collectors.toList())
+        );
         databaseCB.setTooltipText("Select Database Connection");
-        databaseCB.setValue(listOfProjectConnections.get(0));
-        selectedDbConnection = listOfProjectConnections.get(0);
+        databaseCB.setValue(listOfProjectConnections.get(0).getName());
+        selectedDbName = listOfProjectConnections.get(0).getName();
+        System.out.println(selectedDbName+"..........************************************************");
 
         HorizontalLayout hl = new HorizontalLayout();
         hl.setAlignItems(Alignment.BASELINE);
         hl.add(singleFileUpload,databaseCB,saveButton);
         add(hl);
 
-        add(textArea);
+        databaseCB.addValueChangeListener(event -> {
+            selectedDbName = event.getValue();
+        });
 
+        saveButton.addClickListener(clickEvent -> {
+            List<Financials> allFinancialsItems = getFinancialsDataProviderAllItems();
+            List<Subscriber> allSubscriber = getSubscriberDataProviderAllItems();
+            List<UnitsDeepDive> allUnitsDeepDive = getUnitsDeepDiveDataProviderAllItems();
+
+            Notification notification = Notification.show(" Rows Uploaded start",2000, Notification.Position.MIDDLE);
+            notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+
+            String resultFinancial = projectConnectionService.saveFinancials(allFinancialsItems, selectedDbName);
+            if (resultFinancial.contains("ok")){
+                notification = Notification.show(allFinancialsItems.size() + " Rows Uploaded successfully",3000, Notification.Position.MIDDLE);
+                notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+            } else {
+                notification = Notification.show("Error during Financials upload!",4000, Notification.Position.MIDDLE);
+                notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+            }
+            String resultSubscriber = projectConnectionService.saveSubscriber(allSubscriber, selectedDbName);
+            if (resultSubscriber.contains("ok")){
+                notification = Notification.show(allSubscriber.size() + " Rows Uploaded successfully",3000, Notification.Position.MIDDLE);
+                notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+            } else {
+                notification = Notification.show("Error during Subscriber upload!",4000, Notification.Position.MIDDLE);
+                notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+            }
+
+            String resultUnits = projectConnectionService.saveUnitsDeepDive(allUnitsDeepDive, selectedDbName);
+            if (resultUnits.contains("ok")){
+                notification = Notification.show(allUnitsDeepDive.size() + " Rows Uploaded successfully",3000, Notification.Position.MIDDLE);
+                notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+            } else {
+                notification = Notification.show("Error during UnitsDeepDive upload!",4000, Notification.Position.MIDDLE);
+                notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+            }
+
+        });
+
+        add(textArea);
         setupUploader();
         add(getTabsheet());
     }
@@ -259,7 +299,7 @@ public class InputPBIComments extends VerticalLayout {
             setupDataProviderEvent();
 
             singleFileUpload.clearFileList();
-
+            saveButton.setEnabled(true);
         });
     }
 
@@ -419,24 +459,28 @@ public class InputPBIComments extends VerticalLayout {
                 }
 
                 Field[] fields = targetType.getDeclaredFields();
-                for (int index = 0; index < (fields.length -1); index++) {
-                    Cell cell = row.getCell(index);
+                for (int index = 0; index < fields.length; index++) {
+                    Cell cell = null;
+                    if(index != 0) {
+                        cell = row.getCell(index -1);
+                    } else {
+                        cell = row.getCell(index);
+                    }
 
                     if (cell != null && !cell.toString().isEmpty()) {
                         Field field = fields[index];
-                        if( index == 0) {
-                            field.set(entity, RowNumber);
-                        }
-
-                        field = fields[index+1];
                         field.setAccessible(true);
 
-                        if (field.getType() == int.class || field.getType() == Integer.class) {
-                            field.set(entity, (int) cell.getNumericCellValue());
-                        } else if (field.getType() == double.class || field.getType() == Double.class) {
-                            field.set(entity, cell.getNumericCellValue());
-                        } else if (field.getType() == String.class) {
-                            field.set(entity, cell.getStringCellValue());
+                        if (index == 0) {
+                            field.set(entity, RowNumber);
+                        } else {
+                            if (field.getType() == int.class || field.getType() == Integer.class) {
+                                field.set(entity, (int) cell.getNumericCellValue());
+                            } else if (field.getType() == double.class || field.getType() == Double.class) {
+                                field.set(entity, cell.getNumericCellValue());
+                            } else if (field.getType() == String.class) {
+                                field.set(entity, cell.getStringCellValue());
+                            }
                         }
                     }
                 }
@@ -505,195 +549,6 @@ public class InputPBIComments extends VerticalLayout {
         DataProvider<UnitsDeepDive, Void> existDataProvider = (DataProvider<UnitsDeepDive, Void>) gridUnitsDeepDive.getDataProvider();
         List<UnitsDeepDive>  listOfUnitsDeepDive = existDataProvider.fetch(new Query<>()).collect(Collectors.toList());
         return listOfUnitsDeepDive;
-    }
-
-
-    public static class Subscriber {
-
-        public Subscriber() {
-        }
-
-        private Integer row;
-
-        private Integer month;
-
-        private String category;
-
-        private String paymentType;
-
-        private String segment;
-
-        private String comment;
-
-        public Integer getRow() {
-            return row;
-        }
-
-        public void setRow(Integer row) {
-            this.row = row;
-        }
-
-        public Integer getMonth() {
-            return month;
-        }
-
-        public void setMonth(Integer month) {
-            this.month = month;
-        }
-
-        public String getCategory() {
-            return category;
-        }
-
-        public void setCategory(String category) {
-            this.category = category;
-        }
-
-        public String getComment() {
-            return comment;
-        }
-
-        public void setComment(String comment) {
-            this.comment = comment;
-        }
-
-        public String getPaymentType() {
-            return paymentType;
-        }
-
-        public void setPaymentType(String paymentType) {
-            this.paymentType = paymentType;
-        }
-
-        public String getSegment() {
-            return segment;
-        }
-
-        public void setSegment(String segment) {
-            this.segment = segment;
-        }
-    }
-
-    public static class UnitsDeepDive {
-
-        public UnitsDeepDive() {
-        }
-
-        private Integer row;
-
-        private Integer month;
-
-        private String segment;
-
-        private String category;
-
-        private String comment;
-
-        public Integer getRow() {
-            return row;
-        }
-
-        public void setRow(Integer row) {
-            this.row = row;
-        }
-
-        public Integer getMonth() {
-            return month;
-        }
-
-        public void setMonth(Integer month) {
-            this.month = month;
-        }
-
-        public String getCategory() {
-            return category;
-        }
-
-        public void setCategory(String category) {
-            this.category = category;
-        }
-
-        public String getComment() {
-            return comment;
-        }
-
-        public void setComment(String comment) {
-            this.comment = comment;
-        }
-
-        public String getSegment() {
-            return segment;
-        }
-
-        public void setSegment(String segment) {
-            this.segment = segment;
-        }
-    }
-
-    public static class Financials {
-
-        public Financials() {
-        }
-
-        private Integer row;
-
-        private Integer month;
-
-        private String category;
-
-        private String comment;
-
-        private String scenario;
-
-        private String xtd;
-
-        public Integer getRow() {
-            return row;
-        }
-
-        public void setRow(Integer row) {
-            this.row = row;
-        }
-
-        public Integer getMonth() {
-            return month;
-        }
-
-        public void setMonth(Integer month) {
-            this.month = month;
-        }
-
-        public String getCategory() {
-            return category;
-        }
-
-        public void setCategory(String category) {
-            this.category = category;
-        }
-
-        public String getComment() {
-            return comment;
-        }
-
-        public void setComment(String comment) {
-            this.comment = comment;
-        }
-
-        public String getScenario() {
-            return scenario;
-        }
-
-        public void setScenario(String scenario) {
-            this.scenario = scenario;
-        }
-
-        public String getXtd() {
-            return xtd;
-        }
-
-        public void setXtd(String xtd) {
-            this.xtd = xtd;
-        }
     }
 
     public class GenericDataProvider<T> extends AbstractBackEndDataProvider<T, CrudFilter> {
@@ -842,71 +697,4 @@ public class InputPBIComments extends VerticalLayout {
             }
         }
     }
-
-    private static class FinancialsFilter {
-        private final GridListDataView<Financials> dataView;
-
-        private String category;
-        private String month;
-        private String comment;
-        private String scenario;
-        private String xtd;
-        private String row;
-
-
-
-        private FinancialsFilter(GridListDataView<Financials> dataView) {
-            this.dataView = dataView;
-            this.dataView.addFilter(this::test);
-        }
-
-        public boolean test(Financials financials) {
-            boolean matchesRow = matches(financials.getRow()+"", row);
-            boolean matchesMonth = matches(financials.getMonth() + "", month);
-            boolean matchesCategory = matches(financials.getCategory(), category);
-            boolean matchesComment = matches(financials.getComment(), comment);
-            boolean matchesScenario = matches(financials.getScenario(), scenario);
-            boolean matchesXTD = matches(financials.getXtd(), xtd);
-
-           // return matchesFullName && matchesEmail && matchesProfession;
-            return matchesRow && matchesMonth && matchesCategory && matchesComment && matchesScenario && matchesXTD;
-        }
-
-        private boolean matches(String value, String searchTerm) {
-            return searchTerm == null || searchTerm.isEmpty()
-                    || value.toLowerCase().contains(searchTerm.toLowerCase());
-        }
-
-
-        public void setCategory(String category) {
-            this.category = category;
-            this.dataView.refreshAll();
-        }
-        public void setRow(String row) {
-            this.row = row;
-            this.dataView.refreshAll();
-        }
-
-        public void setMonth(String month) {
-            this.month = month;
-            this.dataView.refreshAll();
-        }
-
-        public void setComment(String comment) {
-            this.comment = comment;
-            this.dataView.refreshAll();
-        }
-
-        public void setScenario(String scenario) {
-            this.scenario = scenario;
-            this.dataView.refreshAll();
-        }
-
-        public void setXtd(String xtd) {
-            this.xtd = xtd;
-            this.dataView.refreshAll();
-        }
-
-    }
-
 }

@@ -1,7 +1,6 @@
 package de.dbuss.tefcontrol.data.service;
 
-import de.dbuss.tefcontrol.data.entity.CLTV_HW_Measures;
-import de.dbuss.tefcontrol.data.entity.ProjectConnection;
+import de.dbuss.tefcontrol.data.entity.*;
 import de.dbuss.tefcontrol.data.repository.ProjectConnectionRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.jdbc.DataSourceBuilder;
@@ -138,6 +137,92 @@ public class ProjectConnectionService {
 
         log.info("Ending getDataFromDatabase() for SQL "+ rows.size());
         return result;
+    }
+
+    public String saveFinancials(List<Financials> data, String selectedDatabase) {
+        DataSource dataSource = getDataSource(selectedDatabase);
+        jdbcTemplate = new JdbcTemplate(dataSource);
+
+        try {
+            String sqlDelete = "DELETE FROM Financials";
+            jdbcTemplate.update(sqlDelete);
+
+            String sqlInsert = "INSERT INTO Financials (row, month, category, comment, scenario, xtd) VALUES (?, ?, ?, ?, ?, ?)";
+
+            // Loop through the data and insert new records
+            for (Financials item : data) {
+                jdbcTemplate.update(
+                        sqlInsert,
+                        item.getRow(),
+                        item.getMonth(),
+                        item.getCategory(),
+                        item.getComment(),
+                        item.getScenario(),
+                        item.getXtd()
+                );
+            }
+            return "ok";
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Error during update: " + e.getMessage();
+        }
+    }
+
+    public String saveSubscriber(List<Subscriber> data, String selectedDatabase) {
+        DataSource dataSource = getDataSource(selectedDatabase);
+        jdbcTemplate = new JdbcTemplate(dataSource);
+
+        try {
+            String sqlDelete = "DELETE FROM Subscriber";
+            jdbcTemplate.update(sqlDelete);
+
+            String sqlInsert = "INSERT INTO Subscriber (row, month, category, payment_type, segment, comment) VALUES (?, ?, ?, ?, ?, ?)";
+
+            // Loop through the data and insert new records
+            for (Subscriber item : data) {
+                jdbcTemplate.update(
+                        sqlInsert,
+                        item.getRow(),
+                        item.getMonth(),
+                        item.getCategory(),
+                        item.getPaymentType(),
+                        item.getSegment(),
+                        item.getComment()
+                );
+            }
+            return "ok";
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Error during update: " + e.getMessage();
+        }
+    }
+
+    public String saveUnitsDeepDive(List<UnitsDeepDive> data, String selectedDatabase) {
+        DataSource dataSource = getDataSource(selectedDatabase);
+        jdbcTemplate = new JdbcTemplate(dataSource);
+
+        try {
+            String sqlDelete = "DELETE FROM units_deep_dive";
+            jdbcTemplate.update(sqlDelete);
+
+            String sqlInsert = "INSERT INTO units_deep_dive (row, month,segment, category, comment) VALUES (?, ?, ?, ?, ?)";
+
+            // Loop through the data and insert new records
+            for (UnitsDeepDive item : data) {
+                jdbcTemplate.update(
+                        sqlInsert,
+                        item.getRow(),
+                        item.getMonth(),
+                        item.getSegment(),
+                        item.getCategory(),
+                        item.getComment()
+                );
+            }
+            return "ok";
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Error during update: " + e.getMessage();
+        }
     }
 
 }
