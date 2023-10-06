@@ -11,6 +11,8 @@ import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Article;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.TabSheet;
@@ -27,6 +29,7 @@ import de.dbuss.tefcontrol.data.entity.*;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
 import de.dbuss.tefcontrol.security.AuthenticatedUser;
 import jakarta.annotation.security.RolesAllowed;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -61,10 +64,10 @@ public class InputPBIComments extends VerticalLayout {
     private Grid<Subscriber> gridSubscriber = new Grid<>(Subscriber.class);
     private Crud<UnitsDeepDive> crudUnitsDeepDive;
     private Grid<UnitsDeepDive> gridUnitsDeepDive = new Grid<>(UnitsDeepDive.class);
-
-    private ProjectConnection selectedDbConnection;
+    private String selectedDbName;
     long contentLength = 0;
     String mimeType = "";
+    private Button saveButton;
     Div textArea = new Div();
 
     public InputPBIComments(AuthenticatedUser authenticatedUser, ProjectConnectionService projectConnectionService) {
@@ -72,33 +75,72 @@ public class InputPBIComments extends VerticalLayout {
         this.authenticatedUser = authenticatedUser;
         this.projectConnectionService = projectConnectionService;
 
-        Button saveButton = new Button("Save to DB");
+        saveButton = new Button("Save to DB");
+        saveButton.setEnabled(false);
 
         Div htmlDiv = new Div();
         htmlDiv.getElement().setProperty("innerHTML", "<h2>Input Frontend for PBI Comments");
         add(htmlDiv);
 
-        ComboBox<ProjectConnection> databaseCB = new ComboBox<>("Choose Database");
+        ComboBox<String> databaseCB = new ComboBox<>("Choose Database");
         databaseCB.setAllowCustomValue(true);
 
         List<ProjectConnection> listOfProjectConnections = projectConnectionService.findAll();
-        List<String> connectionNames = listOfProjectConnections.stream()
+        databaseCB.setItems(listOfProjectConnections.stream()
                 .map(ProjectConnection::getName)
-                .collect(Collectors.toList());
-
-        databaseCB.setItems(listOfProjectConnections);
-        databaseCB.setItemLabelGenerator(ProjectConnection::getName);
+                .collect(Collectors.toList())
+        );
         databaseCB.setTooltipText("Select Database Connection");
-        databaseCB.setValue(listOfProjectConnections.get(0));
-        selectedDbConnection = listOfProjectConnections.get(0);
+        databaseCB.setValue(listOfProjectConnections.get(0).getName());
+        selectedDbName = listOfProjectConnections.get(0).getName();
+        System.out.println(selectedDbName+"..........************************************************");
 
         HorizontalLayout hl = new HorizontalLayout();
         hl.setAlignItems(Alignment.BASELINE);
         hl.add(singleFileUpload,databaseCB,saveButton);
         add(hl);
 
-        add(textArea);
+        databaseCB.addValueChangeListener(event -> {
+            selectedDbName = event.getValue();
+        });
 
+        saveButton.addClickListener(clickEvent -> {
+            List<Financials> allFinancialsItems = getFinancialsDataProviderAllItems();
+            List<Subscriber> allSubscriber = getSubscriberDataProviderAllItems();
+            List<UnitsDeepDive> allUnitsDeepDive = getUnitsDeepDiveDataProviderAllItems();
+
+            Notification notification = Notification.show(" Rows Uploaded start",2000, Notification.Position.MIDDLE);
+            notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+
+            String resultFinancial = projectConnectionService.saveFinancials(allFinancialsItems, selectedDbName);
+            if (resultFinancial.contains("ok")){
+                notification = Notification.show(allFinancialsItems.size() + " Rows Uploaded successfully",3000, Notification.Position.MIDDLE);
+                notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+            } else {
+                notification = Notification.show("Error during Financials upload!",4000, Notification.Position.MIDDLE);
+                notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+            }
+            String resultSubscriber = projectConnectionService.saveSubscriber(allSubscriber, selectedDbName);
+            if (resultSubscriber.contains("ok")){
+                notification = Notification.show(allSubscriber.size() + " Rows Uploaded successfully",3000, Notification.Position.MIDDLE);
+                notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+            } else {
+                notification = Notification.show("Error during Subscriber upload!",4000, Notification.Position.MIDDLE);
+                notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+            }
+
+            String resultUnits = projectConnectionService.saveUnitsDeepDive(allUnitsDeepDive, selectedDbName);
+            if (resultUnits.contains("ok")){
+                notification = Notification.show(allUnitsDeepDive.size() + " Rows Uploaded successfully",3000, Notification.Position.MIDDLE);
+                notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+            } else {
+                notification = Notification.show("Error during UnitsDeepDive upload!",4000, Notification.Position.MIDDLE);
+                notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+            }
+
+        });
+
+        add(textArea);
         setupUploader();
         add(getTabsheet());
     }
@@ -257,7 +299,7 @@ public class InputPBIComments extends VerticalLayout {
             setupDataProviderEvent();
 
             singleFileUpload.clearFileList();
-
+            saveButton.setEnabled(true);
         });
     }
 
