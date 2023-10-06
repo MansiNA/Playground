@@ -1,6 +1,7 @@
 package de.dbuss.tefcontrol.views;
 
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.crud.BinderCrudEditor;
@@ -15,9 +16,12 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.progressbar.ProgressBar;
 import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.component.tabs.TabSheetVariant;
+import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextArea;
+import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.data.binder.Binder;
@@ -34,6 +38,9 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.AsyncResult;
+import org.springframework.util.concurrent.ListenableFuture;
 
 import java.io.InputStream;
 import java.lang.reflect.Field;
@@ -64,6 +71,7 @@ public class InputPBIComments extends VerticalLayout {
     private Grid<Subscriber> gridSubscriber = new Grid<>(Subscriber.class);
     private Crud<UnitsDeepDive> crudUnitsDeepDive;
     private Grid<UnitsDeepDive> gridUnitsDeepDive = new Grid<>(UnitsDeepDive.class);
+    private ProgressBar progressBar = new ProgressBar();
     private String selectedDbName;
     long contentLength = 0;
     String mimeType = "";
@@ -77,6 +85,10 @@ public class InputPBIComments extends VerticalLayout {
 
         saveButton = new Button("Save to DB");
         saveButton.setEnabled(false);
+
+        progressBar.setWidth("15em");
+        progressBar.setIndeterminate(true);
+        progressBar.setVisible(false);
 
         Div htmlDiv = new Div();
         htmlDiv.getElement().setProperty("innerHTML", "<h2>Input Frontend for PBI Comments");
@@ -97,52 +109,83 @@ public class InputPBIComments extends VerticalLayout {
 
         HorizontalLayout hl = new HorizontalLayout();
         hl.setAlignItems(Alignment.BASELINE);
-        hl.add(singleFileUpload,databaseCB,saveButton);
+        hl.add(singleFileUpload,databaseCB,saveButton, progressBar);
         add(hl);
 
         databaseCB.addValueChangeListener(event -> {
             selectedDbName = event.getValue();
         });
 
+
+
         saveButton.addClickListener(clickEvent -> {
-            List<Financials> allFinancialsItems = getFinancialsDataProviderAllItems();
-            List<Subscriber> allSubscriber = getSubscriberDataProviderAllItems();
-            List<UnitsDeepDive> allUnitsDeepDive = getUnitsDeepDiveDataProviderAllItems();
 
             Notification notification = Notification.show(" Rows Uploaded start",2000, Notification.Position.MIDDLE);
             notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
 
-            String resultFinancial = projectConnectionService.saveFinancials(allFinancialsItems, selectedDbName);
-            if (resultFinancial.contains("ok")){
-                notification = Notification.show(allFinancialsItems.size() + " Financials Rows Uploaded successfully",3000, Notification.Position.MIDDLE);
-                notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-            } else {
-                notification = Notification.show("Error during Financials upload!",4000, Notification.Position.MIDDLE);
-                notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
-            }
-            String resultSubscriber = projectConnectionService.saveSubscriber(allSubscriber, selectedDbName);
-            if (resultSubscriber.contains("ok")){
-                notification = Notification.show(allSubscriber.size() + " Subscriber Rows Uploaded successfully",3000, Notification.Position.MIDDLE);
-                notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-            } else {
-                notification = Notification.show("Error during Subscriber upload!",4000, Notification.Position.MIDDLE);
-                notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
-            }
 
-            String resultUnits = projectConnectionService.saveUnitsDeepDive(allUnitsDeepDive, selectedDbName);
-            if (resultUnits.contains("ok")){
-                notification = Notification.show(allUnitsDeepDive.size() + " UnitsDeepDive Rows Uploaded successfully",3000, Notification.Position.MIDDLE);
-                notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-            } else {
-                notification = Notification.show("Error during UnitsDeepDive upload!",4000, Notification.Position.MIDDLE);
-                notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
-            }
+            UI ui = clickEvent.getSource().getUI().orElseThrow();
+            progressBar.setVisible(true);
+
+
+            ListenableFuture<String> future = upload2db();;
+            future.addCallback(
+                    successResult -> updateUi(ui, "Task finished: " + successResult),
+                    failureException -> updateUi(ui, "Task failed: " + failureException.getMessage())
+            );
+
 
         });
 
         add(textArea);
         setupUploader();
         add(getTabsheet());
+        setHeightFull();
+    }
+    private void updateUi(UI ui, String result) {
+
+
+        ui.access(() -> {
+            Notification.show(result);
+            progressBar.setVisible(false);
+        });
+    }
+    @Async
+    private ListenableFuture<String> upload2db() {
+        List<Financials> allFinancialsItems = getFinancialsDataProviderAllItems();
+        List<Subscriber> allSubscriber = getSubscriberDataProviderAllItems();
+        List<UnitsDeepDive> allUnitsDeepDive = getUnitsDeepDiveDataProviderAllItems();
+
+        Notification notification;
+
+        String resultFinancial = projectConnectionService.saveFinancials(allFinancialsItems, selectedDbName);
+        if (resultFinancial.contains("ok")){
+            notification = Notification.show(allFinancialsItems.size() + " Financials Rows Uploaded successfully",3000, Notification.Position.MIDDLE);
+            notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+        } else {
+            notification = Notification.show("Error during Financials upload!",4000, Notification.Position.MIDDLE);
+            notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+        }
+        String resultSubscriber = projectConnectionService.saveSubscriber(allSubscriber, selectedDbName);
+        if (resultSubscriber.contains("ok")){
+            notification = Notification.show(allSubscriber.size() + " Subscriber Rows Uploaded successfully",3000, Notification.Position.MIDDLE);
+            notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+        } else {
+            notification = Notification.show("Error during Subscriber upload!",4000, Notification.Position.MIDDLE);
+            notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+        }
+
+        String resultUnits = projectConnectionService.saveUnitsDeepDive(allUnitsDeepDive, selectedDbName);
+        if (resultUnits.contains("ok")){
+            notification = Notification.show(allUnitsDeepDive.size() + " UnitsDeepDive Rows Uploaded successfully",3000, Notification.Position.MIDDLE);
+            notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+        } else {
+            notification = Notification.show("Error during UnitsDeepDive upload!",4000, Notification.Position.MIDDLE);
+            notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+        }
+        return AsyncResult.forValue("Some result");
+
+
     }
 
     private TabSheet getTabsheet() {
@@ -170,6 +213,7 @@ public class InputPBIComments extends VerticalLayout {
             tabSheet.getTab(getUnitsDeepDive).setEnabled(false);
         }
 
+
         tabSheet.setSizeFull();
         tabSheet.setHeightFull();
         tabSheet.addThemeVariants(TabSheetVariant.MATERIAL_BORDERED);
@@ -189,7 +233,8 @@ public class InputPBIComments extends VerticalLayout {
             crudFinancials.edit(selectedEntity, Crud.EditMode.EXISTING_ITEM);
             crudFinancials.getDeleteButton().getElement().getStyle().set("display", "none");
         });
-
+        crudFinancials.setHeightFull();
+        content.setHeightFull();
         return content;
     }
 
@@ -206,6 +251,8 @@ public class InputPBIComments extends VerticalLayout {
             crudSubscriber.edit(selectedEntity, Crud.EditMode.EXISTING_ITEM);
             crudSubscriber.getDeleteButton().getElement().getStyle().set("display", "none");
         });
+        crudSubscriber.setHeightFull();
+        content.setHeightFull();
         return content;
     }
 
@@ -222,6 +269,8 @@ public class InputPBIComments extends VerticalLayout {
             crudUnitsDeepDive.edit(selectedEntity, Crud.EditMode.EXISTING_ITEM);
             crudUnitsDeepDive.getDeleteButton().getElement().getStyle().set("display", "none");
         });
+        crudUnitsDeepDive.setHeightFull();
+        content.setHeightFull();
         return content;
     }
 
@@ -229,13 +278,13 @@ public class InputPBIComments extends VerticalLayout {
 
         TextArea comment = new TextArea("Comment");
 
-        comment.setHeight("200px");
-        comment.setWidth("400px");
+        comment.setHeight("250px");
+        comment.setWidth("1200px");
         FormLayout editForm = new FormLayout(comment);
         editForm.setColspan(comment, 2);
 
-        editForm.setHeight("200px");
-        editForm.setWidth("400px");
+        editForm.setHeight("250px");
+        editForm.setWidth("1200px");
 
         Binder<Financials> binder = new Binder<>(Financials.class);
         binder.forField(comment).asRequired().bind(Financials::getComment, Financials::setComment);
@@ -247,13 +296,13 @@ public class InputPBIComments extends VerticalLayout {
 
         TextArea comment = new TextArea("Comment");
 
-        comment.setHeight("200px");
-        comment.setWidth("400px");
+        comment.setHeight("250px");
+        comment.setWidth("1200px");
         FormLayout editForm = new FormLayout(comment);
         editForm.setColspan(comment, 2);
 
-        editForm.setHeight("200px");
-        editForm.setWidth("400px");
+        editForm.setHeight("250px");
+        editForm.setWidth("1200px");
 
         Binder<Subscriber> binder = new Binder<>(Subscriber.class);
         binder.forField(comment).asRequired().bind(Subscriber::getComment, Subscriber::setComment);
@@ -262,15 +311,15 @@ public class InputPBIComments extends VerticalLayout {
     }
 
     private CrudEditor<UnitsDeepDive> createUnitsDeepDiveEditor() {
+
         TextArea comment = new TextArea("Comment");
-
-        comment.setHeight("200px");
-        comment.setWidth("400px");
+        comment.setHeight("250px");
+        comment.setWidth("1200px");
         FormLayout editForm = new FormLayout(comment);
-        editForm.setColspan(comment, 2);
+        editForm.setColspan(comment, 3);
 
-        editForm.setHeight("200px");
-        editForm.setWidth("400px");
+        editForm.setHeight("350px");
+        editForm.setWidth("800px");
 
         Binder<UnitsDeepDive> binder = new Binder<>(UnitsDeepDive.class);
         binder.forField(comment).asRequired().bind(UnitsDeepDive::getComment, UnitsDeepDive::setComment);
@@ -403,16 +452,16 @@ public class InputPBIComments extends VerticalLayout {
 
         gridSubscriber.getColumnByKey("row").setHeader("Zeile").setWidth("80px").setFlexGrow(0).setResizable(true);
         gridSubscriber.getColumnByKey("month").setHeader("Month").setWidth("100px").setFlexGrow(0).setResizable(true);
-        gridSubscriber.getColumnByKey("category").setHeader("category").setWidth("200px").setFlexGrow(0).setResizable(true);
-        gridSubscriber.getColumnByKey("paymentType").setHeader("paymentType").setWidth("200px").setFlexGrow(0).setResizable(true);
-        gridSubscriber.getColumnByKey("segment").setHeader("segment").setWidth("150px").setFlexGrow(0).setResizable(true);
+        gridSubscriber.getColumnByKey("category").setHeader("Category").setWidth("200px").setFlexGrow(0).setResizable(true);
+        gridSubscriber.getColumnByKey("paymentType").setHeader("Payment Type").setWidth("200px").setFlexGrow(0).setResizable(true);
+        gridSubscriber.getColumnByKey("segment").setHeader("Segment").setWidth("150px").setFlexGrow(0).setResizable(true);
 
         // Reorder the columns (alphabetical by default)
         gridSubscriber.setColumnOrder( gridSubscriber.getColumnByKey(ZEILE)
                 , gridSubscriber.getColumnByKey(MONTH)
                 , gridSubscriber.getColumnByKey(CATEGORY)
-                , gridSubscriber.getColumnByKey(PAYMENTTYPE)
                 , gridSubscriber.getColumnByKey(SEGMENT)
+                , gridSubscriber.getColumnByKey(PAYMENTTYPE)
                 , gridSubscriber.getColumnByKey(COMMENT));
               // , gridSubscriber.getColumnByKey(EDIT_COLUMN));
 
@@ -436,16 +485,16 @@ public class InputPBIComments extends VerticalLayout {
 
         gridUnitsDeepDive.getColumnByKey("row").setHeader("Zeile").setWidth("80px").setFlexGrow(0).setResizable(true);
         gridUnitsDeepDive.getColumnByKey("month").setHeader("Month").setWidth("100px").setFlexGrow(0).setResizable(true);
-        gridUnitsDeepDive.getColumnByKey("category").setHeader("category").setWidth("200px").setFlexGrow(0).setResizable(true);
-        gridUnitsDeepDive.getColumnByKey("segment").setHeader("segment").setWidth("150px").setFlexGrow(0).setResizable(true);
+        gridUnitsDeepDive.getColumnByKey("category").setHeader("Category").setWidth("200px").setFlexGrow(0).setResizable(true);
+        gridUnitsDeepDive.getColumnByKey("segment").setHeader("Segment").setWidth("150px").setFlexGrow(0).setResizable(true);
 
         gridUnitsDeepDive.removeColumn(gridUnitsDeepDive.getColumnByKey(EDIT_COLUMN));
 
         // Reorder the columns (alphabetical by default)
         gridUnitsDeepDive.setColumnOrder( gridUnitsDeepDive.getColumnByKey(ZEILE)
                 , gridUnitsDeepDive.getColumnByKey(MONTH)
-                , gridUnitsDeepDive.getColumnByKey(SEGMENT)
                 , gridUnitsDeepDive.getColumnByKey(CATEGORY)
+                , gridUnitsDeepDive.getColumnByKey(SEGMENT)
                 , gridUnitsDeepDive.getColumnByKey(COMMENT));
             //    , gridUnitsDeepDive.getColumnByKey(EDIT_COLUMN));
 
