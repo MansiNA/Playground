@@ -114,7 +114,7 @@ public class InputPBIComments extends VerticalLayout {
 
             String resultFinancial = projectConnectionService.saveFinancials(allFinancialsItems, selectedDbName);
             if (resultFinancial.contains("ok")){
-                notification = Notification.show(allFinancialsItems.size() + " Rows Uploaded successfully",3000, Notification.Position.MIDDLE);
+                notification = Notification.show(allFinancialsItems.size() + " Financials Rows Uploaded successfully",3000, Notification.Position.MIDDLE);
                 notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
             } else {
                 notification = Notification.show("Error during Financials upload!",4000, Notification.Position.MIDDLE);
@@ -122,7 +122,7 @@ public class InputPBIComments extends VerticalLayout {
             }
             String resultSubscriber = projectConnectionService.saveSubscriber(allSubscriber, selectedDbName);
             if (resultSubscriber.contains("ok")){
-                notification = Notification.show(allSubscriber.size() + " Rows Uploaded successfully",3000, Notification.Position.MIDDLE);
+                notification = Notification.show(allSubscriber.size() + " Subscriber Rows Uploaded successfully",3000, Notification.Position.MIDDLE);
                 notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
             } else {
                 notification = Notification.show("Error during Subscriber upload!",4000, Notification.Position.MIDDLE);
@@ -131,7 +131,7 @@ public class InputPBIComments extends VerticalLayout {
 
             String resultUnits = projectConnectionService.saveUnitsDeepDive(allUnitsDeepDive, selectedDbName);
             if (resultUnits.contains("ok")){
-                notification = Notification.show(allUnitsDeepDive.size() + " Rows Uploaded successfully",3000, Notification.Position.MIDDLE);
+                notification = Notification.show(allUnitsDeepDive.size() + " UnitsDeepDive Rows Uploaded successfully",3000, Notification.Position.MIDDLE);
                 notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
             } else {
                 notification = Notification.show("Error during UnitsDeepDive upload!",4000, Notification.Position.MIDDLE);
@@ -362,13 +362,21 @@ public class InputPBIComments extends VerticalLayout {
 
         gridFinancials.removeColumn(gridFinancials.getColumnByKey(EDIT_COLUMN));
 
+        gridFinancials.getColumnByKey("row").setHeader("Zeile").setWidth("80px").setFlexGrow(0).setResizable(true);
+        gridFinancials.getColumnByKey("month").setHeader("Month").setWidth("100px").setFlexGrow(0).setResizable(true);
+        gridFinancials.getColumnByKey("scenario").setHeader("Scenario").setWidth("200px").setFlexGrow(0).setResizable(true);
+        gridFinancials.getColumnByKey("category").setHeader("Category").setWidth("200px").setFlexGrow(0).setResizable(true);
+        gridFinancials.getColumnByKey("xtd").setHeader("XTD").setWidth("80px").setFlexGrow(0).setResizable(true);
+
+
+
         // Reorder the columns (alphabetical by default)
         gridFinancials.setColumnOrder( gridFinancials.getColumnByKey(ZEILE)
                 , gridFinancials.getColumnByKey(MONTH)
                 , gridFinancials.getColumnByKey(CATEGORY)
-                , gridFinancials.getColumnByKey(COMMENT)
                 , gridFinancials.getColumnByKey(SCENARIO)
-                , gridFinancials.getColumnByKey(XTD));
+                , gridFinancials.getColumnByKey(XTD)
+                , gridFinancials.getColumnByKey(COMMENT));
             //    , gridFinancials.getColumnByKey(EDIT_COLUMN));
 
     }
@@ -391,9 +399,13 @@ public class InputPBIComments extends VerticalLayout {
 
         gridSubscriber = crudSubscriber.getGrid();
 
-        gridSubscriber.getColumnByKey("row").setHeader("Zeile").setWidth("10px");
-
         gridSubscriber.removeColumn(gridSubscriber.getColumnByKey(EDIT_COLUMN));
+
+        gridSubscriber.getColumnByKey("row").setHeader("Zeile").setWidth("80px").setFlexGrow(0).setResizable(true);
+        gridSubscriber.getColumnByKey("month").setHeader("Month").setWidth("100px").setFlexGrow(0).setResizable(true);
+        gridSubscriber.getColumnByKey("category").setHeader("category").setWidth("200px").setFlexGrow(0).setResizable(true);
+        gridSubscriber.getColumnByKey("paymentType").setHeader("paymentType").setWidth("200px").setFlexGrow(0).setResizable(true);
+        gridSubscriber.getColumnByKey("segment").setHeader("segment").setWidth("150px").setFlexGrow(0).setResizable(true);
 
         // Reorder the columns (alphabetical by default)
         gridSubscriber.setColumnOrder( gridSubscriber.getColumnByKey(ZEILE)
@@ -422,7 +434,10 @@ public class InputPBIComments extends VerticalLayout {
 
         gridUnitsDeepDive = crudUnitsDeepDive.getGrid();
 
-        gridUnitsDeepDive.getColumnByKey("row").setHeader("Zeile").setWidth("10px");
+        gridUnitsDeepDive.getColumnByKey("row").setHeader("Zeile").setWidth("80px").setFlexGrow(0).setResizable(true);
+        gridUnitsDeepDive.getColumnByKey("month").setHeader("Month").setWidth("100px").setFlexGrow(0).setResizable(true);
+        gridUnitsDeepDive.getColumnByKey("category").setHeader("category").setWidth("200px").setFlexGrow(0).setResizable(true);
+        gridUnitsDeepDive.getColumnByKey("segment").setHeader("segment").setWidth("150px").setFlexGrow(0).setResizable(true);
 
         gridUnitsDeepDive.removeColumn(gridUnitsDeepDive.getColumnByKey(EDIT_COLUMN));
 
