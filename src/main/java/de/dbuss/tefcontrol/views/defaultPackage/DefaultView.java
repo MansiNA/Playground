@@ -823,8 +823,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
                 new NativeButtonRenderer<>("Run",
                         clickedItem -> {
                             log.info("executing NativeButtonRenderer for Run and clickedItem in gridAgentJobs grid "+clickedItem.getName());
-                            Notification notification = Notification.show("Job " + clickedItem.getName() + " wurde gestartet...",6000, Notification.Position.TOP_END);
-                            notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+
                             try {
                                 startJob(clickedItem.getName());
                             } catch (InterruptedException e) {
@@ -840,19 +839,22 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
     private void startJob(String jobName) throws InterruptedException {
         log.info("Starting startJob() for DB-jobs tab");
         var erg= msmService.startJob(jobName);
-        if (!erg.contains("OK"))
+
+        if (erg.contains("OK"))
         {
-            Notification.show(erg, 5000, Notification.Position.MIDDLE);
+            Notification notification = Notification.show("Job " + jobName + " wurde gestartet...",6000, Notification.Position.TOP_END);
+            notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
+            Div textArea = new Div();
+            Article article=new Article();
+            article.setText(LocalDateTime.now().format(formatter) + ": Job " + jobName + " gestartet..." );
+            textArea.add (article);
+
+            Thread.sleep(2000);
+            gridAgentJobs.setItems(getAgentJobs());
+        } else {
+            Notification.show(erg, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
         }
-
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
-        Div textArea = new Div();
-        Article article=new Article();
-        article.setText(LocalDateTime.now().format(formatter) + ": Job " + jobName + " gestartet..." );
-        textArea.add (article);
-
-        Thread.sleep(2000);
-        gridAgentJobs.setItems(getAgentJobs());
         log.info("Ending startJob() for DB-jobs tab");
     }
 
