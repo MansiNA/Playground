@@ -838,7 +838,8 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
 
     private void startJob(String jobName) throws InterruptedException {
         log.info("Starting startJob() for DB-jobs tab");
-        var erg= msmService.startJob(jobName);
+        String dbName= projects.isPresent()? projects.get().getAgent_db() : "";
+        var erg= msmService.startJob(jobName, dbName);
 
         if (erg.contains("OK"))
         {

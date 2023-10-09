@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
+import javax.sql.DataSource;
 import java.util.List;
 
 @Service
@@ -15,10 +16,11 @@ public class MSMService {
 
     private final ProductHierarchieRepository productHierarchieRepository;
 
-    public MSMService(ProductHierarchieRepository productHierarchieRepository) {
+    private final ProjectConnectionService projectConnectionService;
 
-
+    public MSMService(ProductHierarchieRepository productHierarchieRepository, ProjectConnectionService projectConnectionService) {
         this.productHierarchieRepository = productHierarchieRepository;
+        this.projectConnectionService = projectConnectionService;
     }
 
     public List<ProductHierarchie> findAllProducts(String stringFilter) {
@@ -51,10 +53,14 @@ public class MSMService {
         productHierarchieRepository.save(product);
     }
 
-    public String startJob(String jobname ){
+    public String startJob(String jobname, String agentDb){
+
+        DataSource dataSource = projectConnectionService.getDataSource(agentDb);
+        template = new JdbcTemplate(dataSource);
 
         try {
-            template.execute("msdb.dbo.sp_start_job @job_name=" + jobname);
+            String sql = "msdb.dbo.sp_start_job @job_name='" + jobname + "'";
+            template.execute(sql);
         }
         catch (Exception e)
         {
