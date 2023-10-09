@@ -3,6 +3,7 @@ package de.dbuss.tefcontrol.data.service;
 import de.dbuss.tefcontrol.data.entity.ProductHierarchie;
 import de.dbuss.tefcontrol.data.repository.ProductHierarchieRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -55,6 +56,7 @@ public class MSMService {
 
     public String startJob(String jobname, String agentDb){
 
+        String hostName = projectConnectionService.findByName(agentDb).get().getHostname();
         DataSource dataSource = projectConnectionService.getDataSource(agentDb);
         template = new JdbcTemplate(dataSource);
 
@@ -62,11 +64,12 @@ public class MSMService {
             String sql = "msdb.dbo.sp_start_job @job_name='" + jobname + "'";
             template.execute(sql);
         }
-        catch (Exception e)
-        {
+        catch (CannotGetJdbcConnectionException connectionException) {
+            return "Fehler beim Herstellen der TCP/IP-Verbindung mit dem Host '"+ hostName +"', Port 1433. Fehler: '"+ hostName +"'. Überprüfen Sie die Verbindungseigenschaften. Stellen Sie sicher, dass eine SQL Server-Instanz auf dem Host ausgeführt wird und am Port TCP/IP-Verbindungen akzeptiert";
+        } catch (Exception e) {
+            // Handle other exceptions
             return e.getMessage();
         }
-
         return "OK";
 
     }
