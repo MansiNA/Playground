@@ -250,6 +250,38 @@ public class Tech_KPIView extends VerticalLayout {
         htmlDivQS.getElement().setProperty("innerHTML", "<b>QS-Übersicht:</b>");
 
 
+        saveButton.addClickListener(clickEvent -> {
+
+            Notification notification = Notification.show("Rows Uploaded start",2000, Notification.Position.MIDDLE);
+            notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+
+            String resultKPIFact = projectConnectionService.saveKPIFact(listOfKPI_Fact, selectedDbName);
+            if (resultKPIFact.contains("ok")){
+                notification = Notification.show(listOfKPI_Fact.size() + " KPI_Fcat Rows Uploaded successfully",3000, Notification.Position.MIDDLE);
+                notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+            } else {
+                notification = Notification.show("Error during KPI_Fcat upload!",4000, Notification.Position.MIDDLE);
+                notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+            }
+
+            String resultKPIPlan = projectConnectionService.saveKPIPlan(listOfKPI_Plan, selectedDbName);
+            if (resultKPIPlan.contains("ok")){
+                notification = Notification.show(listOfKPI_Plan.size() + " KPI_Plan Rows Uploaded successfully",3000, Notification.Position.MIDDLE);
+                notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+            } else {
+                notification = Notification.show("Error during KPI_Plan upload!",4000, Notification.Position.MIDDLE);
+                notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+            }
+
+            String resultKPIActuals = projectConnectionService.saveKPIActuals(listOfKPI_Actuals, selectedDbName);
+            if (resultKPIActuals.contains("ok")){
+                notification = Notification.show(listOfKPI_Actuals.size() + " KPI_Actuals Rows Uploaded successfully",3000, Notification.Position.MIDDLE);
+                notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+            } else {
+                notification = Notification.show("Error during KPI_Actuals upload!",4000, Notification.Position.MIDDLE);
+                notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+            }
+        });
 
         add(htmlDivQS,gridQS,accordion);
 
@@ -486,15 +518,6 @@ public class Tech_KPIView extends VerticalLayout {
 
         jdbcTemplate.batchUpdate(sql, batchData, batchData.size(), (ps, entity) -> {
 
-            Integer row=-1;
-            if(entity.getRow() != null)
-            {
-                row=entity.getRow();
-            }
-            else {
-                row=-1;
-            }
-
             ps.setInt(1, entity.row);
             ps.setString(2, entity.getNT_ID());
             ps.setString(3, entity.getWTAC_ID());
@@ -529,14 +552,7 @@ public class Tech_KPIView extends VerticalLayout {
             {
                 versionDate=new java.sql.Date(entity.getVersionDate().getTime());
             }
-            if(entity.getRow() != null)
-            {
-                row=entity.getRow();
-            }
-            else {
-                row=-1;
-            }
-            ps.setInt(1,row);
+            ps.setInt(1,entity.getRow());
             ps.setString(2, entity.getNT_ID());
             ps.setString(3, entity.getSpalte1());
             ps.setString(4, entity.getScenario());
@@ -556,16 +572,8 @@ public class Tech_KPIView extends VerticalLayout {
 
 
         jdbcTemplate.batchUpdate(sql, batchData, batchData.size(), (ps, entity) -> {
-            Integer row=-1;
-            if(entity.getRow() != null)
-            {
-                row=entity.getRow();
-            }
-            else {
-                row=-1;
-            }
 
-            ps.setInt(1, row);
+            ps.setInt(1, entity.getRow());
             ps.setString(2, entity.getNT_ID());
             ps.setString(3, entity.getRunrate());
             ps.setString(4, entity.getScenario());
@@ -1544,7 +1552,7 @@ public class Tech_KPIView extends VerticalLayout {
 
     public class KPI_Fact {
 
-        private Integer row;
+        private int row;
 
 
         private String NT_ID ;
@@ -1556,11 +1564,11 @@ public class Tech_KPIView extends VerticalLayout {
 
         private Double Wert=0.0;
 
-        public Integer getRow() {
+        public int getRow() {
             return row;
         }
 
-        public void setRow(Integer row) {
+        public void setRow(int row) {
             this.row = row;
         }
 
@@ -1608,7 +1616,7 @@ public class Tech_KPIView extends VerticalLayout {
 
     public class KPI_Actuals {
 
-        private Integer row;
+        private int row;
         private String NT_ID="" ;
 
         private String WTAC_ID="" ;
@@ -1638,11 +1646,11 @@ public class Tech_KPIView extends VerticalLayout {
         private String SourceContact="";
         private String SourceLink="";
 
-        public Integer getRow() {
+        public int getRow() {
             return row;
         }
 
-        public void setRow(Integer row) {
+        public void setRow(int row) {
             this.row = row;
         }
 
@@ -1794,7 +1802,7 @@ public class Tech_KPIView extends VerticalLayout {
 
     public class KPI_Plan {
 
-        private Integer row;
+        private int row;
 
         private String NT_ID ;
 
@@ -1808,11 +1816,11 @@ public class Tech_KPIView extends VerticalLayout {
 
         private String Runrate;
 
-        public Integer getRow() {
+        public int getRow() {
             return row;
         }
 
-        public void setRow(Integer row) {
+        public void setRow(int row) {
             this.row = row;
         }
 
