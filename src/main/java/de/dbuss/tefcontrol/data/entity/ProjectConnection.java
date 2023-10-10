@@ -18,6 +18,7 @@ public class ProjectConnection {
     private Long id;
     @NotEmpty
     private String name;
+    private String category;
     @NotEmpty
     private String dbName;
     @NotNull
