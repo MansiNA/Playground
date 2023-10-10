@@ -71,6 +71,7 @@ import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 //@PageTitle("Default Mapping")
@@ -380,12 +381,18 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
         selectConnection.setPlaceholder("name from project_connections");
         selectConnection.setWidth("650 px");
         List<ProjectConnection> projectConnections = projectConnectionService.findAll();
-        selectConnection.setItems(
-                projectConnections
-                        .stream()
-                        .map(ProjectConnection::getName)
-                        .collect(Collectors.toList())
-        );
+        List<String> connectionNames = projectConnections.stream()
+                .flatMap(connection -> {
+                    String category = connection.getCategory();
+                    if (category == null) {
+                        return Stream.of(connection.getName());
+                    }
+                    return Stream.empty();
+                })
+                .collect(Collectors.toList());
+
+        selectConnection.setItems(connectionNames);
+
 
         TextArea textArea = new TextArea();
         textArea.setWidthFull();
@@ -823,8 +830,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
                 new NativeButtonRenderer<>("Run",
                         clickedItem -> {
                             log.info("executing NativeButtonRenderer for Run and clickedItem in gridAgentJobs grid "+clickedItem.getName());
-                            Notification notification = Notification.show("Job " + clickedItem.getName() + " wurde gestartet...",6000, Notification.Position.TOP_END);
-                            notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+
                             try {
                                 startJob(clickedItem.getName());
                             } catch (InterruptedException e) {
@@ -839,20 +845,24 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
 
     private void startJob(String jobName) throws InterruptedException {
         log.info("Starting startJob() for DB-jobs tab");
-        var erg= msmService.startJob(jobName);
-        if (!erg.contains("OK"))
+        String dbName= projects.isPresent()? projects.get().getAgent_db() : "";
+        var erg= msmService.startJob(jobName, dbName);
+
+        if (erg.contains("OK"))
         {
-            Notification.show(erg, 5000, Notification.Position.MIDDLE);
+            Notification notification = Notification.show("Job " + jobName + " wurde gestartet...",6000, Notification.Position.TOP_END);
+            notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
+            Div textArea = new Div();
+            Article article=new Article();
+            article.setText(LocalDateTime.now().format(formatter) + ": Job " + jobName + " gestartet..." );
+            textArea.add (article);
+
+            Thread.sleep(2000);
+            gridAgentJobs.setItems(getAgentJobs());
+        } else {
+            Notification.show(erg, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
         }
-
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
-        Div textArea = new Div();
-        Article article=new Article();
-        article.setText(LocalDateTime.now().format(formatter) + ": Job " + jobName + " gestartet..." );
-        textArea.add (article);
-
-        Thread.sleep(2000);
-        gridAgentJobs.setItems(getAgentJobs());
         log.info("Ending startJob() for DB-jobs tab");
     }
 

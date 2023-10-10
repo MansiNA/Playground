@@ -53,6 +53,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 @PageTitle("HW Mapping")
@@ -107,13 +108,18 @@ public class HWMappingView extends VerticalLayout {
         databaseConnectionCB.setAllowCustomValue(true);
 
         List<ProjectConnection> listOfProjectConnections = projectConnectionService.findAll();
-        databaseConnectionCB.setItems(listOfProjectConnections.stream()
-                .map(ProjectConnection::getName)
-                .collect(Collectors.toList())
-        );
-        databaseConnectionCB.setTooltipText("Select Database Connection");
-        databaseConnectionCB.setValue(listOfProjectConnections.get(0).getName());
-        selectedDbName = listOfProjectConnections.get(0).getName();
+        List<String> connectionNames = listOfProjectConnections.stream()
+                .flatMap(connection -> {
+                    String category = connection.getCategory();
+                    if (category == null) {
+                        return Stream.of(connection.getName());
+                    }
+                    return Stream.empty();
+                })
+                .collect(Collectors.toList());
+        databaseConnectionCB.setItems(connectionNames);
+        databaseConnectionCB.setValue(connectionNames.get(0));
+        selectedDbName = connectionNames.get(0);
 
         horl.add(databaseConnectionCB, downloadButton, uploadButton, singleFileUpload, verl, exportButton, anchor);
         horl.setAlignItems(Alignment.CENTER);
