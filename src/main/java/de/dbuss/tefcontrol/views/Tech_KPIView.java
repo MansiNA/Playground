@@ -6,6 +6,7 @@ import com.vaadin.flow.component.accordion.AccordionPanel;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.CheckboxGroup;
 import com.vaadin.flow.component.checkbox.CheckboxGroupVariant;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.details.Details;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
@@ -25,6 +26,8 @@ import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
+import de.dbuss.tefcontrol.data.entity.ProjectConnection;
+import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -53,6 +56,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 @PageTitle("Tech KPI | TEF-Control")
@@ -61,16 +65,17 @@ import java.util.stream.Collectors;
 public class Tech_KPIView extends VerticalLayout {
 
     private JdbcTemplate jdbcTemplate;
+    private final ProjectConnectionService projectConnectionService;
+    private String selectedDbName;
+    private Button saveButton;
     Article article = new Article();
 
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
     Div textArea = new Div();
     Div message = new Div();
     UI ui=UI.getCurrent();
-    Button importButton = new Button("Freigabe");
     MemoryBuffer memoryBuffer = new MemoryBuffer();
     Upload singleFileUpload = new Upload(memoryBuffer);
-
 
     InputStream fileData_Fact;
     InputStream fileData_Actuals;
@@ -110,22 +115,13 @@ public class Tech_KPIView extends VerticalLayout {
     Div htmlDivToDO;
     CheckboxGroup<String> TodoList;
 
-    public Tech_KPIView(JdbcTemplate jdbcTemplate) {
+    public Tech_KPIView(JdbcTemplate jdbcTemplate, ProjectConnectionService projectConnectionService) {
         this.jdbcTemplate = jdbcTemplate;
+        this.projectConnectionService = projectConnectionService;
 
-        importButton.setEnabled(false);
         progressBarPlan.setVisible(false);
         progressBarActuals.setVisible(false);
         progressBarFact.setVisible(false);
-
-        importButton.addClickListener(e->{
-            System.out.println("Import Button gedrückt");
-            ui.setPollInterval(500);
-            saveFactEntities();
-            savePlanEntities();
-            saveActualsEntities();
-
-        });
 
         description.add("Tool für upload der KPI-Excel Tabelle.\n Bitte als 1. Datei hochladen.");
 
@@ -156,11 +152,11 @@ public class Tech_KPIView extends VerticalLayout {
             }
 
 
-            if (selectedItems.contains("QS bestätigen"))
-            {
-                importButton.setEnabled(true);
+        //    if (selectedItems.contains("QS bestätigen"))
+       //     {
+             //   importButton.setEnabled(true);
 
-            }
+        //    }
 
         });
 
@@ -194,7 +190,33 @@ public class Tech_KPIView extends VerticalLayout {
         //add(htmlDivToDO);
         add(TodoList);
 
-        hl.add(singleFileUpload,importButton);
+        saveButton = new Button("Save to DB");
+        saveButton.setEnabled(false);
+
+        ComboBox<String> databaseCB = new ComboBox<>("Choose Database");
+        databaseCB.setAllowCustomValue(true);
+
+        databaseCB.setTooltipText("Select Database Connection");
+        List<ProjectConnection> listOfProjectConnections = projectConnectionService.findAll();
+        List<String> connectionNames = listOfProjectConnections.stream()
+                .flatMap(connection -> {
+                    String category = connection.getCategory();
+                    if ("Tech_PKI".equals(category)) {
+                        return Stream.of(connection.getName());
+                    }
+                    return Stream.empty();
+                })
+                .collect(Collectors.toList());
+        databaseCB.setItems(connectionNames);
+        databaseCB.setValue(connectionNames.get(0));
+        selectedDbName = connectionNames.get(0);
+
+        databaseCB.addValueChangeListener(event -> {
+            selectedDbName = event.getValue();
+        });
+
+        hl.setAlignItems(Alignment.BASELINE);
+        hl.add(singleFileUpload, databaseCB, saveButton);
 
         //  h3_Fact.add("Fact 0 rows");
         //  h3_Actuals.add("Actuals 0 rows");
@@ -285,8 +307,6 @@ public class Tech_KPIView extends VerticalLayout {
         progressBarPlan.setMin(0);
         progressBarPlan.setMax(totalRows);
         progressBarPlan.setValue(0);
-        importButton.setEnabled(false);
-
 
         message.setText(LocalDateTime.now().format(formatter) + ": Info: saving KPI_Plan to database...");
         truncateTable("[Stage_Tech_KPI].[KPI_Plan]");
@@ -343,8 +363,6 @@ public class Tech_KPIView extends VerticalLayout {
         progressBarActuals.setMin(0);
         progressBarActuals.setMax(totalRows);
         progressBarActuals.setValue(0);
-        importButton.setEnabled(false);
-
 
         message.setText(message.getText() + "\n" + LocalDateTime.now().format(formatter) + ": Info: saving " + sheet + " to database...");
 
@@ -397,8 +415,6 @@ public class Tech_KPIView extends VerticalLayout {
     }
 
     private void saveFactEntities() {
-
-        importButton.setEnabled(false);
 
         int totalRows = listOfKPI_Fact.size();
         progressBarFact.setVisible(true);
@@ -664,6 +680,7 @@ public class Tech_KPIView extends VerticalLayout {
 
             //h3_Plan.removeAll();
             //h3_Plan.add("Plan (" + listOfKPI_Plan.size() + " rows)");
+            saveButton.setEnabled(true);
 
         });
         System.out.println("setup uploader................over");

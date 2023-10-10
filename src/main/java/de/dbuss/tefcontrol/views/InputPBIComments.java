@@ -86,13 +86,18 @@ public class InputPBIComments extends VerticalLayout {
         databaseCB.setAllowCustomValue(true);
 
         List<ProjectConnection> listOfProjectConnections = projectConnectionService.findAll();
-        databaseCB.setItems(listOfProjectConnections.stream()
-                .map(ProjectConnection::getName)
-                .collect(Collectors.toList())
-        );
-        databaseCB.setTooltipText("Select Database Connection");
-        databaseCB.setValue(listOfProjectConnections.get(0).getName());
-        selectedDbName = listOfProjectConnections.get(0).getName();
+        List<String> connectionNames = listOfProjectConnections.stream()
+                .flatMap(connection -> {
+                    String category = connection.getCategory();
+                    if ("InputPBIComment".equals(category)) {
+                        return Stream.of(connection.getName());
+                    }
+                    return Stream.empty();
+                })
+                .collect(Collectors.toList());
+        databaseCB.setItems(connectionNames);
+        databaseCB.setValue(connectionNames.get(0));
+        selectedDbName = connectionNames.get(0);
         System.out.println(selectedDbName+"..........************************************************");
 
         HorizontalLayout hl = new HorizontalLayout();

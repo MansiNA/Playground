@@ -71,6 +71,7 @@ import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 //@PageTitle("Default Mapping")
@@ -380,12 +381,18 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
         selectConnection.setPlaceholder("name from project_connections");
         selectConnection.setWidth("650 px");
         List<ProjectConnection> projectConnections = projectConnectionService.findAll();
-        selectConnection.setItems(
-                projectConnections
-                        .stream()
-                        .map(ProjectConnection::getName)
-                        .collect(Collectors.toList())
-        );
+        List<String> connectionNames = projectConnections.stream()
+                .flatMap(connection -> {
+                    String category = connection.getCategory();
+                    if (category == null) {
+                        return Stream.of(connection.getName());
+                    }
+                    return Stream.empty();
+                })
+                .collect(Collectors.toList());
+
+        selectConnection.setItems(connectionNames);
+
 
         TextArea textArea = new TextArea();
         textArea.setWidthFull();
