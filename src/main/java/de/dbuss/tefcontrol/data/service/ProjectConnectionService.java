@@ -2,6 +2,7 @@ package de.dbuss.tefcontrol.data.service;
 
 import de.dbuss.tefcontrol.data.entity.*;
 import de.dbuss.tefcontrol.data.repository.ProjectConnectionRepository;
+import de.dbuss.tefcontrol.views.Tech_KPIView;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Primary;
@@ -11,9 +12,7 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Service;
 
 import javax.sql.DataSource;
-import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
 import java.util.*;
 
 @Slf4j
@@ -218,6 +217,118 @@ public class ProjectConnectionService {
                         item.getComment()
                 );
             }
+            return "ok";
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Error during update: " + e.getMessage();
+        }
+    }
+
+    public String saveKPIFact(List<Tech_KPIView.KPI_Fact> data, String selectedDatabase) {
+        selectedDatabase = "Test";
+        DataSource dataSource = getDataSource(selectedDatabase);
+        jdbcTemplate = new JdbcTemplate(dataSource);
+
+        try {
+            String sqlDelete = "DELETE FROM [Stage_Tech_KPI].[KPI_Fact]";
+            jdbcTemplate.update(sqlDelete);
+
+            String sqlInsert = "INSERT INTO [Stage_Tech_KPI].[KPI_Fact] (Zeile, NT_ID, Runrate, Scenario,[Date],Wert) VALUES (?, ?, ?, ?, ?, ?)";
+
+
+            jdbcTemplate.batchUpdate(sqlInsert, data, data.size(), (ps, entity) -> {
+
+                ps.setInt(1, entity.getRow());
+                ps.setString(2, entity.getNT_ID());
+                ps.setString(3, entity.getRunrate());
+                ps.setString(4, entity.getScenario());
+                //  ps.setDate(3, new java.sql.Date(2023,01,01));
+                java.sql.Date sqlDate = (entity.getDate() != null) ? new java.sql.Date(entity.getDate().getTime()) : null;
+                ps.setDate(5, sqlDate);
+                //  ps.setDate(5, new java.sql.Date(entity.getDate().getTime() ));
+                ps.setDouble (6, entity.getWert());
+            });
+            return "ok";
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Error during update: " + e.getMessage();
+        }
+    }
+
+    public String saveKPIPlan(List<Tech_KPIView.KPI_Plan> data, String selectedDatabase) {
+        selectedDatabase = "Test";
+        DataSource dataSource = getDataSource(selectedDatabase);
+        jdbcTemplate = new JdbcTemplate(dataSource);
+
+        try {
+            String sqlDelete = "DELETE FROM [Stage_Tech_KPI].[KPI_Plan]";
+            jdbcTemplate.update(sqlDelete);
+
+            String sql = "INSERT INTO [Stage_Tech_KPI].[KPI_Plan] (Zeile, NT_ID, Spalte1, Scenario, VersionDate, VersionComment, Runrate) VALUES (?, ?, ?, ?, ?, ?, ?)";
+
+            jdbcTemplate.batchUpdate(sql, data, data.size(), (ps, entity) -> {
+
+                java.sql.Date versionDate = null;
+                if(entity.getVersionDate() != null)
+                {
+                    versionDate=new java.sql.Date(entity.getVersionDate().getTime());
+                }
+
+                ps.setInt(1,entity.getRow());
+                ps.setString(2, entity.getNT_ID());
+                ps.setString(3, entity.getSpalte1());
+                ps.setString(4, entity.getScenario());
+                ps.setDate(5, versionDate);
+                ps.setString(6, entity.getVersionComment());
+                ps.setString(7, entity.getRunrate());
+                //  ps.setDate(3, new java.sql.Date(2023,01,01));
+                //ps.setDate(3, new java.sql.Date(entity.getDate().getTime() ));
+                //ps.setDouble (4, entity.getWert());
+            });
+
+            return "ok";
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Error during update: " + e.getMessage();
+        }
+    }
+
+    public String saveKPIActuals(List<Tech_KPIView.KPI_Actuals> data, String selectedDatabase) {
+        selectedDatabase = "Test";
+        DataSource dataSource = getDataSource(selectedDatabase);
+        jdbcTemplate = new JdbcTemplate(dataSource);
+
+        try {
+            String sqlDelete = "DELETE FROM [Stage_Tech_KPI].[KPI_Actuals]";
+            jdbcTemplate.update(sqlDelete);
+
+            String sqlInsert = "INSERT INTO [Stage_Tech_KPI].[KPI_Actuals] (Zeile, [NT_ID],[WTAC_ID],[sort],[M2_Area],[M1_Network],[M3_Service],[M4_Dimension],[M5_Tech],[M6_Detail],[KPI_long],[Runrate],[Unit],[Description],[SourceReport],[SourceInput],[SourceComment] ,[SourceContact] ,[SourceLink] ) VALUES (?, ?, ?, ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+
+            jdbcTemplate.batchUpdate(sqlInsert, data, data.size(), (ps, entity) -> {
+
+
+                ps.setInt(1, entity.getRow());
+                ps.setString(2, entity.getNT_ID());
+                ps.setString(3, entity.getWTAC_ID());
+                ps.setInt(4, entity.getSort());
+                ps.setString(5, entity.getM2_Area());
+                ps.setString(6, entity.getM1_Network());
+                ps.setString(7, entity.getM3_Service());
+                ps.setString(8, entity.getM4_Dimension());
+                ps.setString(9, entity.getM5_Tech());
+                ps.setString(10, entity.getM6_Detail());
+                ps.setString(11, entity.getKPI_long());
+                ps.setString(12, entity.getRunrate());
+                ps.setString(13, entity.getUnit());
+                ps.setString(14, entity.getDescription());
+                ps.setString(15, entity.getSourceReport());
+                ps.setString(16, entity.getSourceInput());
+                ps.setString(17, entity.getSourceComment());
+                ps.setString(18, entity.getSourceContact());
+                ps.setString(19, entity.getSourceLink());
+            });
+
+
             return "ok";
         } catch (Exception e) {
             e.printStackTrace();
