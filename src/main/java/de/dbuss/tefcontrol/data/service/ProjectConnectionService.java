@@ -225,7 +225,7 @@ public class ProjectConnectionService {
     }
 
     public String saveKPIFact(List<Tech_KPIView.KPI_Fact> data, String selectedDatabase) {
-        selectedDatabase = "Test";
+      //  selectedDatabase = "Test";
         DataSource dataSource = getDataSource(selectedDatabase);
         jdbcTemplate = new JdbcTemplate(dataSource);
 
@@ -256,7 +256,7 @@ public class ProjectConnectionService {
     }
 
     public String saveKPIPlan(List<Tech_KPIView.KPI_Plan> data, String selectedDatabase) {
-        selectedDatabase = "Test";
+       // selectedDatabase = "Test";
         DataSource dataSource = getDataSource(selectedDatabase);
         jdbcTemplate = new JdbcTemplate(dataSource);
 
@@ -294,7 +294,7 @@ public class ProjectConnectionService {
     }
 
     public String saveKPIActuals(List<Tech_KPIView.KPI_Actuals> data, String selectedDatabase) {
-        selectedDatabase = "Test";
+     //   selectedDatabase = "Test";
         DataSource dataSource = getDataSource(selectedDatabase);
         jdbcTemplate = new JdbcTemplate(dataSource);
 
