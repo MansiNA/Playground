@@ -249,38 +249,11 @@ public class Tech_KPIView extends VerticalLayout {
         // htmlDivQS.getElement().setProperty("innerHTML", "<b style=\"color:blue;\">QS-Übersicht:</b>");
         htmlDivQS.getElement().setProperty("innerHTML", "<b>QS-Übersicht:</b>");
 
-
         saveButton.addClickListener(clickEvent -> {
-
-            Notification notification = Notification.show("Rows Uploaded start",2000, Notification.Position.MIDDLE);
-            notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-
-            String resultKPIFact = projectConnectionService.saveKPIFact(listOfKPI_Fact, selectedDbName);
-            if (resultKPIFact.contains("ok")){
-                notification = Notification.show(listOfKPI_Fact.size() + " KPI_Fcat Rows Uploaded successfully",3000, Notification.Position.MIDDLE);
-                notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-            } else {
-                notification = Notification.show("Error during KPI_Fcat upload!",4000, Notification.Position.MIDDLE);
-                notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
-            }
-
-            String resultKPIPlan = projectConnectionService.saveKPIPlan(listOfKPI_Plan, selectedDbName);
-            if (resultKPIPlan.contains("ok")){
-                notification = Notification.show(listOfKPI_Plan.size() + " KPI_Plan Rows Uploaded successfully",3000, Notification.Position.MIDDLE);
-                notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-            } else {
-                notification = Notification.show("Error during KPI_Plan upload!",4000, Notification.Position.MIDDLE);
-                notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
-            }
-
-            String resultKPIActuals = projectConnectionService.saveKPIActuals(listOfKPI_Actuals, selectedDbName);
-            if (resultKPIActuals.contains("ok")){
-                notification = Notification.show(listOfKPI_Actuals.size() + " KPI_Actuals Rows Uploaded successfully",3000, Notification.Position.MIDDLE);
-                notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-            } else {
-                notification = Notification.show("Error during KPI_Actuals upload!",4000, Notification.Position.MIDDLE);
-                notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
-            }
+            Notification.show("Connection with Server...",1500, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+            savePlanEntities();
+            saveActualsEntities();
+            saveFactEntities();
         });
 
         add(htmlDivQS,gridQS,accordion);
@@ -344,9 +317,7 @@ public class Tech_KPIView extends VerticalLayout {
         truncateTable("[Stage_Tech_KPI].[KPI_Plan]");
         new Thread(() -> {
 
-            // Do some long running task
             try {
-                System.out.println("Upload KPI_Plan Data to DB");
 
                 int batchSize = 1000; // Die Anzahl der Zeilen, die auf einmal verarbeitet werden sollen
 
@@ -359,8 +330,17 @@ public class Tech_KPIView extends VerticalLayout {
 
                     System.out.println("Verarbeitete Zeilen: " + endIndex + " von " + totalRows);
 
-                    savePlanBlock(batchData);
-
+                    //savePlanBlock(batchData);
+                    String resultKPIPlan = projectConnectionService.saveKPIPlan(batchData, selectedDbName);
+                    if (resultKPIPlan.contains("ok")){
+                        ui.access(() -> {
+                            Notification.show(endIndex + " KPI_Plan Rows Uploaded successfully",1500, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                        });
+                    } else {
+                        ui.access(() -> {
+                            Notification.show("Error during KPI_Plan upload! " + resultKPIPlan, 4000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                        });
+                    }
 
                     int finalI = i;
                     ui.access(() -> {
@@ -371,17 +351,16 @@ public class Tech_KPIView extends VerticalLayout {
 
                 }
 
-
             } catch (Exception e) {
+                ui.access(() -> {
+                    Notification.show("Error during KPI_Plan upload! ", 4000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                });
                 e.printStackTrace();
             }
             ui.access(() -> {
 
                 progressBarPlan.setVisible(false);
                 message.setText(LocalDateTime.now().format(formatter) + ": Info: saved " + totalRows + " rows");
-                Notification notification = Notification.show(totalRows + " Rows uploaded");
-                notification.setPosition(Notification.Position.MIDDLE);
-                notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
             });
 
         }).start();
@@ -417,8 +396,18 @@ public class Tech_KPIView extends VerticalLayout {
 
                     System.out.println("Verarbeitete Zeilen: " + endIndex + " von " + totalRows);
 
-                    saveActualsBlock(batchData);
+                    // saveActualsBlock(batchData);
 
+                    String resultKPIActuals = projectConnectionService.saveKPIActuals(batchData, selectedDbName);
+                    if (resultKPIActuals.contains("ok")){
+                        ui.access(() -> {
+                            Notification.show(endIndex + " KPI_Actuals Rows Uploaded successfully",1500, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                        });
+                    } else {
+                        ui.access(() -> {
+                            Notification.show("Error during KPI_Actuals upload! " + resultKPIActuals, 4000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                        });
+                    }
 
                     int finalI = i;
                     ui.access(() -> {
@@ -431,15 +420,15 @@ public class Tech_KPIView extends VerticalLayout {
 
 
             } catch (Exception e) {
+                ui.access(() -> {
+                    Notification.show("Error during KPI_Actuals upload! ", 4000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                });
                 e.printStackTrace();
             }
             ui.access(() -> {
 
                 progressBarActuals.setVisible(false);
                 message.setText(message.getText() + "\n" + LocalDateTime.now().format(formatter) + ": Info: " + sheet+ " saved " + totalRows + " rows");
-                Notification notification = Notification.show(sheet + " " + totalRows + " Rows uploaded");
-                notification.setPosition(Notification.Position.MIDDLE);
-                notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
             });
 
         }).start();
@@ -474,8 +463,18 @@ public class Tech_KPIView extends VerticalLayout {
 
                     System.out.println("Verarbeitete Zeilen: " + endIndex + " von " + totalRows);
 
-                    saveFactBlock(batchData);
+                   // saveFactBlock(batchData);
 
+                    String resultKPIFact = projectConnectionService.saveKPIFact(batchData, selectedDbName);
+                    if (resultKPIFact.contains("ok")){
+                        ui.access(() -> {
+                            Notification.show(endIndex + " KPI_Fcat Rows Uploaded successfully",1500, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                        });
+                    } else {
+                        ui.access(() -> {
+                            Notification.show("Error during KPI_Fcat upload! " + resultKPIFact, 4000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                        });
+                    }
 
                     int finalI = i;
                     ui.access(() -> {
@@ -485,18 +484,15 @@ public class Tech_KPIView extends VerticalLayout {
                     });
 
                 }
-
-
             } catch (Exception e) {
+                ui.access(() -> {
+                    Notification.show("Error during KPI_Fcat upload! ", 4000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                });
                 e.printStackTrace();
             }
             ui.access(() -> {
-
                 progressBarFact.setVisible(false);
                 message.setText(LocalDateTime.now().format(formatter) + ": Info: saved " + totalRows + " rows");
-                Notification notification = Notification.show(totalRows + " Rows uploaded");
-                notification.setPosition(Notification.Position.MIDDLE);
-                notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
                 ui.setPollInterval(-1);
             });
 
@@ -550,7 +546,7 @@ public class Tech_KPIView extends VerticalLayout {
             Integer row=-1;
             if(entity.getVersionDate() != null)
             {
-                versionDate=new java.sql.Date(entity.getVersionDate().getTime());
+                versionDate = new java.sql.Date(entity.getVersionDate().getTime());
             }
             ps.setInt(1,entity.getRow());
             ps.setString(2, entity.getNT_ID());
@@ -568,8 +564,6 @@ public class Tech_KPIView extends VerticalLayout {
     private void saveFactBlock(List<KPI_Fact> batchData) {
 
         String sql = "INSERT INTO [Stage_Tech_KPI].[KPI_Fact] (Zeile, NT_ID, Runrate, Scenario,[Date],Wert) VALUES (?, ?, ?, ?, ?, ?)";
-
-
 
         jdbcTemplate.batchUpdate(sql, batchData, batchData.size(), (ps, entity) -> {
 
@@ -610,8 +604,8 @@ public class Tech_KPIView extends VerticalLayout {
         gridActuals.addColumn(KPI_Actuals::getSourceContact).setHeader("SourceContact");
         gridActuals.addColumn(KPI_Actuals::getSourceLink).setHeader("SourceLink");
 
-
     }
+
     private void setupKPIFactGrid() {
         gridFact = new Grid<>(KPI_Fact.class, false);
 
@@ -624,7 +618,6 @@ public class Tech_KPIView extends VerticalLayout {
         gridFact.addColumn(KPI_Fact::getRunrate).setHeader("Runrate");
         gridFact.addColumn(KPI_Fact::getDate).setHeader("Date");
         gridFact.addColumn(KPI_Fact::getWert).setHeader("Wert");
-
 
     }
 
@@ -833,7 +826,6 @@ public class Tech_KPIView extends VerticalLayout {
                 }
 
                 listOfKPI_Fact.add(kPI_Fact);
-                System.out.println(listOfKPI_Fact.size()+".............parse");
 
             }
 
@@ -1140,7 +1132,6 @@ public class Tech_KPIView extends VerticalLayout {
                 }
 
                 listOfKPI_Actuals.add(kPI_Actuals);
-                System.out.println(listOfKPI_Actuals.size()+".............parse");
             }
 
             article=new Article();
@@ -1315,7 +1306,6 @@ public class Tech_KPIView extends VerticalLayout {
                 }
 
                 listOfKPI_Plan.add(kPI_Plan);
-                System.out.println(listOfKPI_Plan.size()+".............parse");
             }
 
 
@@ -1326,7 +1316,6 @@ public class Tech_KPIView extends VerticalLayout {
             article.add(LocalDateTime.now().format(formatter) + " " + sheetName + ": Count Rows: " + listOfKPI_Plan.size() + " Count Errrors: " + Error_count);
             article.add("\n");
             textArea.add(article);
-
 
             System.out.println("Anzahl Zeilen im Excel: " + listOfKPI_Plan.size());
 
@@ -1464,7 +1453,7 @@ public class Tech_KPIView extends VerticalLayout {
                         cell.getDateCellValue();
 
 
-                        System.out.println(date.getTime());
+                    //    System.out.println(date.getTime());
                     }
                     break;
             }
