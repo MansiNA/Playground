@@ -449,6 +449,10 @@ public class InputPBIComments extends VerticalLayout {
 
         String SEGMENT = "segment";
 
+        String SCENARIO = "scenario";
+
+        String XTD = "xtd";
+
         String EDIT_COLUMN = "vaadin-crud-edit-column";
 
         gridSubscriber = crudSubscriber.getGrid();
@@ -460,6 +464,8 @@ public class InputPBIComments extends VerticalLayout {
         gridSubscriber.getColumnByKey("category").setHeader("Category").setWidth("200px").setFlexGrow(0).setResizable(true);
         gridSubscriber.getColumnByKey("paymentType").setHeader("Payment Type").setWidth("200px").setFlexGrow(0).setResizable(true);
         gridSubscriber.getColumnByKey("segment").setHeader("Segment").setWidth("150px").setFlexGrow(0).setResizable(true);
+        gridSubscriber.getColumnByKey("scenario").setHeader("Scenario").setWidth("200px").setFlexGrow(0).setResizable(true);
+        gridSubscriber.getColumnByKey("xtd").setHeader("XTD").setWidth("80px").setFlexGrow(0).setResizable(true);
 
         // Reorder the columns (alphabetical by default)
         gridSubscriber.setColumnOrder( gridSubscriber.getColumnByKey(ZEILE)
@@ -467,6 +473,8 @@ public class InputPBIComments extends VerticalLayout {
                 , gridSubscriber.getColumnByKey(CATEGORY)
                 , gridSubscriber.getColumnByKey(SEGMENT)
                 , gridSubscriber.getColumnByKey(PAYMENTTYPE)
+                , gridSubscriber.getColumnByKey(SCENARIO)
+                , gridSubscriber.getColumnByKey(XTD)
                 , gridSubscriber.getColumnByKey(COMMENT));
               // , gridSubscriber.getColumnByKey(EDIT_COLUMN));
 
@@ -483,6 +491,9 @@ public class InputPBIComments extends VerticalLayout {
         String CATEGORY = "category";
 
         String SEGMENT = "segment";
+        String SCENARIO = "scenario";
+        String XTD = "xtd";
+
 
         String EDIT_COLUMN = "vaadin-crud-edit-column";
 
@@ -492,6 +503,8 @@ public class InputPBIComments extends VerticalLayout {
         gridUnitsDeepDive.getColumnByKey("month").setHeader("Month").setWidth("100px").setFlexGrow(0).setResizable(true);
         gridUnitsDeepDive.getColumnByKey("category").setHeader("Category").setWidth("200px").setFlexGrow(0).setResizable(true);
         gridUnitsDeepDive.getColumnByKey("segment").setHeader("Segment").setWidth("150px").setFlexGrow(0).setResizable(true);
+        gridUnitsDeepDive.getColumnByKey("scenario").setHeader("Scenario").setWidth("200px").setFlexGrow(0).setResizable(true);
+        gridUnitsDeepDive.getColumnByKey("xtd").setHeader("XTD").setWidth("80px").setFlexGrow(0).setResizable(true);
 
         gridUnitsDeepDive.removeColumn(gridUnitsDeepDive.getColumnByKey(EDIT_COLUMN));
 
@@ -500,6 +513,8 @@ public class InputPBIComments extends VerticalLayout {
                 , gridUnitsDeepDive.getColumnByKey(MONTH)
                 , gridUnitsDeepDive.getColumnByKey(CATEGORY)
                 , gridUnitsDeepDive.getColumnByKey(SEGMENT)
+                , gridUnitsDeepDive.getColumnByKey(SCENARIO)
+                , gridUnitsDeepDive.getColumnByKey(XTD)
                 , gridUnitsDeepDive.getColumnByKey(COMMENT));
             //    , gridUnitsDeepDive.getColumnByKey(EDIT_COLUMN));
 

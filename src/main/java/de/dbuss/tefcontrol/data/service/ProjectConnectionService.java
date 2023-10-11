@@ -180,7 +180,7 @@ public class ProjectConnectionService {
             String sqlDelete = "DELETE FROM Stage_CC_Comment.Comments_Subscriber";
             jdbcTemplate.update(sqlDelete);
 
-            String sqlInsert = "INSERT INTO Stage_CC_Comment.Comments_Subscriber (zeile, month, category, payment_type, segment, comment) VALUES (?, ?, ?, ?, ?, ?)";
+            String sqlInsert = "INSERT INTO Stage_CC_Comment.Comments_Subscriber (zeile, month, category, payment_type, segment, comment, scenario, xtd) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
             // Loop through the data and insert new records
             for (Subscriber item : data) {
@@ -191,7 +191,9 @@ public class ProjectConnectionService {
                         item.getCategory(),
                         item.getPaymentType(),
                         item.getSegment(),
-                        item.getComment()
+                        item.getComment(),
+                        item.getScenario(),
+                        item.getXtd()
                 );
             }
             return "ok";
@@ -209,7 +211,7 @@ public class ProjectConnectionService {
             String sqlDelete = "DELETE FROM Stage_CC_Comment.Comments_UnitsDeepDive";
             jdbcTemplate.update(sqlDelete);
 
-            String sqlInsert = "INSERT INTO Stage_CC_Comment.Comments_UnitsDeepDive (zeile, month,segment, category, comment) VALUES (?, ?, ?, ?, ?)";
+            String sqlInsert = "INSERT INTO Stage_CC_Comment.Comments_UnitsDeepDive (zeile, month,segment, category, comment, scenario, xtd) VALUES (?, ?, ?, ?, ?, ?, ?)";
 
             // Loop through the data and insert new records
             for (UnitsDeepDive item : data) {
@@ -219,7 +221,9 @@ public class ProjectConnectionService {
                         item.getMonth(),
                         item.getSegment(),
                         item.getCategory(),
-                        item.getComment()
+                        item.getComment(),
+                        item.getScenario(),
+                        item.getXtd()
                 );
             }
             return "ok";

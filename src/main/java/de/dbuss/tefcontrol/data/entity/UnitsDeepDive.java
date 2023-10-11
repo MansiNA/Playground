@@ -20,4 +20,6 @@ public class UnitsDeepDive {
     private String segment;
     private String category;
     private String comment;
+    private String scenario;
+    private String xtd;
 }

@@ -23,4 +23,6 @@ public class Subscriber {
     private String paymentType;
     private String segment;
     private String comment;
+    private String Scenario;
+    private String xtd;
 }
