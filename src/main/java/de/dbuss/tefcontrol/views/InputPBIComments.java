@@ -155,7 +155,7 @@ public class InputPBIComments extends VerticalLayout {
             progressBar.setVisible(false);
         });
     }
-    @Async
+
     private ListenableFuture<String> upload2db() {
         List<Financials> allFinancialsItems = getFinancialsDataProviderAllItems();
         List<Subscriber> allSubscriber = getSubscriberDataProviderAllItems();
@@ -165,27 +165,27 @@ public class InputPBIComments extends VerticalLayout {
 
         String resultFinancial = projectConnectionService.saveFinancials(allFinancialsItems, selectedDbName);
         if (resultFinancial.contains("ok")){
-            notification = Notification.show(allFinancialsItems.size() + " Financials Rows Uploaded successfully",3000, Notification.Position.MIDDLE);
+            notification = Notification.show(allFinancialsItems.size() + " Financials Rows Uploaded successfully",5000, Notification.Position.MIDDLE);
             notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
         } else {
-            notification = Notification.show("Error during Financials upload!",4000, Notification.Position.MIDDLE);
+            notification = Notification.show("Error during Financials upload: " + resultFinancial ,5000, Notification.Position.MIDDLE);
             notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
         }
         String resultSubscriber = projectConnectionService.saveSubscriber(allSubscriber, selectedDbName);
         if (resultSubscriber.contains("ok")){
-            notification = Notification.show(allSubscriber.size() + " Subscriber Rows Uploaded successfully",3000, Notification.Position.MIDDLE);
+            notification = Notification.show(allSubscriber.size() + " Subscriber Rows Uploaded successfully",5000, Notification.Position.MIDDLE);
             notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
         } else {
-            notification = Notification.show("Error during Subscriber upload!",4000, Notification.Position.MIDDLE);
+            notification = Notification.show("Error during Subscriber upload: " + resultSubscriber,5000, Notification.Position.MIDDLE);
             notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
         }
 
         String resultUnits = projectConnectionService.saveUnitsDeepDive(allUnitsDeepDive, selectedDbName);
         if (resultUnits.contains("ok")){
-            notification = Notification.show(allUnitsDeepDive.size() + " UnitsDeepDive Rows Uploaded successfully",3000, Notification.Position.MIDDLE);
+            notification = Notification.show(allUnitsDeepDive.size() + " UnitsDeepDive Rows Uploaded successfully",5000, Notification.Position.MIDDLE);
             notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
         } else {
-            notification = Notification.show("Error during UnitsDeepDive upload!",4000, Notification.Position.MIDDLE);
+            notification = Notification.show("Error during UnitsDeepDive upload: " + resultUnits,5000, Notification.Position.MIDDLE);
             notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
         }
         return AsyncResult.forValue("Some result");

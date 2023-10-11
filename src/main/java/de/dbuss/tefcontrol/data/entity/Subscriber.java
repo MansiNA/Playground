@@ -11,7 +11,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-@Table(schema = "dbo", name = "Subscriber")
+@Table(schema = "Stage_CC_Comment", name = "Comments_Subscriber")
 public class Subscriber {
 
     @Id

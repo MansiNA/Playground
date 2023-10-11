@@ -6,6 +6,7 @@ import de.dbuss.tefcontrol.views.Tech_KPIView;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Primary;
+import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.RowMapper;
@@ -143,10 +144,10 @@ public class ProjectConnectionService {
         jdbcTemplate = new JdbcTemplate(dataSource);
 
         try {
-            String sqlDelete = "DELETE FROM Financials";
+            String sqlDelete = "DELETE FROM Stage_CC_Comment.Comments_Financials";
             jdbcTemplate.update(sqlDelete);
 
-            String sqlInsert = "INSERT INTO Financials (row, month, category, comment, scenario, xtd) VALUES (?, ?, ?, ?, ?, ?)";
+            String sqlInsert = "INSERT INTO Stage_CC_Comment.Comments_Financials (zeile, month, category, comment, scenario, xtd) VALUES (?, ?, ?, ?, ?, ?)";
 
             // Loop through the data and insert new records
             for (Financials item : data) {
@@ -161,9 +162,13 @@ public class ProjectConnectionService {
                 );
             }
             return "ok";
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "Error during update: " + e.getMessage();
+        }
+           catch (CannotGetJdbcConnectionException connectionException) {
+            return connectionException.getMessage();
+        }
+           catch (Exception e) {
+                e.printStackTrace();
+            return e.getMessage();
         }
     }
 
@@ -172,10 +177,10 @@ public class ProjectConnectionService {
         jdbcTemplate = new JdbcTemplate(dataSource);
 
         try {
-            String sqlDelete = "DELETE FROM Subscriber";
+            String sqlDelete = "DELETE FROM Stage_CC_Comment.Comments_Subscriber";
             jdbcTemplate.update(sqlDelete);
 
-            String sqlInsert = "INSERT INTO Subscriber (row, month, category, payment_type, segment, comment) VALUES (?, ?, ?, ?, ?, ?)";
+            String sqlInsert = "INSERT INTO Stage_CC_Comment.Comments_Subscriber (zeile, month, category, payment_type, segment, comment) VALUES (?, ?, ?, ?, ?, ?)";
 
             // Loop through the data and insert new records
             for (Subscriber item : data) {
@@ -201,10 +206,10 @@ public class ProjectConnectionService {
         jdbcTemplate = new JdbcTemplate(dataSource);
 
         try {
-            String sqlDelete = "DELETE FROM units_deep_dive";
+            String sqlDelete = "DELETE FROM Stage_CC_Comment.Comments_UnitsDeepDive";
             jdbcTemplate.update(sqlDelete);
 
-            String sqlInsert = "INSERT INTO units_deep_dive (row, month,segment, category, comment) VALUES (?, ?, ?, ?, ?)";
+            String sqlInsert = "INSERT INTO Stage_CC_Comment.Comments_UnitsDeepDive (zeile, month,segment, category, comment) VALUES (?, ?, ?, ?, ?)";
 
             // Loop through the data and insert new records
             for (UnitsDeepDive item : data) {
