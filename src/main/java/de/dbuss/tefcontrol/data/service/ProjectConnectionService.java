@@ -6,7 +6,9 @@ import de.dbuss.tefcontrol.views.Tech_KPIView;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Primary;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.CannotGetJdbcConnectionException;
+
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.RowMapper;
@@ -79,10 +81,11 @@ public class ProjectConnectionService {
     }
 
     public String write2DB(List<CLTV_HW_Measures> data, String selectedDatabase) {
-        DataSource dataSource = getDataSource(selectedDatabase);
-        jdbcTemplate = new JdbcTemplate(dataSource);
 
         try {
+            DataSource dataSource = getDataSource(selectedDatabase);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
             String sqlDelete = "DELETE FROM CLTV_HW_Measures";
             jdbcTemplate.update(sqlDelete);
 
@@ -140,11 +143,13 @@ public class ProjectConnectionService {
     }
 
     public String saveFinancials(List<Financials> data, String selectedDatabase) {
-        DataSource dataSource = getDataSource(selectedDatabase);
-        jdbcTemplate = new JdbcTemplate(dataSource);
 
         try {
+            DataSource dataSource = getDataSource(selectedDatabase);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
             String sqlDelete = "DELETE FROM Stage_CC_Comment.Comments_Financials";
+
             jdbcTemplate.update(sqlDelete);
 
             String sqlInsert = "INSERT INTO Stage_CC_Comment.Comments_Financials (zeile, month, category, comment, scenario, xtd) VALUES (?, ?, ?, ?, ?, ?)";
@@ -173,11 +178,14 @@ public class ProjectConnectionService {
     }
 
     public String saveSubscriber(List<Subscriber> data, String selectedDatabase) {
-        DataSource dataSource = getDataSource(selectedDatabase);
-        jdbcTemplate = new JdbcTemplate(dataSource);
 
         try {
+
+            DataSource dataSource = getDataSource(selectedDatabase);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
             String sqlDelete = "DELETE FROM Stage_CC_Comment.Comments_Subscriber";
+
             jdbcTemplate.update(sqlDelete);
 
             String sqlInsert = "INSERT INTO Stage_CC_Comment.Comments_Subscriber (zeile, month, category, payment_type, segment, comment, scenario, xtd) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
@@ -204,11 +212,14 @@ public class ProjectConnectionService {
     }
 
     public String saveUnitsDeepDive(List<UnitsDeepDive> data, String selectedDatabase) {
-        DataSource dataSource = getDataSource(selectedDatabase);
-        jdbcTemplate = new JdbcTemplate(dataSource);
 
         try {
+
+            DataSource dataSource = getDataSource(selectedDatabase);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+          
             String sqlDelete = "DELETE FROM Stage_CC_Comment.Comments_UnitsDeepDive";
+
             jdbcTemplate.update(sqlDelete);
 
             String sqlInsert = "INSERT INTO Stage_CC_Comment.Comments_UnitsDeepDive (zeile, month,segment, category, comment, scenario, xtd) VALUES (?, ?, ?, ?, ?, ?, ?)";
@@ -234,11 +245,11 @@ public class ProjectConnectionService {
     }
 
     public String saveKPIFact(List<Tech_KPIView.KPI_Fact> data, String selectedDatabase) {
-      //  selectedDatabase = "Test";
-        DataSource dataSource = getDataSource(selectedDatabase);
-        jdbcTemplate = new JdbcTemplate(dataSource);
 
         try {
+            DataSource dataSource = getDataSource(selectedDatabase);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
             String sqlDelete = "DELETE FROM [Stage_Tech_KPI].[KPI_Fact]";
             jdbcTemplate.update(sqlDelete);
 
@@ -260,16 +271,16 @@ public class ProjectConnectionService {
             return "ok";
         } catch (Exception e) {
             e.printStackTrace();
-            return "Error during update: " + e.getMessage();
+            return handleDatabaseError(e);
         }
     }
 
     public String saveKPIPlan(List<Tech_KPIView.KPI_Plan> data, String selectedDatabase) {
-       // selectedDatabase = "Test";
-        DataSource dataSource = getDataSource(selectedDatabase);
-        jdbcTemplate = new JdbcTemplate(dataSource);
 
         try {
+            DataSource dataSource = getDataSource(selectedDatabase);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
             String sqlDelete = "DELETE FROM [Stage_Tech_KPI].[KPI_Plan]";
             jdbcTemplate.update(sqlDelete);
 
@@ -298,16 +309,16 @@ public class ProjectConnectionService {
             return "ok";
         } catch (Exception e) {
             e.printStackTrace();
-            return "Error during update: " + e.getMessage();
+            return handleDatabaseError(e);
         }
     }
 
     public String saveKPIActuals(List<Tech_KPIView.KPI_Actuals> data, String selectedDatabase) {
-     //   selectedDatabase = "Test";
-        DataSource dataSource = getDataSource(selectedDatabase);
-        jdbcTemplate = new JdbcTemplate(dataSource);
 
         try {
+            DataSource dataSource = getDataSource(selectedDatabase);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
             String sqlDelete = "DELETE FROM [Stage_Tech_KPI].[KPI_Actuals]";
             jdbcTemplate.update(sqlDelete);
 
@@ -340,9 +351,34 @@ public class ProjectConnectionService {
 
             return "ok";
         } catch (Exception e) {
-            e.printStackTrace();
-            return "Error during update: " + e.getMessage();
+            return handleDatabaseError(e);
         }
+    }
+
+    private String handleDatabaseError(Exception e) {
+
+        if (e instanceof DataAccessException) {
+            Throwable rootCause = getRootCause(e);
+            if (rootCause instanceof org.springframework.jdbc.CannotGetJdbcConnectionException) {
+                return "Error: Cannot connect to the database. Check database configuration.";
+            } else if (rootCause instanceof org.springframework.jdbc.BadSqlGrammarException) {
+                return "Error: Table does not exist or SQL syntax error.";
+            } else {
+                e.printStackTrace();
+                return "Database error: " + e.getMessage();
+            }
+        } else {
+            e.printStackTrace();
+            return "Unknown error: " + e.getMessage();
+        }
+    }
+
+    private Throwable getRootCause(Throwable throwable) {
+        Throwable cause = throwable.getCause();
+        if (cause == null) {
+            return throwable;
+        }
+        return getRootCause(cause);
     }
 
 }
