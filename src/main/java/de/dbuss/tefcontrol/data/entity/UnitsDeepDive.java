@@ -10,7 +10,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-@Table(schema = "dbo", name = "UnitsDeepDive")
+@Table(schema = "Stage_CC_Comment", name = "Comments_UnitsDeepDive")
 public class UnitsDeepDive {
 
     @Id
@@ -20,4 +20,6 @@ public class UnitsDeepDive {
     private String segment;
     private String category;
     private String comment;
+    private String scenario;
+    private String xtd;
 }

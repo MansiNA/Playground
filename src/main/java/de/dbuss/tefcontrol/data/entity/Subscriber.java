@@ -11,7 +11,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-@Table(schema = "dbo", name = "Subscriber")
+@Table(schema = "Stage_CC_Comment", name = "Comments_Subscriber")
 public class Subscriber {
 
     @Id
@@ -23,4 +23,6 @@ public class Subscriber {
     private String paymentType;
     private String segment;
     private String comment;
+    private String Scenario;
+    private String xtd;
 }

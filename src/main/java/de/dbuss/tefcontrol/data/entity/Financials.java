@@ -10,7 +10,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-@Table(schema = "dbo", name = "Financials")
+@Table(schema = "Stage_CC_Comment", name = "Comments_Financials")
 public class Financials {
 
     @Id
