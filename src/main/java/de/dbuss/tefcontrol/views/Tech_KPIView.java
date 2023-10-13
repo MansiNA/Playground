@@ -31,6 +31,7 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import javax.sql.DataSource;
 import java.io.InputStream;
 import java.util.Date;
 import java.time.LocalDateTime;
@@ -302,13 +303,14 @@ public class Tech_KPIView extends VerticalLayout {
         progressBarPlan.setValue(0);
 
         //  message.setText(LocalDateTime.now().format(formatter) + ": Info: saving KPI_Plan to database...");
-        truncateTable("[Stage_Tech_KPI].[KPI_Plan]");
+        // truncateTable("[Stage_Tech_KPI].[KPI_Plan]");
         new Thread(() -> {
 
             try {
 
                 int batchSize = 1000; // Die Anzahl der Zeilen, die auf einmal verarbeitet werden sollen
 
+                projectConnectionService.deleteKPIPlan(selectedDbName);
 
                 for (int i = 1; i < totalRows; i += batchSize) {
 
@@ -319,7 +321,7 @@ public class Tech_KPIView extends VerticalLayout {
                     System.out.println("Verarbeitete Zeilen: " + endIndex + " von " + totalRows);
 
                     //savePlanBlock(batchData);
-                    String resultKPIPlan = projectConnectionService.saveKPIPlan(batchData, selectedDbName);
+                    String resultKPIPlan = projectConnectionService.saveKPIPlan(batchData);
 
                     returnStatus.set(resultKPIPlan);
 
@@ -369,7 +371,7 @@ public class Tech_KPIView extends VerticalLayout {
 
         //    message.setText(message.getText() + "\n" + LocalDateTime.now().format(formatter) + ": Info: saving " + sheet + " to database...");
 
-        truncateTable("[Stage_Tech_KPI].[KPI_Actuals]");
+        //  truncateTable("[Stage_Tech_KPI].[KPI_Actuals]");
 
         new Thread(() -> {
 
@@ -379,6 +381,7 @@ public class Tech_KPIView extends VerticalLayout {
 
                 int batchSize = 1000; // Die Anzahl der Zeilen, die auf einmal verarbeitet werden sollen
 
+                projectConnectionService.deleteKPIActuals(selectedDbName);
 
                 for (int i = 1; i < totalRows; i += batchSize) {
 
@@ -390,7 +393,7 @@ public class Tech_KPIView extends VerticalLayout {
 
                     // saveActualsBlock(batchData);
 
-                    String resultKPIActuals = projectConnectionService.saveKPIActuals(batchData, selectedDbName);
+                    String resultKPIActuals = projectConnectionService.saveKPIActuals(batchData);
 
                     returnStatus.set(resultKPIActuals);
 
@@ -439,7 +442,7 @@ public class Tech_KPIView extends VerticalLayout {
 
 
         //    message.setText(LocalDateTime.now().format(formatter) + ": Info: saving KPI_Fact to database...");
-        truncateTable("[Stage_Tech_KPI].[KPI_Fact]");
+        //  truncateTable("[Stage_Tech_KPI].[KPI_Fact]");
         new Thread(() -> {
 
             // Do some long running task
@@ -448,6 +451,7 @@ public class Tech_KPIView extends VerticalLayout {
 
                 int batchSize = 1000; // Die Anzahl der Zeilen, die auf einmal verarbeitet werden sollen
 
+                projectConnectionService.deleteKPIFact(selectedDbName);
 
                 for (int i = 1; i < totalRows; i += batchSize) {
 
@@ -459,7 +463,7 @@ public class Tech_KPIView extends VerticalLayout {
 
                     //saveFactBlock(batchData);
 
-                    String resultKPIFact = projectConnectionService.saveKPIFact(batchData, selectedDbName);
+                    String resultKPIFact = projectConnectionService.saveKPIFact(batchData);
                     returnStatus.set(resultKPIFact);
 
                     int finalI = i;

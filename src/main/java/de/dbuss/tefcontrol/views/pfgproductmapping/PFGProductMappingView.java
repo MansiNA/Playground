@@ -23,6 +23,7 @@ import de.dbuss.tefcontrol.data.service.ProductHierarchieService;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
 import de.dbuss.tefcontrol.views.MainLayout;
 import jakarta.annotation.security.RolesAllowed;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
@@ -38,6 +39,8 @@ import java.util.stream.Stream;
 public class PFGProductMappingView extends VerticalLayout {
 
     private final ProductHierarchieService service;
+
+    private final ProjectConnectionService projectConnectionService;
 
     Grid<ProductHierarchie> grid = new Grid<>(ProductHierarchie.class);
 
@@ -61,13 +64,13 @@ public class PFGProductMappingView extends VerticalLayout {
     private ScheduledExecutorService executor;
     private UI ui ;
     Instant startTime;
+    private String productsDb;
 
     private String selectedDbName;
-    public PFGProductMappingView(ProductHierarchieService service, ProjectConnectionService projectConnectionService) {
+    public PFGProductMappingView(@Value("${pfg_mapping_products}") String productsDb , ProductHierarchieService service, ProjectConnectionService projectConnectionService) {
         this.service = service;
-
-        // System.out.println("UI-ID im Konstruktor: " + ui.toString());
-
+        this.projectConnectionService = projectConnectionService;
+        this.productsDb = productsDb;
 
         ui= UI.getCurrent();
 
@@ -87,7 +90,6 @@ public class PFGProductMappingView extends VerticalLayout {
 
         hl.setHeightFull();
         hl.setSizeFull();
-
 
         ComboBox<String> databaseConnectionCB = new ComboBox<>();
         databaseConnectionCB.setAllowCustomValue(true);
@@ -110,10 +112,13 @@ public class PFGProductMappingView extends VerticalLayout {
 
         add(databaseConnectionCB, hl);
 
+      //  getCLTVALLProduct();
+
         updateList();
         closeEditor();
 
     }
+
 
     private void configureLoggingArea() {
 
@@ -178,7 +183,7 @@ public class PFGProductMappingView extends VerticalLayout {
 
     private void configureForm() {
 
-        form = new PFGProductForm();
+        form = new PFGProductForm(projectConnectionService.getCltvAllProducts(productsDb));
         form.setWidth("25em");
         //form.addSaveListener(this::saveProduct);
 

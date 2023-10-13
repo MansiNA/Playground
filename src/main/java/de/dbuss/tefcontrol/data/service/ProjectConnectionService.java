@@ -57,6 +57,12 @@ public class ProjectConnectionService {
         throw new RuntimeException("Database connection not found: " + selectedDatabase);
     }
 
+    public JdbcTemplate getJdbcConnection(String selectedDatabase) {
+        DataSource dataSource = getDataSource(selectedDatabase);
+        jdbcTemplate = new JdbcTemplate(dataSource);
+        return jdbcTemplate;
+    }
+
     public List<CLTV_HW_Measures> fetchDataFromDatabase(String selectedDatabase) {
         DataSource dataSource = getDataSource(selectedDatabase);
         jdbcTemplate = new JdbcTemplate(dataSource);
@@ -244,14 +250,19 @@ public class ProjectConnectionService {
         }
     }
 
-    public String saveKPIFact(List<Tech_KPIView.KPI_Fact> data, String selectedDatabase) {
-
+    public void deleteKPIFact(String selectedDatabase) {
+        getJdbcConnection(selectedDatabase);
         try {
-            DataSource dataSource = getDataSource(selectedDatabase);
-            jdbcTemplate = new JdbcTemplate(dataSource);
-
             String sqlDelete = "DELETE FROM [Stage_Tech_KPI].[KPI_Fact]";
             jdbcTemplate.update(sqlDelete);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public String saveKPIFact(List<Tech_KPIView.KPI_Fact> data) {
+
+        try {
 
             String sqlInsert = "INSERT INTO [Stage_Tech_KPI].[KPI_Fact] (Zeile, NT_ID, Runrate, Scenario,[Date],Wert) VALUES (?, ?, ?, ?, ?, ?)";
 
@@ -275,15 +286,18 @@ public class ProjectConnectionService {
         }
     }
 
-    public String saveKPIPlan(List<Tech_KPIView.KPI_Plan> data, String selectedDatabase) {
-
+    public void deleteKPIPlan(String selectedDatabase) {
+        getJdbcConnection(selectedDatabase);
         try {
-            DataSource dataSource = getDataSource(selectedDatabase);
-            jdbcTemplate = new JdbcTemplate(dataSource);
-
             String sqlDelete = "DELETE FROM [Stage_Tech_KPI].[KPI_Plan]";
             jdbcTemplate.update(sqlDelete);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    public String saveKPIPlan(List<Tech_KPIView.KPI_Plan> data) {
 
+        try {
             String sql = "INSERT INTO [Stage_Tech_KPI].[KPI_Plan] (Zeile, NT_ID, Spalte1, Scenario, VersionDate, VersionComment, Runrate) VALUES (?, ?, ?, ?, ?, ?, ?)";
 
             jdbcTemplate.batchUpdate(sql, data, data.size(), (ps, entity) -> {
@@ -313,15 +327,18 @@ public class ProjectConnectionService {
         }
     }
 
-    public String saveKPIActuals(List<Tech_KPIView.KPI_Actuals> data, String selectedDatabase) {
-
+    public void deleteKPIActuals(String selectedDatabase) {
+        getJdbcConnection(selectedDatabase);
         try {
-            DataSource dataSource = getDataSource(selectedDatabase);
-            jdbcTemplate = new JdbcTemplate(dataSource);
-
             String sqlDelete = "DELETE FROM [Stage_Tech_KPI].[KPI_Actuals]";
             jdbcTemplate.update(sqlDelete);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    public String saveKPIActuals(List<Tech_KPIView.KPI_Actuals> data) {
 
+        try {
             String sqlInsert = "INSERT INTO [Stage_Tech_KPI].[KPI_Actuals] (Zeile, [NT_ID],[WTAC_ID],[sort],[M2_Area],[M1_Network],[M3_Service],[M4_Dimension],[M5_Tech],[M6_Detail],[KPI_long],[Runrate],[Unit],[Description],[SourceReport],[SourceInput],[SourceComment] ,[SourceContact] ,[SourceLink] ) VALUES (?, ?, ?, ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
             jdbcTemplate.batchUpdate(sqlInsert, data, data.size(), (ps, entity) -> {
@@ -347,7 +364,6 @@ public class ProjectConnectionService {
                 ps.setString(18, entity.getSourceContact());
                 ps.setString(19, entity.getSourceLink());
             });
-
 
             return "ok";
         } catch (Exception e) {
@@ -380,5 +396,29 @@ public class ProjectConnectionService {
         }
         return getRootCause(cause);
     }
+
+    public List<CltvAllProduct> getCltvAllProducts(String productDb) {
+        try {
+            String[] dbName = productDb.split("\\.");
+            DataSource dataSource = getDataSource(dbName[0]);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
+        //    String sql = "SELECT [all_products], [all_products_gen_number], [all_products_gen2], [verarb_datum] FROM [PIT2].[Stage].[CLTV_All_Products]";
+            String sql = "SELECT [all_products], [all_products_gen_number], [all_products_gen2], [verarb_datum] FROM " + productDb;
+
+            List<CltvAllProduct> clatvAllProductList = jdbcTemplate.query(sql, (rs, rowNum) -> {
+                CltvAllProduct cltvAllProduct = new CltvAllProduct();
+                cltvAllProduct.setAllProducts(rs.getString("all_products"));
+                cltvAllProduct.setAllProductGenNumber(rs.getString("all_products_gen_number"));
+                cltvAllProduct.setAllProductGen2(rs.getString("all_products_gen2"));
+                cltvAllProduct.setVerarb_datum(null);
+                return cltvAllProduct;
+            });
+
+            return clatvAllProductList;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Collections.emptyList();
+        }    }
 
 }
