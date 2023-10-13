@@ -25,7 +25,8 @@ import java.util.stream.Collectors;
 public class PFGProductForm extends FormLayout {
     ComboBox<String> pfg_Type = new ComboBox("PFG Type");
     TextField node = new TextField("Knoten");
-    Select<String> product_name = new Select<>();
+ //   Select<String> product_name = new Select<>();
+      ComboBox<String> product_name = new ComboBox<>();
   //  TextField exportTime_id = new TextField("Export Zeitpunkt");
 
     private ProductHierarchie productHierarchie;
