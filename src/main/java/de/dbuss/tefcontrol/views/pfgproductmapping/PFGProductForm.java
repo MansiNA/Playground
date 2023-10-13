@@ -13,19 +13,20 @@ import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.data.provider.DataProvider;
 import com.vaadin.flow.shared.Registration;
 import de.dbuss.tefcontrol.data.entity.CltvAllProduct;
 import de.dbuss.tefcontrol.data.entity.ProductHierarchie;
+import de.dbuss.tefcontrol.data.entity.ProjectConnection;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class PFGProductForm extends FormLayout {
     ComboBox<String> pfg_Type = new ComboBox("PFG Type");
-
-   // TextField product_name = new TextField("Produkt");
     TextField node = new TextField("Knoten");
-
-    TextField exportTime_id = new TextField("Export Zeitpunkt");
+    Select<String> product_name = new Select<>();
+  //  TextField exportTime_id = new TextField("Export Zeitpunkt");
 
     private ProductHierarchie productHierarchie;
 
@@ -38,16 +39,25 @@ public class PFGProductForm extends FormLayout {
         pfg_Type.setItems("PFG Post", "PFG PRE");
         pfg_Type.setValue("PFG Post");
 
-        Select<CltvAllProduct> product_name = new Select<>();
         product_name.setLabel("Choose Product");
         product_name.setWidthFull();
-        if(cltvAllProducts != null || cltvAllProducts.size() == 0) {
-            product_name.setItemLabelGenerator(CltvAllProduct::getAllProducts);
-            product_name.setItems(cltvAllProducts);
-            product_name.setValue(cltvAllProducts.get(0));
+
+        if (cltvAllProducts != null && !cltvAllProducts.isEmpty()) {
+            List<String> productNames = cltvAllProducts.stream()
+                    .map(CltvAllProduct::getAllProducts)
+                    .collect(Collectors.toList());
+
+            product_name.setItems(productNames);
+            product_name.setValue(productNames.get(0));
         }
 
-        add(pfg_Type,node,product_name, exportTime_id, createButtonsLayout());
+        product_name.addValueChangeListener(event -> {
+            if(event.getValue() != null) {
+                product_name.setValue(event.getValue());
+            }
+        });
+
+        add(pfg_Type,node,product_name, createButtonsLayout());
     }
 
     public void setProduct(ProductHierarchie productHierarchie){ binder.setBean(productHierarchie);}
