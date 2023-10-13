@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotEmpty;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.Date;
+
 @Getter
 @Setter
 @Entity
@@ -26,9 +28,9 @@ public class ProductHierarchie {
     @Column(name="Product")
     private String product_name = "";
 
-    @NotEmpty
-    @Column(name="Export_Time")
-    private String exportTime_id = "";
+   // @NotEmpty
+   // @Column(name="Export_Time")
+   // private Date exportTime_id;
 
     public void setNode(String node) {
         if (node != null && !node.startsWith("PFG_")) {

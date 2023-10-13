@@ -47,25 +47,20 @@ public class PFGProductMappingView extends VerticalLayout {
     TextField filterText = new TextField();
     TabSheet tabSheet = new TabSheet();
 
-    Button saveBtn = new Button("save");
-    Button editBtn = new Button("edit");
+  //  Button saveBtn = new Button("save");
+ //   Button editBtn = new Button("edit");
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
     Div textArea = new Div();
     VerticalLayout messageLayout = new VerticalLayout();
-
     VaadinCKEditor editor;
     PFGProductForm form;
-
-
     Checkbox autorefresh = new Checkbox();
-
     private Label lastRefreshLabel;
     private Label countdownLabel;
     private ScheduledExecutorService executor;
     private UI ui ;
     Instant startTime;
     private String productsDb;
-
     private String selectedDbName;
     public PFGProductMappingView(@Value("${pfg_mapping_products}") String productsDb , ProductHierarchieService service, ProjectConnectionService projectConnectionService) {
         this.service = service;
@@ -81,8 +76,8 @@ public class PFGProductMappingView extends VerticalLayout {
         configureForm();
         configureLoggingArea();
 
-        saveBtn.setVisible(false);
-        editBtn.setVisible(true);
+       // saveBtn.setVisible(false);
+      //  editBtn.setVisible(true);
 
         HorizontalLayout hl = new HorizontalLayout();
         //   hl.add(getTabsheet(),saveBtn,editBtn);
