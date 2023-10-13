@@ -48,6 +48,11 @@ public class PFGProductForm extends FormLayout {
                     .map(CltvAllProduct::getAllProducts)
                     .collect(Collectors.toList());
 
+            if(productNames.isEmpty() || productNames==null)
+            {
+                productNames.add("no values found");
+            }
+
             product_name.setItems(productNames);
             product_name.setValue(productNames.get(0));
         }

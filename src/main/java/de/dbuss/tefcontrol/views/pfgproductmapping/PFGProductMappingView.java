@@ -93,7 +93,8 @@ public class PFGProductMappingView extends VerticalLayout {
         List<String> connectionNames = listOfProjectConnections.stream()
                 .flatMap(connection -> {
                     String category = connection.getCategory();
-                    if (category == null) {
+                    //if (category == null) {
+                    if("PFG-Mapping".equals(category)){
                         return Stream.of(connection.getName());
                     }
                     return Stream.empty();
