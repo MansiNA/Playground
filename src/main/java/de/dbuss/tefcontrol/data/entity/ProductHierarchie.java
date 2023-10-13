@@ -20,7 +20,7 @@ public class ProductHierarchie {
 
     @NotEmpty
     @Column(name="Knoten")
-    private String node = "";
+    private String node = "PFG_";
 
     @NotEmpty
     @Column(name="Product")
@@ -29,4 +29,12 @@ public class ProductHierarchie {
     @NotEmpty
     @Column(name="Export_Time")
     private String exportTime_id = "";
+
+    public void setNode(String node) {
+        if (node != null && !node.startsWith("PFG_")) {
+            this.node = "PFG_" + node;
+        } else {
+            this.node = node;
+        }
+    }
 }

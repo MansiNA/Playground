@@ -9,35 +9,43 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.shared.Registration;
+import de.dbuss.tefcontrol.data.entity.CltvAllProduct;
 import de.dbuss.tefcontrol.data.entity.ProductHierarchie;
+
+import java.util.List;
 
 public class PFGProductForm extends FormLayout {
     ComboBox<String> pfg_Type = new ComboBox("PFG Type");
 
-    TextField product_name = new TextField("Produkt");
+   // TextField product_name = new TextField("Produkt");
     TextField node = new TextField("Knoten");
 
     TextField exportTime_id = new TextField("Export Zeitpunkt");
 
-    Button save = new Button("Save");
-    Button delete = new Button("Delete");
-    Button close = new Button("Cancel");
     private ProductHierarchie productHierarchie;
 
     Binder<ProductHierarchie> binder = new BeanValidationBinder<>(ProductHierarchie.class);
-    public PFGProductForm() {
+    public PFGProductForm(List<CltvAllProduct> cltvAllProducts) {
         addClassName("product-form");
         binder.bindInstanceFields(this);
 
         pfg_Type.getItemLabelGenerator();
         pfg_Type.setItems("PFG Post", "PFG PRE");
-
-        // Optional: Setze einen Standardwert
         pfg_Type.setValue("PFG Post");
+
+        Select<CltvAllProduct> product_name = new Select<>();
+        product_name.setLabel("Choose Product");
+        product_name.setWidthFull();
+        if(cltvAllProducts != null || cltvAllProducts.size() == 0) {
+            product_name.setItemLabelGenerator(CltvAllProduct::getAllProducts);
+            product_name.setItems(cltvAllProducts);
+            product_name.setValue(cltvAllProducts.get(0));
+        }
 
         add(pfg_Type,node,product_name, exportTime_id, createButtonsLayout());
     }
@@ -45,6 +53,11 @@ public class PFGProductForm extends FormLayout {
     public void setProduct(ProductHierarchie productHierarchie){ binder.setBean(productHierarchie);}
 
     private Component createButtonsLayout() {
+
+        Button save = new Button("Save");
+        Button delete = new Button("Delete");
+        Button close = new Button("Cancel");
+
         save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         delete.addThemeVariants(ButtonVariant.LUMO_ERROR);
         close.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
@@ -65,9 +78,6 @@ public class PFGProductForm extends FormLayout {
             System.out.println("Save-Button gedrückt!");
 
             fireEvent(new SaveEvent(this, binder.getBean()));
-
-
-
         }
     }
 

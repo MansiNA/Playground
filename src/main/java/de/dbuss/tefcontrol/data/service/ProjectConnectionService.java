@@ -348,7 +348,6 @@ public class ProjectConnectionService {
                 ps.setString(19, entity.getSourceLink());
             });
 
-
             return "ok";
         } catch (Exception e) {
             return handleDatabaseError(e);
@@ -380,5 +379,29 @@ public class ProjectConnectionService {
         }
         return getRootCause(cause);
     }
+
+    public List<CltvAllProduct> getCltvAllProducts(String productDb) {
+        try {
+            String[] dbName = productDb.split("\\.");
+            DataSource dataSource = getDataSource(dbName[0]);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
+        //    String sql = "SELECT [all_products], [all_products_gen_number], [all_products_gen2], [verarb_datum] FROM [PIT2].[Stage].[CLTV_All_Products]";
+            String sql = "SELECT [all_products], [all_products_gen_number], [all_products_gen2], [verarb_datum] FROM " + productDb;
+
+            List<CltvAllProduct> clatvAllProductList = jdbcTemplate.query(sql, (rs, rowNum) -> {
+                CltvAllProduct cltvAllProduct = new CltvAllProduct();
+                cltvAllProduct.setAllProducts(rs.getString("all_products"));
+                cltvAllProduct.setAllProductGenNumber(rs.getString("all_products_gen_number"));
+                cltvAllProduct.setAllProductGen2(rs.getString("all_products_gen2"));
+                cltvAllProduct.setVerarb_datum(null);
+                return cltvAllProduct;
+            });
+
+            return clatvAllProductList;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Collections.emptyList();
+        }    }
 
 }
