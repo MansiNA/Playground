@@ -3,10 +3,14 @@ package de.dbuss.tefcontrol.views.pfgproductmapping;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.*;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.TabSheet;
@@ -23,10 +27,16 @@ import de.dbuss.tefcontrol.data.service.ProductHierarchieService;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
 import de.dbuss.tefcontrol.views.MainLayout;
 import jakarta.annotation.security.RolesAllowed;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.jdbc.CannotGetJdbcConnectionException;
+import org.springframework.jdbc.core.JdbcTemplate;
 
+import javax.sql.DataSource;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Collectors;
@@ -37,13 +47,15 @@ import java.util.stream.Stream;
 @RouteAlias(value = "", layout = MainLayout.class)
 @RolesAllowed("USER")
 public class PFGProductMappingView extends VerticalLayout {
-
+    @Autowired
+    private JdbcTemplate template;
     private final ProductHierarchieService service;
 
     private final ProjectConnectionService projectConnectionService;
 
     Grid<ProductHierarchie> grid = new Grid<>(ProductHierarchie.class);
 
+    Button startAgentBtn = new Button("Execute Job");
     TextField filterText = new TextField();
     TabSheet tabSheet = new TabSheet();
 
@@ -54,18 +66,19 @@ public class PFGProductMappingView extends VerticalLayout {
     VerticalLayout messageLayout = new VerticalLayout();
     VaadinCKEditor editor;
     PFGProductForm form;
-    Checkbox autorefresh = new Checkbox();
-    private Label lastRefreshLabel;
-    private Label countdownLabel;
+
     private ScheduledExecutorService executor;
     private UI ui ;
     Instant startTime;
     private String productsDb;
+    private String dBAgentName;
     private String selectedDbName;
-    public PFGProductMappingView(@Value("${pfg_mapping_products}") String productsDb , ProductHierarchieService service, ProjectConnectionService projectConnectionService) {
+    //public PFGProductMappingView(@Value("${pfg_mapping_products}") String productsDb , ProductHierarchieService service, ProjectConnectionService projectConnectionService) {
+    public PFGProductMappingView(@Value("${pfg_mapping_products}") String productsDb, @Value("${pfg_AgentName}") String dBAgentName , ProductHierarchieService service, ProjectConnectionService projectConnectionService) {
         this.service = service;
         this.projectConnectionService = projectConnectionService;
         this.productsDb = productsDb;
+        this.dBAgentName = dBAgentName;
 
         ui= UI.getCurrent();
 
@@ -75,6 +88,7 @@ public class PFGProductMappingView extends VerticalLayout {
         // configureAttachmentsGrid();
         configureForm();
         configureLoggingArea();
+        configureExecuteBtn();
 
        // saveBtn.setVisible(false);
       //  editBtn.setVisible(true);
@@ -106,12 +120,74 @@ public class PFGProductMappingView extends VerticalLayout {
 
 
 
-        add(databaseConnectionCB, hl);
+      //  add(databaseConnectionCB, hl);
+        add(hl);
 
       //  getCLTVALLProduct();
 
         updateList();
         closeEditor();
+
+    }
+
+    private void configureExecuteBtn() {
+
+        String dbConnection="";
+        String agentJobName="";
+
+        try {
+            //String[] dbName = productDb.split("\\.");
+            String[] parts = dBAgentName.split(":");
+
+            if (parts.length == 2) {
+                dbConnection = parts[0];
+                agentJobName = parts[1];
+            } else {
+                System.out.println("ERROR: No Connection/AgentJob for start Agent-Job!");
+            }
+
+          } catch (Exception e) {
+               e.printStackTrace();
+                 return ;
+           }
+
+
+        String finalAgentJobName = agentJobName;
+        String finalDbConnection = dbConnection;
+        startAgentBtn.addClickListener(e->{
+            startAgentBtn.setEnabled(false);
+            startJob(finalDbConnection,finalAgentJobName);
+        });
+
+        startAgentBtn.setText("Execute Job " + agentJobName);
+
+        startAgentBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY,
+                ButtonVariant.LUMO_SUCCESS);
+        startAgentBtn.setTooltipText("Start of SQLServer Job: " + agentJobName );
+
+    }
+
+    private String startJob(String finalDbConnection, String finalAgentJobName) {
+
+        Notification notification = Notification.show("Job " + finalAgentJobName + " wurde gestartet...",6000, Notification.Position.TOP_END);
+        notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+        System.out.println("Start SQLServer-Job: " + finalAgentJobName + " on Connection: " + finalDbConnection);
+
+        DataSource dataSource = projectConnectionService.getDataSource(finalDbConnection);
+        template = new JdbcTemplate(dataSource);
+
+        try {
+            String sql = "msdb.dbo.sp_start_job @job_name='" + finalAgentJobName + "'";
+            template.execute(sql);
+        }
+        catch (CannotGetJdbcConnectionException connectionException) {
+            return connectionException.getMessage();
+        } catch (Exception e) {
+            // Handle other exceptions
+            return e.getMessage();
+        }
+        return "OK";
+
 
     }
 
@@ -214,7 +290,11 @@ public class PFGProductMappingView extends VerticalLayout {
         grid.setHeightFull();
         grid.setColumns("pfg_Type", "node", "product_name");
 
-        grid.getColumns().forEach(col -> col.setAutoWidth(true));
+        grid.getColumnByKey("pfg_Type").setHeader("PFG-Type").setWidth("120px").setFlexGrow(0).setResizable(true);
+        grid.getColumnByKey("node").setHeader("Node").setWidth("500px").setFlexGrow(0).setResizable(true);
+        grid.getColumnByKey("product_name").setHeader("Product").setWidth("500px").setFlexGrow(0).setResizable(true);
+
+        grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
 
 //        grid.asSingleSelect().addValueChangeListener(event ->
 //                editProduct(event.getValue()));
@@ -257,7 +337,8 @@ public class PFGProductMappingView extends VerticalLayout {
 //        startJobButton.addClickListener(click -> startJob());
 
         //      var toolbar = new HorizontalLayout(filterText, addProductButton, startJobButton);
-        HorizontalLayout toolbar = new HorizontalLayout(filterText, addProductButton);
+        HorizontalLayout toolbar = new HorizontalLayout(filterText, addProductButton, startAgentBtn);
+        toolbar.setWidth("800px");
         toolbar.addClassName("toolbar");
 
         return toolbar;
