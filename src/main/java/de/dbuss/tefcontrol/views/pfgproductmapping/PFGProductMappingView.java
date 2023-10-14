@@ -155,8 +155,19 @@ public class PFGProductMappingView extends VerticalLayout {
         String finalAgentJobName = agentJobName;
         String finalDbConnection = dbConnection;
         startAgentBtn.addClickListener(e->{
-            startAgentBtn.setEnabled(false);
-            startJob(finalDbConnection,finalAgentJobName);
+
+           String erg= startJob(finalDbConnection,finalAgentJobName);
+
+           if(!erg.contains("OK"))
+           {
+               Notification notification = Notification.show("ERROR: " + erg,10000, Notification.Position.MIDDLE);
+               notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+
+           }
+           else {
+               startAgentBtn.setEnabled(false);
+           }
+
         });
 
         startAgentBtn.setText("Execute Job " + agentJobName);
@@ -169,23 +180,30 @@ public class PFGProductMappingView extends VerticalLayout {
 
     private String startJob(String finalDbConnection, String finalAgentJobName) {
 
-        Notification notification = Notification.show("Job " + finalAgentJobName + " wurde gestartet...",6000, Notification.Position.TOP_END);
+        String erg="";
+        Notification notification = Notification.show("Starting Job " + finalAgentJobName + "...",5000, Notification.Position.MIDDLE);
         notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
         System.out.println("Start SQLServer-Job: " + finalAgentJobName + " on Connection: " + finalDbConnection);
 
         DataSource dataSource = projectConnectionService.getDataSource(finalDbConnection);
         template = new JdbcTemplate(dataSource);
 
+
+
         try {
             String sql = "msdb.dbo.sp_start_job @job_name='" + finalAgentJobName + "'";
             template.execute(sql);
+
+
         }
         catch (CannotGetJdbcConnectionException connectionException) {
             return connectionException.getMessage();
         } catch (Exception e) {
             // Handle other exceptions
+            System.out.println("Exception: " + e.getMessage());
             return e.getMessage();
         }
+
         return "OK";
 
 
@@ -295,6 +313,7 @@ public class PFGProductMappingView extends VerticalLayout {
         grid.getColumnByKey("product_name").setHeader("Product").setWidth("500px").setFlexGrow(0).setResizable(true);
 
         grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+        grid.addThemeVariants(GridVariant.LUMO_COMPACT);
 
 //        grid.asSingleSelect().addValueChangeListener(event ->
 //                editProduct(event.getValue()));

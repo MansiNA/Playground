@@ -24,7 +24,7 @@ public class ProductHierarchie {
     @Column(name="Knoten")
     private String node = "PFG_";
 
-    @NotEmpty
+   // @NotEmpty
     @Column(name="Product")
     private String product_name = "";
 
