@@ -7,7 +7,9 @@ import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.combobox.ComboBoxVariant;
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
@@ -25,9 +27,9 @@ import java.util.stream.Collectors;
 public class PFGProductForm extends FormLayout {
     ComboBox<String> pfg_Type = new ComboBox("PFG Type");
     TextField node = new TextField("Knoten");
- //   Select<String> product_name = new Select<>();
+  //  Select<String> product_name = new Select<>();
       ComboBox<String> product_name = new ComboBox<>();
-  //  TextField exportTime_id = new TextField("Export Zeitpunkt");
+
 
     private ProductHierarchie productHierarchie;
 
@@ -40,8 +42,18 @@ public class PFGProductForm extends FormLayout {
         pfg_Type.setItems("PFG Post", "PFG PRE");
         pfg_Type.setValue("PFG Post");
 
-        product_name.setLabel("Choose Product");
+        product_name.setLabel("Product");
         product_name.setWidthFull();
+
+        product_name.setPageSize(5);
+
+        //product_name.addThemeVariants(
+             //   ComboBoxVariant.LUMO_SMALL,
+            //    ComboBoxVariant.LUMO_ALIGN_RIGHT,
+            //    ComboBoxVariant.LUMO_HELPER_ABOVE_FIELD
+        //);
+      //  product_name.getStyle().set("--vaadin-input-field-border-width", "1px");
+        product_name.setAllowCustomValue(true);
 
         if (cltvAllProducts != null && !cltvAllProducts.isEmpty()) {
             List<String> productNames = cltvAllProducts.stream()
@@ -55,6 +67,14 @@ public class PFGProductForm extends FormLayout {
 
             product_name.setItems(productNames);
             product_name.setValue(productNames.get(0));
+
+
+            //product_name.setHelperText("Helper text");
+            product_name.setPlaceholder("Choose Product");
+            product_name.setTooltipText("Choose Product from List");
+            product_name.setClearButtonVisible(true);
+            product_name.setPrefixComponent(VaadinIcon.SEARCH.create());
+
         }
 
         product_name.addValueChangeListener(event -> {
@@ -62,6 +82,7 @@ public class PFGProductForm extends FormLayout {
                 product_name.setValue(event.getValue());
             }
         });
+
 
         add(pfg_Type,node,product_name, createButtonsLayout());
     }
