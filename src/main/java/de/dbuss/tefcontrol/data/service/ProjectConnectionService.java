@@ -418,11 +418,11 @@ public class ProjectConnectionService {
             jdbcTemplate = new JdbcTemplate(dataSource);
 
             //String sql = "SELECT [all_products], [all_products_gen_number], [all_products_gen2], [verarb_datum] FROM " + dataBase;
-            String sql = "SELECT distinct [all_products] FROM " + dataBase;
+            String sql = "SELECT distinct [All Products] FROM " + dataBase;
 
             List<CltvAllProduct> clatvAllProductList = jdbcTemplate.query(sql, (rs, rowNum) -> {
                 CltvAllProduct cltvAllProduct = new CltvAllProduct();
-                cltvAllProduct.setAllProducts(rs.getString("all_products"));
+                cltvAllProduct.setAllProducts(rs.getString("All Products"));
               //  cltvAllProduct.setAllProductGenNumber(rs.getString("all_products_gen_number"));
               //  cltvAllProduct.setAllProductGen2(rs.getString("all_products_gen2"));
               //  cltvAllProduct.setVerarb_datum(null);
