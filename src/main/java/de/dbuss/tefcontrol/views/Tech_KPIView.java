@@ -72,13 +72,13 @@ public class Tech_KPIView extends VerticalLayout {
     Grid<KPI_Actuals> gridActuals;
     Grid<KPI_Plan> gridPlan;
 
-    Grid<QS_Status> gridQS;
+  //  Grid<QS_Status> gridQS;
 
     //H3 h3_Fact= new H3();
     //H3 h3_Actuals= new H3();
     //H3 h3_Plan= new H3();
 
-    Article description = new Article();
+ //   Article description = new Article();
 
     String factInfo = "KPI_Fact 0 rows";
     String actualsInfo = "KPI_Actuals 0 rows";
@@ -97,8 +97,8 @@ public class Tech_KPIView extends VerticalLayout {
     AccordionPanel planPanel;
     AccordionPanel actualsPanel;
 
-    Div htmlDivToDO;
-    CheckboxGroup<String> TodoList;
+    //Div htmlDivToDO;
+    //CheckboxGroup<String> TodoList;
 
     public Tech_KPIView(JdbcTemplate jdbcTemplate, ProjectConnectionService projectConnectionService) {
         this.jdbcTemplate = jdbcTemplate;
@@ -108,23 +108,23 @@ public class Tech_KPIView extends VerticalLayout {
         progressBarActuals.setVisible(false);
         progressBarFact.setVisible(false);
 
-        description.add("Tool für upload der KPI-Excel Tabelle.\n Bitte als 1. Datei hochladen.");
+   //     description.add("Tool für upload der KPI-Excel Tabelle.\n Bitte als 1. Datei hochladen.");
 
         setupKPIActualsGrid();
         setupKPIFactGrid();
         setupKPIPlanGrid();
-        setupQSGrid();
+        //setupQSGrid();
 
         setupUploader();
 
         // message.setText("1. Datei hochladen.");
 
 
-        TodoList = new CheckboxGroup<>();
-        TodoList.setLabel("ToDo");
-        TodoList.setItems("KPI_DB.xlsx hochladen");
+    //    TodoList = new CheckboxGroup<>();
+    //    TodoList.setLabel("ToDo");
+    //    TodoList.setItems("KPI_DB.xlsx hochladen");
 
-        TodoList.addValueChangeListener(event -> {
+     /*   TodoList.addValueChangeListener(event -> {
             String selectedItems = event.getValue().stream()
                     .collect(Collectors.joining(", "));
             //   System.out.println("Ausgewählte: " + selectedItems);
@@ -143,13 +143,10 @@ public class Tech_KPIView extends VerticalLayout {
 
             }
 
-        });
+        });*/
 
-        //  TodoList.setItems("KPI_DB.xlsx hochladen", "QS checken", "Verarbeitung starten");
-        TodoList.addThemeVariants(CheckboxGroupVariant.LUMO_VERTICAL);
 
-        //TodoList.setEnabled(false);
-
+   //     TodoList.addThemeVariants(CheckboxGroupVariant.LUMO_VERTICAL);
 
 
 
@@ -168,18 +165,18 @@ public class Tech_KPIView extends VerticalLayout {
         // Div zur Ansicht hinzufügen
         add(htmlDiv);
 
-        htmlDivToDO = new Div();
+   //     htmlDivToDO = new Div();
         // htmlDivQS.getElement().setProperty("innerHTML", "<b style=\"color:blue;\">QS-Übersicht:</b>");
-        htmlDivToDO.getElement().setProperty("innerHTML", "<h4><u>Aktuelles ToDo:</u> <b>Bitte die Datei KPI-DB.xlsx hochladen!</b></h4>");
+   //     htmlDivToDO.getElement().setProperty("innerHTML", "<h4><u>Aktuelles ToDo:</u> <b>Bitte die Datei KPI-DB.xlsx hochladen!</b></h4>");
 
-        //add(htmlDivToDO);
-        add(TodoList);
+   //     add(TodoList);
 
         saveButton = new Button("Save to DB");
         saveButton.setEnabled(false);
 
         ComboBox<String> databaseCB = new ComboBox<>("Choose Database");
         databaseCB.setAllowCustomValue(true);
+        databaseCB.setWidth("400px");
 
         databaseCB.setTooltipText("Select Database Connection");
         List<ProjectConnection> listOfProjectConnections = projectConnectionService.findAll();
@@ -249,7 +246,7 @@ public class Tech_KPIView extends VerticalLayout {
 
     }
 
-    private void setupQSGrid() {
+   /* private void setupQSGrid() {
         gridQS = new Grid<>(QS_Status.class, false);
 
         gridQS.setHeight("220px");
@@ -278,7 +275,7 @@ public class Tech_KPIView extends VerticalLayout {
 
 
         gridQS.addClassName("small-grid");
-    }
+    }*/
 
     private Icon createStatusIcon(String status) {
         boolean isAvailable = "OK".equals(status);
@@ -640,7 +637,7 @@ public class Tech_KPIView extends VerticalLayout {
     }
     private void setupUploader() {
         System.out.println("setup uploader................start");
-        singleFileUpload.setWidth("600px");
+        singleFileUpload.setWidth("450px");
 
         singleFileUpload.addSucceededListener(event -> {
             // Get information about the uploaded file
@@ -663,11 +660,11 @@ public class Tech_KPIView extends VerticalLayout {
 
             singleFileUpload.clearFileList();
 
-            htmlDivToDO.getElement().setProperty("innerHTML", "<u>ToDo:</u> <b>Wenn keine QS Probleme aufgetreten sind, per Button \"Freigabe\" weitere Verarbeitung starten</b>");
+//            htmlDivToDO.getElement().setProperty("innerHTML", "<u>ToDo:</u> <b>Wenn keine QS Probleme aufgetreten sind, per Button \"Freigabe\" weitere Verarbeitung starten</b>");
             //    message.setText("2. Button >Import< for upload to Database");
 
-            TodoList.setItems("KPI_DB.xlsx hochgeladen", "QS bestätigen");
-            TodoList.select("KPI_DB.xlsx hochgeladen");
+//            TodoList.setItems("KPI_DB.xlsx hochgeladen", "QS bestätigen");
+//            TodoList.select("KPI_DB.xlsx hochgeladen");
             //  TodoList.setEnabled(true);
 
             //h3_Fact.removeAll();
@@ -683,6 +680,7 @@ public class Tech_KPIView extends VerticalLayout {
             //h3_Plan.removeAll();
             //h3_Plan.add("Plan (" + listOfKPI_Plan.size() + " rows)");
 
+            saveButton.setEnabled(true);
 
         });
         System.out.println("setup uploader................over");
