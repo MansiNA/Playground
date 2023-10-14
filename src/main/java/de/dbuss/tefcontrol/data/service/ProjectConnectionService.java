@@ -398,20 +398,34 @@ public class ProjectConnectionService {
     }
 
     public List<CltvAllProduct> getCltvAllProducts(String productDb) {
+
+        String dbConnection="";
+        String dataBase="";
+
         try {
-            String[] dbName = productDb.split("\\.");
-            DataSource dataSource = getDataSource(dbName[0]);
+            //String[] dbName = productDb.split("\\.");
+            String[] parts = productDb.split(":");
+
+            if (parts.length == 2) {
+                dbConnection = parts[0];
+                dataBase = parts[1];
+            } else
+            {
+                System.out.println("ERROR: No Connection/Table for CltvAllProducts!");
+            }
+
+            DataSource dataSource = getDataSource(dbConnection);
             jdbcTemplate = new JdbcTemplate(dataSource);
 
-        //    String sql = "SELECT [all_products], [all_products_gen_number], [all_products_gen2], [verarb_datum] FROM [PIT2].[Stage].[CLTV_All_Products]";
-            String sql = "SELECT [all_products], [all_products_gen_number], [all_products_gen2], [verarb_datum] FROM " + productDb;
+            //String sql = "SELECT [all_products], [all_products_gen_number], [all_products_gen2], [verarb_datum] FROM " + dataBase;
+            String sql = "SELECT distinct [all_products] FROM " + dataBase;
 
             List<CltvAllProduct> clatvAllProductList = jdbcTemplate.query(sql, (rs, rowNum) -> {
                 CltvAllProduct cltvAllProduct = new CltvAllProduct();
                 cltvAllProduct.setAllProducts(rs.getString("all_products"));
-                cltvAllProduct.setAllProductGenNumber(rs.getString("all_products_gen_number"));
-                cltvAllProduct.setAllProductGen2(rs.getString("all_products_gen2"));
-                cltvAllProduct.setVerarb_datum(null);
+              //  cltvAllProduct.setAllProductGenNumber(rs.getString("all_products_gen_number"));
+              //  cltvAllProduct.setAllProductGen2(rs.getString("all_products_gen2"));
+              //  cltvAllProduct.setVerarb_datum(null);
                 return cltvAllProduct;
             });
 

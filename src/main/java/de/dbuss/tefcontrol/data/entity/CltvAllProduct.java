@@ -9,7 +9,7 @@ import java.sql.Date;
 @Setter
 public class CltvAllProduct {
         private String allProducts;
-        private String allProductGenNumber;
-        private String allProductGen2;
-        private Date verarb_datum;
+     //   private String allProductGenNumber;
+     //   private String allProductGen2;
+     //   private Date verarb_datum;
 }

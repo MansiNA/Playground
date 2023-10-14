@@ -36,6 +36,20 @@ public class ProductHierarchieService{
         return productHierarchieRepository.count();
     }
 
+    public long getMaxID() {
+        int anzahl=0;
+        try {
+            anzahl = template.queryForObject ("select max(ID) from [dbo].[IN_FRONT_CLTV_Product_Hier_PFG]", Integer.class);
+        }
+        catch (Exception e)
+        {
+            System.out.println(e.getMessage());
+            return -1;
+        }
+
+        return anzahl;
+    }
+
     public void deleteProduct(ProductHierarchie product) {
         productHierarchieRepository.delete(product);
     }
@@ -47,8 +61,12 @@ public class ProductHierarchieService{
             return;
         }
 
+
         if (product.getId() == null) {
-            product.setId(countProducts() + 1);
+
+            product.setId(getMaxID() + 1);
+            //product.setId(countProducts() + 1);
+            System.out.println("Save new product with ID: " + product.getId());
         }
 
         productHierarchieRepository.save(product);

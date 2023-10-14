@@ -179,7 +179,9 @@ public class PFGProductMappingView extends VerticalLayout {
 
     private void configureForm() {
 
-        form = new PFGProductForm(projectConnectionService.getCltvAllProducts(productsDb));
+        var xx= projectConnectionService.getCltvAllProducts(productsDb);
+
+        form = new PFGProductForm(xx);
         form.setWidth("25em");
         //form.addSaveListener(this::saveProduct);
 
