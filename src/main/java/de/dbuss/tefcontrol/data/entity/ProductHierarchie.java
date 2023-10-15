@@ -32,11 +32,11 @@ public class ProductHierarchie {
    // @Column(name="Export_Time")
    // private Date exportTime_id;
 
-    public void setNode(String node) {
+/*    public void setNode(String node) {
         if (node != null && !node.startsWith("PFG_")) {
             this.node = "PFG_" + node;
         } else {
             this.node = node;
         }
-    }
+    }*/
 }

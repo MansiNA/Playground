@@ -291,6 +291,25 @@ public class PFGProductMappingView extends VerticalLayout {
     }
 
     private void saveProduct(PFGProductForm.SaveEvent event) {
+
+
+        String node = event.getProduct().getNode();
+        String product = event.getProduct().getProduct_name();
+
+        if (!node.startsWith("PFG_") || node.length()<9)
+        {
+            Notification notification = Notification.show("Node: Number of characters must be more then 9 and start with PFG_ ",5000, Notification.Position.MIDDLE);
+            notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+            return;
+        }
+
+        if ( product==null ||product.isEmpty())
+        {
+            Notification notification = Notification.show("Please specify Product!",5000, Notification.Position.MIDDLE);
+            notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+            return;
+        }
+
         service.saveProduct(event.getProduct());
         updateList();
         closeEditor();
