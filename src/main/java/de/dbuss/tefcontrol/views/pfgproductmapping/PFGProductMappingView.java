@@ -95,10 +95,10 @@ public class PFGProductMappingView extends VerticalLayout {
 
         HorizontalLayout hl = new HorizontalLayout();
         //   hl.add(getTabsheet(),saveBtn,editBtn);
-        hl.add(getPFGMapping());
 
-        hl.setHeightFull();
-        hl.setSizeFull();
+
+      //  hl.setHeight("50px");
+      //  hl.setSizeFull();
 
         ComboBox<String> databaseConnectionCB = new ComboBox<>();
         databaseConnectionCB.setAllowCustomValue(true);
@@ -118,10 +118,10 @@ public class PFGProductMappingView extends VerticalLayout {
         databaseConnectionCB.setValue(connectionNames.get(0));
         selectedDbName = connectionNames.get(0);
 
+        hl.add(databaseConnectionCB, startAgentBtn);
 
+        add(hl, getPFGMapping());
 
-      //  add(databaseConnectionCB, hl);
-        add(hl);
 
       //  getCLTVALLProduct();
 
@@ -375,7 +375,7 @@ public class PFGProductMappingView extends VerticalLayout {
 //        startJobButton.addClickListener(click -> startJob());
 
         //      var toolbar = new HorizontalLayout(filterText, addProductButton, startJobButton);
-        HorizontalLayout toolbar = new HorizontalLayout(filterText, addProductButton, startAgentBtn);
+        HorizontalLayout toolbar = new HorizontalLayout(filterText, addProductButton);
         toolbar.setWidth("800px");
         toolbar.addClassName("toolbar");
 
