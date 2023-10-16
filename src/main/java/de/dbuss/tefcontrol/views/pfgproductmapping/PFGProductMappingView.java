@@ -1,6 +1,7 @@
 package de.dbuss.tefcontrol.views.pfgproductmapping;
 
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -14,6 +15,7 @@ import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.TabSheet;
+import com.vaadin.flow.component.tabs.TabSheetVariant;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
@@ -54,6 +56,8 @@ public class PFGProductMappingView extends VerticalLayout {
     private final ProjectConnectionService projectConnectionService;
 
     Grid<ProductHierarchie> grid = new Grid<>(ProductHierarchie.class);
+    Grid<ProductHierarchie> missingGrid = new Grid<>(ProductHierarchie.class);
+
 
     Button startAgentBtn = new Button("Execute Job");
     TextField filterText = new TextField();
@@ -86,7 +90,7 @@ public class PFGProductMappingView extends VerticalLayout {
         addClassName("list-view");
         setSizeFull();
         configureGrid();
-        // configureAttachmentsGrid();
+        configureMissingGrid();
         configureForm();
         configureLoggingArea();
         configureExecuteBtn();
@@ -130,11 +134,42 @@ public class PFGProductMappingView extends VerticalLayout {
 
         hl.add(databaseConnectionCB, startAgentBtn);
 
-        add(hl, getPFGMapping());
+        TabSheet tabSheet = new TabSheet();
+
+        tabSheet.add("Missing Entries", getMissingMapping());
+        tabSheet.add("All Entries",getPFGMapping());
+
+        tabSheet.setSizeFull();
+        tabSheet.setHeightFull();
+        tabSheet.addThemeVariants(TabSheetVariant.MATERIAL_BORDERED);
+
+
+        add(tabSheet);
+
+       //
+        add(hl,tabSheet );
 
 
         updateList();
         closeEditor();
+    }
+
+    private Component getMissingMapping() {
+        VerticalLayout vl = new VerticalLayout();
+
+      //  HorizontalLayout content = new HorizontalLayout(missingGrid);
+        HorizontalLayout content = new HorizontalLayout(missingGrid);
+
+        content.addClassName("missingContent");
+        content.setSizeFull();
+        content.setHeightFull();
+
+        vl.add(content);
+
+        vl.setSizeFull();
+        vl.setHeightFull();
+
+        return vl;
     }
 
     private void configureExecuteBtn() {
@@ -348,6 +383,28 @@ public class PFGProductMappingView extends VerticalLayout {
 
         grid.addItemDoubleClickListener(event ->
                 editProduct(event.getItem()));
+
+    }
+
+    private void configureMissingGrid() {
+        missingGrid.addClassNames("Missing PFG-grid");
+        missingGrid.setSizeFull();
+        missingGrid.setHeightFull();
+        missingGrid.setColumns("product_name", "pfg_Type", "node");
+
+        missingGrid.getColumnByKey("product_name").setHeader("Product").setWidth("500px").setFlexGrow(0).setResizable(true);
+        missingGrid.getColumnByKey("pfg_Type").setHeader("PFG-Type").setWidth("120px").setFlexGrow(0).setResizable(true);
+        missingGrid.getColumnByKey("node").setHeader("Node").setWidth("500px").setFlexGrow(0).setResizable(true);
+
+
+        missingGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+        missingGrid.addThemeVariants(GridVariant.LUMO_COMPACT);
+
+//        missingGrid.asSingleSelect().addValueChangeListener(event ->
+//                editProduct(event.getValue()));
+
+//        missingGrid.addItemDoubleClickListener(event ->
+//                editProduct(event.getItem()));
 
     }
 
