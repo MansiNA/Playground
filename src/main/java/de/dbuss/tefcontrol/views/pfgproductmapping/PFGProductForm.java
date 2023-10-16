@@ -87,7 +87,16 @@ public class PFGProductForm extends FormLayout {
         add(pfg_Type,node,product_name, createButtonsLayout());
     }
 
-    public void setProduct(ProductHierarchie productHierarchie){ binder.setBean(productHierarchie);}
+    public void setProduct(ProductHierarchie productHierarchie){
+        if (productHierarchie != null && productHierarchie.getId() != null) {
+            pfg_Type.setEnabled(false);
+            node.setEnabled(false);
+        } else {
+            pfg_Type.setEnabled(true);
+            node.setEnabled(true);
+        }
+        binder.setBean(productHierarchie);
+    }
 
     private Component createButtonsLayout() {
 
@@ -116,6 +125,7 @@ public class PFGProductForm extends FormLayout {
             System.out.println("Save-Button gedrückt!");
 
             fireEvent(new SaveEvent(this, binder.getBean()));
+
         }
     }
 

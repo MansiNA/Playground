@@ -73,8 +73,9 @@ public class PFGProductMappingView extends VerticalLayout {
     private String productsDb;
     private String dBAgentName;
     private String selectedDbName;
+    private String targetTable;
     //public PFGProductMappingView(@Value("${pfg_mapping_products}") String productsDb , ProductHierarchieService service, ProjectConnectionService projectConnectionService) {
-    public PFGProductMappingView(@Value("${pfg_mapping_products}") String productsDb, @Value("${pfg_AgentName}") String dBAgentName , ProductHierarchieService service, ProjectConnectionService projectConnectionService) {
+    public PFGProductMappingView(@Value("${pfg_mapping_products}") String productsDb, @Value("${pfg_AgentName}") String dBAgentName , @Value("${pfg_mapping_target}") String pfg_mapping_target , ProductHierarchieService service, ProjectConnectionService projectConnectionService) {
         this.service = service;
         this.projectConnectionService = projectConnectionService;
         this.productsDb = productsDb;
@@ -115,19 +116,25 @@ public class PFGProductMappingView extends VerticalLayout {
                 })
                 .collect(Collectors.toList());
         databaseConnectionCB.setItems(connectionNames);
-        databaseConnectionCB.setValue(connectionNames.get(0));
-        selectedDbName = connectionNames.get(0);
+       // databaseConnectionCB.setValue(connectionNames.get(0));
+       // selectedDbName = connectionNames.get(0);
+        String [] targets = pfg_mapping_target.split(":");
+        selectedDbName = targets[0];
+        targetTable = targets[1];
+        databaseConnectionCB.setValue(selectedDbName);
+
+        databaseConnectionCB.addValueChangeListener(event -> {
+            selectedDbName = event.getValue();
+            updateList();
+        });
 
         hl.add(databaseConnectionCB, startAgentBtn);
 
         add(hl, getPFGMapping());
 
 
-      //  getCLTVALLProduct();
-
         updateList();
         closeEditor();
-
     }
 
     private void configureExecuteBtn() {
@@ -142,6 +149,7 @@ public class PFGProductMappingView extends VerticalLayout {
             if (parts.length == 2) {
                 dbConnection = parts[0];
                 agentJobName = parts[1];
+
             } else {
                 System.out.println("ERROR: No Connection/AgentJob for start Agent-Job!");
             }
@@ -154,9 +162,10 @@ public class PFGProductMappingView extends VerticalLayout {
 
         String finalAgentJobName = agentJobName;
         String finalDbConnection = dbConnection;
+      //  selectedDbName = dbConnection;
         startAgentBtn.addClickListener(e->{
 
-           String erg= startJob(finalDbConnection,finalAgentJobName);
+           String erg= startJob(selectedDbName,finalAgentJobName);
 
            if(!erg.contains("OK"))
            {
@@ -187,8 +196,6 @@ public class PFGProductMappingView extends VerticalLayout {
 
         DataSource dataSource = projectConnectionService.getDataSource(finalDbConnection);
         template = new JdbcTemplate(dataSource);
-
-
 
         try {
             String sql = "msdb.dbo.sp_start_job @job_name='" + finalAgentJobName + "'";
@@ -232,7 +239,8 @@ public class PFGProductMappingView extends VerticalLayout {
 
     private void updateList() {
 
-        grid.setItems(service.findAllProducts(filterText.getValue()));
+        //grid.setItems(service.findAllProducts(filterText.getValue()));
+        grid.setItems(projectConnectionService.fetchProductHierarchie(selectedDbName, targetTable));
     }
 
     private Component getContent() {
@@ -310,7 +318,8 @@ public class PFGProductMappingView extends VerticalLayout {
             return;
         }
 
-        service.saveProduct(event.getProduct());
+        projectConnectionService.saveProductHierarchie(event.getProduct(), selectedDbName, targetTable);
+      //  service.saveProduct(event.getProduct());
         updateList();
         closeEditor();
     }
