@@ -115,19 +115,22 @@ public class PFGProductMappingView extends VerticalLayout {
                 })
                 .collect(Collectors.toList());
         databaseConnectionCB.setItems(connectionNames);
-        databaseConnectionCB.setValue(connectionNames.get(0));
-        selectedDbName = connectionNames.get(0);
+       // databaseConnectionCB.setValue(connectionNames.get(0));
+       // selectedDbName = connectionNames.get(0);
+        databaseConnectionCB.setValue(selectedDbName);
+
+        databaseConnectionCB.addValueChangeListener(event -> {
+            selectedDbName = event.getValue();
+            updateList();
+        });
 
         hl.add(databaseConnectionCB, startAgentBtn);
 
         add(hl, getPFGMapping());
 
 
-      //  getCLTVALLProduct();
-
         updateList();
         closeEditor();
-
     }
 
     private void configureExecuteBtn() {
@@ -142,6 +145,7 @@ public class PFGProductMappingView extends VerticalLayout {
             if (parts.length == 2) {
                 dbConnection = parts[0];
                 agentJobName = parts[1];
+
             } else {
                 System.out.println("ERROR: No Connection/AgentJob for start Agent-Job!");
             }
@@ -153,10 +157,11 @@ public class PFGProductMappingView extends VerticalLayout {
 
 
         String finalAgentJobName = agentJobName;
-        String finalDbConnection = dbConnection;
+      //  String finalDbConnection = dbConnection;
+        selectedDbName = dbConnection;
         startAgentBtn.addClickListener(e->{
 
-           String erg= startJob(finalDbConnection,finalAgentJobName);
+           String erg= startJob(selectedDbName,finalAgentJobName);
 
            if(!erg.contains("OK"))
            {
@@ -187,8 +192,6 @@ public class PFGProductMappingView extends VerticalLayout {
 
         DataSource dataSource = projectConnectionService.getDataSource(finalDbConnection);
         template = new JdbcTemplate(dataSource);
-
-
 
         try {
             String sql = "msdb.dbo.sp_start_job @job_name='" + finalAgentJobName + "'";
@@ -232,7 +235,8 @@ public class PFGProductMappingView extends VerticalLayout {
 
     private void updateList() {
 
-        grid.setItems(service.findAllProducts(filterText.getValue()));
+        //grid.setItems(service.findAllProducts(filterText.getValue()));
+        grid.setItems(projectConnectionService.fetchProductHierarchie(selectedDbName));
     }
 
     private Component getContent() {
@@ -310,7 +314,8 @@ public class PFGProductMappingView extends VerticalLayout {
             return;
         }
 
-        service.saveProduct(event.getProduct());
+        projectConnectionService.saveProductHierarchie(event.getProduct(), selectedDbName);
+      //  service.saveProduct(event.getProduct());
         updateList();
         closeEditor();
     }

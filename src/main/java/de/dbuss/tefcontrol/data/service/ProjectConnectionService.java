@@ -433,6 +433,65 @@ public class ProjectConnectionService {
         } catch (Exception e) {
             e.printStackTrace();
             return Collections.emptyList();
-        }    }
+        }
+    }
+
+    public List<ProductHierarchie> fetchProductHierarchie(String selectedDatabase) {
+
+        getJdbcConnection(selectedDatabase);
+        String sqlQuery = "SELECT * FROM IN_FRONT_CLTV_Product_Hier_PFG";
+
+        // Create a RowMapper to map the query result to a CLTV_HW_Measures object
+        RowMapper<ProductHierarchie> rowMapper = (rs, rowNum) -> {
+            ProductHierarchie productHierarchie = new ProductHierarchie();
+            productHierarchie.setId(rs.getLong("id"));
+            productHierarchie.setPfg_Type(rs.getString("PFG_PO/PP"));
+            productHierarchie.setNode(rs.getString("Knoten"));
+            productHierarchie.setProduct_name(rs.getString("Product"));
+            return productHierarchie;
+        };
+
+        List<ProductHierarchie> fetchedData = jdbcTemplate.query(sqlQuery, rowMapper);
+
+        return fetchedData;
+    }
+
+    public String saveProductHierarchie(ProductHierarchie data, String selectedDatabase) {
+        try {
+            getJdbcConnection(selectedDatabase);
+
+            // Check if the data already exists based on a case-insensitive condition
+            String sqlSelect = "SELECT COUNT(*) FROM IN_FRONT_CLTV_Product_Hier_PFG WHERE Id = ?";
+            int count = jdbcTemplate.queryForObject(sqlSelect, Integer.class, data.getId());
+
+            if (count > 0) {
+                // Data exists, so update it
+                String sqlUpdate = "UPDATE IN_FRONT_CLTV_Product_Hier_PFG SET [PFG_PO/PP] = ?, Knoten = ?, Product = ? WHERE Id = ?";
+                jdbcTemplate.update(
+                        sqlUpdate,
+                        data.getPfg_Type(),
+                        data.getNode(),
+                        data.getProduct_name(),
+                        data.getId()
+                );
+            } else {
+                // Data doesn't exist, so insert it
+                String sqlInsert = "INSERT INTO IN_FRONT_CLTV_Product_Hier_PFG (Product, [PFG_PO/PP], Knoten) VALUES (?, ?, ?)";
+                jdbcTemplate.update(
+                        sqlInsert,
+                        data.getProduct_name(),
+                        data.getPfg_Type(),
+                        data.getNode()
+                );
+            }
+
+            return "ok";
+        } catch (CannotGetJdbcConnectionException connectionException) {
+            return connectionException.getMessage();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return e.getMessage();
+        }
+    }
 
 }
