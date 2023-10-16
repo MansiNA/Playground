@@ -25,8 +25,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class PFGProductForm extends FormLayout {
-    ComboBox<String> pfg_Type = new ComboBox("PFG Type");
-    TextField node = new TextField("Knoten");
+    ComboBox<String> pfg_Type = new ComboBox("PFG-Type");
+    TextField node = new TextField("Node");
   //  Select<String> product_name = new Select<>();
       ComboBox<String> product_name = new ComboBox<>();
 
@@ -39,8 +39,9 @@ public class PFGProductForm extends FormLayout {
         binder.bindInstanceFields(this);
 
         pfg_Type.getItemLabelGenerator();
-        pfg_Type.setItems("PFG Post", "PFG PRE");
-        pfg_Type.setValue("PFG Post");
+        pfg_Type.setItems("PFG (PO)", "PFG (PP)");
+        pfg_Type.setValue("PFG (PO)");
+        pfg_Type.setAllowCustomValue(false);
 
         product_name.setLabel("Product");
         product_name.setWidthFull();
@@ -84,7 +85,7 @@ public class PFGProductForm extends FormLayout {
         });
 
 
-        add(pfg_Type,node,product_name, createButtonsLayout());
+        add(product_name, pfg_Type,node, createButtonsLayout());
     }
 
     public void setProduct(ProductHierarchie productHierarchie){

@@ -130,7 +130,7 @@ public class MainLayout extends AppLayout {
         toggle.setAriaLabel("Menu toggle");
 
         viewTitle = new H3();
-        viewTitle.setText("No Project selected");
+        viewTitle.setText("");
         //viewTitle.addClassNames(LumoUtility.FontSize.LARGE, LumoUtility.Margin.NONE);
 
         Span version= new Span("V1.01");
