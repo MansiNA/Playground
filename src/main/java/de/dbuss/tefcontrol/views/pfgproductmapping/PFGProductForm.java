@@ -72,7 +72,7 @@ public class PFGProductForm extends FormLayout {
 
             //product_name.setHelperText("Helper text");
             product_name.setPlaceholder("Choose Product");
-            product_name.setTooltipText("Choose Product from List");
+            product_name.setTooltipText("Choose not configured Product");
             product_name.setClearButtonVisible(true);
             product_name.setPrefixComponent(VaadinIcon.SEARCH.create());
 
