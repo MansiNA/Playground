@@ -436,10 +436,10 @@ public class ProjectConnectionService {
         }
     }
 
-    public List<ProductHierarchie> fetchProductHierarchie(String selectedDatabase) {
+    public List<ProductHierarchie> fetchProductHierarchie(String selectedDatabase, String targetTable) {
 
         getJdbcConnection(selectedDatabase);
-        String sqlQuery = "SELECT * FROM IN_FRONT_CLTV_Product_Hier_PFG";
+        String sqlQuery = "SELECT * FROM "+ targetTable;
 
         // Create a RowMapper to map the query result to a CLTV_HW_Measures object
         RowMapper<ProductHierarchie> rowMapper = (rs, rowNum) -> {
@@ -456,17 +456,17 @@ public class ProjectConnectionService {
         return fetchedData;
     }
 
-    public String saveProductHierarchie(ProductHierarchie data, String selectedDatabase) {
+    public String saveProductHierarchie(ProductHierarchie data, String selectedDatabase, String targetTable) {
         try {
             getJdbcConnection(selectedDatabase);
 
             // Check if the data already exists based on a case-insensitive condition
-            String sqlSelect = "SELECT COUNT(*) FROM IN_FRONT_CLTV_Product_Hier_PFG WHERE Id = ?";
+            String sqlSelect = "SELECT COUNT(*) FROM "+ targetTable +" WHERE Id = ?";
             int count = jdbcTemplate.queryForObject(sqlSelect, Integer.class, data.getId());
 
             if (count > 0) {
                 // Data exists, so update it
-                String sqlUpdate = "UPDATE IN_FRONT_CLTV_Product_Hier_PFG SET [PFG_PO/PP] = ?, Knoten = ?, Product = ? WHERE Id = ?";
+                String sqlUpdate = "UPDATE "+ targetTable + " SET [PFG_PO/PP] = ?, Knoten = ?, Product = ? WHERE Id = ?";
                 jdbcTemplate.update(
                         sqlUpdate,
                         data.getPfg_Type(),
@@ -476,7 +476,7 @@ public class ProjectConnectionService {
                 );
             } else {
                 // Data doesn't exist, so insert it
-                String sqlInsert = "INSERT INTO IN_FRONT_CLTV_Product_Hier_PFG (Product, [PFG_PO/PP], Knoten) VALUES (?, ?, ?)";
+                String sqlInsert = "INSERT INTO "+ targetTable +" (Product, [PFG_PO/PP], Knoten) VALUES (?, ?, ?)";
                 jdbcTemplate.update(
                         sqlInsert,
                         data.getProduct_name(),

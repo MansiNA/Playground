@@ -73,8 +73,9 @@ public class PFGProductMappingView extends VerticalLayout {
     private String productsDb;
     private String dBAgentName;
     private String selectedDbName;
+    private String targetTable;
     //public PFGProductMappingView(@Value("${pfg_mapping_products}") String productsDb , ProductHierarchieService service, ProjectConnectionService projectConnectionService) {
-    public PFGProductMappingView(@Value("${pfg_mapping_products}") String productsDb, @Value("${pfg_AgentName}") String dBAgentName , ProductHierarchieService service, ProjectConnectionService projectConnectionService) {
+    public PFGProductMappingView(@Value("${pfg_mapping_products}") String productsDb, @Value("${pfg_AgentName}") String dBAgentName , @Value("${pfg_mapping_target}") String pfg_mapping_target , ProductHierarchieService service, ProjectConnectionService projectConnectionService) {
         this.service = service;
         this.projectConnectionService = projectConnectionService;
         this.productsDb = productsDb;
@@ -117,6 +118,9 @@ public class PFGProductMappingView extends VerticalLayout {
         databaseConnectionCB.setItems(connectionNames);
        // databaseConnectionCB.setValue(connectionNames.get(0));
        // selectedDbName = connectionNames.get(0);
+        String [] targets = pfg_mapping_target.split(":");
+        selectedDbName = targets[0];
+        targetTable = targets[1];
         databaseConnectionCB.setValue(selectedDbName);
 
         databaseConnectionCB.addValueChangeListener(event -> {
@@ -157,8 +161,8 @@ public class PFGProductMappingView extends VerticalLayout {
 
 
         String finalAgentJobName = agentJobName;
-      //  String finalDbConnection = dbConnection;
-        selectedDbName = dbConnection;
+        String finalDbConnection = dbConnection;
+      //  selectedDbName = dbConnection;
         startAgentBtn.addClickListener(e->{
 
            String erg= startJob(selectedDbName,finalAgentJobName);
@@ -236,7 +240,7 @@ public class PFGProductMappingView extends VerticalLayout {
     private void updateList() {
 
         //grid.setItems(service.findAllProducts(filterText.getValue()));
-        grid.setItems(projectConnectionService.fetchProductHierarchie(selectedDbName));
+        grid.setItems(projectConnectionService.fetchProductHierarchie(selectedDbName, targetTable));
     }
 
     private Component getContent() {
@@ -314,7 +318,7 @@ public class PFGProductMappingView extends VerticalLayout {
             return;
         }
 
-        projectConnectionService.saveProductHierarchie(event.getProduct(), selectedDbName);
+        projectConnectionService.saveProductHierarchie(event.getProduct(), selectedDbName, targetTable);
       //  service.saveProduct(event.getProduct());
         updateList();
         closeEditor();
