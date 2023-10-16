@@ -9,6 +9,8 @@ import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.gridpro.GridPro;
+import com.vaadin.flow.component.gridpro.GridProVariant;
 import com.vaadin.flow.component.html.*;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
@@ -56,7 +58,7 @@ public class PFGProductMappingView extends VerticalLayout {
     private final ProjectConnectionService projectConnectionService;
 
     Grid<ProductHierarchie> grid = new Grid<>(ProductHierarchie.class);
-    Grid<ProductHierarchie> missingGrid = new Grid<>(ProductHierarchie.class);
+    GridPro<ProductHierarchie> missingGrid = new GridPro<>(ProductHierarchie.class);
 
 
     Button startAgentBtn = new Button("Execute Job");
@@ -390,15 +392,20 @@ public class PFGProductMappingView extends VerticalLayout {
         missingGrid.addClassNames("Missing PFG-grid");
         missingGrid.setSizeFull();
         missingGrid.setHeightFull();
-        missingGrid.setColumns("product_name", "pfg_Type", "node");
+      //  missingGrid.setColumns("product_name", "pfg_Type", "node");
+        missingGrid.setColumns("product_name");
 
         missingGrid.getColumnByKey("product_name").setHeader("Product").setWidth("500px").setFlexGrow(0).setResizable(true);
-        missingGrid.getColumnByKey("pfg_Type").setHeader("PFG-Type").setWidth("120px").setFlexGrow(0).setResizable(true);
-        missingGrid.getColumnByKey("node").setHeader("Node").setWidth("500px").setFlexGrow(0).setResizable(true);
+     //   missingGrid.getColumnByKey("pfg_Type").setHeader("PFG-Type").setWidth("120px").setFlexGrow(0).setResizable(true);
+     //   missingGrid.getColumnByKey("node").setHeader("Node").setWidth("500px").setFlexGrow(0).setResizable(true);
 
 
         missingGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         missingGrid.addThemeVariants(GridVariant.LUMO_COMPACT);
+        missingGrid.addThemeVariants(GridProVariant.LUMO_HIGHLIGHT_EDITABLE_CELLS);
+
+        missingGrid.addEditColumn(ProductHierarchie::getNode).text(ProductHierarchie::setNode).setHeader("Node");
+        missingGrid.addEditColumn(ProductHierarchie::getPfg_Type).text(ProductHierarchie::setPfg_Type).setHeader("PFG-Type");
 
 //        missingGrid.asSingleSelect().addValueChangeListener(event ->
 //                editProduct(event.getValue()));
