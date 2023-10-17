@@ -407,22 +407,24 @@ public class PFGProductMappingView extends VerticalLayout {
         missingGrid.setHeightFull();
         missingGrid.setColumns("product_name");
 
-        missingGrid.getColumnByKey("product_name").setHeader("Product").setWidth("500px").setFlexGrow(0).setResizable(true);
+        missingGrid.getColumnByKey("product_name").setHeader("Product").setWidth("400px").setFlexGrow(0).setResizable(true);
         missingGrid.addComponentColumn(productHierarchie -> {
             ComboBox<String> comboBox = new ComboBox<>();
             comboBox.setItems("PFG (PO)", "PFG (PP)");
             comboBox.setValue("PFG (PO)");
+            comboBox.setWidth("90px");
             productHierarchie.setPfg_Type("PFG (PO)");
             comboBox.addValueChangeListener(event -> {
                 productHierarchie.setPfg_Type(event.getValue());
             });
             return comboBox;
-        }).setHeader("PFG-Type").setFlexGrow(0).setWidth("200px").setResizable(true);
+        }).setHeader("PFG-Type").setFlexGrow(0).setWidth("120px").setResizable(true);
         // missingGrid.addEditColumn(ProductHierarchie::getPfg_Type).text(ProductHierarchie::setPfg_Type).setHeader("PFG-Type").setFlexGrow(0).setResizable(true);
-        missingGrid.addEditColumn(ProductHierarchie::getNode).text(ProductHierarchie::setNode).setHeader("Node").setFlexGrow(0).setResizable(true);
+        missingGrid.addEditColumn(ProductHierarchie::getNode).text(ProductHierarchie::setNode).setHeader("Node").setFlexGrow(0).setWidth("250px").setResizable(true);
 
         missingGrid.addThemeVariants(GridVariant.LUMO_COMPACT);
-        missingGrid.addThemeVariants(GridProVariant.LUMO_HIGHLIGHT_EDITABLE_CELLS);
+        missingGrid.setSelectionMode(Grid.SelectionMode.NONE);
+        //missingGrid.addThemeVariants(GridProVariant.LUMO_HIGHLIGHT_EDITABLE_CELLS);
 
         Grid.Column<ProductHierarchie> editColumn = missingGrid.addComponentColumn(productHierarchie -> {
             Button editButton = new Button("Add");
