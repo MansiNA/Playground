@@ -12,6 +12,8 @@ import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.gridpro.GridPro;
 import com.vaadin.flow.component.gridpro.GridProVariant;
 import com.vaadin.flow.component.html.*;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -19,6 +21,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.component.tabs.TabSheetVariant;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
@@ -40,6 +43,7 @@ import javax.sql.DataSource;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
@@ -392,26 +396,39 @@ public class PFGProductMappingView extends VerticalLayout {
         missingGrid.addClassNames("Missing PFG-grid");
         missingGrid.setSizeFull();
         missingGrid.setHeightFull();
-      //  missingGrid.setColumns("product_name", "pfg_Type", "node");
         missingGrid.setColumns("product_name");
 
         missingGrid.getColumnByKey("product_name").setHeader("Product").setWidth("500px").setFlexGrow(0).setResizable(true);
-     //   missingGrid.getColumnByKey("pfg_Type").setHeader("PFG-Type").setWidth("120px").setFlexGrow(0).setResizable(true);
-     //   missingGrid.getColumnByKey("node").setHeader("Node").setWidth("500px").setFlexGrow(0).setResizable(true);
+        missingGrid.addEditColumn(ProductHierarchie::getPfg_Type).text(ProductHierarchie::setPfg_Type).setHeader("PFG-Type").setFlexGrow(0).setResizable(true);
+        missingGrid.addEditColumn(ProductHierarchie::getNode).text(ProductHierarchie::setNode).setHeader("Node").setFlexGrow(0).setResizable(true);
 
-
-        missingGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         missingGrid.addThemeVariants(GridVariant.LUMO_COMPACT);
         missingGrid.addThemeVariants(GridProVariant.LUMO_HIGHLIGHT_EDITABLE_CELLS);
 
-        missingGrid.addEditColumn(ProductHierarchie::getNode).text(ProductHierarchie::setNode).setHeader("Node");
-        missingGrid.addEditColumn(ProductHierarchie::getPfg_Type).text(ProductHierarchie::setPfg_Type).setHeader("PFG-Type");
 
-//        missingGrid.asSingleSelect().addValueChangeListener(event ->
-//                editProduct(event.getValue()));
+        Grid.Column<ProductHierarchie> editColumn = missingGrid.addComponentColumn(ProductHierarchie -> {
+            Button editButton = new Button("Add");
+            editButton.addClickListener(e -> {
+                System.out.println("ToDO: Add Entry to Grid");
+            });
+            return editButton;
+        }).setWidth("150px").setFlexGrow(0).setHeader("Add to Mapping");
 
-//        missingGrid.addItemDoubleClickListener(event ->
-//                editProduct(event.getItem()));
+
+        //Temporary Example Data:###################################
+        List<ProductHierarchie> mok = new ArrayList<>() ;
+        ProductHierarchie ph1 = new ProductHierarchie();
+        ProductHierarchie ph2 = new ProductHierarchie();
+        ProductHierarchie ph3 = new ProductHierarchie();
+        ph1.setProduct_name("Simyo Blau 2 GB Flat flex (PO)");
+        ph2.setProduct_name("O2 New");
+        ph3.setProduct_name("Telekom 0815");
+        mok.add(ph1);
+        mok.add(ph2);
+        mok.add(ph3);
+        missingGrid.setItems(mok);
+        //###########################################################
+
 
     }
 
