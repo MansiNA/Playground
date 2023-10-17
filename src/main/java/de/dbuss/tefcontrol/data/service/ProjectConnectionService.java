@@ -414,15 +414,14 @@ public class ProjectConnectionService {
                 System.out.println("ERROR: No Connection/Table for CltvAllProducts!");
             }
 
-            DataSource dataSource = getDataSource(dbConnection);
-            jdbcTemplate = new JdbcTemplate(dataSource);
+            getJdbcConnection(dbConnection);
 
             //String sql = "SELECT [all_products], [all_products_gen_number], [all_products_gen2], [verarb_datum] FROM " + dataBase;
-            String sql = "SELECT distinct [All Products] FROM " + dataBase;
+            String sql = "SELECT distinct [All_Products] FROM " + dataBase;
 
             List<CltvAllProduct> clatvAllProductList = jdbcTemplate.query(sql, (rs, rowNum) -> {
                 CltvAllProduct cltvAllProduct = new CltvAllProduct();
-                cltvAllProduct.setAllProducts(rs.getString("All Products"));
+                cltvAllProduct.setAllProducts(rs.getString("All_Products"));
               //  cltvAllProduct.setAllProductGenNumber(rs.getString("all_products_gen_number"));
               //  cltvAllProduct.setAllProductGen2(rs.getString("all_products_gen2"));
               //  cltvAllProduct.setVerarb_datum(null);
@@ -494,4 +493,17 @@ public class ProjectConnectionService {
         }
     }
 
+    public List<String> getAllMissingProducts(String selectedDatabase, String targetView) {
+        getJdbcConnection(selectedDatabase);
+        String sqlQuery = "SELECT * FROM "+ targetView;
+
+        // Create a RowMapper to map the query result to a CLTV_HW_Measures object
+        RowMapper<String> rowMapper = (rs, rowNum) -> {
+            return rs.getString("All_Products");
+        };
+
+        List<String> fetchedData = jdbcTemplate.query(sqlQuery, rowMapper);
+
+        return fetchedData;
+    }
 }
