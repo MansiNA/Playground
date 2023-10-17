@@ -21,6 +21,10 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.component.tabs.TabSheetVariant;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.provider.AbstractBackEndDataProvider;
+import com.vaadin.flow.data.provider.DataProvider;
+import com.vaadin.flow.data.provider.Query;
+import com.vaadin.flow.data.provider.SortDirection;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
@@ -28,10 +32,12 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
 import com.vaadin.flow.theme.lumo.LumoUtility.Margin;
 import com.wontlost.ckeditor.VaadinCKEditor;
+import de.dbuss.tefcontrol.data.entity.CltvAllProduct;
 import de.dbuss.tefcontrol.data.entity.ProductHierarchie;
 import de.dbuss.tefcontrol.data.entity.ProjectConnection;
 import de.dbuss.tefcontrol.data.service.ProductHierarchieService;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
+import de.dbuss.tefcontrol.views.InputPBIComments;
 import de.dbuss.tefcontrol.views.MainLayout;
 import jakarta.annotation.security.RolesAllowed;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,13 +46,14 @@ import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
+import java.lang.reflect.Field;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -63,14 +70,9 @@ public class PFGProductMappingView extends VerticalLayout {
 
     Grid<ProductHierarchie> grid = new Grid<>(ProductHierarchie.class);
     GridPro<ProductHierarchie> missingGrid = new GridPro<>(ProductHierarchie.class);
-
-
     Button startAgentBtn = new Button("Execute Job");
     TextField filterText = new TextField();
     TabSheet tabSheet = new TabSheet();
-
-  //  Button saveBtn = new Button("save");
- //   Button editBtn = new Button("edit");
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
     Div textArea = new Div();
     VerticalLayout messageLayout = new VerticalLayout();
@@ -84,14 +86,23 @@ public class PFGProductMappingView extends VerticalLayout {
     private String dBAgentName;
     private String selectedDbName;
     private String targetTable;
+    private String targetView;
+
     //public PFGProductMappingView(@Value("${pfg_mapping_products}") String productsDb , ProductHierarchieService service, ProjectConnectionService projectConnectionService) {
-    public PFGProductMappingView(@Value("${pfg_mapping_products}") String productsDb, @Value("${pfg_AgentName}") String dBAgentName , @Value("${pfg_mapping_target}") String pfg_mapping_target , ProductHierarchieService service, ProjectConnectionService projectConnectionService) {
+    public PFGProductMappingView(@Value("${pfg_mapping_products}") String productsDb, @Value("${pfg_AgentName}") String dBAgentName , @Value("${pfg_mapping_target}") String pfg_mapping_target , @Value("${pfg_mapping_missing_query}") String missingQuery, ProductHierarchieService service, ProjectConnectionService projectConnectionService) {
         this.service = service;
         this.projectConnectionService = projectConnectionService;
         this.productsDb = productsDb;
         this.dBAgentName = dBAgentName;
-
         ui= UI.getCurrent();
+
+
+        String [] targets = pfg_mapping_target.split(":");
+        selectedDbName = targets[0];
+        targetTable = targets[1];
+
+        String [] targetViews = missingQuery.split(":");
+        targetView = targetViews[1];
 
         addClassName("list-view");
         setSizeFull();
@@ -128,14 +139,12 @@ public class PFGProductMappingView extends VerticalLayout {
         databaseConnectionCB.setItems(connectionNames);
        // databaseConnectionCB.setValue(connectionNames.get(0));
        // selectedDbName = connectionNames.get(0);
-        String [] targets = pfg_mapping_target.split(":");
-        selectedDbName = targets[0];
-        targetTable = targets[1];
         databaseConnectionCB.setValue(selectedDbName);
 
         databaseConnectionCB.addValueChangeListener(event -> {
             selectedDbName = event.getValue();
             updateList();
+            updateMissingGrid();
         });
 
         hl.add(databaseConnectionCB, startAgentBtn);
@@ -149,7 +158,6 @@ public class PFGProductMappingView extends VerticalLayout {
         tabSheet.setHeightFull();
         tabSheet.addThemeVariants(TabSheetVariant.MATERIAL_BORDERED);
 
-
         add(tabSheet);
 
        //
@@ -157,6 +165,7 @@ public class PFGProductMappingView extends VerticalLayout {
 
 
         updateList();
+        updateMissingGrid();
         closeEditor();
     }
 
@@ -281,7 +290,7 @@ public class PFGProductMappingView extends VerticalLayout {
     private void updateList() {
 
         //grid.setItems(service.findAllProducts(filterText.getValue()));
-        grid.setItems(projectConnectionService.fetchProductHierarchie(selectedDbName, targetTable));
+        grid.setItems(projectConnectionService.fetchProductHierarchie(selectedDbName, targetTable, filterText.getValue()));
     }
 
     private Component getContent() {
@@ -399,39 +408,56 @@ public class PFGProductMappingView extends VerticalLayout {
         missingGrid.setColumns("product_name");
 
         missingGrid.getColumnByKey("product_name").setHeader("Product").setWidth("500px").setFlexGrow(0).setResizable(true);
-        missingGrid.addEditColumn(ProductHierarchie::getPfg_Type).text(ProductHierarchie::setPfg_Type).setHeader("PFG-Type").setFlexGrow(0).setResizable(true);
+        missingGrid.addComponentColumn(productHierarchie -> {
+            ComboBox<String> comboBox = new ComboBox<>();
+            comboBox.setItems("PFG (PO)", "PFG (PP)");
+            comboBox.setValue("PFG (PO)");
+            productHierarchie.setPfg_Type("PFG (PO)");
+            comboBox.addValueChangeListener(event -> {
+                productHierarchie.setPfg_Type(event.getValue());
+            });
+            return comboBox;
+        }).setHeader("PFG-Type").setFlexGrow(0).setWidth("200px").setResizable(true);
+        // missingGrid.addEditColumn(ProductHierarchie::getPfg_Type).text(ProductHierarchie::setPfg_Type).setHeader("PFG-Type").setFlexGrow(0).setResizable(true);
         missingGrid.addEditColumn(ProductHierarchie::getNode).text(ProductHierarchie::setNode).setHeader("Node").setFlexGrow(0).setResizable(true);
 
         missingGrid.addThemeVariants(GridVariant.LUMO_COMPACT);
         missingGrid.addThemeVariants(GridProVariant.LUMO_HIGHLIGHT_EDITABLE_CELLS);
 
-
-        Grid.Column<ProductHierarchie> editColumn = missingGrid.addComponentColumn(ProductHierarchie -> {
+        Grid.Column<ProductHierarchie> editColumn = missingGrid.addComponentColumn(productHierarchie -> {
             Button editButton = new Button("Add");
             editButton.addClickListener(e -> {
-                System.out.println("ToDO: Add Entry to Grid");
+                if (productHierarchie != null) {
+                    if (isValidNode(productHierarchie.getNode())) {
+                        projectConnectionService.saveProductHierarchie(productHierarchie, selectedDbName, targetTable);
+                        updateMissingGrid();
+                        updateList();
+                        editButton.setEnabled(false);
+                    } else {
+                        Notification.show("Invalid Node: The Node must have more than 9 characters and start with 'PFG_'.", 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                    }
+                } else {
+                    System.out.println("No item selected");
+                }
             });
             return editButton;
         }).setWidth("150px").setFlexGrow(0).setHeader("Add to Mapping");
-
-
-        //Temporary Example Data:###################################
-        List<ProductHierarchie> mok = new ArrayList<>() ;
-        ProductHierarchie ph1 = new ProductHierarchie();
-        ProductHierarchie ph2 = new ProductHierarchie();
-        ProductHierarchie ph3 = new ProductHierarchie();
-        ph1.setProduct_name("Simyo Blau 2 GB Flat flex (PO)");
-        ph2.setProduct_name("O2 New");
-        ph3.setProduct_name("Telekom 0815");
-        mok.add(ph1);
-        mok.add(ph2);
-        mok.add(ph3);
-        missingGrid.setItems(mok);
-        //###########################################################
-
-
     }
 
+    private void updateMissingGrid(){
+        List<String> missingProducts = projectConnectionService.getAllMissingProducts(selectedDbName, targetView);
+        List<ProductHierarchie> missingData = new ArrayList<>() ;
+        for (String product : missingProducts) {
+            ProductHierarchie productHierarchie = new ProductHierarchie();
+            productHierarchie.setProduct_name(product);
+            missingData.add(productHierarchie);
+        }
+        missingGrid.setItems(missingData);
+    }
+
+    private boolean isValidNode(String node) {
+        return node != null && node.length() > 9 && node.startsWith("PFG_");
+    }
     private void editProduct(ProductHierarchie product) {
         if (product == null) {
             closeEditor();

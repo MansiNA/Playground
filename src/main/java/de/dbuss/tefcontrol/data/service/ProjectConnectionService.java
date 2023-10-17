@@ -414,15 +414,14 @@ public class ProjectConnectionService {
                 System.out.println("ERROR: No Connection/Table for CltvAllProducts!");
             }
 
-            DataSource dataSource = getDataSource(dbConnection);
-            jdbcTemplate = new JdbcTemplate(dataSource);
+            getJdbcConnection(dbConnection);
 
             //String sql = "SELECT [all_products], [all_products_gen_number], [all_products_gen2], [verarb_datum] FROM " + dataBase;
-            String sql = "SELECT distinct [All Products] FROM " + dataBase;
+            String sql = "SELECT distinct [All_Products] FROM " + dataBase;
 
             List<CltvAllProduct> clatvAllProductList = jdbcTemplate.query(sql, (rs, rowNum) -> {
                 CltvAllProduct cltvAllProduct = new CltvAllProduct();
-                cltvAllProduct.setAllProducts(rs.getString("All Products"));
+                cltvAllProduct.setAllProducts(rs.getString("All_Products"));
               //  cltvAllProduct.setAllProductGenNumber(rs.getString("all_products_gen_number"));
               //  cltvAllProduct.setAllProductGen2(rs.getString("all_products_gen2"));
               //  cltvAllProduct.setVerarb_datum(null);
@@ -436,12 +435,15 @@ public class ProjectConnectionService {
         }
     }
 
-    public List<ProductHierarchie> fetchProductHierarchie(String selectedDatabase, String targetTable) {
-
+    public List<ProductHierarchie> fetchProductHierarchie(String selectedDatabase, String targetTable, String filterValue) {
         getJdbcConnection(selectedDatabase);
-        String sqlQuery = "SELECT * FROM "+ targetTable;
 
-        // Create a RowMapper to map the query result to a CLTV_HW_Measures object
+        // Construct the dynamic SQL query with multiple OR conditions for filtering
+        String sqlQuery = "SELECT * FROM " + targetTable + " WHERE Product LIKE ?" +
+                " OR [PFG_PO/PP] LIKE ?" +
+                " OR Knoten LIKE ?";
+
+        // Create a RowMapper to map the query result to a ProductHierarchie object
         RowMapper<ProductHierarchie> rowMapper = (rs, rowNum) -> {
             ProductHierarchie productHierarchie = new ProductHierarchie();
             productHierarchie.setId(rs.getLong("id"));
@@ -451,7 +453,11 @@ public class ProjectConnectionService {
             return productHierarchie;
         };
 
-        List<ProductHierarchie> fetchedData = jdbcTemplate.query(sqlQuery, rowMapper);
+        // Use wildcard characters to search for partial matches in all columns
+        String filteredValue = "%" + filterValue + "%";
+
+        // Use the same filteredValue for all columns
+        List<ProductHierarchie> fetchedData = jdbcTemplate.query(sqlQuery, rowMapper, filteredValue, filteredValue, filteredValue);
 
         return fetchedData;
     }
@@ -494,4 +500,17 @@ public class ProjectConnectionService {
         }
     }
 
+    public List<String> getAllMissingProducts(String selectedDatabase, String targetView) {
+        getJdbcConnection(selectedDatabase);
+        String sqlQuery = "SELECT * FROM "+ targetView;
+
+        // Create a RowMapper to map the query result to a CLTV_HW_Measures object
+        RowMapper<String> rowMapper = (rs, rowNum) -> {
+            return rs.getString("All_Products");
+        };
+
+        List<String> fetchedData = jdbcTemplate.query(sqlQuery, rowMapper);
+
+        return fetchedData;
+    }
 }
