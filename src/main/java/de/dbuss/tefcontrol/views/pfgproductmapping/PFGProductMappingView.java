@@ -384,20 +384,18 @@ public class PFGProductMappingView extends VerticalLayout {
         grid.addClassNames("PFG-grid");
         grid.setSizeFull();
         grid.setHeightFull();
-        grid.setColumns("pfg_Type", "node", "product_name");
+        grid.setColumns("product_name","pfg_Type", "node");
 
+        grid.getColumnByKey("product_name").setHeader("Product").setWidth("400px").setFlexGrow(0).setResizable(true);
         grid.getColumnByKey("pfg_Type").setHeader("PFG-Type").setWidth("120px").setFlexGrow(0).setResizable(true);
-        grid.getColumnByKey("node").setHeader("Node").setWidth("500px").setFlexGrow(0).setResizable(true);
-        grid.getColumnByKey("product_name").setHeader("Product").setWidth("500px").setFlexGrow(0).setResizable(true);
+        grid.getColumnByKey("node").setHeader("Node").setWidth("400px").setFlexGrow(0).setResizable(true);
+
 
         grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         grid.addThemeVariants(GridVariant.LUMO_COMPACT);
 
-//        grid.asSingleSelect().addValueChangeListener(event ->
-//                editProduct(event.getValue()));
-
-        grid.addItemDoubleClickListener(event ->
-                editProduct(event.getItem()));
+//        grid.addItemDoubleClickListener(event ->
+//                editProduct(event.getItem()));
 
     }
 
@@ -412,18 +410,30 @@ public class PFGProductMappingView extends VerticalLayout {
             ComboBox<String> comboBox = new ComboBox<>();
             comboBox.setItems("PFG (PO)", "PFG (PP)");
             comboBox.setValue("PFG (PO)");
-            comboBox.setWidth("90px");
+            comboBox.setWidth("120px");
+         //   comboBox.setHeight("40px");
             productHierarchie.setPfg_Type("PFG (PO)");
             comboBox.addValueChangeListener(event -> {
                 productHierarchie.setPfg_Type(event.getValue());
             });
             return comboBox;
-        }).setHeader("PFG-Type").setFlexGrow(0).setWidth("120px").setResizable(true);
+        }).setHeader("PFG-Type").setFlexGrow(0).setWidth("150px").setResizable(true);
         // missingGrid.addEditColumn(ProductHierarchie::getPfg_Type).text(ProductHierarchie::setPfg_Type).setHeader("PFG-Type").setFlexGrow(0).setResizable(true);
-        missingGrid.addEditColumn(ProductHierarchie::getNode).text(ProductHierarchie::setNode).setHeader("Node").setFlexGrow(0).setWidth("250px").setResizable(true);
+      //  missingGrid.addEditColumn(ProductHierarchie::getNode).text(ProductHierarchie::setNode).setHeader("Node").setFlexGrow(0).setWidth("250px").setResizable(true);
 
-        missingGrid.addThemeVariants(GridVariant.LUMO_COMPACT);
+        missingGrid.addEditColumn(ProductHierarchie::getNode).text((productHierarchie, newValue) ->{
+             if (newValue.startsWith("PFG_")) {
+                 productHierarchie.setNode(newValue);
+             } else {
+                 productHierarchie.setNode("PFG_"+newValue);
+              // showErrorNotification("Enter a valid PFG-Name");
+             }
+        }).setHeader("Node").setFlexGrow(0).setWidth("250px").setResizable(true);;
+
+
+      //  missingGrid.addThemeVariants(GridVariant.LUMO_COMPACT);
         missingGrid.setSelectionMode(Grid.SelectionMode.NONE);
+        missingGrid.setEditOnClick(true);
         //missingGrid.addThemeVariants(GridProVariant.LUMO_HIGHLIGHT_EDITABLE_CELLS);
 
         Grid.Column<ProductHierarchie> editColumn = missingGrid.addComponentColumn(productHierarchie -> {
@@ -436,14 +446,21 @@ public class PFGProductMappingView extends VerticalLayout {
                         updateList();
                         editButton.setEnabled(false);
                     } else {
-                        Notification.show("Invalid Node: The Node must have more than 9 characters and start with 'PFG_'.", 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                        Notification.show("Invalid Node: The Node must have more than 7 characters and start with 'PFG_'.", 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
                     }
                 } else {
                     System.out.println("No item selected");
                 }
             });
             return editButton;
-        }).setWidth("150px").setFlexGrow(0).setHeader("Add to Mapping");
+        }).setWidth("150px").setFlexGrow(0);
+    }
+
+    private static void showErrorNotification(String msg) {
+        Notification notification = new Notification(msg, 5000,
+                Notification.Position.BOTTOM_CENTER);
+        notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+        notification.open();
     }
 
     private void updateMissingGrid(){
@@ -458,7 +475,7 @@ public class PFGProductMappingView extends VerticalLayout {
     }
 
     private boolean isValidNode(String node) {
-        return node != null && node.length() > 9 && node.startsWith("PFG_");
+        return node != null && node.length() > 7 && node.startsWith("PFG_");
     }
     private void editProduct(ProductHierarchie product) {
         if (product == null) {
@@ -493,7 +510,8 @@ public class PFGProductMappingView extends VerticalLayout {
 //        startJobButton.addClickListener(click -> startJob());
 
         //      var toolbar = new HorizontalLayout(filterText, addProductButton, startJobButton);
-        HorizontalLayout toolbar = new HorizontalLayout(filterText, addProductButton);
+    //    HorizontalLayout toolbar = new HorizontalLayout(filterText, addProductButton);
+        HorizontalLayout toolbar = new HorizontalLayout(filterText);
         toolbar.setWidth("800px");
         toolbar.addClassName("toolbar");
 
