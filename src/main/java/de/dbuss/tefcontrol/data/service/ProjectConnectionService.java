@@ -435,12 +435,15 @@ public class ProjectConnectionService {
         }
     }
 
-    public List<ProductHierarchie> fetchProductHierarchie(String selectedDatabase, String targetTable) {
-
+    public List<ProductHierarchie> fetchProductHierarchie(String selectedDatabase, String targetTable, String filterValue) {
         getJdbcConnection(selectedDatabase);
-        String sqlQuery = "SELECT * FROM "+ targetTable;
 
-        // Create a RowMapper to map the query result to a CLTV_HW_Measures object
+        // Construct the dynamic SQL query with multiple OR conditions for filtering
+        String sqlQuery = "SELECT * FROM " + targetTable + " WHERE Product LIKE ?" +
+                " OR [PFG_PO/PP] LIKE ?" +
+                " OR Knoten LIKE ?";
+
+        // Create a RowMapper to map the query result to a ProductHierarchie object
         RowMapper<ProductHierarchie> rowMapper = (rs, rowNum) -> {
             ProductHierarchie productHierarchie = new ProductHierarchie();
             productHierarchie.setId(rs.getLong("id"));
@@ -450,7 +453,11 @@ public class ProjectConnectionService {
             return productHierarchie;
         };
 
-        List<ProductHierarchie> fetchedData = jdbcTemplate.query(sqlQuery, rowMapper);
+        // Use wildcard characters to search for partial matches in all columns
+        String filteredValue = "%" + filterValue + "%";
+
+        // Use the same filteredValue for all columns
+        List<ProductHierarchie> fetchedData = jdbcTemplate.query(sqlQuery, rowMapper, filteredValue, filteredValue, filteredValue);
 
         return fetchedData;
     }

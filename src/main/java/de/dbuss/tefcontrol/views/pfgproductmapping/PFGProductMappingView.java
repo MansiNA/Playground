@@ -290,7 +290,7 @@ public class PFGProductMappingView extends VerticalLayout {
     private void updateList() {
 
         //grid.setItems(service.findAllProducts(filterText.getValue()));
-        grid.setItems(projectConnectionService.fetchProductHierarchie(selectedDbName, targetTable));
+        grid.setItems(projectConnectionService.fetchProductHierarchie(selectedDbName, targetTable, filterText.getValue()));
     }
 
     private Component getContent() {
