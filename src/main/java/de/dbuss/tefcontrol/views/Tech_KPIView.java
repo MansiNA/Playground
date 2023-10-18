@@ -177,21 +177,30 @@ public class Tech_KPIView extends VerticalLayout {
         ComboBox<String> databaseCB = new ComboBox<>("Choose Database");
         databaseCB.setAllowCustomValue(true);
         databaseCB.setWidth("400px");
-
         databaseCB.setTooltipText("Select Database Connection");
+
         List<ProjectConnection> listOfProjectConnections = projectConnectionService.findAll();
-        List<String> connectionNames = listOfProjectConnections.stream()
-                .flatMap(connection -> {
-                    String category = connection.getCategory();
-                    if ("Tech_PKI".equals(category)) {
-                        return Stream.of(connection.getName());
-                    }
-                    return Stream.empty();
-                })
-                .collect(Collectors.toList());
-        databaseCB.setItems(connectionNames);
-        databaseCB.setValue(connectionNames.get(0));
-        selectedDbName = connectionNames.get(0);
+        if (listOfProjectConnections.isEmpty()) {
+            Notification.show("Project Connections is empty in database", 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+        } else {
+            List<String> connectionNames = listOfProjectConnections.stream()
+                    .flatMap(connection -> {
+                        String category = connection.getCategory();
+                        if ("Tech_PKI".equals(category)) {
+                            return Stream.of(connection.getName());
+                        }
+                        return Stream.empty();
+                    })
+                    .collect(Collectors.toList());
+
+            if (connectionNames.isEmpty()) {
+                Notification.show("Connections not found in database", 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+            } else {
+                databaseCB.setItems(connectionNames);
+                databaseCB.setValue(connectionNames.get(0));
+                selectedDbName = connectionNames.get(0);
+            }
+        }
 
         databaseCB.addValueChangeListener(event -> {
             selectedDbName = event.getValue();

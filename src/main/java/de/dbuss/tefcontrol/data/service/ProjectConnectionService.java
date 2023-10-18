@@ -1,8 +1,12 @@
 package de.dbuss.tefcontrol.data.service;
 
 import de.dbuss.tefcontrol.data.entity.*;
+import de.dbuss.tefcontrol.data.modules.inputPBIComments.entity.Financials;
+import de.dbuss.tefcontrol.data.modules.inputPBIComments.entity.Subscriber;
+import de.dbuss.tefcontrol.data.modules.inputPBIComments.entity.UnitsDeepDive;
 import de.dbuss.tefcontrol.data.repository.ProjectConnectionRepository;
 import de.dbuss.tefcontrol.views.Tech_KPIView;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Primary;
@@ -24,6 +28,9 @@ public class ProjectConnectionService {
     private final ProjectConnectionRepository repository;
 
     private JdbcTemplate jdbcTemplate;
+
+    @Getter
+    private String errorMessage;
 
     public ProjectConnectionService(ProjectConnectionRepository repository) {
         this.repository = repository;
@@ -112,7 +119,7 @@ public class ProjectConnectionService {
             return "ok";
         } catch (Exception e) {
             e.printStackTrace();
-            return "Error during update: " + e.getMessage();
+            return handleDatabaseError(e);
         }
     }
 
@@ -176,10 +183,9 @@ public class ProjectConnectionService {
         }
            catch (CannotGetJdbcConnectionException connectionException) {
             return connectionException.getMessage();
-        }
-           catch (Exception e) {
-                e.printStackTrace();
-            return e.getMessage();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return handleDatabaseError(e);
         }
     }
 
@@ -213,7 +219,7 @@ public class ProjectConnectionService {
             return "ok";
         } catch (Exception e) {
             e.printStackTrace();
-            return "Error during update: " + e.getMessage();
+            return handleDatabaseError(e);
         }
     }
 
@@ -246,7 +252,7 @@ public class ProjectConnectionService {
             return "ok";
         } catch (Exception e) {
             e.printStackTrace();
-            return "Error during update: " + e.getMessage();
+            return handleDatabaseError(e);
         }
     }
 
@@ -257,6 +263,7 @@ public class ProjectConnectionService {
             jdbcTemplate.update(sqlDelete);
         } catch (Exception e) {
             e.printStackTrace();
+            errorMessage = handleDatabaseError(e);
         }
     }
 
@@ -293,6 +300,7 @@ public class ProjectConnectionService {
             jdbcTemplate.update(sqlDelete);
         } catch (Exception e) {
             e.printStackTrace();
+            errorMessage = handleDatabaseError(e);
         }
     }
     public String saveKPIPlan(List<Tech_KPIView.KPI_Plan> data) {
@@ -334,6 +342,7 @@ public class ProjectConnectionService {
             jdbcTemplate.update(sqlDelete);
         } catch (Exception e) {
             e.printStackTrace();
+            errorMessage = handleDatabaseError(e);
         }
     }
     public String saveKPIActuals(List<Tech_KPIView.KPI_Actuals> data) {
@@ -431,35 +440,44 @@ public class ProjectConnectionService {
             return clatvAllProductList;
         } catch (Exception e) {
             e.printStackTrace();
+            errorMessage = handleDatabaseError(e);
             return Collections.emptyList();
         }
     }
 
     public List<ProductHierarchie> fetchProductHierarchie(String selectedDatabase, String targetTable, String filterValue) {
-        getJdbcConnection(selectedDatabase);
 
-        // Construct the dynamic SQL query with multiple OR conditions for filtering
-        String sqlQuery = "SELECT * FROM " + targetTable + " WHERE Product LIKE ?" +
-                " OR [PFG_PO/PP] LIKE ?" +
-                " OR Knoten LIKE ?";
+        try {
+            getJdbcConnection(selectedDatabase);
 
-        // Create a RowMapper to map the query result to a ProductHierarchie object
-        RowMapper<ProductHierarchie> rowMapper = (rs, rowNum) -> {
-            ProductHierarchie productHierarchie = new ProductHierarchie();
-            productHierarchie.setId(rs.getLong("id"));
-            productHierarchie.setPfg_Type(rs.getString("PFG_PO/PP"));
-            productHierarchie.setNode(rs.getString("Knoten"));
-            productHierarchie.setProduct_name(rs.getString("Product"));
-            return productHierarchie;
-        };
+            // Construct the dynamic SQL query with multiple OR conditions for filtering
+            String sqlQuery = "SELECT * FROM " + targetTable + " WHERE Product LIKE ?" +
+                    " OR [PFG_PO/PP] LIKE ?" +
+                    " OR Knoten LIKE ?";
 
-        // Use wildcard characters to search for partial matches in all columns
-        String filteredValue = "%" + filterValue + "%";
+            // Create a RowMapper to map the query result to a ProductHierarchie object
+            RowMapper<ProductHierarchie> rowMapper = (rs, rowNum) -> {
+                ProductHierarchie productHierarchie = new ProductHierarchie();
+                productHierarchie.setId(rs.getLong("id"));
+                productHierarchie.setPfg_Type(rs.getString("PFG_PO/PP"));
+                productHierarchie.setNode(rs.getString("Knoten"));
+                productHierarchie.setProduct_name(rs.getString("Product"));
+                return productHierarchie;
+            };
 
-        // Use the same filteredValue for all columns
-        List<ProductHierarchie> fetchedData = jdbcTemplate.query(sqlQuery, rowMapper, filteredValue, filteredValue, filteredValue);
+            // Use wildcard characters to search for partial matches in all columns
+            String filteredValue = "%" + filterValue + "%";
 
-        return fetchedData;
+            // Use the same filteredValue for all columns
+            List<ProductHierarchie> fetchedData = jdbcTemplate.query(sqlQuery, rowMapper, filteredValue, filteredValue, filteredValue);
+
+            return fetchedData;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            errorMessage = handleDatabaseError(ex);
+            return Collections.emptyList();
+        }
+
     }
 
     public String saveProductHierarchie(ProductHierarchie data, String selectedDatabase, String targetTable) {
@@ -492,25 +510,29 @@ public class ProjectConnectionService {
             }
 
             return "ok";
-        } catch (CannotGetJdbcConnectionException connectionException) {
-            return connectionException.getMessage();
         } catch (Exception e) {
             e.printStackTrace();
-            return e.getMessage();
+            return handleDatabaseError(e);
         }
     }
 
     public List<String> getAllMissingProducts(String selectedDatabase, String targetView) {
-        getJdbcConnection(selectedDatabase);
-        String sqlQuery = "SELECT * FROM "+ targetView;
+        try {
+            getJdbcConnection(selectedDatabase);
+            String sqlQuery = "SELECT * FROM " + targetView;
 
-        // Create a RowMapper to map the query result to a CLTV_HW_Measures object
-        RowMapper<String> rowMapper = (rs, rowNum) -> {
-            return rs.getString("All_Products");
-        };
+            RowMapper<String> rowMapper = (rs, rowNum) -> {
+                return rs.getString("All_Products");
+            };
 
-        List<String> fetchedData = jdbcTemplate.query(sqlQuery, rowMapper);
+            List<String> fetchedData = jdbcTemplate.query(sqlQuery, rowMapper);
 
-        return fetchedData;
+            return fetchedData;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            errorMessage = handleDatabaseError(ex);
+            return Collections.emptyList();
+        }
+
     }
 }

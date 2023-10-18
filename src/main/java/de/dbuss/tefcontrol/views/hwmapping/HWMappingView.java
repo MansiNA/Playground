@@ -30,12 +30,11 @@ import com.vaadin.flow.data.provider.Query;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.StreamResource;
-import de.dbuss.tefcontrol.data.DynamicDataSourceContextHolder;
 import de.dbuss.tefcontrol.data.entity.CLTV_HW_Measures;
-import de.dbuss.tefcontrol.data.entity.CLTV_HW_MeasuresDataProvider;
 import de.dbuss.tefcontrol.data.entity.ProjectConnection;
 import de.dbuss.tefcontrol.data.service.CLTV_HW_MeasureService;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
+import de.dbuss.tefcontrol.dataprovider.GenericDataProvider;
 import de.dbuss.tefcontrol.views.MainLayout;
 import jakarta.annotation.security.RolesAllowed;
 import lombok.extern.slf4j.Slf4j;
@@ -108,18 +107,27 @@ public class HWMappingView extends VerticalLayout {
         databaseConnectionCB.setAllowCustomValue(true);
 
         List<ProjectConnection> listOfProjectConnections = projectConnectionService.findAll();
-        List<String> connectionNames = listOfProjectConnections.stream()
-                .flatMap(connection -> {
-                    String category = connection.getCategory();
-                    if (category == null) {
-                        return Stream.of(connection.getName());
-                    }
-                    return Stream.empty();
-                })
-                .collect(Collectors.toList());
-        databaseConnectionCB.setItems(connectionNames);
-        databaseConnectionCB.setValue(connectionNames.get(0));
-        selectedDbName = connectionNames.get(0);
+        if (listOfProjectConnections.isEmpty()) {
+            Notification.show("Project Connections is empty in database", 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+        } else {
+            List<String> connectionNames = listOfProjectConnections.stream()
+                    .flatMap(connection -> {
+                        String category = connection.getCategory();
+                        if (category == null) {
+                            return Stream.of(connection.getName());
+                        }
+                        return Stream.empty();
+                    })
+                    .collect(Collectors.toList());
+
+            if (connectionNames.isEmpty()) {
+                Notification.show("Connections not found in database", 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+            } else {
+                databaseConnectionCB.setItems(connectionNames);
+                databaseConnectionCB.setValue(connectionNames.get(0));
+                selectedDbName = connectionNames.get(0);
+            }
+        }
 
         horl.add(databaseConnectionCB, downloadButton, uploadButton, singleFileUpload, verl, exportButton, anchor);
         horl.setAlignItems(Alignment.CENTER);
@@ -158,17 +166,12 @@ public class HWMappingView extends VerticalLayout {
 
                 DataSource dataSource = projectConnectionService.getDataSource(selectedDbName);
 
-                // Switch to the selected data source
-                DynamicDataSourceContextHolder.setDataSource(dataSource);
-
                 try {
                     // Perform fetch operations using the selected data source
                     List<CLTV_HW_Measures> fetchListOfCLTVMeasures = projectConnectionService.fetchDataFromDatabase(selectedDbName);
-                    CLTV_HW_MeasuresDataProvider dataProvider = new CLTV_HW_MeasuresDataProvider(fetchListOfCLTVMeasures);
+                    GenericDataProvider dataProvider = new GenericDataProvider(fetchListOfCLTVMeasures);
                     crud.setDataProvider(dataProvider);
                     setupDataProviderEvent();
-                    // Clear the data source key to revert to the default data source
-                    DynamicDataSourceContextHolder.clearDataSourceKey();
 
                     Notification notification = Notification.show(" Rows fetch successfully", 3000, Notification.Position.MIDDLE);
                     notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
@@ -185,9 +188,6 @@ public class HWMappingView extends VerticalLayout {
             List<CLTV_HW_Measures>allItems = getDataProviderAllItems();
 
             DataSource dataSource = projectConnectionService.getDataSource(selectedDbName);
-
-            // Switch to the selected data source
-            DynamicDataSourceContextHolder.setDataSource(dataSource);
 
             Notification notification = Notification.show(allItems.size() + " Rows Uploaded start",2000, Notification.Position.MIDDLE);
             notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
@@ -215,7 +215,7 @@ public class HWMappingView extends VerticalLayout {
                         .collect(Collectors.toList());
 
                 oldListOfCLTVMeasures.addAll(uniqueItems);
-                CLTV_HW_MeasuresDataProvider dataProvider = new CLTV_HW_MeasuresDataProvider(oldListOfCLTVMeasures);
+                GenericDataProvider dataProvider = new GenericDataProvider(oldListOfCLTVMeasures);
                 crud.setDataProvider(dataProvider);
 
                 Notification notification = Notification.show("New data was appended with grid data successfully.", 4000, Notification.Position.MIDDLE);
@@ -232,7 +232,7 @@ public class HWMappingView extends VerticalLayout {
         replaceRowsBT.addClickListener(clickEvent -> {
             log.info("executing replaceRowsBT.addClickListener for Replace data in Crud Grid");
             if (listOfCLTVMeasures != null && !listOfCLTVMeasures.isEmpty()) {
-                CLTV_HW_MeasuresDataProvider dataProvider = new CLTV_HW_MeasuresDataProvider(listOfCLTVMeasures);
+                GenericDataProvider dataProvider = new GenericDataProvider(listOfCLTVMeasures);
                 crud.setDataProvider(dataProvider);
                 Notification notification = Notification.show("New data was replaced with grid data successfully.", 4000, Notification.Position.MIDDLE);
                 notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
@@ -656,7 +656,7 @@ public class HWMappingView extends VerticalLayout {
 
     private void setupDataProviderEvent() {
         log.info("Starting setupDataProviderEvent() for crude editor save, delete events");
-        CLTV_HW_MeasuresDataProvider dataProvider = new CLTV_HW_MeasuresDataProvider(getDataProviderAllItems());
+        GenericDataProvider dataProvider = new GenericDataProvider(getDataProviderAllItems());
 
         article=new Article();
         article.setText(LocalDateTime.now().format(formatter) + ": Info: Download from Database");

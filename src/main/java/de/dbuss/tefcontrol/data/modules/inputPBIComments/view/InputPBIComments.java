@@ -1,4 +1,4 @@
-package de.dbuss.tefcontrol.views;
+package de.dbuss.tefcontrol.data.modules.inputPBIComments.view;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
@@ -19,9 +19,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.progressbar.ProgressBar;
 import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.component.tabs.TabSheetVariant;
-import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextArea;
-import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.data.binder.Binder;
@@ -30,15 +28,18 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import de.dbuss.tefcontrol.data.Role;
 import de.dbuss.tefcontrol.data.entity.*;
+import de.dbuss.tefcontrol.data.modules.inputPBIComments.entity.Financials;
+import de.dbuss.tefcontrol.data.modules.inputPBIComments.entity.Subscriber;
+import de.dbuss.tefcontrol.data.modules.inputPBIComments.entity.UnitsDeepDive;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
+import de.dbuss.tefcontrol.dataprovider.GenericDataProvider;
 import de.dbuss.tefcontrol.security.AuthenticatedUser;
+import de.dbuss.tefcontrol.views.MainLayout;
 import jakarta.annotation.security.RolesAllowed;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.util.concurrent.ListenableFuture;
 
@@ -78,6 +79,8 @@ public class InputPBIComments extends VerticalLayout {
     private Button saveButton;
     Div textArea = new Div();
 
+    private String idKey = "row";
+
     public InputPBIComments(AuthenticatedUser authenticatedUser, ProjectConnectionService projectConnectionService) {
 
         this.authenticatedUser = authenticatedUser;
@@ -98,19 +101,27 @@ public class InputPBIComments extends VerticalLayout {
         databaseCB.setAllowCustomValue(true);
 
         List<ProjectConnection> listOfProjectConnections = projectConnectionService.findAll();
-        List<String> connectionNames = listOfProjectConnections.stream()
-                .flatMap(connection -> {
-                    String category = connection.getCategory();
-                    if ("InputPBIComment".equals(category)) {
-                        return Stream.of(connection.getName());
-                    }
-                    return Stream.empty();
-                })
-                .collect(Collectors.toList());
-        databaseCB.setItems(connectionNames);
-        databaseCB.setValue(connectionNames.get(0));
-        selectedDbName = connectionNames.get(0);
-        System.out.println(selectedDbName+"..........************************************************");
+        if (listOfProjectConnections.isEmpty()) {
+            Notification.show("Project Connections is empty in database", 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+        } else {
+            List<String> connectionNames = listOfProjectConnections.stream()
+                    .flatMap(connection -> {
+                        String category = connection.getCategory();
+                        if ("InputPBIComment".equals(category)) {
+                            return Stream.of(connection.getName());
+                        }
+                        return Stream.empty();
+                    })
+                    .collect(Collectors.toList());
+
+            if (connectionNames.isEmpty()) {
+                Notification.show("Connections not found in database", 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+            } else {
+                databaseCB.setItems(connectionNames);
+                databaseCB.setValue(connectionNames.get(0));
+                selectedDbName = connectionNames.get(0);
+            }
+        }
 
         HorizontalLayout hl = new HorizontalLayout();
         hl.setAlignItems(Alignment.BASELINE);
@@ -344,11 +355,11 @@ public class InputPBIComments extends VerticalLayout {
 
             parseExcelFile(fileData,fileName);
 
-            GenericDataProvider dataFinancialsProvider = new GenericDataProvider(listOfFinancials);
+            GenericDataProvider dataFinancialsProvider = new GenericDataProvider(listOfFinancials, idKey);
             gridFinancials.setDataProvider(dataFinancialsProvider);
-            GenericDataProvider dataSubscriberProvider = new GenericDataProvider(listOfSubscriber);
+            GenericDataProvider dataSubscriberProvider = new GenericDataProvider(listOfSubscriber, idKey);
             crudSubscriber.setDataProvider(dataSubscriberProvider);
-            GenericDataProvider dataUnitsDeepDiveProvider = new GenericDataProvider(listOfUnitsDeepDive);
+            GenericDataProvider dataUnitsDeepDiveProvider = new GenericDataProvider(listOfUnitsDeepDive, idKey);
             crudUnitsDeepDive.setDataProvider(dataUnitsDeepDiveProvider);
             setupDataProviderEvent();
 
@@ -579,9 +590,9 @@ public class InputPBIComments extends VerticalLayout {
     }
 
     private void setupDataProviderEvent() {
-        GenericDataProvider  financialsdataProvider = new GenericDataProvider(getFinancialsDataProviderAllItems());
-        GenericDataProvider  subscriberdataProvider = new GenericDataProvider(getSubscriberDataProviderAllItems());
-        GenericDataProvider  unitsDeepDivedataProvider = new GenericDataProvider(getUnitsDeepDiveDataProviderAllItems());
+        GenericDataProvider financialsdataProvider = new GenericDataProvider(getFinancialsDataProviderAllItems(), idKey);
+        GenericDataProvider  subscriberdataProvider = new GenericDataProvider(getSubscriberDataProviderAllItems(), idKey);
+        GenericDataProvider  unitsDeepDivedataProvider = new GenericDataProvider(getUnitsDeepDiveDataProviderAllItems(), idKey);
 
         crudFinancials.addDeleteListener(
                 deleteEvent -> {financialsdataProvider.delete(deleteEvent.getItem());
@@ -635,150 +646,4 @@ public class InputPBIComments extends VerticalLayout {
         return listOfUnitsDeepDive;
     }
 
-    public class GenericDataProvider<T> extends AbstractBackEndDataProvider<T, CrudFilter> {
-
-        private final List<T> DATABASE;
-        private Consumer<Long> sizeChangeListener;
-
-        public GenericDataProvider(List<T> data) {
-            this.DATABASE = data;
-        }
-
-        public void setSizeChangeListener(Consumer<Long> sizeChangeListener) {
-            this.sizeChangeListener = sizeChangeListener;
-        }
-
-        @Override
-        protected Stream<T> fetchFromBackEnd(Query<T, CrudFilter> query) {
-            int offset = query.getOffset();
-            int limit = query.getLimit();
-
-            Stream<T> stream = DATABASE.stream();
-
-            if (query.getFilter().isPresent()) {
-                stream = stream.filter(predicate(query.getFilter().get()))
-                        .sorted(comparator(query.getFilter().get()));
-            }
-
-            return stream.skip(offset).limit(limit);
-        }
-
-        private Predicate<T> predicate(CrudFilter filter) {
-            return filter.getConstraints().entrySet().stream()
-                    .map(constraint -> (Predicate<T>) entity -> {
-                        try {
-                            Object value = valueOf(constraint.getKey(), entity);
-                            return value != null && value.toString().toLowerCase()
-                                    .contains(constraint.getValue().toLowerCase());
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            return false;
-                        }
-                    }).reduce(Predicate::and).orElse(entity -> true);
-        }
-
-        private Object valueOf(String fieldName, T entity) {
-            try {
-                Field field = entity.getClass().getDeclaredField(fieldName);
-                field.setAccessible(true);
-                return field.get(entity);
-            } catch (Exception ex) {
-                throw new RuntimeException(ex);
-            }
-        }
-
-        private Comparator<T> comparator(CrudFilter filter) {
-            return filter.getSortOrders().entrySet().stream().map(sortClause -> {
-                try {
-                    Comparator<T> comparator = Comparator.comparing(
-                            entity -> (Comparable) valueOf(sortClause.getKey(),
-                                    entity));
-
-                    if (sortClause.getValue() == SortDirection.DESCENDING) {
-                        comparator = comparator.reversed();
-                    }
-
-                    return comparator;
-
-                } catch (Exception ex) {
-                    return (Comparator<T>) (o1, o2) -> 0;
-                }
-            }).reduce(Comparator::thenComparing).orElse((o1, o2) -> 0);
-        }
-
-        @Override
-        protected int sizeInBackEnd(Query<T, CrudFilter> query) {
-            long count = fetchFromBackEnd(query).count();
-
-            if (sizeChangeListener != null) {
-                sizeChangeListener.accept(count);
-            }
-
-            return (int) count;
-        }
-        public void persist(T item) {
-            try {
-                Field field = item.getClass().getDeclaredField("row");
-                field.setAccessible(true);
-                Integer row = (Integer) field.get(item);
-
-                if (row == null) {
-                    row = DATABASE.stream().map(entity -> {
-                        try {
-                            Field entityField = entity.getClass().getDeclaredField("row");
-                            entityField.setAccessible(true);
-                            return (Integer) entityField.get(entity);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            return 0;
-                        }
-                    }).max(Comparator.naturalOrder()).orElse(0) + 1;
-                    field.set(item, row);
-                }
-
-                Optional<T> existingItem = find(row);
-                if (existingItem.isPresent()) {
-                    int position = DATABASE.indexOf(existingItem.get());
-                    DATABASE.remove(existingItem.get());
-                    DATABASE.add(position, item);
-                } else {
-                    DATABASE.add(item);
-                }
-            } catch (Exception ex) {
-                throw new RuntimeException(ex);
-            }
-        }
-
-        public Optional<T> find(Integer id) {
-            return DATABASE.stream().filter(entity -> {
-                try {
-                    Field field = entity.getClass().getDeclaredField("row");
-                    field.setAccessible(true);
-                    return field.get(entity).equals(id);
-                } catch (Exception ex) {
-                    throw new RuntimeException(ex);
-                }
-            }).findFirst();
-        }
-
-        public void delete(T item) {
-            try {
-                Field field = item.getClass().getDeclaredField("row");
-                field.setAccessible(true);
-                Integer row = (Integer) field.get(item);
-
-                DATABASE.removeIf(entity -> {
-                    try {
-                        Field entityField = entity.getClass().getDeclaredField("row");
-                        entityField.setAccessible(true);
-                        return entityField.get(entity).equals(row);
-                    } catch (Exception ex) {
-                        throw new RuntimeException(ex);
-                    }
-                });
-            } catch (Exception ex) {
-                throw new RuntimeException(ex);
-            }
-        }
-    }
 }
