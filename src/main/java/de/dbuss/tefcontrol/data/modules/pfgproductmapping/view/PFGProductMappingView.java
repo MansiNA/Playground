@@ -16,6 +16,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.component.tabs.TabSheetVariant;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
@@ -48,6 +49,7 @@ public class PFGProductMappingView extends VerticalLayout {
     Grid<ProductHierarchie> grid = new Grid<>(ProductHierarchie.class);
     GridPro<ProductHierarchie> missingGrid = new GridPro<>(ProductHierarchie.class);
     Button startAgentBtn = new Button("Execute Job");
+    Button saveButton = new Button("Save");
     TextField filterText = new TextField();
     Div textArea = new Div();
     VerticalLayout messageLayout = new VerticalLayout();
@@ -58,6 +60,7 @@ public class PFGProductMappingView extends VerticalLayout {
     private String selectedDbName;
     private String targetTable;
     private String targetView;
+    private List<ProductHierarchie> modifiedProducts = new ArrayList<>();
 
     //public PFGProductMappingView(@Value("${pfg_mapping_products}") String productsDb , ProductHierarchieService service, ProjectConnectionService projectConnectionService) {
     public PFGProductMappingView(@Value("${pfg_mapping_products}") String productsDb, @Value("${pfg_AgentName}") String dBAgentName , @Value("${pfg_mapping_target}") String pfg_mapping_target , @Value("${pfg_mapping_missing_query}") String missingQuery, ProductHierarchieService service, ProjectConnectionService projectConnectionService) {
@@ -81,6 +84,7 @@ public class PFGProductMappingView extends VerticalLayout {
         configureForm();
         configureLoggingArea();
         configureExecuteBtn();
+        configureSaveBtn();
 
         HorizontalLayout hl = new HorizontalLayout();
         ComboBox<String> databaseConnectionCB = new ComboBox<>();
@@ -108,7 +112,7 @@ public class PFGProductMappingView extends VerticalLayout {
             updateMissingGrid();
         });
 
-        hl.add(databaseConnectionCB, startAgentBtn);
+        hl.add(databaseConnectionCB, startAgentBtn, saveButton);
 
         TabSheet tabSheet = new TabSheet();
         tabSheet.add("Missing Entries", getMissingMapping());
@@ -124,6 +128,25 @@ public class PFGProductMappingView extends VerticalLayout {
         updateList();
         updateMissingGrid();
         closeEditor();
+    }
+
+    private void configureSaveBtn() {
+
+        saveButton.addClickListener(e -> {
+            if (modifiedProducts != null && !modifiedProducts.isEmpty()) {
+                    String result = projectConnectionService.saveListOfProductHierarchie(modifiedProducts, selectedDbName, targetTable);
+                    if (result.contains("ok")){
+                        Notification.show(modifiedProducts.size()+" Uploaded successfully",2000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                        modifiedProducts.clear();
+                    } else {
+                        Notification.show( "Error during upload: "+ result,3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                    }
+                    updateMissingGrid();
+                    updateList();
+            } else {
+                Notification.show( "Not any changed in products",3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+            }
+        });
     }
 
     private Component getMissingMapping() {
@@ -360,6 +383,11 @@ public class PFGProductMappingView extends VerticalLayout {
     }
 
     private void configureMissingGrid() {
+        List<ProductHierarchie> listOfProductHierarchie = projectConnectionService.fetchProductHierarchie(selectedDbName, targetTable, filterText.getValue());
+        List<String> listOfNodes = listOfProductHierarchie.stream()
+                .map(ProductHierarchie::getNode)
+                .collect(Collectors.toList());
+
         missingGrid.addClassNames("Missing PFG-grid");
         missingGrid.setSizeFull();
         missingGrid.setHeightFull();
@@ -375,49 +403,71 @@ public class PFGProductMappingView extends VerticalLayout {
             productHierarchie.setPfg_Type("PFG (PO)");
             comboBox.addValueChangeListener(event -> {
                 productHierarchie.setPfg_Type(event.getValue());
+                if(isValidNode(productHierarchie.getNode())) {
+                    if(modifiedProducts.contains(productHierarchie)){
+                        modifiedProducts.remove(productHierarchie);
+                        modifiedProducts.add(productHierarchie);
+                    } else {
+                        modifiedProducts.add(productHierarchie);
+                    }
+                }
             });
             return comboBox;
-        }).setHeader("PFG-Type").setFlexGrow(0).setWidth("150px").setResizable(true);
-        // missingGrid.addEditColumn(ProductHierarchie::getPfg_Type).text(ProductHierarchie::setPfg_Type).setHeader("PFG-Type").setFlexGrow(0).setResizable(true);
-      //  missingGrid.addEditColumn(ProductHierarchie::getNode).text(ProductHierarchie::setNode).setHeader("Node").setFlexGrow(0).setWidth("250px").setResizable(true);
+        }).setHeader("PFG-Type").setFlexGrow(0).setWidth("200px").setResizable(true);
 
-        missingGrid.addEditColumn(ProductHierarchie::getNode).text((productHierarchie, newValue) ->{
-             if (newValue.startsWith("PFG_")) {
-                 productHierarchie.setNode(newValue);
-             } else {
-                 productHierarchie.setNode("PFG_"+newValue);
-              // showErrorNotification("Enter a valid PFG-Name");
-             }
-        }).setHeader("Node").setFlexGrow(0).setWidth("250px").setResizable(true);;
+        missingGrid.addComponentColumn(productHierarchie -> {
+            HorizontalLayout hl = new HorizontalLayout();
+            ComboBox<String> nodeComboBox = new ComboBox<>();
+            nodeComboBox.setPlaceholder("select value...");
+            TextField textField = new TextField();
+            //textField.setWidth("200px");
+            if(listOfNodes != null && !listOfNodes.isEmpty()) {
+                nodeComboBox.setItems(listOfNodes);
+                nodeComboBox.setValue(listOfNodes.get(0));
+            }
+            nodeComboBox.addValueChangeListener(event -> {
+                String selectedValue = event.getValue();
+                if (selectedValue != null) {
+                    productHierarchie.setNode(selectedValue);
+                    if(isValidNode(productHierarchie.getNode())) {
+                        if(modifiedProducts.contains(productHierarchie)){
+                            modifiedProducts.remove(productHierarchie);
+                            modifiedProducts.add(productHierarchie);
+                        } else {
+                            modifiedProducts.add(productHierarchie);
+                        }
+                    } else {
+                        Notification.show("Invalid Node: The Node must have more than 7 characters and start with 'PFG_'.", 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                    }
+                }
+            });
+
+            textField.setValue(productHierarchie.getNode());
+            textField.addValueChangeListener(event -> {
+                String newValue = event.getValue();
+                if(isValidNode(newValue)) {
+                    productHierarchie.setNode(newValue);
+                    nodeComboBox.setValue(newValue);
+                    if (modifiedProducts.contains(productHierarchie)) {
+                        modifiedProducts.remove(productHierarchie);
+                        modifiedProducts.add(productHierarchie);
+                    } else {
+                        modifiedProducts.add(productHierarchie);
+                    }
+                } else {
+                    Notification.show("Invalid Node: The Node must have more than 7 characters and start with 'PFG_'.", 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                }
+            });
+
+            hl.add(nodeComboBox, textField);
+            return hl;
+        }).setHeader("Node").setFlexGrow(0).setWidth("400px").setResizable(true);
 
       //  missingGrid.addThemeVariants(GridVariant.LUMO_COMPACT);
         missingGrid.setSelectionMode(Grid.SelectionMode.NONE);
         missingGrid.setEditOnClick(true);
         //missingGrid.addThemeVariants(GridProVariant.LUMO_HIGHLIGHT_EDITABLE_CELLS);
 
-        Grid.Column<ProductHierarchie> editColumn = missingGrid.addComponentColumn(productHierarchie -> {
-            Button editButton = new Button("Add");
-            editButton.addClickListener(e -> {
-                if (productHierarchie != null) {
-                    if (isValidNode(productHierarchie.getNode())) {
-                        String result = projectConnectionService.saveProductHierarchie(productHierarchie, selectedDbName, targetTable);
-                        if (result.contains("ok")){
-                            Notification.show(" Uploaded successfully",2000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-                        } else {
-                            Notification.show( "Error during upload: "+ result,3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
-                        }
-                        updateMissingGrid();
-                        updateList();
-                        editButton.setEnabled(false);
-                    } else {
-                        Notification.show("Invalid Node: The Node must have more than 7 characters and start with 'PFG_'.", 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
-                    }
-                } else {
-                    System.out.println("No item selected");
-                }
-            });
-            return editButton;
-        }).setWidth("150px").setFlexGrow(0);
     }
 
     private static void showErrorNotification(String msg) {

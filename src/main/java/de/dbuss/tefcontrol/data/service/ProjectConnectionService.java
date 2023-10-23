@@ -32,7 +32,7 @@ public class ProjectConnectionService {
     private JdbcTemplate jdbcTemplate;
 
     @Getter
-    private String errorMessage;
+    private String errorMessage = "";
 
     public ProjectConnectionService(ProjectConnectionRepository repository) {
         this.repository = repository;
@@ -516,6 +516,7 @@ public class ProjectConnectionService {
             e.printStackTrace();
             return handleDatabaseError(e);
         }
+
     }
 
     public List<String> getAllMissingProducts(String selectedDatabase, String targetView) {
@@ -536,5 +537,23 @@ public class ProjectConnectionService {
             return Collections.emptyList();
         }
 
+    }
+
+    public String saveListOfProductHierarchie(List<ProductHierarchie> data, String selectedDatabase, String targetTable) {
+        try {
+            getJdbcConnection(selectedDatabase);
+            String sql = "INSERT INTO " + targetTable + " (Product, [PFG_PO/PP], Knoten) VALUES (?, ?, ?)";
+
+            jdbcTemplate.batchUpdate(sql, data, data.size(), (ps, productHierarchie) -> {
+                ps.setString(1, productHierarchie.getProduct_name());
+                ps.setString(2, productHierarchie.getPfg_Type());
+                ps.setString(3, productHierarchie.getNode());
+            });
+
+            return "ok";
+        } catch (Exception e) {
+            e.printStackTrace();
+            return handleDatabaseError(e);
+        }
     }
 }
