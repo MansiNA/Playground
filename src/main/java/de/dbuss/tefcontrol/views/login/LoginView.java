@@ -10,6 +10,8 @@ import com.vaadin.flow.router.internal.RouteUtil;
 import com.vaadin.flow.server.VaadinService;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import de.dbuss.tefcontrol.security.AuthenticatedUser;
+import de.dbuss.tefcontrol.views.LogService;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @AnonymousAllowed
 @PageTitle("Login")
@@ -17,9 +19,13 @@ import de.dbuss.tefcontrol.security.AuthenticatedUser;
 public class LoginView extends LoginOverlay implements BeforeEnterObserver {
 
     private final AuthenticatedUser authenticatedUser;
+    private LogService logService;
 
-    public LoginView(AuthenticatedUser authenticatedUser) {
+    public LoginView(AuthenticatedUser authenticatedUser, LogService logService) {
+        logService.addLogMessage("Info", "Starting login on LoginView");
         this.authenticatedUser = authenticatedUser;
+        this.logService = logService;
+
         setAction(RouteUtil.getRoutePath(VaadinService.getCurrent().getContext(), getClass()));
 
         LoginI18n i18n = LoginI18n.createDefault();
@@ -31,11 +37,14 @@ public class LoginView extends LoginOverlay implements BeforeEnterObserver {
 
         setForgotPasswordButtonVisible(false);
         setOpened(true);
+
+        logService.addLogMessage(LogService.INFO, "Ending login on LoginView");
     }
 
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
         if (authenticatedUser.get().isPresent()) {
+            logService.addLogMessage(LogService.INFO, "user already login in application");
             // Already logged in
             setOpened(false);
             event.forwardTo("");

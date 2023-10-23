@@ -1,4 +1,4 @@
-package de.dbuss.tefcontrol.data.modules.inputPBIComments.view;
+package de.dbuss.tefcontrol.data.modules.inputpbicomments.view;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
@@ -7,7 +7,6 @@ import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.crud.BinderCrudEditor;
 import com.vaadin.flow.component.crud.Crud;
 import com.vaadin.flow.component.crud.CrudEditor;
-import com.vaadin.flow.component.crud.CrudFilter;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Article;
@@ -28,9 +27,9 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import de.dbuss.tefcontrol.data.Role;
 import de.dbuss.tefcontrol.data.entity.*;
-import de.dbuss.tefcontrol.data.modules.inputPBIComments.entity.Financials;
-import de.dbuss.tefcontrol.data.modules.inputPBIComments.entity.Subscriber;
-import de.dbuss.tefcontrol.data.modules.inputPBIComments.entity.UnitsDeepDive;
+import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.Financials;
+import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.Subscriber;
+import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.UnitsDeepDive;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
 import de.dbuss.tefcontrol.dataprovider.GenericDataProvider;
 import de.dbuss.tefcontrol.security.AuthenticatedUser;
@@ -48,15 +47,13 @@ import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 
 @PageTitle("PowerBI Comments")
 @Route(value = "InputPBIComments", layout = MainLayout.class)
-@RolesAllowed("USER")
+@RolesAllowed("ADMIN")
 public class InputPBIComments extends VerticalLayout {
 
     MemoryBuffer memoryBuffer = new MemoryBuffer();

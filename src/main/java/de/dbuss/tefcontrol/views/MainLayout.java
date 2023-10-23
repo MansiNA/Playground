@@ -21,14 +21,15 @@ import com.vaadin.flow.server.auth.AccessAnnotationChecker;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import de.dbuss.tefcontrol.data.entity.Projects;
 import de.dbuss.tefcontrol.data.entity.User;
-import de.dbuss.tefcontrol.data.modules.inputPBIComments.view.InputPBIComments;
+import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.InputPBIComments;
+import de.dbuss.tefcontrol.data.modules.techkpi.view.Tech_KPIView;
 import de.dbuss.tefcontrol.data.service.ProjectsService;
 import de.dbuss.tefcontrol.security.AuthenticatedUser;
 import de.dbuss.tefcontrol.views.about.AboutView;
 import de.dbuss.tefcontrol.views.defaultPackage.DefaultView;
 import de.dbuss.tefcontrol.views.hwmapping.HWMappingView;
 import de.dbuss.tefcontrol.views.knowledgeBase.KnowledgeBaseView;
-import de.dbuss.tefcontrol.views.pfgproductmapping.PFGProductMappingView;
+import de.dbuss.tefcontrol.data.modules.pfgproductmapping.view.PFGProductMappingView;
 import java.io.ByteArrayInputStream;
 import java.util.HashMap;
 import java.util.Map;
@@ -53,16 +54,23 @@ public class MainLayout extends AppLayout {
     private AccessAnnotationChecker accessChecker;
 
     private ProjectsService projectsService;
+    private LogService logService;
 
     // Map to associate URLs with view classes
     private Map<String, Class<? extends Component>> urlToViewMap = new HashMap<>();
 
     Image image = new Image("images/telefonica.svg", "Telefonica Image");
 
-    public MainLayout(AuthenticatedUser authenticatedUser, AccessAnnotationChecker accessChecker, ProjectsService projectsService) {
+    public MainLayout(AuthenticatedUser authenticatedUser, AccessAnnotationChecker accessChecker, ProjectsService projectsService, LogService logService) {
         this.authenticatedUser = authenticatedUser;
         this.accessChecker = accessChecker;
         this.projectsService = projectsService;
+        this.logService = logService;
+
+        logService.addLogMessage(LogService.INFO, "Starting application in MainLayout");
+      //  logService.addLogMessage(LogService.ERROR, ".....Starting application in MainLayout");
+      //  logService.addLogMessage(LogService.WARN, "Starting application in MainLayout......");
+
 
         // Add mappings for URLs and view classes
         urlToViewMap.put("PFG-Mapping", PFGProductMappingView.class);
@@ -80,7 +88,7 @@ public class MainLayout extends AppLayout {
      //   createHeader();
 
 
-
+        logService.addLogMessage(LogService.INFO, "Ending application in MainLayout");
     }
 
     private void createHeader() {
@@ -167,6 +175,12 @@ public class MainLayout extends AppLayout {
 
     private Tree createTree() {
         log.info("Starting createTree() in mainlayout");
+
+        Optional<User> maybeUser = authenticatedUser.get();
+        if (maybeUser.isPresent()) {
+            User user = maybeUser.get();
+            projectsService.setUser(user);
+        }
 
         Tree<Projects> tree = new Tree<>(Projects::getName);
         tree.setItems(projectsService.getRootProjects(),projectsService::getChildProjects);

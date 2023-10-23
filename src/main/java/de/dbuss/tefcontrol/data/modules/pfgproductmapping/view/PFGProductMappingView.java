@@ -1,4 +1,4 @@
-package de.dbuss.tefcontrol.views.pfgproductmapping;
+package de.dbuss.tefcontrol.data.modules.pfgproductmapping.view;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
@@ -20,8 +20,7 @@ import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
-import com.wontlost.ckeditor.VaadinCKEditor;
-import de.dbuss.tefcontrol.data.entity.ProductHierarchie;
+import de.dbuss.tefcontrol.data.modules.pfgproductmapping.entity.ProductHierarchie;
 import de.dbuss.tefcontrol.data.entity.ProjectConnection;
 import de.dbuss.tefcontrol.data.service.ProductHierarchieService;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
@@ -33,17 +32,14 @@ import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
-import java.time.Instant;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @PageTitle("PFG Product-Mapping")
 @Route(value = "PFG-Mapping", layout = MainLayout.class)
 @RouteAlias(value = "", layout = MainLayout.class)
-@RolesAllowed("USER")
+@RolesAllowed({"USER", "ADMIN"})
 public class PFGProductMappingView extends VerticalLayout {
     @Autowired
     private JdbcTemplate template;

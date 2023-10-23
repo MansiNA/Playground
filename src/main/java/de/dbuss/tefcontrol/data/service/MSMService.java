@@ -1,6 +1,6 @@
 package de.dbuss.tefcontrol.data.service;
 
-import de.dbuss.tefcontrol.data.entity.ProductHierarchie;
+import de.dbuss.tefcontrol.data.modules.pfgproductmapping.entity.ProductHierarchie;
 import de.dbuss.tefcontrol.data.repository.ProductHierarchieRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.CannotGetJdbcConnectionException;

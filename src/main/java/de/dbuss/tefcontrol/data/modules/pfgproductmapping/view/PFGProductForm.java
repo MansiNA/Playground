@@ -1,4 +1,4 @@
-package de.dbuss.tefcontrol.views.pfgproductmapping;
+package de.dbuss.tefcontrol.data.modules.pfgproductmapping.view;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.ComponentEvent;
@@ -14,8 +14,8 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.shared.Registration;
-import de.dbuss.tefcontrol.data.entity.CltvAllProduct;
-import de.dbuss.tefcontrol.data.entity.ProductHierarchie;
+import de.dbuss.tefcontrol.data.modules.pfgproductmapping.entity.CltvAllProduct;
+import de.dbuss.tefcontrol.data.modules.pfgproductmapping.entity.ProductHierarchie;
 
 import java.util.List;
 import java.util.stream.Collectors;

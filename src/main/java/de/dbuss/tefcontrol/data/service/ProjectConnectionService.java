@@ -1,11 +1,13 @@
 package de.dbuss.tefcontrol.data.service;
 
 import de.dbuss.tefcontrol.data.entity.*;
-import de.dbuss.tefcontrol.data.modules.inputPBIComments.entity.Financials;
-import de.dbuss.tefcontrol.data.modules.inputPBIComments.entity.Subscriber;
-import de.dbuss.tefcontrol.data.modules.inputPBIComments.entity.UnitsDeepDive;
+import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.Financials;
+import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.Subscriber;
+import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.UnitsDeepDive;
+import de.dbuss.tefcontrol.data.modules.pfgproductmapping.entity.CltvAllProduct;
+import de.dbuss.tefcontrol.data.modules.pfgproductmapping.entity.ProductHierarchie;
 import de.dbuss.tefcontrol.data.repository.ProjectConnectionRepository;
-import de.dbuss.tefcontrol.views.Tech_KPIView;
+import de.dbuss.tefcontrol.data.modules.techkpi.view.Tech_KPIView;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.jdbc.DataSourceBuilder;

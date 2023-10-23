@@ -1,16 +1,20 @@
 package de.dbuss.tefcontrol.data.service;
 
+import de.dbuss.tefcontrol.data.Role;
 import de.dbuss.tefcontrol.data.dto.ProjectAttachmentsDTO;
 import de.dbuss.tefcontrol.data.entity.ProjectAttachments;
 import de.dbuss.tefcontrol.data.entity.ProjectSql;
 import de.dbuss.tefcontrol.data.entity.Projects;
+import de.dbuss.tefcontrol.data.entity.User;
 import de.dbuss.tefcontrol.data.repository.ProjectsRepository;
+import de.dbuss.tefcontrol.security.AuthenticatedUser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -20,9 +24,12 @@ public class ProjectsService {
     private final ProjectsRepository repository;
     private List<Projects> projectsList;
 
+    private User user;
     public ProjectsService(ProjectsRepository repository) {
         this.repository = repository;
         this.projectsList = repository.findAll();
+
+
     }
 
     public Optional<Projects> get(Long id) {
@@ -51,6 +58,10 @@ public class ProjectsService {
         return repository.findById(id);
     }
 
+    public void setUser(User user) {
+        this.user = user;
+    }
+
     public List<ProjectAttachments> getProjectAttachments(Projects projects) {
         log.info("Executing getProjectAttachments() in projectsService");
         return projects.getListOfAttachments();
@@ -66,6 +77,7 @@ public class ProjectsService {
         return projectsList
                 .stream()
                 .filter(projects -> projects.getParent_id() == null)
+                .filter(projects -> hasAccess(user.getRoles(), projects.getRole_access()))
                 .collect(Collectors.toList());
     }
 
@@ -74,7 +86,14 @@ public class ProjectsService {
         return projectsList
                 .stream()
                 .filter(projects -> Objects.equals(projects.getParent_id(), parent.getId()))
+                .filter(projects -> hasAccess(user.getRoles(), projects.getRole_access()))
                 .collect(Collectors.toList());
+    }
+
+    private boolean hasAccess(Set<Role> userRoles, String projectRoles) {
+        // Implement the logic for role-based access control here.
+        // For example, check if the user has at least one role that matches the project's role_access.
+        return userRoles.stream().anyMatch(role -> projectRoles.contains(role.name()));
     }
 
     public List<ProjectAttachmentsDTO> getProjectAttachmentsWithoutFileContent(Projects projects) {

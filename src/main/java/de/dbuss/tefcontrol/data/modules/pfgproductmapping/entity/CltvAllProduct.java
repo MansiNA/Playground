@@ -1,4 +1,4 @@
-package de.dbuss.tefcontrol.data.entity;
+package de.dbuss.tefcontrol.data.modules.pfgproductmapping.entity;
 
 import lombok.Getter;
 import lombok.Setter;

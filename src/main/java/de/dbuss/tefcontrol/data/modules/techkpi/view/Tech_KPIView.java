@@ -1,4 +1,4 @@
-package de.dbuss.tefcontrol.views;
+package de.dbuss.tefcontrol.data.modules.techkpi.view;
 
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.accordion.Accordion;
@@ -24,6 +24,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import de.dbuss.tefcontrol.data.entity.ProjectConnection;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
+import de.dbuss.tefcontrol.views.MainLayout;
 import jakarta.annotation.security.RolesAllowed;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -46,7 +47,7 @@ import java.util.stream.Stream;
 
 @PageTitle("Tech KPI | TEF-Control")
 @Route(value = "Tech_KPI", layout = MainLayout.class)
-@RolesAllowed("USER")
+@RolesAllowed("ADMIN")
 public class Tech_KPIView extends VerticalLayout {
 
     private JdbcTemplate jdbcTemplate;
