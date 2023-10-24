@@ -386,6 +386,7 @@ public class PFGProductMappingView extends VerticalLayout {
         List<ProductHierarchie> listOfProductHierarchie = projectConnectionService.fetchProductHierarchie(selectedDbName, targetTable, filterText.getValue());
         List<String> listOfNodes = listOfProductHierarchie.stream()
                 .map(ProductHierarchie::getNode)
+                .distinct()
                 .collect(Collectors.toList());
 
         missingGrid.addClassNames("Missing PFG-grid");
@@ -416,39 +417,35 @@ public class PFGProductMappingView extends VerticalLayout {
         }).setHeader("PFG-Type").setFlexGrow(0).setWidth("200px").setResizable(true);
 
         missingGrid.addComponentColumn(productHierarchie -> {
-            HorizontalLayout hl = new HorizontalLayout();
             ComboBox<String> nodeComboBox = new ComboBox<>();
-            nodeComboBox.setPlaceholder("select value...");
-            TextField textField = new TextField();
-            //textField.setWidth("200px");
+            nodeComboBox.setPlaceholder("select or enter value...");
             if(listOfNodes != null && !listOfNodes.isEmpty()) {
                 nodeComboBox.setItems(listOfNodes);
-                nodeComboBox.setValue(listOfNodes.get(0));
+             //   nodeComboBox.setValue(listOfNodes.get(0));
             }
-            nodeComboBox.addValueChangeListener(event -> {
-                String selectedValue = event.getValue();
-                if (selectedValue != null) {
-                    productHierarchie.setNode(selectedValue);
-                    if(isValidNode(productHierarchie.getNode())) {
-                        if(modifiedProducts.contains(productHierarchie)){
-                            modifiedProducts.remove(productHierarchie);
-                            modifiedProducts.add(productHierarchie);
-                        } else {
-                            modifiedProducts.add(productHierarchie);
-                        }
+            nodeComboBox.setAllowCustomValue(true);
+            nodeComboBox.addCustomValueSetListener(e -> {
+                String customValue = e.getDetail();
+                if(isValidNode(customValue)) {
+                    productHierarchie.setNode(customValue);
+                    listOfNodes.add(customValue);
+                    nodeComboBox.setItems(listOfNodes);
+                    nodeComboBox.setValue(customValue);
+                    if(modifiedProducts.contains(productHierarchie)){
+                        modifiedProducts.remove(productHierarchie);
+                        modifiedProducts.add(productHierarchie);
                     } else {
-                        Notification.show("Invalid Node: The Node must have more than 7 characters and start with 'PFG_'.", 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                        modifiedProducts.add(productHierarchie);
                     }
+                } else {
+                    Notification.show("Invalid Node: The Node must have more than 7 characters and start with 'PFG_'.", 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
                 }
             });
-
-            textField.setValue(productHierarchie.getNode());
-            textField.addValueChangeListener(event -> {
-                String newValue = event.getValue();
-                if(isValidNode(newValue)) {
-                    productHierarchie.setNode(newValue);
-                    nodeComboBox.setValue(newValue);
-                    if (modifiedProducts.contains(productHierarchie)) {
+            nodeComboBox.addValueChangeListener(event -> {
+                String selectedValue = event.getValue();
+                if(isValidNode(selectedValue)) {
+                    productHierarchie.setNode(selectedValue);
+                    if(modifiedProducts.contains(productHierarchie)){
                         modifiedProducts.remove(productHierarchie);
                         modifiedProducts.add(productHierarchie);
                     } else {
@@ -459,9 +456,8 @@ public class PFGProductMappingView extends VerticalLayout {
                 }
             });
 
-            hl.add(nodeComboBox, textField);
-            return hl;
-        }).setHeader("Node").setFlexGrow(0).setWidth("400px").setResizable(true);
+            return nodeComboBox;
+        }).setHeader("Node").setFlexGrow(0).setWidth("300px").setResizable(true);
 
       //  missingGrid.addThemeVariants(GridVariant.LUMO_COMPACT);
         missingGrid.setSelectionMode(Grid.SelectionMode.NONE);
