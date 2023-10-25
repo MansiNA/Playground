@@ -1,6 +1,8 @@
 package de.dbuss.tefcontrol.data.service;
 
 import de.dbuss.tefcontrol.data.entity.*;
+import de.dbuss.tefcontrol.data.modules.cltv_Inflow.entity.CLTVInflow;
+import de.dbuss.tefcontrol.data.modules.cltv_Inflow.view.CLTVInflowView;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.Financials;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.Subscriber;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.UnitsDeepDive;
@@ -556,4 +558,43 @@ public class ProjectConnectionService {
             return handleDatabaseError(e);
         }
     }
+
+    public List<CLTVInflow> getAllCLTVInflow(String selectedDatabase) {
+        try {
+            getJdbcConnection(selectedDatabase);
+
+            String sqlQuery = "SELECT * FROM [Mapping].[USR].[IN_FRONT_CLTV_Inflow]";
+
+            // Create a RowMapper to map the query result to a CLTVInflow object
+            RowMapper<CLTVInflow> rowMapper = (rs, rowNum) -> {
+                CLTVInflow cltvInflow = new CLTVInflow();
+                cltvInflow.setContractFeatureId(rs.getLong("ContractFeature_id"));
+                cltvInflow.setAttributeClassesId(rs.getLong("AttributeClasses_ID"));
+                cltvInflow.setCfTypeClassName(rs.getString("CF_TYPE_CLASS_NAME"));
+                cltvInflow.setAttributeClassesName(rs.getString("AttributeClasses_NAME"));
+                cltvInflow.setContractFeatureSubCategoryName(rs.getString("ContractFeatureSubCategory_Name"));
+                cltvInflow.setContractFeatureName(rs.getString("ContractFeature_Name"));
+                cltvInflow.setCfTypeName(rs.getString("CF_TYPE_NAME"));
+                cltvInflow.setCfDurationInMonth(rs.getInt("CF_Duration_in_Month"));
+                cltvInflow.setConnectType(rs.getString("Connect_Type"));
+                cltvInflow.setCltvCategoryName(rs.getString("CLTV_Category_Name"));
+                cltvInflow.setControllingBrandingDetailed(rs.getString("Controlling_Branding_Detailed"));
+                cltvInflow.setControllingBranding(rs.getString("Controlling_Branding"));
+                cltvInflow.setUser(rs.getString("User"));
+                cltvInflow.setCltvChargeName(rs.getString("CLTV_Charge_Name"));
+
+                return cltvInflow;
+            };
+
+            List<CLTVInflow> fetchedData = jdbcTemplate.query(sqlQuery, rowMapper);
+
+            return fetchedData;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            errorMessage = handleDatabaseError(ex);
+            return Collections.emptyList();
+        }
+
+    }
+
 }

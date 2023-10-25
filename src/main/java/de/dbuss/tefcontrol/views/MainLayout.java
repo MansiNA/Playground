@@ -21,7 +21,7 @@ import com.vaadin.flow.server.auth.AccessAnnotationChecker;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import de.dbuss.tefcontrol.data.entity.Projects;
 import de.dbuss.tefcontrol.data.entity.User;
-import de.dbuss.tefcontrol.data.modules.cltv_Inflow.view.CLTVInflow;
+import de.dbuss.tefcontrol.data.modules.cltv_Inflow.view.CLTVInflowView;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.InputPBIComments;
 import de.dbuss.tefcontrol.data.modules.techkpi.view.Tech_KPIView;
 import de.dbuss.tefcontrol.data.service.ProjectsService;
@@ -80,7 +80,7 @@ public class MainLayout extends AppLayout {
         urlToViewMap.put("Default-Mapping", DefaultView.class );
         urlToViewMap.put("InputPBIComments", InputPBIComments.class );
         urlToViewMap.put("Tech_KPI", Tech_KPIView.class );
-        urlToViewMap.put("CLTV-Inflow", CLTVInflow.class );
+        urlToViewMap.put("CLTV-Inflow", CLTVInflowView.class );
 
 
         setPrimarySection(Section.DRAWER);

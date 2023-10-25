@@ -3,13 +3,15 @@ package de.dbuss.tefcontrol.data.modules.cltv_Inflow.entity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
 @Entity
-public class CLTVInflowEntity {
+@Table(schema = "USR", name = "IN_FRONT_CLTV_Inflow")
+public class CLTVInflow {
 
     @Id
     @Column(name = "ContractFeature_id")

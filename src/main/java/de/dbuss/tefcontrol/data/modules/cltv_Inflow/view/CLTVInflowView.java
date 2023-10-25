@@ -11,8 +11,7 @@ import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.component.tabs.TabSheetVariant;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import de.dbuss.tefcontrol.data.modules.cltv_Inflow.entity.CLTVInflowEntity;
-import de.dbuss.tefcontrol.data.modules.pfgproductmapping.entity.ProductHierarchie;
+import de.dbuss.tefcontrol.data.modules.cltv_Inflow.entity.CLTVInflow;
 import de.dbuss.tefcontrol.data.entity.ProjectConnection;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
 import de.dbuss.tefcontrol.views.MainLayout;
@@ -24,13 +23,13 @@ import java.util.stream.Stream;
 @PageTitle("CLTV Product-Mapping")
 @Route(value = "CLTV-Inflow", layout = MainLayout.class)
 @RolesAllowed({"MAPPING", "ADMIN"})
-public class CLTVInflow extends VerticalLayout {
+public class CLTVInflowView extends VerticalLayout {
     private final ProjectConnectionService projectConnectionService;
-    private Grid<CLTVInflowEntity> grid = new Grid<>(CLTVInflowEntity.class);
-    private GridPro<CLTVInflowEntity> missingGrid = new GridPro<>(CLTVInflowEntity.class);
+    private Grid<CLTVInflow> grid = new Grid<>(CLTVInflow.class);
+    private GridPro<CLTVInflow> missingGrid = new GridPro<>(CLTVInflow.class);
     private String selectedDbName;
 
-    public CLTVInflow( ProjectConnectionService projectConnectionService) {
+    public CLTVInflowView(ProjectConnectionService projectConnectionService) {
         this.projectConnectionService = projectConnectionService;
 
         addClassName("list-view");
@@ -77,10 +76,18 @@ public class CLTVInflow extends VerticalLayout {
         add(tabSheet);
         add(hl,tabSheet );
 
-      //  updateList();
+        updateGrid();
       //  updateMissingGrid();
       //  closeEditor();
     }
+
+    private void updateGrid() {
+
+        List<CLTVInflow> allCLTVInflowData = projectConnectionService.getAllCLTVInflow(selectedDbName);
+        grid.setItems(allCLTVInflowData);
+
+    }
+
     private Component getAllCLTV_Inflow() {
 
         VerticalLayout vl = new VerticalLayout();
@@ -122,12 +129,25 @@ public class CLTVInflow extends VerticalLayout {
         grid.addClassNames("CLTV-Inflow-grid");
         grid.setSizeFull();
         grid.setHeightFull();
-        grid.setColumns("cltvCategoryName","controllingBrandingDetailed", "controllingBranding", "cltvChargeName");
+        grid.setColumns("contractFeatureId", "attributeClassesId", "cfTypeClassName", "attributeClassesName", "contractFeatureSubCategoryName","contractFeatureName","cfTypeName","cfDurationInMonth","connectType", "cltvCategoryName","controllingBrandingDetailed", "controllingBranding", "user", "cltvChargeName");
 
-        grid.getColumnByKey("cltvCategoryName").setHeader("CLTV_Category_Name").setWidth("200px").setFlexGrow(0).setResizable(true);
-        grid.getColumnByKey("controllingBrandingDetailed").setHeader("Controlling_Branding_Detailed").setWidth("200px").setFlexGrow(0).setResizable(true);
-        grid.getColumnByKey("controllingBranding").setHeader("Controlling_Branding").setWidth("200px").setFlexGrow(0).setResizable(true);
-        grid.getColumnByKey("cltvChargeName").setHeader("Controlling_Branding").setWidth("200px").setFlexGrow(0).setResizable(true);
+        grid.getColumnByKey("contractFeatureId").setHeader("ContractFeature_id").setFlexGrow(0).setResizable(true);
+        grid.getColumnByKey("attributeClassesId").setHeader("AttributeClasses_ID").setFlexGrow(0).setResizable(true);
+        grid.getColumnByKey("cfTypeClassName").setHeader("CF_TYPE_CLASS_NAME").setFlexGrow(0).setResizable(true);
+        grid.getColumnByKey("attributeClassesName").setHeader("AttributeClasses_NAME").setFlexGrow(0).setResizable(true);
+        grid.getColumnByKey("contractFeatureSubCategoryName").setHeader("ContractFeatureSubCategory_Name").setFlexGrow(0).setResizable(true);
+        grid.getColumnByKey("contractFeatureName").setHeader("ContractFeature_Name").setFlexGrow(0).setResizable(true);
+        grid.getColumnByKey("cfTypeName").setHeader("CF_TYPE_NAME").setFlexGrow(0).setResizable(true);
+        grid.getColumnByKey("cfDurationInMonth").setHeader("CF_Duration_in_Month").setFlexGrow(0).setResizable(true);
+        grid.getColumnByKey("connectType").setHeader("Connect_Type").setFlexGrow(0).setResizable(true);
+        grid.getColumnByKey("cltvCategoryName").setHeader("CLTV_Category_Name").setFlexGrow(0).setResizable(true);
+        grid.getColumnByKey("controllingBrandingDetailed").setHeader("Controlling_Branding_Detailed").setFlexGrow(0).setResizable(true);
+        grid.getColumnByKey("controllingBranding").setHeader("Controlling_Branding").setFlexGrow(0).setResizable(true);
+        grid.getColumnByKey("user").setHeader("User").setFlexGrow(0).setResizable(true);
+        grid.getColumnByKey("cltvChargeName").setHeader("CLTV_Charge_Name").setFlexGrow(0).setResizable(true);
+
+
+        grid.getColumns().forEach(col -> col.setAutoWidth(true));
 
         grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         grid.addThemeVariants(GridVariant.LUMO_COMPACT);
@@ -141,9 +161,19 @@ public class CLTVInflow extends VerticalLayout {
         missingGrid.addClassNames("Missing CLTV-Inflow-grid");
         missingGrid.setSizeFull();
         missingGrid.setHeightFull();
-        missingGrid.setColumns("contractFeatureId");
 
-        missingGrid.getColumnByKey("contractFeatureId").setHeader("ContractFeatureId").setWidth("400px").setFlexGrow(0).setResizable(true);
+        missingGrid.setColumns("contractFeatureId", "attributeClassesId", "cfTypeClassName", "attributeClassesName", "contractFeatureSubCategoryName","contractFeatureName","cfTypeName","cfDurationInMonth","connectType", "cltvCategoryName","controllingBrandingDetailed", "controllingBranding", "user", "cltvChargeName");
+
+        missingGrid.getColumnByKey("contractFeatureId").setHeader("ContractFeature_id").setFlexGrow(0).setResizable(true);
+        missingGrid.getColumnByKey("attributeClassesId").setHeader("AttributeClasses_ID").setFlexGrow(0).setResizable(true);
+        missingGrid.getColumnByKey("cfTypeClassName").setHeader("CF_TYPE_CLASS_NAME").setFlexGrow(0).setResizable(true);
+        missingGrid.getColumnByKey("attributeClassesName").setHeader("AttributeClasses_NAME").setFlexGrow(0).setResizable(true);
+        missingGrid.getColumnByKey("contractFeatureSubCategoryName").setHeader("ContractFeatureSubCategory_Name").setFlexGrow(0).setResizable(true);
+        missingGrid.getColumnByKey("contractFeatureName").setHeader("ContractFeature_Name").setFlexGrow(0).setResizable(true);
+        missingGrid.getColumnByKey("cfTypeName").setHeader("CF_TYPE_NAME").setFlexGrow(0).setResizable(true);
+        missingGrid.getColumnByKey("cfDurationInMonth").setHeader("CF_Duration_in_Month").setFlexGrow(0).setResizable(true);
+        missingGrid.getColumnByKey("connectType").setHeader("Connect_Type").setFlexGrow(0).setResizable(true);
+        // missingGrid.getColumnByKey("cltvCategoryName").setHeader("CLTV_Category_Name").setFlexGrow(0).setResizable(true);
         missingGrid.addComponentColumn(cltvInflow -> {
             ComboBox<String> comboBoxCategory = new ComboBox<>();
             comboBoxCategory.setPlaceholder("select or enter value...");
@@ -161,6 +191,7 @@ public class CLTVInflow extends VerticalLayout {
             return comboBoxCategory;
         }).setHeader("CLTV_Category_Name").setFlexGrow(0).setWidth("300px").setResizable(true);
 
+        // missingGrid.getColumnByKey("controllingBrandingDetailed").setHeader("Controlling_Branding_Detailed").setFlexGrow(0).setResizable(true);
         missingGrid.addComponentColumn(cltvInflow -> {
             ComboBox<String> comboBoxBrandingDetailed = new ComboBox<>();
             comboBoxBrandingDetailed.setPlaceholder("select or enter value...");
@@ -178,6 +209,7 @@ public class CLTVInflow extends VerticalLayout {
             return comboBoxBrandingDetailed;
         }).setHeader("Controlling_Branding_Detailed").setFlexGrow(0).setWidth("300px").setResizable(true);
 
+        // missingGrid.getColumnByKey("controllingBranding").setHeader("Controlling_Branding").setFlexGrow(0).setResizable(true);
         missingGrid.addComponentColumn(cltvInflow -> {
             ComboBox<String> comboBoxBranding = new ComboBox<>();
             comboBoxBranding.setPlaceholder("select or enter value...");
@@ -195,6 +227,8 @@ public class CLTVInflow extends VerticalLayout {
             return comboBoxBranding;
         }).setHeader("Controlling_Branding").setFlexGrow(0).setWidth("300px").setResizable(true);
 
+        missingGrid.getColumnByKey("user").setHeader("User").setFlexGrow(0).setResizable(true);
+        // missingGrid.getColumnByKey("cltvChargeName").setHeader("CLTV_Charge_Name").setFlexGrow(0).setResizable(true);
         missingGrid.addComponentColumn(cltvInflow -> {
             ComboBox<String> comboBoxChargeName = new ComboBox<>();
             comboBoxChargeName.setPlaceholder("select or enter value...");
@@ -210,6 +244,8 @@ public class CLTVInflow extends VerticalLayout {
 
             return comboBoxChargeName;
         }).setHeader("CLTV_Charge_Name").setFlexGrow(0).setWidth("300px").setResizable(true);
+
+        missingGrid.getColumns().forEach(col -> col.setAutoWidth(true));
 
         missingGrid.setSelectionMode(Grid.SelectionMode.NONE);
         missingGrid.setEditOnClick(true);

@@ -57,7 +57,7 @@ import java.util.stream.Stream;
 @Slf4j
 @PageTitle("HW Mapping")
 @Route(value = "HWMapping", layout = MainLayout.class)
-@RolesAllowed("ADMIN")
+@RolesAllowed({"ADMIN", "MAPPING"})
 public class HWMappingView extends VerticalLayout {
     private final CLTV_HW_MeasureService cltvHwMeasureService;
     private final ProjectConnectionService projectConnectionService;
