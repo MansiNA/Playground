@@ -36,7 +36,7 @@ public class CLTVInflow {
     private String cfTypeName;
 
     @Column(name = "CF_Duration_in_Month")
-    private Integer cfDurationInMonth;
+    private String cfDurationInMonth;
 
     @Column(name = "Connect_Type")
     private String connectType;

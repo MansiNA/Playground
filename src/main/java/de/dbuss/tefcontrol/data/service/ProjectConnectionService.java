@@ -56,6 +56,7 @@ public class ProjectConnectionService {
 
         if (projectConnection.isPresent()) {
             System.out.println("jdbc:sqlserver://"+projectConnection.get().getHostname() + ";databaseName="+projectConnection.get().getDbName()+";encrypt=true;trustServerCertificate=true");
+            System.out.println("Username = "+projectConnection.get().getUsername()+ " Password = "+projectConnection.get().getPassword());
             DataSource dataSource = DataSourceBuilder
                     .create()
                     .url("jdbc:sqlserver://"+projectConnection.get().getHostname() + ";databaseName="+projectConnection.get().getDbName()+";encrypt=true;trustServerCertificate=true")
@@ -559,11 +560,11 @@ public class ProjectConnectionService {
         }
     }
 
-    public List<CLTVInflow> getAllCLTVInflow(String selectedDatabase) {
+    public List<CLTVInflow> getAllCLTVInflow(String selectedDatabase, String tableName) {
         try {
             getJdbcConnection(selectedDatabase);
 
-            String sqlQuery = "SELECT * FROM [Mapping].[USR].[IN_FRONT_CLTV_Inflow]";
+            String sqlQuery = "SELECT * FROM " +tableName;
 
             // Create a RowMapper to map the query result to a CLTVInflow object
             RowMapper<CLTVInflow> rowMapper = (rs, rowNum) -> {
@@ -575,7 +576,7 @@ public class ProjectConnectionService {
                 cltvInflow.setContractFeatureSubCategoryName(rs.getString("ContractFeatureSubCategory_Name"));
                 cltvInflow.setContractFeatureName(rs.getString("ContractFeature_Name"));
                 cltvInflow.setCfTypeName(rs.getString("CF_TYPE_NAME"));
-                cltvInflow.setCfDurationInMonth(rs.getInt("CF_Duration_in_Month"));
+                cltvInflow.setCfDurationInMonth(rs.getString("CF_Duration_in_Month"));
                 cltvInflow.setConnectType(rs.getString("Connect_Type"));
                 cltvInflow.setCltvCategoryName(rs.getString("CLTV_Category_Name"));
                 cltvInflow.setControllingBrandingDetailed(rs.getString("Controlling_Branding_Detailed"));
@@ -594,7 +595,31 @@ public class ProjectConnectionService {
             errorMessage = handleDatabaseError(ex);
             return Collections.emptyList();
         }
-
     }
+
+
+    public String updateListOfCLTVInflow(List<CLTVInflow> modifiedCLTVInflow, String selectedDbName, String tableName) {
+        try {
+            getJdbcConnection(selectedDbName);
+
+            // Assuming that you have a unique identifier to match the records to update, e.g., contractFeatureId
+            String sql = "UPDATE " + tableName + " SET CLTV_Category_Name = ?, Controlling_Branding_Detailed = ?, " +
+                    "Controlling_Branding = ?, CLTV_Charge_Name = ? WHERE ContractFeature_id = ?";
+
+            jdbcTemplate.batchUpdate(sql, modifiedCLTVInflow, modifiedCLTVInflow.size(), (ps, cltvInflow) -> {
+                ps.setString(1, cltvInflow.getCltvCategoryName());
+                ps.setString(2, cltvInflow.getControllingBrandingDetailed());
+                ps.setString(3, cltvInflow.getControllingBranding());
+                ps.setString(4, cltvInflow.getCltvChargeName());
+                ps.setLong(5, cltvInflow.getContractFeatureId());
+            });
+
+            return "ok";
+        } catch (Exception e) {
+            e.printStackTrace();
+            return handleDatabaseError(e);
+        }
+    }
+
 
 }
