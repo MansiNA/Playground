@@ -193,27 +193,28 @@ public class CLTVInflowView extends VerticalLayout {
     private void configureMissingGrid() {
         List<CLTVInflow> allCLTVInflowData = projectConnectionService.getAllCLTVInflow(selectedDbName, tableName);
 
+        String missing = "missing";
         List<String> listOfControllingBrandingDetailed = allCLTVInflowData.stream()
                 .map(CLTVInflow::getControllingBrandingDetailed)
-                .filter(value -> !value.equals("missing"))
+                .filter(value -> value != null && !value.isEmpty() && !missing.equals(value))
                 .distinct()
                 .collect(Collectors.toList());
 
         List<String> listOfControllingBranding = allCLTVInflowData.stream()
                 .map(CLTVInflow::getControllingBranding)
-                .filter(value -> !value.equals("missing"))
+                .filter(value -> value != null && !value.isEmpty() && !missing.equals(value))
                 .distinct()
                 .collect(Collectors.toList());
 
         List<String> listOfCLTVCategoryName = allCLTVInflowData.stream()
                 .map(CLTVInflow::getCltvCategoryName)
-                .filter(value -> !value.equals("missing"))
+                .filter(value -> value != null && !value.isEmpty() && !missing.equals(value))
                 .distinct()
                 .collect(Collectors.toList());
 
         List<String> listOfCLTVChargeName = allCLTVInflowData.stream()
                 .map(CLTVInflow::getCltvChargeName)
-                .filter(value -> !value.equals("missing"))
+                .filter(value -> value != null && !value.isEmpty() && !missing.equals(value))
                 .distinct()
                 .collect(Collectors.toList());
 
@@ -234,7 +235,7 @@ public class CLTVInflowView extends VerticalLayout {
         missingGrid.getColumnByKey("connectType").setHeader("Connect_Type").setFlexGrow(0).setResizable(true);
         // missingGrid.getColumnByKey("cltvCategoryName").setHeader("CLTV_Category_Name").setFlexGrow(0).setResizable(true);
         missingGrid.addComponentColumn(cltvInflow -> {
-            if (cltvInflow.getCltvCategoryName().equals("missing")) {
+            if (isMissingNullOrEmpty(cltvInflow.getCltvCategoryName())) {
                 ComboBox<String> comboBoxCategory = new ComboBox<>();
                 comboBoxCategory.setPlaceholder("select or enter value...");
                 if (listOfCLTVCategoryName != null && !listOfCLTVCategoryName.isEmpty()) {
@@ -263,7 +264,7 @@ public class CLTVInflowView extends VerticalLayout {
 
         // missingGrid.getColumnByKey("controllingBrandingDetailed").setHeader("Controlling_Branding_Detailed").setFlexGrow(0).setResizable(true);
         missingGrid.addComponentColumn(cltvInflow -> {
-            if (cltvInflow.getControllingBrandingDetailed().equals("missing")) {
+            if (isMissingNullOrEmpty(cltvInflow.getControllingBrandingDetailed())) {
                 ComboBox<String> comboBoxBrandingDetailed = new ComboBox<>();
                 comboBoxBrandingDetailed.setPlaceholder("select or enter value...");
                 if (listOfControllingBrandingDetailed != null && !listOfControllingBrandingDetailed.isEmpty()) {
@@ -292,7 +293,7 @@ public class CLTVInflowView extends VerticalLayout {
 
         // missingGrid.getColumnByKey("controllingBranding").setHeader("Controlling_Branding").setFlexGrow(0).setResizable(true);
         missingGrid.addComponentColumn(cltvInflow -> {
-            if (cltvInflow.getControllingBranding().equals("missing")) {
+            if (isMissingNullOrEmpty(cltvInflow.getControllingBranding())) {
                 ComboBox<String> comboBoxBranding = new ComboBox<>();
                 comboBoxBranding.setPlaceholder("select or enter value...");
                 if (listOfControllingBranding != null && !listOfControllingBranding.isEmpty()) {
@@ -322,8 +323,7 @@ public class CLTVInflowView extends VerticalLayout {
         missingGrid.getColumnByKey("user").setHeader("User").setFlexGrow(0).setResizable(true);
         // missingGrid.getColumnByKey("cltvChargeName").setHeader("CLTV_Charge_Name").setFlexGrow(0).setResizable(true);
         missingGrid.addComponentColumn(cltvInflow -> {
-            System.out.println(cltvInflow.getCltvChargeName()+"hello");
-            if (cltvInflow.getCltvChargeName().equals("missing")) {
+            if (isMissingNullOrEmpty(cltvInflow.getCltvChargeName())) {
                 ComboBox<String> comboBoxChargeName = new ComboBox<>();
                 comboBoxChargeName.setPlaceholder("select or enter value...");
                 if (listOfCLTVChargeName != null && !listOfCLTVChargeName.isEmpty()) {
@@ -355,9 +355,12 @@ public class CLTVInflowView extends VerticalLayout {
         missingGrid.setSelectionMode(Grid.SelectionMode.NONE);
         missingGrid.setEditOnClick(true);
     }
+    public static boolean isMissingNullOrEmpty(String value) {
+        return value == null || value.trim().isEmpty() || "missing".equals(value);
+    }
 
     private void saveModifiedCLTVInflow(CLTVInflow cltvInflow, String selectedValue) {
-        if(!selectedValue.equals("missing")) {
+        if(!isMissingNullOrEmpty(selectedValue)) {
             if(modifiedCLTVInflow.contains(cltvInflow)){
                 modifiedCLTVInflow.remove(cltvInflow);
                 modifiedCLTVInflow.add(cltvInflow);
