@@ -23,6 +23,7 @@ import com.vaadin.flow.component.tabs.TabSheetVariant;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import de.dbuss.tefcontrol.data.entity.Constants;
 import de.dbuss.tefcontrol.data.entity.ProjectParameter;
 import de.dbuss.tefcontrol.data.modules.cltv_Inflow.entity.CLTVInflow;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
@@ -43,7 +44,7 @@ public class CLTVInflowView extends VerticalLayout {
     private Crud<CLTVInflow> crud;
     private Grid<CLTVInflow> grid;
     private GridPro<CLTVInflow> missingGrid = new GridPro<>(CLTVInflow.class);
-    private Button saveButton = new Button("Save");
+    private Button saveButton = new Button(Constants.SAVE);
     private List<CLTVInflow> modifiedCLTVInflow = new ArrayList<>();
     private String selectedDbName;
     private String tableName;
@@ -61,12 +62,12 @@ public class CLTVInflowView extends VerticalLayout {
         String dbServer = null;
 
         for (ProjectParameter projectParameter : listOfProjectParameters) {
-            if(projectParameter.getNamespace().equals("CLTV_Inflow")) {
-                if ("DB_Server".equals(projectParameter.getName())) {
+            if(projectParameter.getNamespace().equals(Constants.B2P_OUTLOOK)) {
+                if (Constants.DB_SERVER.equals(projectParameter.getName())) {
                     dbServer = projectParameter.getValue();
-                } else if ("DB_Name".equals(projectParameter.getName())) {
+                } else if (Constants.DB_NAME.equals(projectParameter.getName())) {
                     selectedDbName = projectParameter.getValue();
-                } else if ("Table".equals(projectParameter.getName())) {
+                } else if (Constants.TABLE.equals(projectParameter.getName())) {
                     tableName = projectParameter.getValue();
                 }
             }
@@ -353,7 +354,6 @@ public class CLTVInflowView extends VerticalLayout {
                     cltvInflow.setControllingBranding(selectedValue);
                     saveModifiedCLTVInflow(cltvInflow, selectedValue);
                 });
-
                 return comboBoxBranding;
             } else {
                 return new Text(getValidValue(cltvInflow.getControllingBranding()));

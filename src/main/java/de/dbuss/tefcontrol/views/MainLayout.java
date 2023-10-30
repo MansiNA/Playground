@@ -21,6 +21,7 @@ import com.vaadin.flow.server.auth.AccessAnnotationChecker;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import de.dbuss.tefcontrol.data.entity.Projects;
 import de.dbuss.tefcontrol.data.entity.User;
+import de.dbuss.tefcontrol.data.modules.b2pOutlook.view.B2POutlookView;
 import de.dbuss.tefcontrol.data.modules.cltv_Inflow.view.CLTVInflowView;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.InputPBIComments;
 import de.dbuss.tefcontrol.data.modules.techkpi.view.Tech_KPIView;
@@ -81,6 +82,7 @@ public class MainLayout extends AppLayout {
         urlToViewMap.put("InputPBIComments", InputPBIComments.class );
         urlToViewMap.put("Tech_KPI", Tech_KPIView.class );
         urlToViewMap.put("CLTV-Inflow", CLTVInflowView.class );
+        urlToViewMap.put("B2P_Outlook_Excel", B2POutlookView.class);
 
 
         setPrimarySection(Section.DRAWER);
