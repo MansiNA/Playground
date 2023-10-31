@@ -174,9 +174,9 @@ public class HWMappingView extends VerticalLayout {
 
                 try {
                     // Perform fetch operations using the selected data source
-<
+
                     fetchListOfCLTVMeasures = projectConnectionService.fetchDataFromDatabase(selectedDbName);
-                    CLTV_HW_MeasuresDataProvider dataProvider = new CLTV_HW_MeasuresDataProvider(fetchListOfCLTVMeasures);
+                    GenericDataProvider dataProvider = new GenericDataProvider(fetchListOfCLTVMeasures);
 
                     crud.setDataProvider(dataProvider);
                     setupDataProviderEvent();

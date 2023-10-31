@@ -263,8 +263,10 @@
   "Frontend/generated/jar-resources/gridConnector.js",
   "Frontend/generated/jar-resources/gridProConnector.js",
   "Frontend/generated/jar-resources/lit-renderer.ts",
+  "Frontend/generated/jar-resources/lumo-pivot.css",
   "Frontend/generated/jar-resources/menubarConnector.js",
   "Frontend/generated/jar-resources/messageListConnector.js",
+  "Frontend/generated/jar-resources/pivot_connector.js",
   "Frontend/generated/jar-resources/selectConnector.js",
   "Frontend/generated/jar-resources/theme-util.js",
   "Frontend/generated/jar-resources/tooltip.ts",
@@ -358,8 +360,10 @@
   "gridConnector.js": "e817697eae8d69da98f9c4fb83f60910421a15148e3d1254685d30384f24b825",
   "gridProConnector.js": "bda2f830ef5a534e672457a633787dad9d7e69467b90330d1f5310d01dcbb61f",
   "lit-renderer.ts": "afefa9f5fcb38260a0ff08bc044a5f591f242689ca3c7905130ad32df0476e7c",
+  "lumo-pivot.css": "3df3f90b125ce659b25d0cdcdffc592fb62923d215c2a908df8bf8714096342a",
   "menubarConnector.js": "8ddac5a87155632c516fd16c9402bd9a2fe6d965998169743744842aacdfd412",
   "messageListConnector.js": "480d7092b9fe42aab45756eb4287b2c4b0d6e5d38514e967543bc5c317948c18",
+  "pivot_connector.js": "434b5be11a6de658831e924491150e9ba3f622f89182da3c17979355fc35b2bb",
   "selectConnector.js": "bd4277e735d390853603351ddd963233349b702789ddf8ce000df5179bb30523",
   "theme-util.js": "828ba8154b5d2d762ade6ed6f0614691c68db929b69c3c54250858a077960ba3",
   "tooltip.ts": "b7e9af67169277b94cab722d244340c3a9d463bcf4de2aaa84dddcebbd59447b",
@@ -443,7 +447,7 @@
   "tefcontrol": "{\n  \"lumoImports\" : [ \"typography\", \"color\", \"spacing\", \"badge\", \"utility\" ]\n}"
  },
  "entryScripts": [
-  "VAADIN/build/indexhtml-fb712672.js"
+  "VAADIN/build/indexhtml-a99fcdfc.js"
  ],
  "webComponents": [],
  "cvdlModules": {
@@ -478,6 +482,6 @@
  },
  "packageJsonHash": "7ebbe7c68929f764d3de4793d9b77f976fe1f58d3dd670bf78b9e7ae6728544f",
  "indexHtmlGenerated": [
-  "  <script type=\"module\" crossorigin src=\"./VAADIN/build/indexhtml-fb712672.js\"></script>"
+  "  <script type=\"module\" crossorigin src=\"./VAADIN/build/indexhtml-a99fcdfc.js\"></script>"
  ]
 }
