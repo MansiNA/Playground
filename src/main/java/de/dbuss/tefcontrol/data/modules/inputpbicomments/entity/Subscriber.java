@@ -1,4 +1,4 @@
-package de.dbuss.tefcontrol.data.entity;
+package de.dbuss.tefcontrol.data.modules.inputpbicomments.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

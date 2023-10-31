@@ -1,4 +1,4 @@
-package de.dbuss.tefcontrol.views.pfgproductmapping;
+package de.dbuss.tefcontrol.data.modules.pfgproductmapping.view;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.ComponentEvent;
@@ -7,33 +7,24 @@ import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
-import com.vaadin.flow.component.combobox.ComboBoxVariant;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
-import com.vaadin.flow.data.provider.DataProvider;
 import com.vaadin.flow.shared.Registration;
-import de.dbuss.tefcontrol.data.entity.CltvAllProduct;
-import de.dbuss.tefcontrol.data.entity.ProductHierarchie;
-import de.dbuss.tefcontrol.data.entity.ProjectConnection;
+import de.dbuss.tefcontrol.data.modules.pfgproductmapping.entity.CltvAllProduct;
+import de.dbuss.tefcontrol.data.modules.pfgproductmapping.entity.ProductHierarchie;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class PFGProductForm extends FormLayout {
-    ComboBox<String> pfg_Type = new ComboBox("PFG-Type");
-    TextField node = new TextField("Node");
-  //  Select<String> product_name = new Select<>();
-      ComboBox<String> product_name = new ComboBox<>();
-
-
-    private ProductHierarchie productHierarchie;
-
-    Binder<ProductHierarchie> binder = new BeanValidationBinder<>(ProductHierarchie.class);
+    private ComboBox<String> pfg_Type = new ComboBox("PFG-Type");
+    private TextField node = new TextField("Node");
+    private ComboBox<String> product_name = new ComboBox<>();
+    private Binder<ProductHierarchie> binder = new BeanValidationBinder<>(ProductHierarchie.class);
     public PFGProductForm(List<CltvAllProduct> cltvAllProducts) {
         addClassName("product-form");
         binder.bindInstanceFields(this);
@@ -45,15 +36,7 @@ public class PFGProductForm extends FormLayout {
 
         product_name.setLabel("Product");
         product_name.setWidthFull();
-
         product_name.setPageSize(5);
-
-        //product_name.addThemeVariants(
-             //   ComboBoxVariant.LUMO_SMALL,
-            //    ComboBoxVariant.LUMO_ALIGN_RIGHT,
-            //    ComboBoxVariant.LUMO_HELPER_ABOVE_FIELD
-        //);
-      //  product_name.getStyle().set("--vaadin-input-field-border-width", "1px");
         product_name.setAllowCustomValue(true);
 
         if (cltvAllProducts != null && !cltvAllProducts.isEmpty()) {
@@ -68,14 +51,11 @@ public class PFGProductForm extends FormLayout {
 
             product_name.setItems(productNames);
             product_name.setValue(productNames.get(0));
-
-
             //product_name.setHelperText("Helper text");
             product_name.setPlaceholder("Choose Product");
             product_name.setTooltipText("Choose not configured Product");
             product_name.setClearButtonVisible(true);
             product_name.setPrefixComponent(VaadinIcon.SEARCH.create());
-
         }
 
         product_name.addValueChangeListener(event -> {
@@ -83,7 +63,6 @@ public class PFGProductForm extends FormLayout {
                 product_name.setValue(event.getValue());
             }
         });
-
 
         add(product_name, pfg_Type,node, createButtonsLayout());
     }
@@ -123,10 +102,7 @@ public class PFGProductForm extends FormLayout {
 
     private void validateAndSave() {
         if(binder.isValid()) {
-            System.out.println("Save-Button gedrückt!");
-
             fireEvent(new SaveEvent(this, binder.getBean()));
-
         }
     }
 
