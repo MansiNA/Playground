@@ -77,7 +77,7 @@ import java.util.stream.Stream;
 //@PageTitle("Default Mapping")
 @Slf4j
 @Route(value = "Default-Mapping/:project_Id", layout = MainLayout.class)
-@RolesAllowed("USER")
+@RolesAllowed({"MAPPING", "USER"})
 public class DefaultView extends VerticalLayout  implements BeforeEnterObserver  {
 
     private final ProjectsService projectsService;

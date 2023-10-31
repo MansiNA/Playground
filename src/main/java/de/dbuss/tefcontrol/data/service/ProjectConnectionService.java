@@ -1,8 +1,17 @@
 package de.dbuss.tefcontrol.data.service;
 
 import de.dbuss.tefcontrol.data.entity.*;
+import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.OutlookMGSR;
+import de.dbuss.tefcontrol.data.modules.cltv_Inflow.entity.CLTVInflow;
+import de.dbuss.tefcontrol.data.modules.cltv_Inflow.view.CLTVInflowView;
+import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.Financials;
+import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.Subscriber;
+import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.UnitsDeepDive;
+import de.dbuss.tefcontrol.data.modules.pfgproductmapping.entity.CltvAllProduct;
+import de.dbuss.tefcontrol.data.modules.pfgproductmapping.entity.ProductHierarchie;
 import de.dbuss.tefcontrol.data.repository.ProjectConnectionRepository;
-import de.dbuss.tefcontrol.views.Tech_KPIView;
+import de.dbuss.tefcontrol.data.modules.techkpi.view.Tech_KPIView;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Primary;
@@ -25,6 +34,9 @@ public class ProjectConnectionService {
 
     private JdbcTemplate jdbcTemplate;
 
+    @Getter
+    private String errorMessage = "";
+
     public ProjectConnectionService(ProjectConnectionRepository repository) {
         this.repository = repository;
     }
@@ -45,6 +57,7 @@ public class ProjectConnectionService {
 
         if (projectConnection.isPresent()) {
             System.out.println("jdbc:sqlserver://"+projectConnection.get().getHostname() + ";databaseName="+projectConnection.get().getDbName()+";encrypt=true;trustServerCertificate=true");
+            System.out.println("Username = "+projectConnection.get().getUsername()+ " Password = "+projectConnection.get().getPassword());
             DataSource dataSource = DataSourceBuilder
                     .create()
                     .url("jdbc:sqlserver://"+projectConnection.get().getHostname() + ";databaseName="+projectConnection.get().getDbName()+";encrypt=true;trustServerCertificate=true")
@@ -112,7 +125,7 @@ public class ProjectConnectionService {
             return "ok";
         } catch (Exception e) {
             e.printStackTrace();
-            return "Error during update: " + e.getMessage();
+            return handleDatabaseError(e);
         }
     }
 
@@ -176,10 +189,9 @@ public class ProjectConnectionService {
         }
            catch (CannotGetJdbcConnectionException connectionException) {
             return connectionException.getMessage();
-        }
-           catch (Exception e) {
-                e.printStackTrace();
-            return e.getMessage();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return handleDatabaseError(e);
         }
     }
 
@@ -213,7 +225,7 @@ public class ProjectConnectionService {
             return "ok";
         } catch (Exception e) {
             e.printStackTrace();
-            return "Error during update: " + e.getMessage();
+            return handleDatabaseError(e);
         }
     }
 
@@ -246,7 +258,7 @@ public class ProjectConnectionService {
             return "ok";
         } catch (Exception e) {
             e.printStackTrace();
-            return "Error during update: " + e.getMessage();
+            return handleDatabaseError(e);
         }
     }
 
@@ -257,6 +269,7 @@ public class ProjectConnectionService {
             jdbcTemplate.update(sqlDelete);
         } catch (Exception e) {
             e.printStackTrace();
+            errorMessage = handleDatabaseError(e);
         }
     }
 
@@ -293,6 +306,7 @@ public class ProjectConnectionService {
             jdbcTemplate.update(sqlDelete);
         } catch (Exception e) {
             e.printStackTrace();
+            errorMessage = handleDatabaseError(e);
         }
     }
     public String saveKPIPlan(List<Tech_KPIView.KPI_Plan> data) {
@@ -334,6 +348,7 @@ public class ProjectConnectionService {
             jdbcTemplate.update(sqlDelete);
         } catch (Exception e) {
             e.printStackTrace();
+            errorMessage = handleDatabaseError(e);
         }
     }
     public String saveKPIActuals(List<Tech_KPIView.KPI_Actuals> data) {
@@ -431,35 +446,44 @@ public class ProjectConnectionService {
             return clatvAllProductList;
         } catch (Exception e) {
             e.printStackTrace();
+            errorMessage = handleDatabaseError(e);
             return Collections.emptyList();
         }
     }
 
     public List<ProductHierarchie> fetchProductHierarchie(String selectedDatabase, String targetTable, String filterValue) {
-        getJdbcConnection(selectedDatabase);
 
-        // Construct the dynamic SQL query with multiple OR conditions for filtering
-        String sqlQuery = "SELECT * FROM " + targetTable + " WHERE Product LIKE ?" +
-                " OR [PFG_PO/PP] LIKE ?" +
-                " OR Knoten LIKE ?";
+        try {
+            getJdbcConnection(selectedDatabase);
 
-        // Create a RowMapper to map the query result to a ProductHierarchie object
-        RowMapper<ProductHierarchie> rowMapper = (rs, rowNum) -> {
-            ProductHierarchie productHierarchie = new ProductHierarchie();
-            productHierarchie.setId(rs.getLong("id"));
-            productHierarchie.setPfg_Type(rs.getString("PFG_PO/PP"));
-            productHierarchie.setNode(rs.getString("Knoten"));
-            productHierarchie.setProduct_name(rs.getString("Product"));
-            return productHierarchie;
-        };
+            // Construct the dynamic SQL query with multiple OR conditions for filtering
+            String sqlQuery = "SELECT * FROM " + targetTable + " WHERE Product LIKE ?" +
+                    " OR [PFG_PO/PP] LIKE ?" +
+                    " OR Knoten LIKE ?";
 
-        // Use wildcard characters to search for partial matches in all columns
-        String filteredValue = "%" + filterValue + "%";
+            // Create a RowMapper to map the query result to a ProductHierarchie object
+            RowMapper<ProductHierarchie> rowMapper = (rs, rowNum) -> {
+                ProductHierarchie productHierarchie = new ProductHierarchie();
+                productHierarchie.setId(rs.getLong("id"));
+                productHierarchie.setPfg_Type(rs.getString("PFG_PO/PP"));
+                productHierarchie.setNode(rs.getString("Knoten"));
+                productHierarchie.setProduct_name(rs.getString("Product"));
+                return productHierarchie;
+            };
 
-        // Use the same filteredValue for all columns
-        List<ProductHierarchie> fetchedData = jdbcTemplate.query(sqlQuery, rowMapper, filteredValue, filteredValue, filteredValue);
+            // Use wildcard characters to search for partial matches in all columns
+            String filteredValue = "%" + filterValue + "%";
 
-        return fetchedData;
+            // Use the same filteredValue for all columns
+            List<ProductHierarchie> fetchedData = jdbcTemplate.query(sqlQuery, rowMapper, filteredValue, filteredValue, filteredValue);
+
+            return fetchedData;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            errorMessage = handleDatabaseError(ex);
+            return Collections.emptyList();
+        }
+
     }
 
     public String saveProductHierarchie(ProductHierarchie data, String selectedDatabase, String targetTable) {
@@ -492,25 +516,147 @@ public class ProjectConnectionService {
             }
 
             return "ok";
-        } catch (CannotGetJdbcConnectionException connectionException) {
-            return connectionException.getMessage();
         } catch (Exception e) {
             e.printStackTrace();
-            return e.getMessage();
+            return handleDatabaseError(e);
         }
+
     }
 
     public List<String> getAllMissingProducts(String selectedDatabase, String targetView) {
-        getJdbcConnection(selectedDatabase);
-        String sqlQuery = "SELECT * FROM "+ targetView;
+        try {
+            getJdbcConnection(selectedDatabase);
+            String sqlQuery = "SELECT * FROM " + targetView;
 
-        // Create a RowMapper to map the query result to a CLTV_HW_Measures object
-        RowMapper<String> rowMapper = (rs, rowNum) -> {
-            return rs.getString("All_Products");
-        };
+            RowMapper<String> rowMapper = (rs, rowNum) -> {
+                return rs.getString("All_Products");
+            };
 
-        List<String> fetchedData = jdbcTemplate.query(sqlQuery, rowMapper);
+            List<String> fetchedData = jdbcTemplate.query(sqlQuery, rowMapper);
 
-        return fetchedData;
+            return fetchedData;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            errorMessage = handleDatabaseError(ex);
+            return Collections.emptyList();
+        }
+
+    }
+
+    public String saveListOfProductHierarchie(List<ProductHierarchie> data, String selectedDatabase, String targetTable) {
+        try {
+            getJdbcConnection(selectedDatabase);
+            String sql = "INSERT INTO " + targetTable + " (Product, [PFG_PO/PP], Knoten) VALUES (?, ?, ?)";
+
+            jdbcTemplate.batchUpdate(sql, data, data.size(), (ps, productHierarchie) -> {
+                ps.setString(1, productHierarchie.getProduct_name());
+                ps.setString(2, productHierarchie.getPfg_Type());
+                ps.setString(3, productHierarchie.getNode());
+            });
+
+            return "ok";
+        } catch (Exception e) {
+            e.printStackTrace();
+            return handleDatabaseError(e);
+        }
+    }
+
+    public List<CLTVInflow> getAllCLTVInflow(String selectedDatabase, String tableName) {
+        try {
+            getJdbcConnection(selectedDatabase);
+
+            String sqlQuery = "SELECT * FROM " +tableName;
+
+            // Create a RowMapper to map the query result to a CLTVInflow object
+            RowMapper<CLTVInflow> rowMapper = (rs, rowNum) -> {
+                CLTVInflow cltvInflow = new CLTVInflow();
+                cltvInflow.setContractFeatureId(rs.getLong("ContractFeature_id"));
+                cltvInflow.setAttributeClassesId(rs.getLong("AttributeClasses_ID"));
+                cltvInflow.setCfTypeClassName(rs.getString("CF_TYPE_CLASS_NAME"));
+                cltvInflow.setAttributeClassesName(rs.getString("AttributeClasses_NAME"));
+                cltvInflow.setContractFeatureSubCategoryName(rs.getString("ContractFeatureSubCategory_Name"));
+                cltvInflow.setContractFeatureName(rs.getString("ContractFeature_Name"));
+                cltvInflow.setCfTypeName(rs.getString("CF_TYPE_NAME"));
+                cltvInflow.setCfDurationInMonth(rs.getString("CF_Duration_in_Month"));
+                cltvInflow.setConnectType(rs.getString("Connect_Type"));
+                cltvInflow.setCltvCategoryName(rs.getString("CLTV_Category_Name"));
+                cltvInflow.setControllingBrandingDetailed(rs.getString("Controlling_Branding_Detailed"));
+                cltvInflow.setControllingBranding(rs.getString("Controlling_Branding"));
+                cltvInflow.setUser(rs.getString("User"));
+                cltvInflow.setCltvChargeName(rs.getString("CLTV_Charge_Name"));
+
+                return cltvInflow;
+            };
+
+            List<CLTVInflow> fetchedData = jdbcTemplate.query(sqlQuery, rowMapper);
+
+            return fetchedData;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            errorMessage = handleDatabaseError(ex);
+            return Collections.emptyList();
+        }
+    }
+
+
+    public String updateListOfCLTVInflow(List<CLTVInflow> modifiedCLTVInflow, String selectedDbName, String tableName) {
+        try {
+            getJdbcConnection(selectedDbName);
+
+            // Assuming that you have a unique identifier to match the records to update, e.g., contractFeatureId
+            String sql = "UPDATE " + tableName + " SET CLTV_Category_Name = ?, Controlling_Branding_Detailed = ?, " +
+                    "Controlling_Branding = ?, CLTV_Charge_Name = ? WHERE ContractFeature_id = ?";
+
+            jdbcTemplate.batchUpdate(sql, modifiedCLTVInflow, modifiedCLTVInflow.size(), (ps, cltvInflow) -> {
+                ps.setString(1, cltvInflow.getCltvCategoryName());
+                ps.setString(2, cltvInflow.getControllingBrandingDetailed());
+                ps.setString(3, cltvInflow.getControllingBranding());
+                ps.setString(4, cltvInflow.getCltvChargeName());
+                ps.setLong(5, cltvInflow.getContractFeatureId());
+            });
+
+            return "ok";
+        } catch (Exception e) {
+            e.printStackTrace();
+            return handleDatabaseError(e);
+        }
+    }
+
+
+    public String saveOutlookMGSR(List<OutlookMGSR> data, String selectedDbName, String tableName) {
+
+        try {
+
+            DataSource dataSource = getDataSource(selectedDbName);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
+            String sqlDelete = "DELETE FROM " + tableName;
+
+            jdbcTemplate.update(sqlDelete);
+
+            String sqlInsert = "INSERT INTO "+ tableName +" (Zeile, Blatt, month, PL_Line, profit_center, scenario, block, segment, payment_type, type_of_data, value, LoadDate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+            jdbcTemplate.batchUpdate(sqlInsert, data, data.size(), (ps, entity) -> {
+
+                ps.setInt(1, entity.getZeile());
+                ps.setString(2, entity.getBlatt());
+                ps.setInt(3, entity.getMonth());
+                ps.setString(4, entity.getPl_Line());
+                ps.setLong(5, entity.getProfitCenter());
+                ps.setString(6, entity.getScenario());
+                ps.setString(7, entity.getBlock());
+                ps.setString(8, entity.getSegment());
+                ps.setString(9, entity.getPaymentType());
+                ps.setString(10, entity.getTypeOfData());
+                ps.setLong(11, entity.getValue());
+                java.sql.Date sqlDate = (entity.getLoadDate() != null) ? new java.sql.Date(entity.getLoadDate().getTime()) : null;
+                ps.setDate(12, sqlDate);
+            });
+
+            return "ok";
+        } catch (Exception e) {
+            e.printStackTrace();
+            return handleDatabaseError(e);
+        }
     }
 }

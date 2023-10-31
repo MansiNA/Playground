@@ -1,4 +1,4 @@
-package de.dbuss.tefcontrol.data.entity;
+package de.dbuss.tefcontrol.data.modules.pfgproductmapping.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotEmpty;

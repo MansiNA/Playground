@@ -31,6 +31,8 @@ public class Projects {
 
     private String agent_db;
 
+    private String role_access;
+
     // Define a one-to-many relationship between Project and ProjectAttachments
     @OneToMany(mappedBy = "project", fetch = FetchType.LAZY, orphanRemoval = true)
     private List<ProjectAttachments> listOfAttachments = new ArrayList<>();
