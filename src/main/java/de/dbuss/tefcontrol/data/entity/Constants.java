@@ -15,4 +15,8 @@ public class Constants {
     // This constant is used for B2P_Outlook module
     public static final String B2P_OUTLOOK = "B2P_Outlook";
 
+    // This constant is used for CLTV_Inflow module
+    public static final String CLTV_INFLOW = "CLTV_Inflow";
+
+
 }

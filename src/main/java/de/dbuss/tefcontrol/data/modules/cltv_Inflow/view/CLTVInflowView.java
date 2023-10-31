@@ -62,7 +62,7 @@ public class CLTVInflowView extends VerticalLayout {
         String dbServer = null;
 
         for (ProjectParameter projectParameter : listOfProjectParameters) {
-            if(projectParameter.getNamespace().equals(Constants.B2P_OUTLOOK)) {
+            if(projectParameter.getNamespace().equals(Constants.CLTV_INFLOW)) {
                 if (Constants.DB_SERVER.equals(projectParameter.getName())) {
                     dbServer = projectParameter.getValue();
                 } else if (Constants.DB_NAME.equals(projectParameter.getName())) {

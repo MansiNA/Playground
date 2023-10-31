@@ -1,6 +1,7 @@
 package de.dbuss.tefcontrol.data.service;
 
 import de.dbuss.tefcontrol.data.entity.*;
+import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.OutlookMGSR;
 import de.dbuss.tefcontrol.data.modules.cltv_Inflow.entity.CLTVInflow;
 import de.dbuss.tefcontrol.data.modules.cltv_Inflow.view.CLTVInflowView;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.Financials;
@@ -622,4 +623,40 @@ public class ProjectConnectionService {
     }
 
 
+    public String saveOutlookMGSR(List<OutlookMGSR> data, String selectedDbName, String tableName) {
+
+        try {
+
+            DataSource dataSource = getDataSource(selectedDbName);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
+            String sqlDelete = "DELETE FROM " + tableName;
+
+            jdbcTemplate.update(sqlDelete);
+
+            String sqlInsert = "INSERT INTO "+ tableName +" (Zeile, Blatt, month, PL_Line, profit_center, scenario, block, segment, payment_type, type_of_data, value, LoadDate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+            jdbcTemplate.batchUpdate(sqlInsert, data, data.size(), (ps, entity) -> {
+
+                ps.setInt(1, entity.getZeile());
+                ps.setString(2, entity.getBlatt());
+                ps.setInt(3, entity.getMonth());
+                ps.setString(4, entity.getPl_Line());
+                ps.setLong(5, entity.getProfitCenter());
+                ps.setString(6, entity.getScenario());
+                ps.setString(7, entity.getBlock());
+                ps.setString(8, entity.getSegment());
+                ps.setString(9, entity.getPaymentType());
+                ps.setString(10, entity.getTypeOfData());
+                ps.setLong(11, entity.getValue());
+                java.sql.Date sqlDate = (entity.getLoadDate() != null) ? new java.sql.Date(entity.getLoadDate().getTime()) : null;
+                ps.setDate(12, sqlDate);
+            });
+
+            return "ok";
+        } catch (Exception e) {
+            e.printStackTrace();
+            return handleDatabaseError(e);
+        }
+    }
 }
