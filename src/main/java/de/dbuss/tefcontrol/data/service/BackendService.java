@@ -17,8 +17,9 @@ public class BackendService {
             Thread.sleep(60000);
         } catch (InterruptedException e) {
 
-            return AsyncResult.forValue("Backend Job abgebrochen!");
-         //   e.printStackTrace();
+         //   return AsyncResult.forValue("Backend Job abgebrochen:" + e.getMessage());
+            e.printStackTrace();
+            return AsyncResult.forValue("Backend Job abgebrochen:" + e.getMessage());
         }
         return AsyncResult.forValue("Backend Job finished!");
 
