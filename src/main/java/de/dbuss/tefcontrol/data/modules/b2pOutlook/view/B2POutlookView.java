@@ -101,7 +101,6 @@ public class B2POutlookView extends VerticalLayout {
             for (List<OutlookMGSR> sheetData : listOfAllSheets) {
                 listOfAllData.addAll(sheetData);
             }
-            System.out.println("save....................");
             String resultFinancial = projectConnectionService.saveOutlookMGSR(listOfAllData, selectedDbName, tableName);
             if (resultFinancial.contains("ok")){
                 notification = Notification.show(listOfAllData.size() + " B2P_Outlook Rows Uploaded successfully",5000, Notification.Position.MIDDLE);
