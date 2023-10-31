@@ -7,8 +7,10 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.crud.BinderCrudEditor;
 import com.vaadin.flow.component.crud.Crud;
 import com.vaadin.flow.component.crud.CrudEditor;
+import com.vaadin.flow.component.crud.CrudVariant;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Article;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.notification.Notification;
@@ -115,6 +117,8 @@ public class B2POutlookView extends VerticalLayout {
 
         setupUploader();
         add(getMGSRGrid());
+        setSizeFull();
+        setHeightFull();
     }
 
     private Component getMGSRGrid() {
@@ -157,8 +161,9 @@ public class B2POutlookView extends VerticalLayout {
 
         gridMGSR = crudMGSR.getGrid();
 
-        gridMGSR.getColumnByKey(ZEILE).setHeader("Zeile").setWidth("80px").setFlexGrow(0).setResizable(true);
-        gridMGSR.getColumnByKey(MONTH).setHeader("Month").setWidth("100px").setFlexGrow(0).setResizable(true);
+        gridMGSR.getColumnByKey(BLATT).setHeader("Blatt").setWidth("120px").setFlexGrow(0).setResizable(true);
+        gridMGSR.getColumnByKey(ZEILE).setHeader("Zeile").setWidth("60px").setFlexGrow(0).setResizable(true);
+        gridMGSR.getColumnByKey(MONTH).setHeader("Month").setWidth("80px").setFlexGrow(0).setResizable(true);
         gridMGSR.getColumnByKey(PLLINE).setHeader("PL_Line").setWidth("80px").setFlexGrow(0).setResizable(true);
         gridMGSR.getColumnByKey(PROFITCENTER).setHeader("ProfitCenter").setWidth("100px").setFlexGrow(0).setResizable(true);
         gridMGSR.getColumnByKey(SCENARIO).setHeader("Scenario").setWidth("200px").setFlexGrow(0).setResizable(true);
@@ -167,7 +172,7 @@ public class B2POutlookView extends VerticalLayout {
         gridMGSR.getColumnByKey(PAYMENTTYPE).setHeader("PaymentType").setWidth("80px").setFlexGrow(0).setResizable(true);
         gridMGSR.getColumnByKey(TYPEOFDATA).setHeader("TypeOfData").setWidth("200px").setFlexGrow(0).setResizable(true);
         gridMGSR.getColumnByKey(VALUE).setHeader("Value").setWidth("80px").setFlexGrow(0).setResizable(true);
-        gridMGSR.getColumnByKey(BLATT).setHeader("Blatt").setWidth("80px").setFlexGrow(0).setResizable(true);
+
         gridMGSR.getColumnByKey(LOADDATE).setHeader("LoadDate").setWidth("80px").setFlexGrow(0).setResizable(true);
 
         gridMGSR.getColumns().forEach(col -> col.setAutoWidth(true));
@@ -178,7 +183,8 @@ public class B2POutlookView extends VerticalLayout {
         gridMGSR.removeColumn(gridMGSR.getColumnByKey(LOADDATE));
 
         // Reorder the columns (alphabetical by default)
-        gridMGSR.setColumnOrder( gridMGSR.getColumnByKey(ZEILE)
+        gridMGSR.setColumnOrder(gridMGSR.getColumnByKey(BLATT)
+                , gridMGSR.getColumnByKey(ZEILE)
                 , gridMGSR.getColumnByKey(MONTH)
                 , gridMGSR.getColumnByKey(PLLINE)
                 , gridMGSR.getColumnByKey(PROFITCENTER)
@@ -188,8 +194,13 @@ public class B2POutlookView extends VerticalLayout {
                 , gridMGSR.getColumnByKey(PAYMENTTYPE)
                 , gridMGSR.getColumnByKey(TYPEOFDATA)
                 , gridMGSR.getColumnByKey(VALUE)
-                , gridMGSR.getColumnByKey(BLATT));
+                );
         //    , gridFinancials.getColumnByKey(EDIT_COLUMN));
+
+
+
+        gridMGSR.addThemeVariants(GridVariant.LUMO_COMPACT);
+
     }
     private void setupUploader() {
         singleFileUpload.setWidth("600px");

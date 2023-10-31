@@ -634,7 +634,7 @@ public class ProjectConnectionService {
 
             jdbcTemplate.update(sqlDelete);
 
-            String sqlInsert = "INSERT INTO "+ tableName +" (Zeile, Blatt, month, PL_Line, profit_center, scenario, block, segment, payment_type, type_of_data, value, LoadDate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            String sqlInsert = "INSERT INTO "+ tableName +" (Zeile, Blatt, month, PL_Line, profit_center, scenario, block, segment, payment_type, type_of_data, value) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
             jdbcTemplate.batchUpdate(sqlInsert, data, data.size(), (ps, entity) -> {
 
@@ -649,8 +649,8 @@ public class ProjectConnectionService {
                 ps.setString(9, entity.getPaymentType());
                 ps.setString(10, entity.getTypeOfData());
                 ps.setLong(11, entity.getValue());
-                java.sql.Date sqlDate = (entity.getLoadDate() != null) ? new java.sql.Date(entity.getLoadDate().getTime()) : null;
-                ps.setDate(12, sqlDate);
+              //  java.sql.Date sqlDate = (entity.getLoadDate() != null) ? new java.sql.Date(entity.getLoadDate().getTime()) : null;
+              //  ps.setDate(12, sqlDate);
             });
 
             return "ok";
