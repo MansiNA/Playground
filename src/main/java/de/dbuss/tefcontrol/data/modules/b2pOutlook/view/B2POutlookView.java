@@ -1,8 +1,6 @@
 package de.dbuss.tefcontrol.data.modules.b2pOutlook.view;
 
-import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.Text;
-import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.*;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.crud.BinderCrudEditor;
 import com.vaadin.flow.component.crud.Crud;
@@ -33,6 +31,7 @@ import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.OutlookMGSR;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.Financials;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.Subscriber;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.UnitsDeepDive;
+import de.dbuss.tefcontrol.data.service.BackendService;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
 import de.dbuss.tefcontrol.data.service.ProjectParameterService;
 import de.dbuss.tefcontrol.dataprovider.GenericDataProvider;
@@ -67,8 +66,13 @@ public class B2POutlookView extends VerticalLayout {
     private String mimeType = "";
     private Div textArea = new Div();
 
-    public B2POutlookView (ProjectParameterService projectParameterService, ProjectConnectionService projectConnectionService) {
+    ListenableFuture<String> future;
 
+    BackendService backendService;
+
+    public B2POutlookView (ProjectParameterService projectParameterService, ProjectConnectionService projectConnectionService, BackendService backendService) {
+
+        this.backendService=backendService;
         this.projectConnectionService = projectConnectionService;
         saveButton = new Button(Constants.SAVE);
         saveButton.setEnabled(false);
@@ -119,6 +123,41 @@ public class B2POutlookView extends VerticalLayout {
         add(getMGSRGrid());
         setSizeFull();
         setHeightFull();
+
+        UI.getCurrent().addShortcutListener(
+                () ->  start_thread(),
+                Key.KEY_V, KeyModifier.ALT);
+
+        UI.getCurrent().addShortcutListener(
+                () ->  future.cancel(true),
+                Key.KEY_S, KeyModifier.ALT);
+
+
+    }
+
+    private void start_thread() {
+
+        Notification.show("starte Thread");
+
+        UI ui = getUI().orElseThrow();
+
+        future = backendService.longRunningTask();
+        future.addCallback(
+                successResult -> updateUi(ui, "Task finished: " + successResult),
+                failureException -> updateUi(ui, "Task failed: " + failureException.getMessage())
+
+        );
+
+
+
+    }
+
+    private void updateUi(UI ui, String result) {
+
+
+        ui.access(() -> {
+            Notification.show(result,6000, Notification.Position.MIDDLE);
+        });
     }
 
     private Component getMGSRGrid() {

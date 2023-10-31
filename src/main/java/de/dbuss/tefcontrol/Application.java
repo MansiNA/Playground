@@ -1,6 +1,7 @@
 package de.dbuss.tefcontrol;
 
 import com.vaadin.flow.component.page.AppShellConfigurator;
+import com.vaadin.flow.component.page.Push;
 import com.vaadin.flow.theme.Theme;
 import com.vaadin.flow.theme.lumo.Lumo;
 import de.dbuss.tefcontrol.data.repository.UserRepository;
@@ -10,6 +11,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.sql.init.SqlDataSourceScriptDatabaseInitializer;
 import org.springframework.boot.autoconfigure.sql.init.SqlInitializationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.scheduling.annotation.EnableAsync;
 
 /**
  * The entry point of the Spring Boot application.
@@ -21,6 +23,8 @@ import org.springframework.context.annotation.Bean;
 @SpringBootApplication
 //@Theme(value = "tefcontrol", variant = Lumo.DARK)
 @Theme(value = "tefcontrol", variant = Lumo.LIGHT)
+@Push
+@EnableAsync
 public class Application implements AppShellConfigurator {
 
     public static void main(String[] args) {

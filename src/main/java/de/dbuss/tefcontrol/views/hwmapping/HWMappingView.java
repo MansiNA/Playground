@@ -1,5 +1,8 @@
 package de.dbuss.tefcontrol.views.hwmapping;
 
+import com.vaadin.flow.component.Key;
+import com.vaadin.flow.component.KeyModifier;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
@@ -268,6 +271,7 @@ public class HWMappingView extends VerticalLayout {
 
         // Damit Gesamtsummen (Totals) nicht angezeigt werden in styles.css einfügen:
         //  .pvtTotal, .pvtTotalLabel, .pvtGrandTotal {display: none}
+
 
     }
 
