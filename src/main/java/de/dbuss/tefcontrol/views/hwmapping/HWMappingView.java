@@ -2,6 +2,7 @@ package de.dbuss.tefcontrol.views.hwmapping;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.crud.BinderCrudEditor;
 import com.vaadin.flow.component.crud.Crud;
@@ -44,6 +45,7 @@ import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.vaadin.addons.componentfactory.PivotTable;
 
 import javax.sql.DataSource;
 import java.io.*;
@@ -77,6 +79,10 @@ public class HWMappingView extends VerticalLayout {
     Article article = new Article();
     private Button exportButton = new Button("Export");
     private String exportPath;
+
+    Checkbox checkbox;
+    HorizontalLayout hl;
+    List<CLTV_HW_Measures> fetchListOfCLTVMeasures;
     private Anchor anchor = new Anchor(getStreamResource("CLTV_HW_Mapping.xls", "default content"), "click to download");
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
 
@@ -163,7 +169,7 @@ public class HWMappingView extends VerticalLayout {
 
                 try {
                     // Perform fetch operations using the selected data source
-                    List<CLTV_HW_Measures> fetchListOfCLTVMeasures = projectConnectionService.fetchDataFromDatabase(selectedDbName);
+                    fetchListOfCLTVMeasures = projectConnectionService.fetchDataFromDatabase(selectedDbName);
                     CLTV_HW_MeasuresDataProvider dataProvider = new CLTV_HW_MeasuresDataProvider(fetchListOfCLTVMeasures);
                     crud.setDataProvider(dataProvider);
                     setupDataProviderEvent();
@@ -172,6 +178,7 @@ public class HWMappingView extends VerticalLayout {
 
                     Notification notification = Notification.show(" Rows fetch successfully", 3000, Notification.Position.MIDDLE);
                     notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+
 
                 } catch (Exception e) {
                     Notification notification = Notification.show("Error during fetch: " + e.getMessage(), 4000, Notification.Position.MIDDLE);
@@ -250,7 +257,60 @@ public class HWMappingView extends VerticalLayout {
         Details details = new Details("details", textArea);
         details.setOpened(false);
 
-        add(horl, details ,crud);
+        checkbox = new Checkbox();
+        checkbox.setLabel("Show Pivot");
+        checkbox.addClickListener(e->{showPivot();});
+
+        add(horl, details ,crud,checkbox );
+
+
+        // Damit Gesamtsummen (Totals) nicht angezeigt werden in styles.css einfügen:
+        //  .pvtTotal, .pvtTotalLabel, .pvtGrandTotal {display: none}
+
+    }
+
+
+    private void showPivot()
+    {
+        if(!checkbox.getValue())
+        {
+            remove(hl);
+            return;
+        }
+
+        PivotTable.PivotData pivotData = new PivotTable.PivotData();
+        pivotData.addColumn("Monat", String.class);
+        pivotData.addColumn("Device", String.class);
+        pivotData.addColumn("Measure", String.class);
+        pivotData.addColumn("Channel", String.class);
+        pivotData.addColumn("Wert", Double.class);
+        // pivotData.addColumn("filled", Boolean.class);
+
+
+        PivotTable.PivotOptions pivotOptions = new PivotTable.PivotOptions();
+        pivotOptions.setCols("Monat");
+        pivotOptions.setRows("Device","Measure","Channel");
+        pivotOptions.setAggregator("Sum","Wert");
+
+
+        fetchListOfCLTVMeasures.forEach(e->{
+            System.out.println(e.getMonat_ID() + "|" + e.getDevice() + "|" + e.getMeasure_Name() + "|" +e.getChannel() + "|" + e.getValue());
+
+            pivotData.addRow(e.getMonat_ID().toString(),e.getDevice(), e.getMeasure_Name(),e.getChannel(), Double.parseDouble(e.getValue()) );
+
+        });
+
+
+        //PivotTable table = new PivotTable(pivotData, pivotOptions, PivotTable.PivotMode.INTERACTIVE);
+        PivotTable pivotTable = new PivotTable(pivotData, pivotOptions, PivotTable.PivotMode.NONINTERACTIVE);
+
+        hl =new HorizontalLayout();
+        hl.add(pivotTable);
+        add(hl);
+
+        // Damit Gesamtsummen (Totals) nicht angezeigt werden in styles.css einfügen:
+        //  .pvtTotal, .pvtTotalLabel, .pvtGrandTotal {display: none}
+
     }
 
     public StreamResource getStreamResource(String filename, String content) {
