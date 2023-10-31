@@ -261,7 +261,7 @@ public class HWMappingView extends VerticalLayout {
         checkbox.setLabel("Show Pivot");
         checkbox.addClickListener(e->{showPivot();});
 
-        add(horl, details ,crud,checkbox );
+        add(horl, details ,crud,checkbox);
 
 
         // Damit Gesamtsummen (Totals) nicht angezeigt werden in styles.css einfügen:
