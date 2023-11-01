@@ -3,11 +3,13 @@ package de.dbuss.tefcontrol.views.defaultPackage;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.accordion.Accordion;
 import com.vaadin.flow.component.applayout.DrawerToggle;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
 
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.crud.BinderCrudEditor;
 import com.vaadin.flow.component.crud.Crud;
 import com.vaadin.flow.component.crud.CrudEditor;
@@ -97,7 +99,8 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
     private Label lastRefreshLabel;
     private Label countdownLabel;
     private ScheduledExecutorService executor;
-    private Select<String> select;
+    //private Select<String> select;
+    private ComboBox<String> select;
     private Select<String> selectConnection;
     private TextArea sqlDescriptionTextArea;
     private UI ui ;
@@ -190,7 +193,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
         tabSheet.add("Description", getProjectsDescription());
         tabSheet.add("Attachments", getProjectAttachements());
         tabSheet.add("DB-Jobs", getAgentJobTab());
-        tabSheet.add("QS", getProjectSQL());
+        tabSheet.add("SQL-Query", getProjectSQL());
 
         tabSheet.setSizeFull();
         tabSheet.setHeightFull();
@@ -301,12 +304,63 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
         Div sqlTabContent = new Div();
         sqlTabContent.setSizeFull();
 
+        HorizontalLayout hl = new HorizontalLayout();
         selectConnection = new Select<>();
-        select = new Select<>();
-        select.setLabel("Choose Query SQL");
+       // select = new Select<>();
+        select = new ComboBox<>();
+        select.setLabel("Choose existing Query");
+        select.setAllowCustomValue(true);
         setSelectedSql();
-        select.setPlaceholder("name from table project_sqls for selected project_id");
-        select.setWidthFull();
+        //select.setPlaceholder("SQL");
+        Button newBtn = new Button("new");
+
+        select.setWidth("300px");
+        select.addValueChangeListener(e -> {
+
+            if (select.getValue()==null){
+                newBtn.setText("new");
+            }
+            else {
+                newBtn.setText("save");
+            }
+
+        });
+
+
+        newBtn.addClickListener(e->{
+
+            if (select.getValue() == null)
+            {
+                System.out.println("Save as new Query");
+                Dialog dialog = new Dialog();
+                dialog.setHeaderTitle("New Query");
+
+                VerticalLayout dialogLayout = createDialogLayout();
+                dialog.add(dialogLayout);
+
+                Button saveButton = createSaveButton(dialog);
+                Button cancelButton = new Button("Cancel", c -> dialog.close());
+                dialog.getFooter().add(cancelButton);
+                dialog.getFooter().add(saveButton);
+
+                Button button = new Button("Show dialog", c -> dialog.open());
+                dialog.open();
+
+            }
+
+            else{
+                System.out.println("Save Query: " + select.getValue());
+            }
+
+
+            return;
+
+
+        });
+
+        hl.setAlignItems(Alignment.BASELINE);
+        hl.add(select, newBtn);
+
 
         TextArea sqlQuerytextArea = new TextArea();
 
@@ -326,18 +380,39 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
             resultGrid.removeAllColumns();
         });
 
-        TabSheet tabSheet = new TabSheet();
-        tabSheet.add("Description",getSqlDescription());
-        tabSheet.add("Connection",getsqllConnection());
-        tabSheet.add("Query",getSqlQuery(sqlQuerytextArea, resultGrid));
+   //     TabSheet tabSheet = new TabSheet();
+   //     tabSheet.add("Description",getSqlDescription());
+   //     tabSheet.add("Connection",getsqllConnection());
+   //     tabSheet.add("Query",getSqlQuery(sqlQuerytextArea, resultGrid));
 
-        sqlTabContent.add(select,tabSheet);
+   //     sqlTabContent.add(hl,tabSheet);
+        sqlTabContent.add(hl,getSqlQuery(sqlQuerytextArea, resultGrid));
         sqlTabContent.setHeightFull();
         content.setHeightFull();
         content.add(sqlTabContent);
         log.info("Ending getProjectSQL() for QS tab");
         return content;
 
+    }
+
+    private static Button createSaveButton(Dialog dialog) {
+        Button saveButton = new Button("Add", e -> dialog.close());
+        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
+        return saveButton;
+    }
+
+    private static VerticalLayout createDialogLayout() {
+
+        TextField firstNameField = new TextField("Name of Query");
+
+        VerticalLayout dialogLayout = new VerticalLayout(firstNameField);
+        dialogLayout.setPadding(false);
+        dialogLayout.setSpacing(false);
+        dialogLayout.setAlignItems(FlexComponent.Alignment.STRETCH);
+        dialogLayout.getStyle().set("width", "18rem").set("max-width", "100%");
+
+        return dialogLayout;
     }
 
     private void setValueForConnection(Optional<ProjectSql> selectedProjectSql) {
@@ -362,24 +437,27 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
         }
     }
 
-    private VerticalLayout getSqlDescription() {
+    private Component getSqlDescription() {
         log.info("Starting getSqlDescription() for QS tab");
-        VerticalLayout content = new VerticalLayout();
+        HorizontalLayout hl= new HorizontalLayout();
+        hl.setWidthFull();
         sqlDescriptionTextArea = new TextArea();
         sqlDescriptionTextArea.setWidthFull();
-        sqlDescriptionTextArea.setHeight("250px");
+        sqlDescriptionTextArea.setHeight("50px");
         sqlDescriptionTextArea.setValue("No description available");
-        content.add(sqlDescriptionTextArea);
+        hl.add( sqlDescriptionTextArea);
+      //  accordion.setHeight("50px");
         log.info("Ending getSqlDescription() for QS tab");
-        return content;
+        return hl;
     }
 
     private Component getsqllConnection() {
         log.info("Starting getsqllConnection() for data get based on sql");
-        VerticalLayout content = new VerticalLayout();
-
-        selectConnection.setPlaceholder("name from project_connections");
-        selectConnection.setWidth("650 px");
+        HorizontalLayout content = new HorizontalLayout();
+        Accordion accordion = new Accordion();
+        accordion.setWidthFull();
+        //selectConnection.setPlaceholder("name from project_connections");
+        selectConnection.setWidth("800 px");
         List<ProjectConnection> projectConnections = projectConnectionService.findAll();
         List<String> connectionNames = projectConnections.stream()
                 .flatMap(connection -> {
@@ -397,7 +475,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
         TextArea textArea = new TextArea();
         textArea.setWidthFull();
         textArea.setValue("Description for selected connection (from Table [project_connections] for selected id");
-        textArea.setHeight("400 px");
+       // textArea.setHeight("400 px");
         textArea.setReadOnly(true);
 
         selectConnection.addValueChangeListener(event -> {
@@ -409,8 +487,13 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
             }
         });
 
+        content.setAlignItems(Alignment.BASELINE);
         content.add(selectConnection, textArea);
-        content.setWidth("650 px");
+     //   accordion.add("connection",content);
+
+
+        //content.setWidth("650 px");
+        content.setWidthFull();
         log.info("Ending getsqllConnection() for data get based on sql");
         return content;
     }
@@ -430,14 +513,24 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
         exportButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_SUCCESS);
         exportButton.setEnabled(false);
 
+
         hl.add(executeButton, exportButton);
 
         sqlQuerytextArea.setWidthFull();
         sqlQuerytextArea.setHeight("300 px");
-        sqlQuerytextArea.setPlaceholder("SQL from Table [project_sqls] Column sql for selected id");
+     //   sqlQuerytextArea.setPlaceholder("SQL from Table [project_sqls] Column sql for selected id");
         //sqlQuerytextArea.setValue("SQL from Table [project_sqls] Column sql for selected id");
 
-        vl.add(sqlQuerytextArea,hl);
+
+        TabSheet tabSheet = new TabSheet();
+
+        tabSheet.add("Description",getSqlDescription());
+        tabSheet.add("Connection",getsqllConnection());
+
+        //     tabSheet.add("Query",getSqlQuery(sqlQuerytextArea, resultGrid));
+        tabSheet.setWidthFull();
+
+        vl.add(tabSheet, sqlQuerytextArea,hl);
 
 
         SplitLayout splitLayout = new SplitLayout(vl, resultGrid);
@@ -450,7 +543,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
             resultGrid.removeAllColumns();
 
             resultGrid.setPageSize(50);
-            resultGrid.setHeight("800px");
+            resultGrid.setHeight("600px");
 
             resultGrid.getStyle().set("resize", "vertical");
             resultGrid.getStyle().set("overflow", "auto");
@@ -497,9 +590,16 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
             }
         });
      //   content.setHeightFull();
+
+
+
+
         sqlTabContent.add(splitLayout);
 
         content.add(sqlTabContent);
+
+
+
         log.info("Ending getSqlQuery() for data get based on sql");
         return content;
 
