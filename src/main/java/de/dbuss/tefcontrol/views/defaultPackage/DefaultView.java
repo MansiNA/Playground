@@ -107,7 +107,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
     private String selectedDbName;
     Button executeButton;
     Button exportButton;
-
+    static TextField QueryNameField;
     public DefaultView(ProjectsService projectsService, ProjectAttachmentsService projectAttachmentsService, AgentJobsService agentJobsService, MSMService msmService, ProjectSqlService projectSqlService, ProjectConnectionService projectConnectionService, AuthenticatedUser authenticatedUser) {
         this.projectsService = projectsService;
         this.projectAttachmentsService = projectAttachmentsService;
@@ -331,25 +331,32 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
 
             if (select.getValue() == null)
             {
-                System.out.println("Save as new Query");
+                System.out.println("Create new Query");
                 Dialog dialog = new Dialog();
                 dialog.setHeaderTitle("New Query");
 
                 VerticalLayout dialogLayout = createDialogLayout();
                 dialog.add(dialogLayout);
 
-                Button saveButton = createSaveButton(dialog);
+              //  Button saveButton = createSaveButton(dialog);
+                Button saveButton = new Button("Add", c -> dialog.close());
                 Button cancelButton = new Button("Cancel", c -> dialog.close());
                 dialog.getFooter().add(cancelButton);
                 dialog.getFooter().add(saveButton);
 
-                Button button = new Button("Show dialog", c -> dialog.open());
+                saveButton.addClickListener(n->{
+                    System.out.println("Add Entry in [dbo].[project_sqls] with new name " + QueryNameField.getValue() + " and current project id");
+                    // to do...
+                });
+
                 dialog.open();
 
             }
 
             else{
-                System.out.println("Save Query: " + select.getValue());
+                System.out.println("Save Description-Text, Connection_id and SQL-Text for Query: " + select.getValue());
+                //to do...
+
             }
 
 
@@ -399,14 +406,15 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
         Button saveButton = new Button("Add", e -> dialog.close());
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
+        System.out.println("Add Entry in [dbo].[project_sqls] with new name and current project id");
         return saveButton;
     }
 
     private static VerticalLayout createDialogLayout() {
 
-        TextField firstNameField = new TextField("Name of Query");
+        QueryNameField = new TextField("Name of Query");
 
-        VerticalLayout dialogLayout = new VerticalLayout(firstNameField);
+        VerticalLayout dialogLayout = new VerticalLayout(QueryNameField);
         dialogLayout.setPadding(false);
         dialogLayout.setSpacing(false);
         dialogLayout.setAlignItems(FlexComponent.Alignment.STRETCH);
