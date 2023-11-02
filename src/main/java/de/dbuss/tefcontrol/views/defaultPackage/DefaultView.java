@@ -346,7 +346,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
 
                 saveButton.addClickListener(n->{
                     System.out.println("Add Entry in [dbo].[project_sqls] with new name " + QueryNameField.getValue() + " and current project id");
-                    // to do...
+                    // Mansi to do...
                 });
 
                 dialog.open();
@@ -355,7 +355,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
 
             else{
                 System.out.println("Save Description-Text, Connection_id and SQL-Text for Query: " + select.getValue());
-                //to do...
+                // Mansi to do...
 
             }
 
