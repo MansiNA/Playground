@@ -22,9 +22,9 @@ public class ProjectSql {
     @JoinColumn(name = "project_id", referencedColumnName = "id")
     private Projects project;
 
-    @NotNull
+    // @NotNull
     @ManyToOne(fetch = FetchType.EAGER) // Many ProjectSql entities can belong to one ProjectConnection entity
-    @JoinColumn(name = "connection_id", referencedColumnName = "id")
+    @JoinColumn(name = "connection_id", referencedColumnName = "id", nullable = true)
     private ProjectConnection projectConnection;
 
     @Column(name = "name")

@@ -4,7 +4,6 @@ import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.accordion.Accordion;
-import com.vaadin.flow.component.applayout.DrawerToggle;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
 
@@ -46,7 +45,6 @@ import com.wontlost.ckeditor.Config;
 import com.wontlost.ckeditor.Constants;
 import com.wontlost.ckeditor.VaadinCKEditor;
 import com.wontlost.ckeditor.VaadinCKEditorBuilder;
-import de.dbuss.tefcontrol.GlobalProperties;
 import de.dbuss.tefcontrol.data.Role;
 import de.dbuss.tefcontrol.data.dto.ProjectAttachmentsDTO;
 import de.dbuss.tefcontrol.data.entity.*;
@@ -60,6 +58,7 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.security.access.method.P;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -107,7 +106,8 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
     private String selectedDbName;
     Button executeButton;
     Button exportButton;
-    static TextField QueryNameField;
+    private TextField queryNameField;
+
     public DefaultView(ProjectsService projectsService, ProjectAttachmentsService projectAttachmentsService, AgentJobsService agentJobsService, MSMService msmService, ProjectSqlService projectSqlService, ProjectConnectionService projectConnectionService, AuthenticatedUser authenticatedUser) {
         this.projectsService = projectsService;
         this.projectAttachmentsService = projectAttachmentsService;
@@ -167,7 +167,11 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
 
     private void updatesqlDescription(Optional<ProjectSql> selectedProjectSql) {
         log.info("executing updatesqlDescription() for project description....."+selectedProjectSql);
-        sqlDescriptionTextArea.setValue(selectedProjectSql.isPresent() ? selectedProjectSql.get().getDescription() : "No description available");
+        String sqlDescription = "No description available";
+        if(selectedProjectSql.isPresent() && selectedProjectSql.get().getDescription() != null) {
+            sqlDescription = selectedProjectSql.get().getDescription();
+        }
+        sqlDescriptionTextArea.setValue(sqlDescription);
     }
 
     private void updateDescription() {
@@ -306,10 +310,12 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
 
         HorizontalLayout hl = new HorizontalLayout();
         selectConnection = new Select<>();
+        TextArea sqlQuerytextArea = new TextArea();
+
        // select = new Select<>();
         select = new ComboBox<>();
         select.setLabel("Choose existing Query");
-        select.setAllowCustomValue(true);
+       // select.setAllowCustomValue(true);
         setSelectedSql();
         //select.setPlaceholder("SQL");
         Button newBtn = new Button("new");
@@ -339,24 +345,34 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
                 dialog.add(dialogLayout);
 
               //  Button saveButton = createSaveButton(dialog);
-                Button saveButton = new Button("Add", c -> dialog.close());
+                Button addButton = new Button("Add", c -> dialog.close());
                 Button cancelButton = new Button("Cancel", c -> dialog.close());
                 dialog.getFooter().add(cancelButton);
-                dialog.getFooter().add(saveButton);
+                dialog.getFooter().add(addButton);
 
-                saveButton.addClickListener(n->{
-                    System.out.println("Add Entry in [dbo].[project_sqls] with new name " + QueryNameField.getValue() + " and current project id");
-                    // Mansi to do...
+                addButton.addClickListener(n->{
+                    System.out.println("Add Entry in [dbo].[project_sqls] with new name " + queryNameField.getValue() + " and current project id");
+                    ProjectSql newProjectSql = new ProjectSql();
+                    newProjectSql.setProject(projects.isPresent() ? projects.get() : null);
+                    newProjectSql.setName(queryNameField.getValue());
+                    projectSqlService.save(newProjectSql);
+                    setSelectedSql();
+                    select.setValue(queryNameField.getValue());
                 });
 
                 dialog.open();
 
-            }
-
-            else{
+            } else{
                 System.out.println("Save Description-Text, Connection_id and SQL-Text for Query: " + select.getValue());
-                // Mansi to do...
+                Optional<ProjectSql> updateProjectSqlOp = projectSqlService.findByName(select.getValue());
 
+                if(updateProjectSqlOp != null && updateProjectSqlOp.isPresent()) {
+                    ProjectSql updateProjectSql = updateProjectSqlOp.get();
+                    updateProjectSql.setSql(sqlQuerytextArea.getValue());
+                    updateProjectSql.setDescription(sqlDescriptionTextArea.getValue());
+                    updateProjectSql.setProjectConnection(projectConnectionService.findByName(selectConnection.getValue()).get());
+                    projectSqlService.save(updateProjectSql);
+                }
             }
 
 
@@ -369,7 +385,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
         hl.add(select, newBtn);
 
 
-        TextArea sqlQuerytextArea = new TextArea();
+
 
         Grid<LinkedHashMap<String, Object>> resultGrid = new Grid<>();
         resultGrid.removeAllColumns();
@@ -378,12 +394,18 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
             log.info("executing select.addValueChangeListener for database selection " + event.getValue());
             selectedProjectSql = projectSqlService.findByName(event.getValue());
             if(selectedProjectSql.isPresent()){
-                selectedDbName = selectedProjectSql.get().getProjectConnection().getName();
+                ProjectConnection projectConnection = selectedProjectSql.get().getProjectConnection();
+                if(projectConnection != null) {
+                    selectedDbName = projectConnection.getName();
+                }
                 executeButton.setEnabled(true);
             }
             updatesqlDescription(selectedProjectSql);
             setValueForConnection(selectedProjectSql);
-            sqlQuerytextArea.setValue(selectedProjectSql.isPresent()? selectedProjectSql.get().getSql():"");
+            if(selectedProjectSql.isPresent()) {
+                sqlQuerytextArea.setValue(selectedProjectSql.get().getSql() != null ? selectedProjectSql.get().getSql() : "");
+            }
+
             resultGrid.removeAllColumns();
         });
 
@@ -410,11 +432,11 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
         return saveButton;
     }
 
-    private static VerticalLayout createDialogLayout() {
+    private VerticalLayout createDialogLayout() {
 
-        QueryNameField = new TextField("Name of Query");
+        queryNameField = new TextField("Name of Query");
 
-        VerticalLayout dialogLayout = new VerticalLayout(QueryNameField);
+        VerticalLayout dialogLayout = new VerticalLayout(queryNameField);
         dialogLayout.setPadding(false);
         dialogLayout.setSpacing(false);
         dialogLayout.setAlignItems(FlexComponent.Alignment.STRETCH);
@@ -425,7 +447,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
 
     private void setValueForConnection(Optional<ProjectSql> selectedProjectSql) {
         log.info("Executing setValueForConnection() for connection of sql"+ selectedProjectSql);
-        if(selectedProjectSql.isPresent()){
+        if(selectedProjectSql.isPresent() && selectedProjectSql.get().getProjectConnection() != null){
             selectConnection.setValue(selectedProjectSql.get().getProjectConnection().getName());
         }
 
@@ -434,7 +456,8 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
 
     private void setSelectedSql() {
         if(projects != null) {
-            List<ProjectSql> listOfSql = projectsService.getProjectSqls(projects.get());
+            Optional<Projects> projectsOptional = projectsService.findById(projects.get().getId());
+            List<ProjectSql> listOfSql = projectsService.getProjectSqls(projectsOptional.get());
             if(listOfSql.size() != 0) {
                 select.setItems(listOfSql.stream()
                         .map(ProjectSql::getName)
