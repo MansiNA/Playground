@@ -58,7 +58,6 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.springframework.security.access.method.P;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -319,15 +318,18 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
         setSelectedSql();
         //select.setPlaceholder("SQL");
         Button newBtn = new Button("new");
-
+        Button deleteBtn = new Button("delete");
+        deleteBtn.setEnabled(false);
         select.setWidth("300px");
         select.addValueChangeListener(e -> {
 
             if (select.getValue()==null){
                 newBtn.setText("new");
+                deleteBtn.setEnabled(false);
             }
             else {
                 newBtn.setText("save");
+                deleteBtn.setEnabled(true);
             }
 
         });
@@ -335,35 +337,35 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
 
         newBtn.addClickListener(e->{
 
-            if (select.getValue() == null)
-            {
-                System.out.println("Create new Query");
+            if (select.getValue() == null) {
                 Dialog dialog = new Dialog();
                 dialog.setHeaderTitle("New Query");
 
                 VerticalLayout dialogLayout = createDialogLayout();
                 dialog.add(dialogLayout);
 
-              //  Button saveButton = createSaveButton(dialog);
                 Button addButton = new Button("Add", c -> dialog.close());
                 Button cancelButton = new Button("Cancel", c -> dialog.close());
                 dialog.getFooter().add(cancelButton);
                 dialog.getFooter().add(addButton);
 
                 addButton.addClickListener(n->{
-                    System.out.println("Add Entry in [dbo].[project_sqls] with new name " + queryNameField.getValue() + " and current project id");
-                    ProjectSql newProjectSql = new ProjectSql();
-                    newProjectSql.setProject(projects.isPresent() ? projects.get() : null);
-                    newProjectSql.setName(queryNameField.getValue());
-                    projectSqlService.save(newProjectSql);
-                    setSelectedSql();
-                    select.setValue(queryNameField.getValue());
+                    if(!isSqlNameExist(queryNameField.getValue())) {
+                        ProjectSql newProjectSql = new ProjectSql();
+                        newProjectSql.setProject(projects.isPresent() ? projects.get() : null);
+                        newProjectSql.setName(queryNameField.getValue());
+                        projectSqlService.save(newProjectSql);
+                        setSelectedSql();
+                        select.setValue(queryNameField.getValue());
+                    } else {
+                        Notification.show("This sql name exist please enter different", 2000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                    }
+
                 });
 
                 dialog.open();
 
             } else{
-                System.out.println("Save Description-Text, Connection_id and SQL-Text for Query: " + select.getValue());
                 Optional<ProjectSql> updateProjectSqlOp = projectSqlService.findByName(select.getValue());
 
                 if(updateProjectSqlOp != null && updateProjectSqlOp.isPresent()) {
@@ -374,18 +376,17 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
                     projectSqlService.save(updateProjectSql);
                 }
             }
-
-
-            return;
-
-
         });
 
+        deleteBtn.addClickListener(e->{
+            if (select.getValue() != null) {
+                Optional<ProjectSql> deleteProjectSql = projectSqlService.findByName(select.getValue());
+                deleteProjectSql.ifPresent(projectSqlService::delete);
+                setSelectedSql();
+            }
+        });
         hl.setAlignItems(Alignment.BASELINE);
-        hl.add(select, newBtn);
-
-
-
+        hl.add(select, newBtn, deleteBtn);
 
         Grid<LinkedHashMap<String, Object>> resultGrid = new Grid<>();
         resultGrid.removeAllColumns();
@@ -422,6 +423,11 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
         log.info("Ending getProjectSQL() for QS tab");
         return content;
 
+    }
+
+    private boolean isSqlNameExist(String value) {
+        Optional<ProjectSql> existProjectSql = projectSqlService.findByName(value);
+        return existProjectSql.isPresent();
     }
 
     private static Button createSaveButton(Dialog dialog) {

@@ -27,5 +27,8 @@ public class ProjectSqlService {
     public ProjectSql save(ProjectSql projectSql) {
         return repository.save(projectSql);
     }
+    public void delete (ProjectSql projectSql) {
+        repository.deleteById(projectSql.getId());
+    }
 
 }
