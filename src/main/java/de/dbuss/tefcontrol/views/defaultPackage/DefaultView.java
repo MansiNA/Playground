@@ -380,9 +380,22 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
 
         deleteBtn.addClickListener(e->{
             if (select.getValue() != null) {
-                Optional<ProjectSql> deleteProjectSql = projectSqlService.findByName(select.getValue());
-                deleteProjectSql.ifPresent(projectSqlService::delete);
-                setSelectedSql();
+                Dialog dialog = new Dialog();
+                dialog.setHeaderTitle("Delete Query");
+                Button deleteButton = new Button("Delete", c -> dialog.close());
+                Button cancelButton = new Button("Cancel", c -> dialog.close());
+                dialog.getFooter().add(cancelButton);
+                dialog.getFooter().add(deleteButton);
+                dialog.open();
+                Text text = new Text("Are you sure do you want to delete "+select.getValue() + "?");
+                dialog.add(text);
+
+                deleteButton.addClickListener(event -> {
+                    Optional<ProjectSql> deleteProjectSql = projectSqlService.findByName(select.getValue());
+                    deleteProjectSql.ifPresent(projectSqlService::delete);
+                    setSelectedSql();
+                });
+
             }
         });
         hl.setAlignItems(Alignment.BASELINE);
