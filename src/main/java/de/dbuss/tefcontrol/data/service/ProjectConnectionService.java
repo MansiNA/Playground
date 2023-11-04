@@ -648,7 +648,7 @@ public class ProjectConnectionService {
                 ps.setString(8, entity.getSegment());
                 ps.setString(9, entity.getPaymentType());
                 ps.setString(10, entity.getTypeOfData());
-                ps.setLong(11, entity.getValue());
+                ps.setDouble(11, entity.getValue());
               //  java.sql.Date sqlDate = (entity.getLoadDate() != null) ? new java.sql.Date(entity.getLoadDate().getTime()) : null;
               //  ps.setDate(12, sqlDate);
             });

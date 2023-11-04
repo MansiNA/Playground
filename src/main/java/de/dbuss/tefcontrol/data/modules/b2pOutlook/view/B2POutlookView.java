@@ -341,7 +341,7 @@ public class B2POutlookView extends VerticalLayout {
                             } else if (field.getType() == long.class || field.getType() == Long.class) {
                                 field.set(entity, (long) cell.getNumericCellValue());
                             } else if (field.getType() == double.class || field.getType() == Double.class) {
-                                field.set(entity, cell.getNumericCellValue());
+                                field.set(entity, (double) cell.getNumericCellValue());
                             } else if (field.getType() == String.class) {
                                 field.set(entity, cell.getStringCellValue());
                             }
