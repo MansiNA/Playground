@@ -24,6 +24,11 @@ public class ProjectSqlService {
     public Optional<ProjectSql> findById(long id) {
         return repository.findById(id);
     }
-
+    public ProjectSql save(ProjectSql projectSql) {
+        return repository.save(projectSql);
+    }
+    public void delete (ProjectSql projectSql) {
+        repository.deleteById(projectSql.getId());
+    }
 
 }
