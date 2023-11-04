@@ -53,7 +53,7 @@ import java.util.stream.Stream;
 
 @PageTitle("PowerBI Comments")
 @Route(value = "InputPBIComments", layout = MainLayout.class)
-@RolesAllowed("ADMIN")
+@RolesAllowed({"ADMIN", "MAPPING"})
 public class InputPBIComments extends VerticalLayout {
 
     MemoryBuffer memoryBuffer = new MemoryBuffer();
