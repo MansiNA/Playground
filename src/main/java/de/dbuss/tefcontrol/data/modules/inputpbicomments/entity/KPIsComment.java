@@ -9,7 +9,7 @@ import java.util.Date;
 @Setter
 public class KPIsComment {
     private int zeile;
-    private String date;
+    private int date;
     private String topic;
     private String category1;
     private String category2;

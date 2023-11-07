@@ -11,6 +11,7 @@ public class Constants {
     public static final String DB_NAME = "DB_Name";
     public static final String TABLE = "Table";
 
+
     public static  final String ZEILE = "zeile";
 
 
@@ -26,5 +27,8 @@ public class Constants {
     public static  final String XPEX = "xPEX";
     public static  final String ITONLY = "IT only";
     public static  final String KPIS = "KPIs";
+    public static final String TABLE_ITONLY = "Table_ITOnly";
+    public static final String TABLE_KPIS = "Table_KPIs";
+    public static final String TABLE_xPEX = "Table_xPEX";
 
 }

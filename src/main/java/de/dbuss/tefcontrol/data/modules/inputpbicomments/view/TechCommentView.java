@@ -9,6 +9,8 @@ import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Article;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.TabSheet;
@@ -19,6 +21,7 @@ import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.Route;
 import de.dbuss.tefcontrol.data.entity.Constants;
 import de.dbuss.tefcontrol.data.entity.ProjectParameter;
+import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.OutlookMGSR;
 import de.dbuss.tefcontrol.data.modules.cltv_Inflow.entity.CLTVInflow;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.*;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
@@ -26,6 +29,7 @@ import de.dbuss.tefcontrol.data.service.ProjectParameterService;
 import de.dbuss.tefcontrol.dataprovider.GenericDataProvider;
 import de.dbuss.tefcontrol.views.MainLayout;
 import jakarta.annotation.security.RolesAllowed;
+import org.apache.poi.ss.format.CellFormatType;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -73,6 +77,10 @@ public class TechCommentView extends VerticalLayout {
 
         List<ProjectParameter> listOfProjectParameters = projectParameterService.findAll();
         String dbServer = null;
+        String xPexTableName = null;
+        String iTOnlyTableName = null;
+        String kPIsTableName = null;
+
 
         for (ProjectParameter projectParameter : listOfProjectParameters) {
             if(projectParameter.getNamespace().equals(Constants.PBI_TECH_COMMENTS)) {
@@ -80,8 +88,12 @@ public class TechCommentView extends VerticalLayout {
                     dbServer = projectParameter.getValue();
                 } else if (Constants.DB_NAME.equals(projectParameter.getName())) {
                     selectedDbName = projectParameter.getValue();
-                } else if (Constants.TABLE.equals(projectParameter.getName())) {
-                    tableName = projectParameter.getValue();
+                } else if (Constants.TABLE_xPEX.equals(projectParameter.getName())) {
+                    xPexTableName = projectParameter.getValue();
+                } else if (Constants.TABLE_ITONLY.equals(projectParameter.getName())) {
+                    iTOnlyTableName = projectParameter.getValue();
+                } else if (Constants.TABLE_KPIS.equals(projectParameter.getName())) {
+                    kPIsTableName = projectParameter.getValue();
                 }
             }
         }
@@ -90,6 +102,44 @@ public class TechCommentView extends VerticalLayout {
         hl.setAlignItems(Alignment.BASELINE);
         hl.add(singleFileUpload,saveButton);
         add(hl);
+
+        String finalXPexTableName = xPexTableName;
+        String finalITOnlyTableName = iTOnlyTableName;
+        String finalKPIsTableName = kPIsTableName;
+
+        saveButton.addClickListener(clickEvent -> {
+
+            Notification notification = Notification.show(" Rows Uploaded start",2000, Notification.Position.MIDDLE);
+            notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+
+            String resultFinancial = projectConnectionService.saveXPexComments(listOfXPexComment, selectedDbName, finalXPexTableName);
+            if (resultFinancial.contains("ok")){
+                notification = Notification.show(listOfXPexComment.size() + " Financials Rows Uploaded successfully",5000, Notification.Position.MIDDLE);
+                notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+            } else {
+                notification = Notification.show("Error during Financials upload: " + resultFinancial ,5000, Notification.Position.MIDDLE);
+                notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+            }
+
+            String resultSubscriber = projectConnectionService.saveITOnlyComments(listOfITOnlyComment, selectedDbName, finalITOnlyTableName);
+            if (resultSubscriber.contains("ok")){
+                notification = Notification.show(listOfITOnlyComment.size() + " Subscriber Rows Uploaded successfully",5000, Notification.Position.MIDDLE);
+                notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+            } else {
+                notification = Notification.show("Error during Subscriber upload: " + resultSubscriber,5000, Notification.Position.MIDDLE);
+                notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+            }
+
+            String resultUnits = projectConnectionService.saveKPIsComments(listOfKPIsComment, selectedDbName, finalKPIsTableName);
+            if (resultUnits.contains("ok")){
+                notification = Notification.show(listOfKPIsComment.size() + " UnitsDeepDive Rows Uploaded successfully",5000, Notification.Position.MIDDLE);
+                notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+            } else {
+                notification = Notification.show("Error during UnitsDeepDive upload: " + resultUnits,5000, Notification.Position.MIDDLE);
+                notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+            }
+
+        });
 
         setupUploader();
         add(getTabsheet());
@@ -156,6 +206,7 @@ public class TechCommentView extends VerticalLayout {
         gridKPIsComment.getColumnByKey(LOADDATE).setHeader("LoadDate").setWidth("80px").setFlexGrow(0).setResizable(true);
 
         gridKPIsComment.removeColumn(gridKPIsComment.getColumnByKey(EDIT_COLUMN));
+        gridKPIsComment.removeColumn(gridKPIsComment.getColumnByKey(LOADDATE));
         gridKPIsComment.getColumns().forEach(col -> col.setAutoWidth(true));
         // Reorder the columns (alphabetical by default)
         gridKPIsComment.setColumnOrder( gridKPIsComment.getColumnByKey(ZEILE)
@@ -164,9 +215,8 @@ public class TechCommentView extends VerticalLayout {
                 , gridKPIsComment.getColumnByKey(COMMENT)
                 , gridKPIsComment.getColumnByKey(CATEGORY1)
                 , gridKPIsComment.getColumnByKey(CATEGORY2)
-                , gridKPIsComment.getColumnByKey(PLANSCENARIO)
-                , gridKPIsComment.getColumnByKey(LOADDATE));
-
+                , gridKPIsComment.getColumnByKey(PLANSCENARIO));
+        //        , gridKPIsComment.getColumnByKey(LOADDATE));
         //    , gridUnitsDeepDive.getColumnByKey(EDIT_COLUMN));
 
     }
@@ -221,11 +271,12 @@ public class TechCommentView extends VerticalLayout {
         gridITOnlyComment.getColumnByKey(COMMENT).setHeader("Comment").setWidth("80px").setFlexGrow(0).setResizable(true);
         gridITOnlyComment.getColumnByKey(CATEGORY1).setHeader("Category_1").setWidth("150px").setFlexGrow(0).setResizable(true);
         gridITOnlyComment.getColumnByKey(CATEGORY2).setHeader("Category_2").setWidth("200px").setFlexGrow(0).setResizable(true);
-        gridITOnlyComment.getColumnByKey(SCENARIO).setHeader("PlanScenario").setWidth("80px").setFlexGrow(0).setResizable(true);
+        gridITOnlyComment.getColumnByKey(SCENARIO).setHeader("Scenario").setWidth("80px").setFlexGrow(0).setResizable(true);
         gridITOnlyComment.getColumnByKey(XTD).setHeader("XTD").setWidth("80px").setFlexGrow(0).setResizable(true);
         gridITOnlyComment.getColumnByKey(LOADDATE).setHeader("LoadDate").setWidth("80px").setFlexGrow(0).setResizable(true);
 
         gridITOnlyComment.removeColumn(gridITOnlyComment.getColumnByKey(EDIT_COLUMN));
+        gridITOnlyComment.removeColumn(gridITOnlyComment.getColumnByKey(LOADDATE));
         gridITOnlyComment.getColumns().forEach(col -> col.setAutoWidth(true));
         // Reorder the columns (alphabetical by default)
         gridITOnlyComment.setColumnOrder( gridITOnlyComment.getColumnByKey(ZEILE)
@@ -235,9 +286,9 @@ public class TechCommentView extends VerticalLayout {
                 , gridITOnlyComment.getColumnByKey(CATEGORY1)
                 , gridITOnlyComment.getColumnByKey(CATEGORY2)
                 , gridITOnlyComment.getColumnByKey(SCENARIO)
-                , gridITOnlyComment.getColumnByKey(XTD)
-                , gridITOnlyComment.getColumnByKey(LOADDATE));
+                , gridITOnlyComment.getColumnByKey(XTD));
 
+        //        , gridITOnlyComment.getColumnByKey(LOADDATE));
         //    , gridUnitsDeepDive.getColumnByKey(EDIT_COLUMN));
 
     }
@@ -292,11 +343,12 @@ public class TechCommentView extends VerticalLayout {
         gridXPexComment.getColumnByKey(COMMENT).setHeader("Comment").setWidth("80px").setFlexGrow(0).setResizable(true);
         gridXPexComment.getColumnByKey(CATEGORY1).setHeader("Category_1").setWidth("150px").setFlexGrow(0).setResizable(true);
         gridXPexComment.getColumnByKey(CATEGORY2).setHeader("Category_2").setWidth("200px").setFlexGrow(0).setResizable(true);
-        gridXPexComment.getColumnByKey(SCENARIO).setHeader("PlanScenario").setWidth("80px").setFlexGrow(0).setResizable(true);
+        gridXPexComment.getColumnByKey(SCENARIO).setHeader("Scenario").setWidth("80px").setFlexGrow(0).setResizable(true);
         gridXPexComment.getColumnByKey(XTD).setHeader("XTD").setWidth("80px").setFlexGrow(0).setResizable(true);
         gridXPexComment.getColumnByKey(LOADDATE).setHeader("LoadDate").setWidth("80px").setFlexGrow(0).setResizable(true);
 
         gridXPexComment.removeColumn(gridXPexComment.getColumnByKey(EDIT_COLUMN));
+        gridXPexComment.removeColumn(gridXPexComment.getColumnByKey(LOADDATE));
         gridXPexComment.getColumns().forEach(col -> col.setAutoWidth(true));
         // Reorder the columns (alphabetical by default)
         gridXPexComment.setColumnOrder( gridXPexComment.getColumnByKey(ZEILE)
@@ -306,9 +358,9 @@ public class TechCommentView extends VerticalLayout {
                 , gridXPexComment.getColumnByKey(CATEGORY1)
                 , gridXPexComment.getColumnByKey(CATEGORY2)
                 , gridXPexComment.getColumnByKey(SCENARIO)
-                , gridXPexComment.getColumnByKey(XTD)
-                , gridXPexComment.getColumnByKey(LOADDATE));
+                , gridXPexComment.getColumnByKey(XTD));
 
+        //        , gridXPexComment.getColumnByKey(LOADDATE));
         //    , gridUnitsDeepDive.getColumnByKey(EDIT_COLUMN));
 
     }
@@ -339,7 +391,7 @@ public class TechCommentView extends VerticalLayout {
             gridKPIsComment.setDataProvider(dataUnitsDeepDiveProvider);
 
             singleFileUpload.clearFileList();
-            saveButton.setEnabled(false);
+            saveButton.setEnabled(true);
         });
     }
 
@@ -418,7 +470,14 @@ public class TechCommentView extends VerticalLayout {
                             field.set(entity, rowNumber);
                         } else {
                             if (field.getType() == int.class || field.getType() == Integer.class) {
-                                field.set(entity, (int) cell.getNumericCellValue());
+                                if (cell.getCellType() == cell.CELL_TYPE_NUMERIC) {
+                                    // If the cell type is numeric, set the integer value
+                                    field.set(entity, (int) cell.getNumericCellValue());
+                                } else if (cell.getCellType() == cell.CELL_TYPE_STRING) {
+                                    // If the cell type is string, try to parse it as an integer
+                                    String cellText = cell.getStringCellValue();
+                                    field.set(entity, Integer.parseInt(cellText));
+                                }
                             } else if (field.getType() == double.class || field.getType() == Double.class) {
                                 field.set(entity, cell.getNumericCellValue());
                             } else if (field.getType() == String.class) {

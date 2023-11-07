@@ -3,10 +3,7 @@ package de.dbuss.tefcontrol.data.service;
 import de.dbuss.tefcontrol.data.entity.*;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.OutlookMGSR;
 import de.dbuss.tefcontrol.data.modules.cltv_Inflow.entity.CLTVInflow;
-import de.dbuss.tefcontrol.data.modules.cltv_Inflow.view.CLTVInflowView;
-import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.Financials;
-import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.Subscriber;
-import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.UnitsDeepDive;
+import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.*;
 import de.dbuss.tefcontrol.data.modules.pfgproductmapping.entity.CltvAllProduct;
 import de.dbuss.tefcontrol.data.modules.pfgproductmapping.entity.ProductHierarchie;
 import de.dbuss.tefcontrol.data.repository.ProjectConnectionRepository;
@@ -651,6 +648,101 @@ public class ProjectConnectionService {
                 ps.setDouble(11, entity.getValue());
               //  java.sql.Date sqlDate = (entity.getLoadDate() != null) ? new java.sql.Date(entity.getLoadDate().getTime()) : null;
               //  ps.setDate(12, sqlDate);
+            });
+
+            return "ok";
+        } catch (Exception e) {
+            e.printStackTrace();
+            return handleDatabaseError(e);
+        }
+    }
+
+    public String saveXPexComments(List<XPexComment> data, String selectedDbName, String tableName) {
+
+        try {
+
+            DataSource dataSource = getDataSource(selectedDbName);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
+            String sqlDelete = "DELETE FROM " + tableName;
+
+            jdbcTemplate.update(sqlDelete);
+
+            String sqlInsert = "INSERT INTO "+ tableName +" (Zeile, Date, Topic, Comment, Category_1, Category_2, Scenario, XTD) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+
+            jdbcTemplate.batchUpdate(sqlInsert, data, data.size(), (ps, entity) -> {
+
+                ps.setInt(1, entity.getZeile());
+                ps.setInt(2, entity.getDate());
+                ps.setString(3, entity.getTopic());
+                ps.setString(4, entity.getComment());
+                ps.setString(5, entity.getCategory1());
+                ps.setString(6, entity.getCategory2());
+                ps.setString(7, entity.getScenario());
+                ps.setString(8, entity.getXtd());
+            });
+
+            return "ok";
+        } catch (Exception e) {
+            e.printStackTrace();
+            return handleDatabaseError(e);
+        }
+    }
+
+    public String saveITOnlyComments(List<ITOnlyComment> data, String selectedDbName, String tableName) {
+
+        try {
+
+            DataSource dataSource = getDataSource(selectedDbName);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
+            String sqlDelete = "DELETE FROM " + tableName;
+
+            jdbcTemplate.update(sqlDelete);
+
+            String sqlInsert = "INSERT INTO "+ tableName +" (Zeile, Date, Topic, Comment, Category_1, Category_2, Scenario, XTD) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+
+            jdbcTemplate.batchUpdate(sqlInsert, data, data.size(), (ps, entity) -> {
+
+                ps.setInt(1, entity.getZeile());
+                ps.setInt(2, entity.getDate());
+                ps.setString(3, entity.getTopic());
+                ps.setString(4, entity.getComment());
+                ps.setString(5, entity.getCategory1());
+                ps.setString(6, entity.getCategory2());
+                ps.setString(7, entity.getScenario());
+                ps.setString(8, entity.getXtd());
+            });
+
+            return "ok";
+        } catch (Exception e) {
+            e.printStackTrace();
+            return handleDatabaseError(e);
+        }
+    }
+
+    public String saveKPIsComments(List<KPIsComment> data, String selectedDbName, String tableName) {
+
+        try {
+
+            DataSource dataSource = getDataSource(selectedDbName);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
+            String sqlDelete = "DELETE FROM " + tableName;
+
+            jdbcTemplate.update(sqlDelete);
+
+            String sqlInsert = "INSERT INTO "+ tableName +" (Zeile, Date, Topic, Comment, Category_1, Category_2, Plan_Scenario) VALUES (?, ?, ?, ?, ?, ?, ?)";
+
+            jdbcTemplate.batchUpdate(sqlInsert, data, data.size(), (ps, entity) -> {
+
+                ps.setInt(1, entity.getZeile());
+                ps.setInt(2, entity.getDate());
+                ps.setString(3, entity.getTopic());
+                ps.setString(4, entity.getComment());
+                ps.setString(5, entity.getCategory1());
+                ps.setString(6, entity.getCategory2());
+                ps.setString(7, entity.getPlanScenario());
             });
 
             return "ok";
