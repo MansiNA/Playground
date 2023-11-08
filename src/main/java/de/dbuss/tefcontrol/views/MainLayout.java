@@ -24,6 +24,7 @@ import de.dbuss.tefcontrol.data.entity.User;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.view.B2POutlookView;
 import de.dbuss.tefcontrol.data.modules.cltv_Inflow.view.CLTVInflowView;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.InputPBIComments;
+import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.TechCommentView;
 import de.dbuss.tefcontrol.data.modules.techkpi.view.Tech_KPIView;
 import de.dbuss.tefcontrol.data.service.ProjectsService;
 import de.dbuss.tefcontrol.security.AuthenticatedUser;
@@ -38,6 +39,8 @@ import java.util.Map;
 import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.vaadin.lineawesome.LineAwesomeIcon;
@@ -63,12 +66,15 @@ public class MainLayout extends AppLayout {
 
     Image image = new Image("images/telefonica.svg", "Telefonica Image");
 
+    private static final Logger logInfo = LoggerFactory.getLogger(MainLayout.class);
+
     public MainLayout(AuthenticatedUser authenticatedUser, AccessAnnotationChecker accessChecker, ProjectsService projectsService, LogService logService) {
         this.authenticatedUser = authenticatedUser;
         this.accessChecker = accessChecker;
         this.projectsService = projectsService;
         this.logService = logService;
 
+        logInfo.info("start logs using file...###################");
         logService.addLogMessage(LogService.INFO, "Starting application in MainLayout");
       //  logService.addLogMessage(LogService.ERROR, ".....Starting application in MainLayout");
       //  logService.addLogMessage(LogService.WARN, "Starting application in MainLayout......");
@@ -83,7 +89,7 @@ public class MainLayout extends AppLayout {
         urlToViewMap.put("Tech_KPI", Tech_KPIView.class );
         urlToViewMap.put("CLTV-Inflow", CLTVInflowView.class );
         urlToViewMap.put("B2P_Outlook_Excel", B2POutlookView.class);
-
+        urlToViewMap.put("TechComments", TechCommentView.class);
 
         setPrimarySection(Section.DRAWER);
         addDrawerContent();

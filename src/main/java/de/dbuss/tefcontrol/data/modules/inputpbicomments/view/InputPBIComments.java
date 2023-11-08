@@ -1,6 +1,7 @@
 package de.dbuss.tefcontrol.data.modules.inputpbicomments.view;
 
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -31,6 +32,7 @@ import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.Financials;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.Subscriber;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.UnitsDeepDive;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
+import de.dbuss.tefcontrol.data.service.ProjectParameterService;
 import de.dbuss.tefcontrol.dataprovider.GenericDataProvider;
 import de.dbuss.tefcontrol.security.AuthenticatedUser;
 import de.dbuss.tefcontrol.views.MainLayout;
@@ -70,7 +72,12 @@ public class InputPBIComments extends VerticalLayout {
     private Crud<UnitsDeepDive> crudUnitsDeepDive;
     private Grid<UnitsDeepDive> gridUnitsDeepDive = new Grid<>(UnitsDeepDive.class);
     private ProgressBar progressBar = new ProgressBar();
-    private String selectedDbName;
+    private String financialsTableName;
+    private String subscriberTableName;
+    private String unitTableName;
+    private String dbUrl;
+    private String dbUser;
+    private String dbPassword;
     long contentLength = 0;
     String mimeType = "";
     private Button saveButton;
@@ -78,7 +85,7 @@ public class InputPBIComments extends VerticalLayout {
 
     private String idKey = "row";
 
-    public InputPBIComments(AuthenticatedUser authenticatedUser, ProjectConnectionService projectConnectionService) {
+    public InputPBIComments(AuthenticatedUser authenticatedUser, ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService) {
 
         this.authenticatedUser = authenticatedUser;
         this.projectConnectionService = projectConnectionService;
@@ -94,42 +101,36 @@ public class InputPBIComments extends VerticalLayout {
         htmlDiv.getElement().setProperty("innerHTML", "<h2>Input Frontend for PBI Comments");
         add(htmlDiv);
 
-        ComboBox<String> databaseCB = new ComboBox<>("Choose Database");
-        databaseCB.setAllowCustomValue(true);
+        List<ProjectParameter> listOfProjectParameters = projectParameterService.findAll();
+        String dbServer = null;
+        String dbName = null;
 
-        List<ProjectConnection> listOfProjectConnections = projectConnectionService.findAll();
-        if (listOfProjectConnections.isEmpty()) {
-            Notification.show("Project Connections is empty in database", 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
-        } else {
-            List<String> connectionNames = listOfProjectConnections.stream()
-                    .flatMap(connection -> {
-                        String category = connection.getCategory();
-                        if ("InputPBIComment".equals(category)) {
-                            return Stream.of(connection.getName());
-                        }
-                        return Stream.empty();
-                    })
-                    .collect(Collectors.toList());
-
-            if (connectionNames.isEmpty()) {
-                Notification.show("Connections not found in database", 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
-            } else {
-                databaseCB.setItems(connectionNames);
-                databaseCB.setValue(connectionNames.get(0));
-                selectedDbName = connectionNames.get(0);
+        for (ProjectParameter projectParameter : listOfProjectParameters) {
+            if(projectParameter.getNamespace().equals(Constants.PBI_CENTRAL_COMMENTS)) {
+                if (Constants.DB_SERVER.equals(projectParameter.getName())) {
+                    dbServer = projectParameter.getValue();
+                } else if (Constants.DB_NAME.equals(projectParameter.getName())) {
+                    dbName = projectParameter.getValue();
+                } else if (Constants.DB_USER.equals(projectParameter.getName())) {
+                    dbUser = projectParameter.getValue();
+                } else if (Constants.DB_PASSWORD.equals(projectParameter.getName())) {
+                    dbPassword = projectParameter.getValue();
+                }else if (Constants.TABLE_FINANCIALS.equals(projectParameter.getName())) {
+                    financialsTableName = projectParameter.getValue();
+                } else if (Constants.TABLE_SUBSCRIBER.equals(projectParameter.getName())) {
+                    subscriberTableName = projectParameter.getValue();
+                } else if (Constants.TABLE_UNITDEEPDIVE.equals(projectParameter.getName())) {
+                    unitTableName = projectParameter.getValue();
+                }
             }
         }
+        dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
+        Text databaseDetail = new Text("Connected to: "+ dbServer+ ", Database: " + dbName+ ", Table Financials: " + financialsTableName + ", Table Subscriber: " + subscriberTableName+ ", Table Unitdeepdive: "+ unitTableName);
 
         HorizontalLayout hl = new HorizontalLayout();
         hl.setAlignItems(Alignment.BASELINE);
-        hl.add(singleFileUpload,databaseCB,saveButton, progressBar);
+        hl.add(singleFileUpload, saveButton, databaseDetail, progressBar);
         add(hl);
-
-        databaseCB.addValueChangeListener(event -> {
-            selectedDbName = event.getValue();
-        });
-
-
 
         saveButton.addClickListener(clickEvent -> {
 
@@ -171,7 +172,7 @@ public class InputPBIComments extends VerticalLayout {
 
         Notification notification;
 
-        String resultFinancial = projectConnectionService.saveFinancials(allFinancialsItems, selectedDbName);
+        String resultFinancial = projectConnectionService.saveFinancials(allFinancialsItems, financialsTableName, dbUrl, dbUser, dbPassword);
         if (resultFinancial.contains("ok")){
             notification = Notification.show(allFinancialsItems.size() + " Financials Rows Uploaded successfully",5000, Notification.Position.MIDDLE);
             notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
@@ -179,7 +180,7 @@ public class InputPBIComments extends VerticalLayout {
             notification = Notification.show("Error during Financials upload: " + resultFinancial ,5000, Notification.Position.MIDDLE);
             notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
         }
-        String resultSubscriber = projectConnectionService.saveSubscriber(allSubscriber, selectedDbName);
+        String resultSubscriber = projectConnectionService.saveSubscriber(allSubscriber, subscriberTableName, dbUrl, dbUser, dbPassword);
         if (resultSubscriber.contains("ok")){
             notification = Notification.show(allSubscriber.size() + " Subscriber Rows Uploaded successfully",5000, Notification.Position.MIDDLE);
             notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
@@ -188,7 +189,7 @@ public class InputPBIComments extends VerticalLayout {
             notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
         }
 
-        String resultUnits = projectConnectionService.saveUnitsDeepDive(allUnitsDeepDive, selectedDbName);
+        String resultUnits = projectConnectionService.saveUnitsDeepDive(allUnitsDeepDive, unitTableName, dbUrl, dbUser, dbPassword);
         if (resultUnits.contains("ok")){
             notification = Notification.show(allUnitsDeepDive.size() + " UnitsDeepDive Rows Uploaded successfully",5000, Notification.Position.MIDDLE);
             notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);

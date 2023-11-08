@@ -21,10 +21,13 @@ import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
+import de.dbuss.tefcontrol.data.entity.Constants;
+import de.dbuss.tefcontrol.data.entity.ProjectParameter;
 import de.dbuss.tefcontrol.data.modules.pfgproductmapping.entity.ProductHierarchie;
 import de.dbuss.tefcontrol.data.entity.ProjectConnection;
 import de.dbuss.tefcontrol.data.service.ProductHierarchieService;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
+import de.dbuss.tefcontrol.data.service.ProjectParameterService;
 import de.dbuss.tefcontrol.views.MainLayout;
 import jakarta.annotation.security.RolesAllowed;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,13 +65,29 @@ public class PFGProductMappingView extends VerticalLayout {
     private String targetView;
     private List<ProductHierarchie> modifiedProducts = new ArrayList<>();
 
-    //public PFGProductMappingView(@Value("${pfg_mapping_products}") String productsDb , ProductHierarchieService service, ProjectConnectionService projectConnectionService) {
-    public PFGProductMappingView(@Value("${pfg_mapping_products}") String productsDb, @Value("${pfg_AgentName}") String dBAgentName , @Value("${pfg_mapping_target}") String pfg_mapping_target , @Value("${pfg_mapping_missing_query}") String missingQuery, ProductHierarchieService service, ProjectConnectionService projectConnectionService) {
+    public PFGProductMappingView( ProductHierarchieService service, ProjectParameterService projectParameterService, ProjectConnectionService projectConnectionService) {
         this.service = service;
         this.projectConnectionService = projectConnectionService;
-        this.productsDb = productsDb;
-        this.dBAgentName = dBAgentName;
         ui= UI.getCurrent();
+
+        List<ProjectParameter> listOfProjectParameters = projectParameterService.findAll();
+        String missingQuery = null;
+        String pfg_mapping_target = null;
+
+        for (ProjectParameter projectParameter : listOfProjectParameters) {
+            if(projectParameter.getNamespace().equals(Constants.PFGPRODUCTMAPPING)) {
+                if (Constants.MAPPINGALLPRODUCTS.equals(projectParameter.getName())) {
+                    productsDb = projectParameter.getValue();
+                } else if (Constants.AGENT_NAME.equals(projectParameter.getName())) {
+                    dBAgentName = projectParameter.getValue();
+                } else if (Constants.MAPPINGMISSINGPRODUCTS.equals(projectParameter.getName())) {
+                    missingQuery = projectParameter.getValue();
+                } else if (Constants.PFG_TABLE.equals(projectParameter.getName())) {
+                    pfg_mapping_target = projectParameter.getValue();
+                }
+            }
+        }
+
 
         String [] targets = pfg_mapping_target.split(":");
         selectedDbName = targets[0];
