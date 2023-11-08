@@ -28,7 +28,6 @@ import java.util.*;
 @Service
 public class ProjectConnectionService {
     private final ProjectConnectionRepository repository;
-
     private JdbcTemplate jdbcTemplate;
 
     @Getter
@@ -65,6 +64,24 @@ public class ProjectConnectionService {
         }
 
         throw new RuntimeException("Database connection not found: " + selectedDatabase);
+    }
+
+    @Primary
+    public DataSource getDataSourceUsingParameter(String dbUrl, String dbUser, String dbPassword) {
+
+        if(dbUser != null) {
+            System.out.println(dbUrl);
+            System.out.println("Username = " + dbUser + " Password = " + dbPassword);
+            DataSource dataSource = DataSourceBuilder
+                    .create()
+                    .url(dbUrl)
+                    .username(dbUser)
+                    .password(dbPassword)
+                    .build();
+            return dataSource;
+        }
+
+        throw new RuntimeException("Database connection not found: " + dbUser);
     }
 
     public JdbcTemplate getJdbcConnection(String selectedDatabase) {
@@ -158,17 +175,17 @@ public class ProjectConnectionService {
         return result;
     }
 
-    public String saveFinancials(List<Financials> data, String selectedDatabase) {
+    public String saveFinancials(List<Financials> data, String tableName, String dbUrl, String dbUser, String dbPassword) {
 
         try {
-            DataSource dataSource = getDataSource(selectedDatabase);
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
             jdbcTemplate = new JdbcTemplate(dataSource);
 
-            String sqlDelete = "DELETE FROM Stage_CC_Comment.Comments_Financials";
+            String sqlDelete = "DELETE FROM " + tableName;
 
             jdbcTemplate.update(sqlDelete);
 
-            String sqlInsert = "INSERT INTO Stage_CC_Comment.Comments_Financials (zeile, month, category, comment, scenario, xtd) VALUES (?, ?, ?, ?, ?, ?)";
+            String sqlInsert = "INSERT INTO " + tableName + " (zeile, month, category, comment, scenario, xtd) VALUES (?, ?, ?, ?, ?, ?)";
 
             // Loop through the data and insert new records
             for (Financials item : data) {
@@ -192,18 +209,18 @@ public class ProjectConnectionService {
         }
     }
 
-    public String saveSubscriber(List<Subscriber> data, String selectedDatabase) {
+    public String saveSubscriber(List<Subscriber> data, String tableName, String dbUrl, String dbUser, String dbPassword) {
 
         try {
 
-            DataSource dataSource = getDataSource(selectedDatabase);
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
             jdbcTemplate = new JdbcTemplate(dataSource);
 
-            String sqlDelete = "DELETE FROM Stage_CC_Comment.Comments_Subscriber";
+            String sqlDelete = "DELETE FROM " + tableName;
 
             jdbcTemplate.update(sqlDelete);
 
-            String sqlInsert = "INSERT INTO Stage_CC_Comment.Comments_Subscriber (zeile, month, category, payment_type, segment, comment, scenario, xtd) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            String sqlInsert = "INSERT INTO " + tableName + " (zeile, month, category, payment_type, segment, comment, scenario, xtd) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
             // Loop through the data and insert new records
             for (Subscriber item : data) {
@@ -226,18 +243,18 @@ public class ProjectConnectionService {
         }
     }
 
-    public String saveUnitsDeepDive(List<UnitsDeepDive> data, String selectedDatabase) {
+    public String saveUnitsDeepDive(List<UnitsDeepDive> data, String tableName, String dbUrl, String dbUser, String dbPassword) {
 
         try {
 
-            DataSource dataSource = getDataSource(selectedDatabase);
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
             jdbcTemplate = new JdbcTemplate(dataSource);
           
-            String sqlDelete = "DELETE FROM Stage_CC_Comment.Comments_UnitsDeepDive";
+            String sqlDelete = "DELETE FROM " + tableName;
 
             jdbcTemplate.update(sqlDelete);
 
-            String sqlInsert = "INSERT INTO Stage_CC_Comment.Comments_UnitsDeepDive (zeile, month,segment, category, comment, scenario, xtd) VALUES (?, ?, ?, ?, ?, ?, ?)";
+            String sqlInsert = "INSERT INTO " + tableName + " (zeile, month,segment, category, comment, scenario, xtd) VALUES (?, ?, ?, ?, ?, ?, ?)";
 
             // Loop through the data and insert new records
             for (UnitsDeepDive item : data) {
@@ -558,9 +575,11 @@ public class ProjectConnectionService {
         }
     }
 
-    public List<CLTVInflow> getAllCLTVInflow(String selectedDatabase, String tableName) {
+    public List<CLTVInflow> getAllCLTVInflow(String tableName, String dbUrl, String dbUser, String dbPassword) {
         try {
-            getJdbcConnection(selectedDatabase);
+
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
 
             String sqlQuery = "SELECT * FROM " +tableName;
 
@@ -596,9 +615,11 @@ public class ProjectConnectionService {
     }
 
 
-    public String updateListOfCLTVInflow(List<CLTVInflow> modifiedCLTVInflow, String selectedDbName, String tableName) {
+    public String updateListOfCLTVInflow(List<CLTVInflow> modifiedCLTVInflow, String tableName, String dbUrl, String dbUser, String dbPassword) {
         try {
-            getJdbcConnection(selectedDbName);
+
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
 
             // Assuming that you have a unique identifier to match the records to update, e.g., contractFeatureId
             String sql = "UPDATE " + tableName + " SET CLTV_Category_Name = ?, Controlling_Branding_Detailed = ?, " +
@@ -620,11 +641,11 @@ public class ProjectConnectionService {
     }
 
 
-    public String saveOutlookMGSR(List<OutlookMGSR> data, String selectedDbName, String tableName) {
+    public String saveOutlookMGSR(List<OutlookMGSR> data, String tableName, String dbUrl, String dbUser, String dbPassword) {
 
         try {
 
-            DataSource dataSource = getDataSource(selectedDbName);
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
             jdbcTemplate = new JdbcTemplate(dataSource);
 
             String sqlDelete = "DELETE FROM " + tableName;
@@ -657,11 +678,11 @@ public class ProjectConnectionService {
         }
     }
 
-    public String saveXPexComments(List<XPexComment> data, String selectedDbName, String tableName) {
+    public String saveXPexComments(List<XPexComment> data, String tableName, String dbUrl, String dbUser, String dbPassword) {
 
         try {
 
-            DataSource dataSource = getDataSource(selectedDbName);
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
             jdbcTemplate = new JdbcTemplate(dataSource);
 
             String sqlDelete = "DELETE FROM " + tableName;
@@ -689,11 +710,11 @@ public class ProjectConnectionService {
         }
     }
 
-    public String saveITOnlyComments(List<ITOnlyComment> data, String selectedDbName, String tableName) {
+    public String saveITOnlyComments(List<ITOnlyComment> data, String tableName, String dbUrl, String dbUser, String dbPassword) {
 
         try {
 
-            DataSource dataSource = getDataSource(selectedDbName);
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
             jdbcTemplate = new JdbcTemplate(dataSource);
 
             String sqlDelete = "DELETE FROM " + tableName;
@@ -721,11 +742,11 @@ public class ProjectConnectionService {
         }
     }
 
-    public String saveKPIsComments(List<KPIsComment> data, String selectedDbName, String tableName) {
+    public String saveKPIsComments(List<KPIsComment> data, String tableName, String dbUrl, String dbUser, String dbPassword) {
 
         try {
 
-            DataSource dataSource = getDataSource(selectedDbName);
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
             jdbcTemplate = new JdbcTemplate(dataSource);
 
             String sqlDelete = "DELETE FROM " + tableName;

@@ -1,6 +1,7 @@
 package de.dbuss.tefcontrol.data.modules.inputpbicomments.view;
 
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.crud.BinderCrudEditor;
 import com.vaadin.flow.component.crud.Crud;
@@ -61,7 +62,6 @@ public class TechCommentView extends VerticalLayout {
     private Crud<KPIsComment> crudKPIsComment;
     private Grid<KPIsComment> gridKPIsComment = new Grid<>(KPIsComment.class);
     private String selectedDbName;
-    private String tableName;
     private long contentLength = 0;
     private String mimeType = "";
     private Div textArea = new Div();
@@ -77,6 +77,9 @@ public class TechCommentView extends VerticalLayout {
 
         List<ProjectParameter> listOfProjectParameters = projectParameterService.findAll();
         String dbServer = null;
+        String dbName = null;
+        String dbUser = null;
+        String dbPassword = null;
         String xPexTableName = null;
         String iTOnlyTableName = null;
         String kPIsTableName = null;
@@ -87,7 +90,11 @@ public class TechCommentView extends VerticalLayout {
                 if (Constants.DB_SERVER.equals(projectParameter.getName())) {
                     dbServer = projectParameter.getValue();
                 } else if (Constants.DB_NAME.equals(projectParameter.getName())) {
-                    selectedDbName = projectParameter.getValue();
+                    dbName = projectParameter.getValue();
+                } else if (Constants.DB_USER.equals(projectParameter.getName())) {
+                    dbUser = projectParameter.getValue();
+                } else if (Constants.DB_PASSWORD.equals(projectParameter.getName())) {
+                    dbPassword = projectParameter.getValue();
                 } else if (Constants.TABLE_xPEX.equals(projectParameter.getName())) {
                     xPexTableName = projectParameter.getValue();
                 } else if (Constants.TABLE_ITONLY.equals(projectParameter.getName())) {
@@ -97,22 +104,27 @@ public class TechCommentView extends VerticalLayout {
                 }
             }
         }
+        String dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
+
+        Text databaseDetail = new Text("Connected to: "+ dbServer+ ", Database: " + dbName+ ", Table xPEX: " + xPexTableName + ", Table IT only: " + iTOnlyTableName+ ", Table KPIs: "+ kPIsTableName);
 
         HorizontalLayout hl = new HorizontalLayout();
         hl.setAlignItems(Alignment.BASELINE);
-        hl.add(singleFileUpload,saveButton);
+        hl.add(singleFileUpload,saveButton, databaseDetail);
         add(hl);
 
         String finalXPexTableName = xPexTableName;
         String finalITOnlyTableName = iTOnlyTableName;
         String finalKPIsTableName = kPIsTableName;
 
+        String finalDbUser = dbUser;
+        String finalDbPassword = dbPassword;
         saveButton.addClickListener(clickEvent -> {
 
             Notification notification = Notification.show(" Rows Uploaded start",2000, Notification.Position.MIDDLE);
             notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
 
-            String resultFinancial = projectConnectionService.saveXPexComments(listOfXPexComment, selectedDbName, finalXPexTableName);
+            String resultFinancial = projectConnectionService.saveXPexComments(listOfXPexComment, finalXPexTableName, dbUrl, finalDbUser, finalDbPassword);
             if (resultFinancial.contains("ok")){
                 notification = Notification.show(listOfXPexComment.size() + " Financials Rows Uploaded successfully",5000, Notification.Position.MIDDLE);
                 notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
@@ -121,7 +133,7 @@ public class TechCommentView extends VerticalLayout {
                 notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
             }
 
-            String resultSubscriber = projectConnectionService.saveITOnlyComments(listOfITOnlyComment, selectedDbName, finalITOnlyTableName);
+            String resultSubscriber = projectConnectionService.saveITOnlyComments(listOfITOnlyComment, finalITOnlyTableName, dbUrl, finalDbUser, finalDbPassword);
             if (resultSubscriber.contains("ok")){
                 notification = Notification.show(listOfITOnlyComment.size() + " Subscriber Rows Uploaded successfully",5000, Notification.Position.MIDDLE);
                 notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
@@ -130,7 +142,7 @@ public class TechCommentView extends VerticalLayout {
                 notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
             }
 
-            String resultUnits = projectConnectionService.saveKPIsComments(listOfKPIsComment, selectedDbName, finalKPIsTableName);
+            String resultUnits = projectConnectionService.saveKPIsComments(listOfKPIsComment, finalKPIsTableName, dbUrl, finalDbUser, finalDbPassword);
             if (resultUnits.contains("ok")){
                 notification = Notification.show(listOfKPIsComment.size() + " UnitsDeepDive Rows Uploaded successfully",5000, Notification.Position.MIDDLE);
                 notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);

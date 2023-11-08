@@ -60,8 +60,10 @@ public class B2POutlookView extends VerticalLayout {
     private Crud<OutlookMGSR> crudMGSR;
     private Grid<OutlookMGSR> gridMGSR = new Grid<>(OutlookMGSR.class, false);
     private Button saveButton;
-    private String selectedDbName;
     private String tableName;
+    private String dbUrl;
+    private String dbUser;
+    private String dbPassword;
     private long contentLength = 0;
     private String mimeType = "";
     private Div textArea = new Div();
@@ -79,22 +81,31 @@ public class B2POutlookView extends VerticalLayout {
 
         List<ProjectParameter> listOfProjectParameters = projectParameterService.findAll();
         String dbServer = null;
+        String dbName = null;
 
         for (ProjectParameter projectParameter : listOfProjectParameters) {
             if(projectParameter.getNamespace().equals(Constants.B2P_OUTLOOK)) {
                 if (Constants.DB_SERVER.equals(projectParameter.getName())) {
                     dbServer = projectParameter.getValue();
                 } else if (Constants.DB_NAME.equals(projectParameter.getName())) {
-                    selectedDbName = projectParameter.getValue();
-                } else if (Constants.TABLE.equals(projectParameter.getName())) {
+                    dbName = projectParameter.getValue();
+                } else if (Constants.DB_USER.equals(projectParameter.getName())) {
+                    dbUser = projectParameter.getValue();
+                } else if (Constants.DB_PASSWORD.equals(projectParameter.getName())) {
+                    dbPassword = projectParameter.getValue();
+                }else if (Constants.TABLE.equals(projectParameter.getName())) {
                     tableName = projectParameter.getValue();
                 }
             }
         }
 
+        dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
+
+        Text databaseDetail = new Text("Connected to: "+ dbServer+ " Database: " + dbName+ " Table: " + tableName);
+
         HorizontalLayout hl = new HorizontalLayout();
         hl.setAlignItems(Alignment.BASELINE);
-        hl.add(singleFileUpload,saveButton);
+        hl.add(singleFileUpload,saveButton, databaseDetail);
         add(hl);
 
         saveButton.addClickListener(clickEvent -> {
@@ -107,7 +118,7 @@ public class B2POutlookView extends VerticalLayout {
             for (List<OutlookMGSR> sheetData : listOfAllSheets) {
                 listOfAllData.addAll(sheetData);
             }
-            String resultFinancial = projectConnectionService.saveOutlookMGSR(listOfAllData, selectedDbName, tableName);
+            String resultFinancial = projectConnectionService.saveOutlookMGSR(listOfAllData, tableName, dbUrl, dbUser, dbPassword);
             if (resultFinancial.contains("ok")){
                 notification = Notification.show(listOfAllData.size() + " B2P_Outlook Rows Uploaded successfully",5000, Notification.Position.MIDDLE);
                 notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
@@ -115,8 +126,6 @@ public class B2POutlookView extends VerticalLayout {
                 notification = Notification.show("Error during B2P_Outlook upload: " + resultFinancial ,5000, Notification.Position.MIDDLE);
                 notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
             }
-
-
         });
 
         setupUploader();

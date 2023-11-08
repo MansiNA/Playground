@@ -46,8 +46,10 @@ public class CLTVInflowView extends VerticalLayout {
     private GridPro<CLTVInflow> missingGrid = new GridPro<>(CLTVInflow.class);
     private Button saveButton = new Button(Constants.SAVE);
     private List<CLTVInflow> modifiedCLTVInflow = new ArrayList<>();
-    private String selectedDbName;
     private String tableName;
+    private String dbUrl;
+    private String dbUser;
+    private String dbPassword;
     private Button missingShowHidebtn = new Button("Show/Hide Columns");
     private Button allEntriesShowHidebtn = new Button("Show/Hide Columns");
 
@@ -60,20 +62,26 @@ public class CLTVInflowView extends VerticalLayout {
 
         List<ProjectParameter> listOfProjectParameters = projectParameterService.findAll();
         String dbServer = null;
+        String dbName = null;
 
         for (ProjectParameter projectParameter : listOfProjectParameters) {
             if(projectParameter.getNamespace().equals(Constants.CLTV_INFLOW)) {
                 if (Constants.DB_SERVER.equals(projectParameter.getName())) {
                     dbServer = projectParameter.getValue();
                 } else if (Constants.DB_NAME.equals(projectParameter.getName())) {
-                    selectedDbName = projectParameter.getValue();
-                } else if (Constants.TABLE.equals(projectParameter.getName())) {
+                    dbName = projectParameter.getValue();
+                } else if (Constants.DB_USER.equals(projectParameter.getName())) {
+                    dbUser = projectParameter.getValue();
+                } else if (Constants.DB_PASSWORD.equals(projectParameter.getName())) {
+                    dbPassword = projectParameter.getValue();
+                }else if (Constants.TABLE.equals(projectParameter.getName())) {
                     tableName = projectParameter.getValue();
                 }
             }
         }
 
-        Text databaseDetail = new Text("Connected to: "+ dbServer+ " Database: " + selectedDbName+ " Table: " + tableName);
+        dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
+        Text databaseDetail = new Text("Connected to: "+ dbServer+ ", Database: " + dbName+ ", Table: " + tableName);
 
         TabSheet tabSheet = new TabSheet();
         tabSheet.add("Missing Entries", getMissingCLTV_InflowGrid());
@@ -97,7 +105,7 @@ public class CLTVInflowView extends VerticalLayout {
 
     private void updateGrid() {
 
-        List<CLTVInflow> allCLTVInflowData = projectConnectionService.getAllCLTVInflow(selectedDbName, tableName);
+        List<CLTVInflow> allCLTVInflowData = projectConnectionService.getAllCLTVInflow(tableName, dbUrl, dbUser, dbPassword);
         GenericDataProvider dataProvider = new GenericDataProvider(allCLTVInflowData, "ContractFeature_id");
       //  grid.setItems(allCLTVInflowData);
         grid.setDataProvider(dataProvider);
@@ -105,7 +113,7 @@ public class CLTVInflowView extends VerticalLayout {
 
     private void updateMissingGrid() {
 
-        List<CLTVInflow> allCLTVInflowData = projectConnectionService.getAllCLTVInflow(selectedDbName, tableName);
+        List<CLTVInflow> allCLTVInflowData = projectConnectionService.getAllCLTVInflow(tableName, dbUrl, dbUser, dbPassword);
         List<CLTVInflow> missingList = allCLTVInflowData.stream()
                 .filter(item -> "missing".equals(item.getCltvCategoryName()) ||
                         "missing".equals(item.getControllingBrandingDetailed()) ||
@@ -119,7 +127,7 @@ public class CLTVInflowView extends VerticalLayout {
 
         saveButton.addClickListener(e -> {
             if (modifiedCLTVInflow != null && !modifiedCLTVInflow.isEmpty()) {
-                String result = projectConnectionService.updateListOfCLTVInflow(modifiedCLTVInflow, selectedDbName, tableName);
+                String result = projectConnectionService.updateListOfCLTVInflow(modifiedCLTVInflow, tableName, dbUrl, dbUser, dbPassword);
                 if (result.contains("ok")){
                     Notification.show(modifiedCLTVInflow.size()+" Uploaded successfully",2000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
                     modifiedCLTVInflow.clear();
@@ -232,7 +240,7 @@ public class CLTVInflowView extends VerticalLayout {
     }
 
     private void configureMissingGrid() {
-        List<CLTVInflow> allCLTVInflowData = projectConnectionService.getAllCLTVInflow(selectedDbName, tableName);
+        List<CLTVInflow> allCLTVInflowData = projectConnectionService.getAllCLTVInflow(tableName, dbUrl, dbUser, dbPassword);
 
      //   String missing = "missing";
         List<String> listOfControllingBrandingDetailed = allCLTVInflowData.stream()
