@@ -6,12 +6,15 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.crud.BinderCrudEditor;
 import com.vaadin.flow.component.crud.Crud;
 import com.vaadin.flow.component.crud.CrudEditor;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Article;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.TabSheet;
@@ -36,14 +39,15 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import javax.naming.Context;
+import javax.naming.NamingException;
+import javax.naming.directory.DirContext;
+import javax.naming.directory.InitialDirContext;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 @Route(value = "TechComments", layout = MainLayout.class)
 @RolesAllowed({"ADMIN", "MAPPING"})
@@ -66,14 +70,47 @@ public class TechCommentView extends VerticalLayout {
     private String mimeType = "";
     private Div textArea = new Div();
     private Button saveButton;
+
+    private Button login;
+    private Button qsBtn;
+
+    Dialog qsDialog = new Dialog();
+
     private String idKey = Constants.ZEILE;
 
     public TechCommentView(ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService) {
 
         this.projectConnectionService = projectConnectionService;
 
+        Div htmlDiv = new Div();
+        htmlDiv.getElement().setProperty("innerHTML", "<h2>Input Frontend for Tech Comments");
+        add(htmlDiv);
+
         saveButton = new Button(Constants.SAVE);
         saveButton.setEnabled(false);
+
+        qsBtn = new Button("Start Job");
+     //   qsBtn.setEnabled(false);
+
+        login = new Button("Login");
+        login.addClickListener(e -> {
+            System.out.println("Login clicked...");
+
+            String lpadUrl="ldap://viaginterkom.de:389";
+            String lpadUser="mquaschn@viaginterkom.de";
+            String lpadPassword="Juniper_16";
+            DirContext context = connectToLpad(lpadUrl, lpadUser, lpadPassword);
+            if (context != null){
+                System.out.println("User " + lpadUser + " connected");
+            }
+            else
+            {
+                System.out.println("Fehler beim Verbinden mit LPAD-Server "  + lpadUrl);
+            }
+
+
+        });
+
 
         List<ProjectParameter> listOfProjectParameters = projectParameterService.findAll();
         String dbServer = null;
@@ -106,11 +143,19 @@ public class TechCommentView extends VerticalLayout {
         }
         String dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
 
-        Text databaseDetail = new Text("Connected to: "+ dbServer+ ", Database: " + dbName+ ", Table xPEX: " + xPexTableName + ", Table IT only: " + iTOnlyTableName+ ", Table KPIs: "+ kPIsTableName);
+    //    Text databaseDetail = new Text("Connected to: "+ dbServer+ ", Database: " + dbName+ ", Table xPEX: " + xPexTableName + ", Table IT only: " + iTOnlyTableName+ ", Table KPIs: "+ kPIsTableName);
+        Text databaseDetail = new Text("Connected to: "+ dbServer+ ", Database: " + dbName) ;
+
+      //  qsDialog.setHeaderTitle("QS Results");
+
+        VerticalLayout dialogLayout = createDialogLayout();
+        qsDialog.add(dialogLayout);
+        qsDialog.setDraggable(true);
+        qsDialog.setResizable(true);
 
         HorizontalLayout hl = new HorizontalLayout();
         hl.setAlignItems(Alignment.BASELINE);
-        hl.add(singleFileUpload,saveButton, databaseDetail);
+        hl.add(singleFileUpload,qsBtn,saveButton, databaseDetail, qsDialog, login);
         add(hl);
 
         String finalXPexTableName = xPexTableName;
@@ -119,6 +164,14 @@ public class TechCommentView extends VerticalLayout {
 
         String finalDbUser = dbUser;
         String finalDbPassword = dbPassword;
+
+        qsBtn.addClickListener(e ->{
+            System.out.println("QS Dialog öffnen...");
+            qsDialog.open();
+
+
+        });
+
         saveButton.addClickListener(clickEvent -> {
 
             Notification notification = Notification.show(" Rows Uploaded start",2000, Notification.Position.MIDDLE);
@@ -156,6 +209,71 @@ public class TechCommentView extends VerticalLayout {
         setupUploader();
         add(getTabsheet());
         setHeightFull();
+
+
+
+    }
+
+    private DirContext connectToLpad(String ldapUrl, String ldapUser, String ldapPassword) {
+        Hashtable<String, String> env = new Hashtable<>();
+        env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
+        env.put(Context.PROVIDER_URL, ldapUrl);
+        env.put(Context.SECURITY_PRINCIPAL, ldapUser);
+        env.put(Context.SECURITY_CREDENTIALS, ldapPassword);
+
+
+        try {
+            return new InitialDirContext(env);
+        } catch (NamingException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+    }
+
+    private VerticalLayout createDialogLayout() {
+
+        Grid<QS> grid = new Grid<>(QS.class, false);
+        grid.addColumn(QS::getName).setHeader("QS-Name");
+        grid.addColumn(QS::getResult).setHeader("Result");
+
+
+        List<QS> results = new ArrayList<>();
+        QS qs1 = new QS();
+        QS qs2 = new QS();
+        qs1.setName("Testfall 1");
+        qs1.setResult("OK");
+
+        qs2.setName("Testfall 2");
+        qs2.setResult("failed");
+        results.add(qs1);
+        results.add(qs2);
+        grid.setItems(results);
+
+        VerticalLayout dialogLayout = new VerticalLayout();
+        dialogLayout.setPadding(false);
+        dialogLayout.setAlignItems(FlexComponent.Alignment.STRETCH);
+        dialogLayout.getStyle().set("min-width", "300px")
+                .set("max-width", "100%").set("height", "100%");
+
+
+        Paragraph paragraph = new Paragraph(
+                "Please check failed Checks. Only when all tests are ok further processing can startet");
+
+
+        Button closeButton = new Button("Close");
+        closeButton.addClickListener(e -> qsDialog.close());
+
+        Button okButton = new Button("Start Job");
+        okButton.setEnabled(false);
+
+        HorizontalLayout hl = new HorizontalLayout(closeButton,okButton);
+
+
+        dialogLayout.add(paragraph,grid,hl);
+
+        return dialogLayout;
+
     }
 
     private TabSheet getTabsheet() {
@@ -404,6 +522,7 @@ public class TechCommentView extends VerticalLayout {
 
             singleFileUpload.clearFileList();
             saveButton.setEnabled(true);
+            qsBtn.setEnabled(true);
         });
     }
 
