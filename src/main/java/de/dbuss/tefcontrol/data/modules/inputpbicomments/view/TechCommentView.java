@@ -23,6 +23,8 @@ import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.Route;
+import de.dbuss.tefcontrol.components.QS_Callback;
+import de.dbuss.tefcontrol.components.QS_Grid;
 import de.dbuss.tefcontrol.data.entity.Constants;
 import de.dbuss.tefcontrol.data.entity.ProjectParameter;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.OutlookMGSR;
@@ -43,6 +45,7 @@ import javax.naming.Context;
 import javax.naming.NamingException;
 import javax.naming.directory.DirContext;
 import javax.naming.directory.InitialDirContext;
+import javax.security.auth.callback.CallbackHandler;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
@@ -51,7 +54,10 @@ import java.util.*;
 
 @Route(value = "TechComments", layout = MainLayout.class)
 @RolesAllowed({"ADMIN", "MAPPING"})
-public class TechCommentView extends VerticalLayout {
+public class TechCommentView extends VerticalLayout  {
+
+    // Erstellen einer Instanz des CallbackHandlers
+
     private final ProjectConnectionService projectConnectionService;
     private MemoryBuffer memoryBuffer = new MemoryBuffer();
     private Upload singleFileUpload = new Upload(memoryBuffer);
@@ -74,7 +80,7 @@ public class TechCommentView extends VerticalLayout {
     private Button login;
     private Button qsBtn;
 
-    Dialog qsDialog = new Dialog();
+    QS_Grid qsGrid;
 
     private String idKey = Constants.ZEILE;
 
@@ -107,8 +113,6 @@ public class TechCommentView extends VerticalLayout {
             {
                 System.out.println("Fehler beim Verbinden mit LPAD-Server "  + lpadUrl);
             }
-
-
         });
 
 
@@ -146,16 +150,16 @@ public class TechCommentView extends VerticalLayout {
     //    Text databaseDetail = new Text("Connected to: "+ dbServer+ ", Database: " + dbName+ ", Table xPEX: " + xPexTableName + ", Table IT only: " + iTOnlyTableName+ ", Table KPIs: "+ kPIsTableName);
         Text databaseDetail = new Text("Connected to: "+ dbServer+ ", Database: " + dbName) ;
 
-      //  qsDialog.setHeaderTitle("QS Results");
+        //Componente QS-Grid:
+        qsGrid=new QS_Grid();
+        CallbackHandler callbackHandler = new CallbackHandler();
+        qsGrid.createDialog(callbackHandler, 13);  //Todo: Determination of respective project ID for this Modul.
 
-        VerticalLayout dialogLayout = createDialogLayout();
-        qsDialog.add(dialogLayout);
-        qsDialog.setDraggable(true);
-        qsDialog.setResizable(true);
 
         HorizontalLayout hl = new HorizontalLayout();
         hl.setAlignItems(Alignment.BASELINE);
-        hl.add(singleFileUpload,qsBtn,saveButton, databaseDetail, qsDialog, login);
+      //  hl.add(singleFileUpload,qsBtn,saveButton, databaseDetail, qsDialog, login);
+        hl.add(singleFileUpload,qsBtn,saveButton, databaseDetail, qsGrid, login);
         add(hl);
 
         String finalXPexTableName = xPexTableName;
@@ -166,10 +170,7 @@ public class TechCommentView extends VerticalLayout {
         String finalDbPassword = dbPassword;
 
         qsBtn.addClickListener(e ->{
-            System.out.println("QS Dialog öffnen...");
-            qsDialog.open();
-
-
+            qsGrid.showDialog(true);
         });
 
         saveButton.addClickListener(clickEvent -> {
@@ -212,6 +213,20 @@ public class TechCommentView extends VerticalLayout {
 
 
 
+
+    }
+
+    // Die Klasse, die die Callback-Methode implementiert
+    public class CallbackHandler implements QS_Callback {
+        // Die Methode, die aufgerufen wird, wenn die externe Methode abgeschlossen ist
+        @Override
+        public void onComplete(String result) {
+            System.out.println("Callback received: " + result);
+
+            //ToDo IF QS OK -> Start Jobs
+
+
+        }
     }
 
     private DirContext connectToLpad(String ldapUrl, String ldapUser, String ldapPassword) {
@@ -228,51 +243,6 @@ public class TechCommentView extends VerticalLayout {
             e.printStackTrace();
             return null;
         }
-
-    }
-
-    private VerticalLayout createDialogLayout() {
-
-        Grid<QS> grid = new Grid<>(QS.class, false);
-        grid.addColumn(QS::getName).setHeader("QS-Name");
-        grid.addColumn(QS::getResult).setHeader("Result");
-
-
-        List<QS> results = new ArrayList<>();
-        QS qs1 = new QS();
-        QS qs2 = new QS();
-        qs1.setName("Testfall 1");
-        qs1.setResult("OK");
-
-        qs2.setName("Testfall 2");
-        qs2.setResult("failed");
-        results.add(qs1);
-        results.add(qs2);
-        grid.setItems(results);
-
-        VerticalLayout dialogLayout = new VerticalLayout();
-        dialogLayout.setPadding(false);
-        dialogLayout.setAlignItems(FlexComponent.Alignment.STRETCH);
-        dialogLayout.getStyle().set("min-width", "300px")
-                .set("max-width", "100%").set("height", "100%");
-
-
-        Paragraph paragraph = new Paragraph(
-                "Please check failed Checks. Only when all tests are ok further processing can startet");
-
-
-        Button closeButton = new Button("Close");
-        closeButton.addClickListener(e -> qsDialog.close());
-
-        Button okButton = new Button("Start Job");
-        okButton.setEnabled(false);
-
-        HorizontalLayout hl = new HorizontalLayout(closeButton,okButton);
-
-
-        dialogLayout.add(paragraph,grid,hl);
-
-        return dialogLayout;
 
     }
 
@@ -625,4 +595,6 @@ public class TechCommentView extends VerticalLayout {
             return null;
         }
     }
+
+
 }
