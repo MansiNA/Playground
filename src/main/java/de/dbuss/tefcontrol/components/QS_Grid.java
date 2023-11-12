@@ -19,24 +19,24 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class QS_Grid extends Composite<Div> {
-    private Label label;
-    private Input input;
 
     Dialog qsDialog = new Dialog();
     QS_Callback qs_callback;
-
+    int projectId;
     public QS_Grid() {
 
     }
 
     public void createDialog(QS_Callback callback, int projectId) {
         this.qs_callback=callback;
+        this.projectId=projectId;
 
         VerticalLayout dialogLayout = createDialogLayout();
         qsDialog.add(dialogLayout);
         qsDialog.setDraggable(true);
         qsDialog.setResizable(true);
         qsDialog.setVisible(false);
+        qsDialog.setHeaderTitle("QS for Project-ID " + projectId );
         getContent().add(qsDialog);
     }
 
@@ -54,16 +54,6 @@ public class QS_Grid extends Composite<Div> {
         }
     }
 
-    public void TextField(String labelText, String value) {
-        Text label = new Text("");
-        label.setText(labelText);
-        input = new Input();
-        input.setValue(value);
-
-        getContent().add( label, input);
-    }
-
-
     private VerticalLayout createDialogLayout() {
 
         Grid<QS> grid = new Grid<>(QS.class, false);
@@ -71,6 +61,7 @@ public class QS_Grid extends Composite<Div> {
         grid.addColumn(QS::getResult).setHeader("Result");
 
         //Demo Content
+        //ToDO: Fill with QS-Result from projectId
         List<QS> results = new ArrayList<>();
         QS qs1 = new QS();
         QS qs2 = new QS();
@@ -88,6 +79,7 @@ public class QS_Grid extends Composite<Div> {
         dialogLayout.setAlignItems(FlexComponent.Alignment.STRETCH);
         dialogLayout.getStyle().set("min-width", "300px")
                 .set("max-width", "100%").set("height", "100%");
+
 
 
         Paragraph paragraph = new Paragraph(
