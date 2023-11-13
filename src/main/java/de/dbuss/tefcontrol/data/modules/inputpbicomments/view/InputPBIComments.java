@@ -98,7 +98,7 @@ public class InputPBIComments extends VerticalLayout {
         progressBar.setVisible(false);
 
         Div htmlDiv = new Div();
-        htmlDiv.getElement().setProperty("innerHTML", "<h2>Input Frontend for PBI Comments");
+        htmlDiv.getElement().setProperty("innerHTML", "<h2>Input Frontend for Central Comments");
         add(htmlDiv);
 
         List<ProjectParameter> listOfProjectParameters = projectParameterService.findAll();
@@ -125,7 +125,8 @@ public class InputPBIComments extends VerticalLayout {
             }
         }
         dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
-        Text databaseDetail = new Text("Connected to: "+ dbServer+ ", Database: " + dbName+ ", Table Financials: " + financialsTableName + ", Table Subscriber: " + subscriberTableName+ ", Table Unitdeepdive: "+ unitTableName);
+        //Text databaseDetail = new Text("Connected to: "+ dbServer+ ", Database: " + dbName+ ", Table Financials: " + financialsTableName + ", Table Subscriber: " + subscriberTableName+ ", Table Unitdeepdive: "+ unitTableName);
+        Text databaseDetail = new Text("Connected to: "+ dbServer+ ", Database: " + dbName);
 
         HorizontalLayout hl = new HorizontalLayout();
         hl.setAlignItems(Alignment.BASELINE);

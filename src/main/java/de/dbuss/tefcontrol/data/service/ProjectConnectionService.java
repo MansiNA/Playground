@@ -446,11 +446,11 @@ public class ProjectConnectionService {
             getJdbcConnection(dbConnection);
 
             //String sql = "SELECT [all_products], [all_products_gen_number], [all_products_gen2], [verarb_datum] FROM " + dataBase;
-            String sql = "SELECT distinct [All_Products] FROM " + dataBase;
+            String sql = "SELECT distinct [All Products] FROM " + dataBase;
 
             List<CltvAllProduct> clatvAllProductList = jdbcTemplate.query(sql, (rs, rowNum) -> {
                 CltvAllProduct cltvAllProduct = new CltvAllProduct();
-                cltvAllProduct.setAllProducts(rs.getString("All_Products"));
+                cltvAllProduct.setAllProducts(rs.getString("All Products"));
               //  cltvAllProduct.setAllProductGenNumber(rs.getString("all_products_gen_number"));
               //  cltvAllProduct.setAllProductGen2(rs.getString("all_products_gen2"));
               //  cltvAllProduct.setVerarb_datum(null);
@@ -543,7 +543,7 @@ public class ProjectConnectionService {
             String sqlQuery = "SELECT * FROM " + targetView;
 
             RowMapper<String> rowMapper = (rs, rowNum) -> {
-                return rs.getString("All_Products");
+                return rs.getString("All Products");
             };
 
             List<String> fetchedData = jdbcTemplate.query(sqlQuery, rowMapper);

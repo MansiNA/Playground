@@ -6,12 +6,15 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.crud.BinderCrudEditor;
 import com.vaadin.flow.component.crud.Crud;
 import com.vaadin.flow.component.crud.CrudEditor;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Article;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.TabSheet;
@@ -23,6 +26,8 @@ import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.provider.DataProvider;
 import com.vaadin.flow.data.provider.Query;
 import com.vaadin.flow.router.Route;
+import de.dbuss.tefcontrol.components.QS_Callback;
+import de.dbuss.tefcontrol.components.QS_Grid;
 import de.dbuss.tefcontrol.data.entity.Constants;
 import de.dbuss.tefcontrol.data.entity.ProjectParameter;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.OutlookMGSR;
@@ -39,19 +44,24 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import javax.naming.Context;
+import javax.naming.NamingException;
+import javax.naming.directory.DirContext;
+import javax.naming.directory.InitialDirContext;
+import javax.security.auth.callback.CallbackHandler;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-import java.util.stream.Collectors;
+
+import java.util.*;
 
 @Route(value = "TechComments", layout = MainLayout.class)
 @RolesAllowed({"ADMIN", "MAPPING"})
-public class TechCommentView extends VerticalLayout {
+public class TechCommentView extends VerticalLayout  {
+
+    // Erstellen einer Instanz des CallbackHandlers
+
     private final ProjectConnectionService projectConnectionService;
     private MemoryBuffer memoryBuffer = new MemoryBuffer();
     private Upload singleFileUpload = new Upload(memoryBuffer);
@@ -70,14 +80,45 @@ public class TechCommentView extends VerticalLayout {
     private String mimeType = "";
     private Div textArea = new Div();
     private Button saveButton;
+
+    private Button login;
+    private Button qsBtn;
+
+    QS_Grid qsGrid;
+
     private String idKey = Constants.ZEILE;
 
     public TechCommentView(ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService) {
 
         this.projectConnectionService = projectConnectionService;
 
+        Div htmlDiv = new Div();
+        htmlDiv.getElement().setProperty("innerHTML", "<h2>Input Frontend for Tech Comments");
+        add(htmlDiv);
+
         saveButton = new Button(Constants.SAVE);
         saveButton.setEnabled(false);
+
+        qsBtn = new Button("Start Job");
+     //   qsBtn.setEnabled(false);
+
+        login = new Button("Login");
+        login.addClickListener(e -> {
+            System.out.println("Login clicked...");
+
+            String lpadUrl="ldap://viaginterkom.de:389";
+            String lpadUser="mquaschn@viaginterkom.de";
+            String lpadPassword="Juniper_16";
+            DirContext context = connectToLpad(lpadUrl, lpadUser, lpadPassword);
+            if (context != null){
+                System.out.println("User " + lpadUser + " connected");
+            }
+            else
+            {
+                System.out.println("Fehler beim Verbinden mit LPAD-Server "  + lpadUrl);
+            }
+        });
+
 
         List<ProjectParameter> listOfProjectParameters = projectParameterService.findAll();
         String dbServer = null;
@@ -110,11 +151,19 @@ public class TechCommentView extends VerticalLayout {
         }
         String dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
 
-        Text databaseDetail = new Text("Connected to: "+ dbServer+ ", Database: " + dbName+ ", Table xPEX: " + xPexTableName + ", Table IT only: " + iTOnlyTableName+ ", Table KPIs: "+ kPIsTableName);
+    //    Text databaseDetail = new Text("Connected to: "+ dbServer+ ", Database: " + dbName+ ", Table xPEX: " + xPexTableName + ", Table IT only: " + iTOnlyTableName+ ", Table KPIs: "+ kPIsTableName);
+        Text databaseDetail = new Text("Connected to: "+ dbServer+ ", Database: " + dbName) ;
+
+        //Componente QS-Grid:
+        qsGrid=new QS_Grid();
+        CallbackHandler callbackHandler = new CallbackHandler();
+        qsGrid.createDialog(callbackHandler, 13);  //Todo: Determination of respective project ID for this Modul.
+
 
         HorizontalLayout hl = new HorizontalLayout();
         hl.setAlignItems(Alignment.BASELINE);
-        hl.add(singleFileUpload,saveButton, databaseDetail);
+      //  hl.add(singleFileUpload,qsBtn,saveButton, databaseDetail, qsDialog, login);
+        hl.add(singleFileUpload,qsBtn,saveButton, databaseDetail, qsGrid, login);
         add(hl);
 
         String finalXPexTableName = xPexTableName;
@@ -123,6 +172,11 @@ public class TechCommentView extends VerticalLayout {
 
         String finalDbUser = dbUser;
         String finalDbPassword = dbPassword;
+
+        qsBtn.addClickListener(e ->{
+            qsGrid.showDialog(true);
+        });
+
         saveButton.addClickListener(clickEvent -> {
 
             List<XPexComment> allXPexData = getXPexDataProviderAllItems();
@@ -164,6 +218,40 @@ public class TechCommentView extends VerticalLayout {
         setupUploader();
         add(getTabsheet());
         setHeightFull();
+
+
+
+
+    }
+
+    // Die Klasse, die die Callback-Methode implementiert
+    public class CallbackHandler implements QS_Callback {
+        // Die Methode, die aufgerufen wird, wenn die externe Methode abgeschlossen ist
+        @Override
+        public void onComplete(String result) {
+            System.out.println("Callback received: " + result);
+
+            //ToDo IF QS OK -> Start Jobs
+
+
+        }
+    }
+
+    private DirContext connectToLpad(String ldapUrl, String ldapUser, String ldapPassword) {
+        Hashtable<String, String> env = new Hashtable<>();
+        env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
+        env.put(Context.PROVIDER_URL, ldapUrl);
+        env.put(Context.SECURITY_PRINCIPAL, ldapUser);
+        env.put(Context.SECURITY_CREDENTIALS, ldapPassword);
+
+
+        try {
+            return new InitialDirContext(env);
+        } catch (NamingException e) {
+            e.printStackTrace();
+            return null;
+        }
+
     }
 
     private TabSheet getTabsheet() {
@@ -448,6 +536,7 @@ public class TechCommentView extends VerticalLayout {
 
             singleFileUpload.clearFileList();
             saveButton.setEnabled(true);
+            qsBtn.setEnabled(true);
         });
     }
 
@@ -568,4 +657,5 @@ public class TechCommentView extends VerticalLayout {
         List<KPIsComment>  listOfUnitsDeepDive = existDataProvider.fetch(new Query<>()).collect(Collectors.toList());
         return listOfUnitsDeepDive;
     }
+
 }
