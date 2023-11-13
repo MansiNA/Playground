@@ -19,9 +19,12 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.component.tabs.TabSheetVariant;
+import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.data.provider.DataProvider;
+import com.vaadin.flow.data.provider.Query;
 import com.vaadin.flow.router.Route;
 import de.dbuss.tefcontrol.components.QS_Callback;
 import de.dbuss.tefcontrol.components.QS_Grid;
@@ -50,6 +53,7 @@ import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+
 import java.util.*;
 
 @Route(value = "TechComments", layout = MainLayout.class)
@@ -175,30 +179,34 @@ public class TechCommentView extends VerticalLayout  {
 
         saveButton.addClickListener(clickEvent -> {
 
+            List<XPexComment> allXPexData = getXPexDataProviderAllItems();
+            List<ITOnlyComment> allITOnlyData = getITOnlyDataProviderAllItems();
+            List<KPIsComment> allKPIsData = getKPIsDataProviderAllItems();
+
             Notification notification = Notification.show(" Rows Uploaded start",2000, Notification.Position.MIDDLE);
             notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
 
-            String resultFinancial = projectConnectionService.saveXPexComments(listOfXPexComment, finalXPexTableName, dbUrl, finalDbUser, finalDbPassword);
+            String resultFinancial = projectConnectionService.saveXPexComments(allXPexData, finalXPexTableName, dbUrl, finalDbUser, finalDbPassword);
             if (resultFinancial.contains("ok")){
-                notification = Notification.show(listOfXPexComment.size() + " Financials Rows Uploaded successfully",5000, Notification.Position.MIDDLE);
+                notification = Notification.show(allXPexData.size() + " Financials Rows Uploaded successfully",5000, Notification.Position.MIDDLE);
                 notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
             } else {
                 notification = Notification.show("Error during Financials upload: " + resultFinancial ,5000, Notification.Position.MIDDLE);
                 notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
             }
 
-            String resultSubscriber = projectConnectionService.saveITOnlyComments(listOfITOnlyComment, finalITOnlyTableName, dbUrl, finalDbUser, finalDbPassword);
+            String resultSubscriber = projectConnectionService.saveITOnlyComments(allITOnlyData, finalITOnlyTableName, dbUrl, finalDbUser, finalDbPassword);
             if (resultSubscriber.contains("ok")){
-                notification = Notification.show(listOfITOnlyComment.size() + " Subscriber Rows Uploaded successfully",5000, Notification.Position.MIDDLE);
+                notification = Notification.show(allITOnlyData.size() + " Subscriber Rows Uploaded successfully",5000, Notification.Position.MIDDLE);
                 notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
             } else {
                 notification = Notification.show("Error during Subscriber upload: " + resultSubscriber,5000, Notification.Position.MIDDLE);
                 notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
             }
 
-            String resultUnits = projectConnectionService.saveKPIsComments(listOfKPIsComment, finalKPIsTableName, dbUrl, finalDbUser, finalDbPassword);
+            String resultUnits = projectConnectionService.saveKPIsComments(allKPIsData, finalKPIsTableName, dbUrl, finalDbUser, finalDbPassword);
             if (resultUnits.contains("ok")){
-                notification = Notification.show(listOfKPIsComment.size() + " UnitsDeepDive Rows Uploaded successfully",5000, Notification.Position.MIDDLE);
+                notification = Notification.show(allKPIsData.size() + " UnitsDeepDive Rows Uploaded successfully",5000, Notification.Position.MIDDLE);
                 notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
             } else {
                 notification = Notification.show("Error during UnitsDeepDive upload: " + resultUnits,5000, Notification.Position.MIDDLE);
@@ -322,8 +330,20 @@ public class TechCommentView extends VerticalLayout  {
     }
 
     private CrudEditor<KPIsComment> createKPIsCommentEditor() {
-        FormLayout editForm = new FormLayout();
+
+        TextArea comment = new TextArea("Comment");
+
+        comment.setHeight("250px");
+        comment.setWidth("1200px");
+        FormLayout editForm = new FormLayout(comment);
+        editForm.setColspan(comment, 2);
+
+        editForm.setHeight("250px");
+        editForm.setWidth("1200px");
+
         Binder<KPIsComment> binder = new Binder<>(KPIsComment.class);
+        binder.forField(comment).asRequired().bind(KPIsComment::getComment, KPIsComment::setComment);
+
         return new BinderCrudEditor<>(binder, editForm);
     }
 
@@ -394,8 +414,20 @@ public class TechCommentView extends VerticalLayout  {
     }
 
     private CrudEditor<ITOnlyComment> createITOnlyCommentEditor() {
-        FormLayout editForm = new FormLayout();
+
+        TextArea comment = new TextArea("Comment");
+
+        comment.setHeight("250px");
+        comment.setWidth("1200px");
+        FormLayout editForm = new FormLayout(comment);
+        editForm.setColspan(comment, 2);
+
+        editForm.setHeight("250px");
+        editForm.setWidth("1200px");
+
         Binder<ITOnlyComment> binder = new Binder<>(ITOnlyComment.class);
+        binder.forField(comment).asRequired().bind(ITOnlyComment::getComment, ITOnlyComment::setComment);
+
         return new BinderCrudEditor<>(binder, editForm);
     }
 
@@ -466,8 +498,20 @@ public class TechCommentView extends VerticalLayout  {
     }
 
     private CrudEditor<XPexComment> createXPexCommentEditor() {
-        FormLayout editForm = new FormLayout();
+
+        TextArea comment = new TextArea("Comment");
+
+        comment.setHeight("250px");
+        comment.setWidth("1200px");
+        FormLayout editForm = new FormLayout(comment);
+        editForm.setColspan(comment, 2);
+
+        editForm.setHeight("250px");
+        editForm.setWidth("1200px");
+
         Binder<XPexComment> binder = new Binder<>(XPexComment.class);
+        binder.forField(comment).asRequired().bind(XPexComment::getComment, XPexComment::setComment);
+
         return new BinderCrudEditor<>(binder, editForm);
     }
 
@@ -596,5 +640,22 @@ public class TechCommentView extends VerticalLayout  {
         }
     }
 
+    private List<XPexComment> getXPexDataProviderAllItems() {
+        DataProvider<XPexComment, Void> existDataProvider = (DataProvider<XPexComment, Void>) gridXPexComment.getDataProvider();
+        List<XPexComment> listOfFinancials = existDataProvider.fetch(new Query<>()).collect(Collectors.toList());
+        return listOfFinancials;
+    }
+
+    private List<ITOnlyComment> getITOnlyDataProviderAllItems() {
+        DataProvider<ITOnlyComment, Void> existDataProvider = (DataProvider<ITOnlyComment, Void>) gridITOnlyComment.getDataProvider();
+        List<ITOnlyComment> listOfSubscriber = existDataProvider.fetch(new Query<>()).collect(Collectors.toList());
+        return listOfSubscriber;
+    }
+
+    private List<KPIsComment> getKPIsDataProviderAllItems() {
+        DataProvider<KPIsComment, Void> existDataProvider = (DataProvider<KPIsComment, Void>) gridKPIsComment.getDataProvider();
+        List<KPIsComment>  listOfUnitsDeepDive = existDataProvider.fetch(new Query<>()).collect(Collectors.toList());
+        return listOfUnitsDeepDive;
+    }
 
 }

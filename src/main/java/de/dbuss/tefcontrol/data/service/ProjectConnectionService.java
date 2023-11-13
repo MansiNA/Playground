@@ -400,7 +400,7 @@ public class ProjectConnectionService {
         }
     }
 
-    private String handleDatabaseError(Exception e) {
+    public String handleDatabaseError(Exception e) {
 
         if (e instanceof DataAccessException) {
             Throwable rootCause = getRootCause(e);
@@ -770,6 +770,38 @@ public class ProjectConnectionService {
         } catch (Exception e) {
             e.printStackTrace();
             return handleDatabaseError(e);
+        }
+    }
+
+    public List<ProjectQSEntity> getAllProjectQS(String tableName, String dbUrl, String dbUser, String dbPassword) {
+        try {
+
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
+            String sqlQuery = "SELECT * FROM " +tableName;
+
+            // Create a RowMapper to map the query result to a CLTVInflow object
+            RowMapper<ProjectQSEntity> rowMapper = (rs, rowNum) -> {
+                ProjectQSEntity projectQSEntity = new ProjectQSEntity();
+                projectQSEntity.setId(rs.getInt("id"));
+                projectQSEntity.setName(rs.getString("name"));
+                projectQSEntity.setSql(rs.getString("sql"));
+                projectQSEntity.setDescription(rs.getString("description"));
+                projectQSEntity.setQs_id(rs.getInt("qs_id"));
+                projectQSEntity.setQs_group(rs.getInt("qs_group"));
+                projectQSEntity.setCreate_date(rs.getDate("create_date"));
+
+                return projectQSEntity;
+            };
+
+            List<ProjectQSEntity> fetchedData = jdbcTemplate.query(sqlQuery, rowMapper);
+
+            return fetchedData;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            errorMessage = handleDatabaseError(ex);
+            return Collections.emptyList();
         }
     }
 }

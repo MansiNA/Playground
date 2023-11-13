@@ -95,7 +95,9 @@ public class MainLayout extends AppLayout {
         addDrawerContent();
         addHeaderContent();
      //   createHeader();
-
+        if (accessChecker.hasAccess(InfoView.class)) {
+            UI.getCurrent().navigate(InfoView.class);
+        }
 
         logService.addLogMessage(LogService.INFO, "Ending application in MainLayout");
     }
@@ -193,6 +195,7 @@ public class MainLayout extends AppLayout {
 
         Tree<Projects> tree = new Tree<>(Projects::getName);
         tree.setItems(projectsService.getRootProjects(),projectsService::getChildProjects);
+
         log.info("setItems createTree() in getRootProjects");
         //    tree.setItemIconProvider(item -> getIcon(item));
         //    tree.setItemIconSrcProvider(item -> getImageIconSrc(item));
@@ -206,8 +209,7 @@ public class MainLayout extends AppLayout {
         tree.addCollapseListener(event ->
                 System.out.println(String.format("Collapsed %s item(s)", event.getItems().size()))
         );
-
-        tree.asSingleSelect().addValueChangeListener(event -> {
+            tree.asSingleSelect().addValueChangeListener(event -> {
             log.info("Executing tree.asSingleSelect().addValueChangeListener in mainlayout");
 
             selectedProject = event.getValue();
