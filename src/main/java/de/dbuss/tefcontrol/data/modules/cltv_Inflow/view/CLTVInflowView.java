@@ -21,13 +21,18 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.component.tabs.TabSheetVariant;
 import com.vaadin.flow.data.binder.Binder;
-import com.vaadin.flow.router.PageTitle;
-import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.*;
+import de.dbuss.tefcontrol.components.QS_Callback;
+import de.dbuss.tefcontrol.components.QS_Grid;
 import de.dbuss.tefcontrol.data.entity.Constants;
 import de.dbuss.tefcontrol.data.entity.ProjectParameter;
+import de.dbuss.tefcontrol.data.entity.ProjectQSEntity;
+import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.OutlookMGSR;
+import de.dbuss.tefcontrol.data.modules.b2pOutlook.view.B2POutlookView;
 import de.dbuss.tefcontrol.data.modules.cltv_Inflow.entity.CLTVInflow;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
 import de.dbuss.tefcontrol.data.service.ProjectParameterService;
+import de.dbuss.tefcontrol.data.service.ProjectQsService;
 import de.dbuss.tefcontrol.dataprovider.GenericDataProvider;
 import de.dbuss.tefcontrol.views.MainLayout;
 import jakarta.annotation.security.RolesAllowed;
@@ -39,12 +44,13 @@ import java.util.stream.Collectors;
 @PageTitle("CLTV Product-Mapping")
 @Route(value = "CLTV-Inflow/:project_Id", layout = MainLayout.class)
 @RolesAllowed({"MAPPING", "ADMIN"})
-public class CLTVInflowView extends VerticalLayout {
+public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserver {
     private final ProjectConnectionService projectConnectionService;
+    private final ProjectQsService projectQsService;
     private Crud<CLTVInflow> crud;
     private Grid<CLTVInflow> grid;
     private GridPro<CLTVInflow> missingGrid = new GridPro<>(CLTVInflow.class);
-    private Button saveButton = new Button(Constants.SAVE);
+    Button saveButton = new Button(Constants.SAVE);
     private List<CLTVInflow> modifiedCLTVInflow = new ArrayList<>();
     private String tableName;
     private String dbUrl;
@@ -52,13 +58,20 @@ public class CLTVInflowView extends VerticalLayout {
     private String dbPassword;
     private Button missingShowHidebtn = new Button("Show/Hide Columns");
     private Button allEntriesShowHidebtn = new Button("Show/Hide Columns");
+    private int projectId;
+    private QS_Grid qsGrid;
+    private Button qsBtn;
 
-    public CLTVInflowView(ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService) {
+    public CLTVInflowView(ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, ProjectQsService projectQsService) {
         this.projectConnectionService = projectConnectionService;
+        this.projectQsService = projectQsService;
+
+        qsBtn = new Button("Start Job");
+        // qsBtn.setEnabled(false);
 
         addClassName("list-view");
         setSizeFull();
-        configureSaveBtn();
+        // configureSaveBtn();
 
         List<ProjectParameter> listOfProjectParameters = projectParameterService.findAll();
         String dbServer = null;
@@ -83,6 +96,9 @@ public class CLTVInflowView extends VerticalLayout {
         dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
         Text databaseDetail = new Text("Connected to: "+ dbServer+ ", Database: " + dbName+ ", Table: " + tableName);
 
+        //Componente QS-Grid:
+        qsGrid = new QS_Grid();
+
         TabSheet tabSheet = new TabSheet();
         tabSheet.add("Missing Entries", getMissingCLTV_InflowGrid());
         tabSheet.add("All Entries",getCLTV_InflowGrid());
@@ -92,17 +108,55 @@ public class CLTVInflowView extends VerticalLayout {
         tabSheet.addThemeVariants(TabSheetVariant.MATERIAL_BORDERED);
 
         HorizontalLayout hl = new HorizontalLayout();
-        hl.add(saveButton,databaseDetail);
+        // hl.add(saveButton,databaseDetail);
+        hl.add(qsBtn,databaseDetail, qsGrid);
         hl.setAlignItems(Alignment.BASELINE);
-   //     add(saveButton);
-     //   add(databaseDetail);
         add(hl, tabSheet );
+
+        qsBtn.addClickListener(e ->{
+            qsGrid.showDialog(true);
+        });
 
         updateGrid();
         updateMissingGrid();
       //  closeEditor();
     }
 
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+        RouteParameters parameters = event.getRouteParameters();
+        projectId = Integer.parseInt(parameters.get("project_Id").orElse(null));
+        if(projectId != 0) {
+            List<ProjectQSEntity> listOfProjectQs = projectQsService.getListOfProjectQs(projectId);
+            listOfProjectQs = projectQsService.executeSQL(dbUrl, dbUser, dbPassword, listOfProjectQs);
+            qsGrid.setListOfProjectQs(listOfProjectQs);
+            CallbackHandler callbackHandler = new CallbackHandler();
+            qsGrid.createDialog(callbackHandler, projectId);
+        }
+    }
+
+    public class CallbackHandler implements QS_Callback {
+        // Die Methode, die aufgerufen wird, wenn die externe Methode abgeschlossen ist
+        @Override
+        public void onComplete(String result) {
+            if(!result.equals("Cancel")) {
+                if (modifiedCLTVInflow != null && !modifiedCLTVInflow.isEmpty()) {
+                    String resultString = projectConnectionService.updateListOfCLTVInflow(modifiedCLTVInflow, tableName, dbUrl, dbUser, dbPassword);
+                    if (resultString.contains("ok")){
+                        Notification.show(modifiedCLTVInflow.size()+" Uploaded successfully",2000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                        modifiedCLTVInflow.clear();
+                    } else {
+                        Notification.show( "Error during upload: "+ result,3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                    }
+                    updateMissingGrid();
+                    updateGrid();
+                } else {
+                    Notification.show( "Not any changes",3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                }
+            }
+
+        }
+    }
     private void updateGrid() {
 
         List<CLTVInflow> allCLTVInflowData = projectConnectionService.getAllCLTVInflow(tableName, dbUrl, dbUser, dbPassword);

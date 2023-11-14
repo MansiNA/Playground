@@ -93,12 +93,10 @@ public class TechCommentView extends VerticalLayout implements BeforeEnterObserv
     private Div textArea = new Div();
     private Button login;
     private Button qsBtn;
-
     private QS_Grid qsGrid;
     private String dbUser;
     private String dbPassword;
     private String dbUrl;
-
     private String idKey = Constants.ZEILE;
 
     public TechCommentView(ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, ProjectQsService projectQsService) {

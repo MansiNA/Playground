@@ -21,19 +21,21 @@ import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.data.binder.Binder;
-import com.vaadin.flow.router.PageTitle;
-import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.*;
+import de.dbuss.tefcontrol.components.QS_Callback;
+import de.dbuss.tefcontrol.components.QS_Grid;
 import de.dbuss.tefcontrol.data.Role;
 import de.dbuss.tefcontrol.data.entity.Constants;
 import de.dbuss.tefcontrol.data.entity.ProjectParameter;
+import de.dbuss.tefcontrol.data.entity.ProjectQSEntity;
 import de.dbuss.tefcontrol.data.entity.User;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.OutlookMGSR;
-import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.Financials;
-import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.Subscriber;
-import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.UnitsDeepDive;
+import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.*;
+import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.TechCommentView;
 import de.dbuss.tefcontrol.data.service.BackendService;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
 import de.dbuss.tefcontrol.data.service.ProjectParameterService;
+import de.dbuss.tefcontrol.data.service.ProjectQsService;
 import de.dbuss.tefcontrol.dataprovider.GenericDataProvider;
 import de.dbuss.tefcontrol.views.MainLayout;
 import jakarta.annotation.security.RolesAllowed;
@@ -51,15 +53,15 @@ import java.util.*;
 
 @Route(value = "B2P_Outlook_Excel/:project_Id", layout = MainLayout.class)
 @RolesAllowed({"MAPPING", "ADMIN"})
-public class B2POutlookView extends VerticalLayout {
+public class B2POutlookView extends VerticalLayout implements BeforeEnterObserver {
 
-    private ProjectConnectionService projectConnectionService;
+    private final ProjectConnectionService projectConnectionService;
+    private final ProjectQsService projectQsService;
     private MemoryBuffer memoryBuffer = new MemoryBuffer();
     private Upload singleFileUpload = new Upload(memoryBuffer);
     private List<List<OutlookMGSR>> listOfAllSheets = new ArrayList<>();
     private Crud<OutlookMGSR> crudMGSR;
     private Grid<OutlookMGSR> gridMGSR = new Grid<>(OutlookMGSR.class, false);
-    private Button saveButton;
     private String tableName;
     private String dbUrl;
     private String dbUser;
@@ -67,17 +69,22 @@ public class B2POutlookView extends VerticalLayout {
     private long contentLength = 0;
     private String mimeType = "";
     private Div textArea = new Div();
+    private int projectId;
+    private QS_Grid qsGrid;
+    private Button qsBtn;
 
     ListenableFuture<String> future;
 
     BackendService backendService;
 
-    public B2POutlookView (ProjectParameterService projectParameterService, ProjectConnectionService projectConnectionService, BackendService backendService) {
+    public B2POutlookView (ProjectParameterService projectParameterService, ProjectConnectionService projectConnectionService, BackendService backendService, ProjectQsService projectQsService) {
 
         this.backendService=backendService;
         this.projectConnectionService = projectConnectionService;
-        saveButton = new Button(Constants.SAVE);
-        saveButton.setEnabled(false);
+        this.projectQsService = projectQsService;
+
+        qsBtn = new Button("Start Job");
+        qsBtn.setEnabled(false);
 
         List<ProjectParameter> listOfProjectParameters = projectParameterService.findAll();
         String dbServer = null;
@@ -103,29 +110,17 @@ public class B2POutlookView extends VerticalLayout {
 
         Text databaseDetail = new Text("Connected to: "+ dbServer+ " Database: " + dbName+ " Table: " + tableName);
 
+        //Componente QS-Grid:
+        qsGrid = new QS_Grid();
+
         HorizontalLayout hl = new HorizontalLayout();
         hl.setAlignItems(Alignment.BASELINE);
-        hl.add(singleFileUpload,saveButton, databaseDetail);
+        // hl.add(singleFileUpload,saveButton, databaseDetail);
+        hl.add(singleFileUpload,qsBtn, databaseDetail, qsGrid);
         add(hl);
 
-        saveButton.addClickListener(clickEvent -> {
-
-            Notification notification = Notification.show(" Rows Uploaded start",2000, Notification.Position.MIDDLE);
-            notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-
-            List<OutlookMGSR> listOfAllData = new ArrayList<>();
-
-            for (List<OutlookMGSR> sheetData : listOfAllSheets) {
-                listOfAllData.addAll(sheetData);
-            }
-            String resultFinancial = projectConnectionService.saveOutlookMGSR(listOfAllData, tableName, dbUrl, dbUser, dbPassword);
-            if (resultFinancial.contains("ok")){
-                notification = Notification.show(listOfAllData.size() + " B2P_Outlook Rows Uploaded successfully",5000, Notification.Position.MIDDLE);
-                notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-            } else {
-                notification = Notification.show("Error during B2P_Outlook upload: " + resultFinancial ,5000, Notification.Position.MIDDLE);
-                notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
-            }
+        qsBtn.addClickListener(e ->{
+            qsGrid.showDialog(true);
         });
 
         setupUploader();
@@ -143,7 +138,45 @@ public class B2POutlookView extends VerticalLayout {
 
 
     }
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+        RouteParameters parameters = event.getRouteParameters();
+        projectId = Integer.parseInt(parameters.get("project_Id").orElse(null));
+        if(projectId != 0) {
+            List<ProjectQSEntity> listOfProjectQs = projectQsService.getListOfProjectQs(projectId);
+            listOfProjectQs = projectQsService.executeSQL(dbUrl, dbUser, dbPassword, listOfProjectQs);
+            qsGrid.setListOfProjectQs(listOfProjectQs);
+            CallbackHandler callbackHandler = new CallbackHandler();
+            qsGrid.createDialog(callbackHandler, projectId);
+        }
+    }
 
+    public class CallbackHandler implements QS_Callback {
+        // Die Methode, die aufgerufen wird, wenn die externe Methode abgeschlossen ist
+        @Override
+        public void onComplete(String result) {
+            if(!result.equals("Cancel")) {
+
+                Notification notification = Notification.show(" Rows Uploaded start",2000, Notification.Position.MIDDLE);
+                notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+
+                List<OutlookMGSR> listOfAllData = new ArrayList<>();
+
+                for (List<OutlookMGSR> sheetData : listOfAllSheets) {
+                    listOfAllData.addAll(sheetData);
+                }
+                String resultFinancial = projectConnectionService.saveOutlookMGSR(listOfAllData, tableName, dbUrl, dbUser, dbPassword);
+                if (resultFinancial.contains("ok")){
+                    notification = Notification.show(listOfAllData.size() + " B2P_Outlook Rows Uploaded successfully",5000, Notification.Position.MIDDLE);
+                    notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                } else {
+                    notification = Notification.show("Error during B2P_Outlook upload: " + resultFinancial ,5000, Notification.Position.MIDDLE);
+                    notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+                }
+            }
+
+        }
+    }
     private void start_thread() {
 
         Notification.show("starte Thread");
@@ -269,7 +302,7 @@ public class B2POutlookView extends VerticalLayout {
             GenericDataProvider dataFinancialsProvider = new GenericDataProvider(listOfAllData, "Zeile");
             gridMGSR.setDataProvider(dataFinancialsProvider);
             singleFileUpload.clearFileList();
-            saveButton.setEnabled(true);
+            qsBtn.setEnabled(true);
         });
     }
 
