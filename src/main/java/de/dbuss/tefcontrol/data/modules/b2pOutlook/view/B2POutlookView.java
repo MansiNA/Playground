@@ -49,7 +49,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
-@Route(value = "B2P_Outlook_Excel", layout = MainLayout.class)
+@Route(value = "B2P_Outlook_Excel/:project_Id", layout = MainLayout.class)
 @RolesAllowed({"MAPPING", "ADMIN"})
 public class B2POutlookView extends VerticalLayout {
 

@@ -1,5 +1,6 @@
 package de.dbuss.tefcontrol.data.service;
 
+import de.dbuss.tefcontrol.data.entity.ProjectQSEntity;
 import de.dbuss.tefcontrol.data.entity.*;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.OutlookMGSR;
 import de.dbuss.tefcontrol.data.modules.cltv_Inflow.entity.CLTVInflow;
@@ -410,6 +411,10 @@ public class ProjectConnectionService {
                 return "Error: Table does not exist or SQL syntax error.";
             } else {
                 e.printStackTrace();
+                if(e.getMessage().contains(";")) {
+                    String [] errorMessage = e.getMessage().split(";");
+                    return errorMessage[errorMessage.length - 1];
+                }
                 return "Database error: " + e.getMessage();
             }
         } else {
@@ -788,8 +793,8 @@ public class ProjectConnectionService {
                 projectQSEntity.setName(rs.getString("name"));
                 projectQSEntity.setSql(rs.getString("sql"));
                 projectQSEntity.setDescription(rs.getString("description"));
-                projectQSEntity.setQs_id(rs.getInt("qs_id"));
-                projectQSEntity.setQs_group(rs.getInt("qs_group"));
+               // projectQSEntity.setProject(rs.getInt("project_id"));
+              //  projectQSEntity.setQs_group(rs.getInt("qs_group"));
                 projectQSEntity.setCreate_date(rs.getDate("create_date"));
 
                 return projectQSEntity;

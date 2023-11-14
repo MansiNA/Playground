@@ -1,8 +1,7 @@
 package de.dbuss.tefcontrol.data.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import de.dbuss.tefcontrol.data.entity.Projects;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import java.util.Date;
@@ -14,13 +13,18 @@ import java.util.Date;
 public class ProjectQSEntity {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
     private Date create_date;
     private String description;
     private String name;
     private String sql;
-    private int qs_id;
-    private int qs_group;
+    @Transient
     private String result;
+
+    @ManyToOne(fetch = FetchType.LAZY) // Many ProjectSql entities can belong to one Projects entity
+    @JoinColumn(name = "project_id", referencedColumnName = "id")
+    private Projects project;
+
 
 }

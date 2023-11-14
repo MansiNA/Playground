@@ -221,7 +221,7 @@ public class MainLayout extends AppLayout {
                 Class<? extends Component> viewClass = urlToViewMap.get(pageUrl);
                 Class<? extends Component> defaultViewClass = DefaultView.class;
                 if (viewClass != null && accessChecker.hasAccess(viewClass)) {
-                    UI.getCurrent().navigate(viewClass);
+                    UI.getCurrent().navigate(viewClass, new RouteParameters("project_Id",selectedProject.getId().toString()));
                 } else if (accessChecker.hasAccess(defaultViewClass)) {
                     UI.getCurrent().navigate(defaultViewClass, new RouteParameters("project_Id",selectedProject.getId().toString()));
                 } else {

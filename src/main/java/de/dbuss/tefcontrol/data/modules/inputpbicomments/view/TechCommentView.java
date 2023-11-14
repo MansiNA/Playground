@@ -25,19 +25,26 @@ import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.provider.DataProvider;
 import com.vaadin.flow.data.provider.Query;
+import com.vaadin.flow.router.BeforeEnterEvent;
+import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.RouteParameters;
 import de.dbuss.tefcontrol.components.QS_Callback;
 import de.dbuss.tefcontrol.components.QS_Grid;
 import de.dbuss.tefcontrol.data.entity.Constants;
 import de.dbuss.tefcontrol.data.entity.ProjectParameter;
+import de.dbuss.tefcontrol.data.entity.ProjectQSEntity;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.OutlookMGSR;
 import de.dbuss.tefcontrol.data.modules.cltv_Inflow.entity.CLTVInflow;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.*;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
 import de.dbuss.tefcontrol.data.service.ProjectParameterService;
+import de.dbuss.tefcontrol.data.service.ProjectQsService;
+import de.dbuss.tefcontrol.data.service.ProjectsService;
 import de.dbuss.tefcontrol.dataprovider.GenericDataProvider;
 import de.dbuss.tefcontrol.views.MainLayout;
 import jakarta.annotation.security.RolesAllowed;
+import lombok.Getter;
 import org.apache.poi.ss.format.CellFormatType;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -55,17 +62,19 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
-@Route(value = "TechComments", layout = MainLayout.class)
+@Route(value = "TechComments/:project_Id", layout = MainLayout.class)
 @RolesAllowed({"ADMIN", "MAPPING"})
-public class TechCommentView extends VerticalLayout  {
+public class TechCommentView extends VerticalLayout implements BeforeEnterObserver {
 
     // Erstellen einer Instanz des CallbackHandlers
 
     private final ProjectConnectionService projectConnectionService;
+    private final ProjectQsService projectQsService;
     private MemoryBuffer memoryBuffer = new MemoryBuffer();
     private Upload singleFileUpload = new Upload(memoryBuffer);
-
+    private int projectId;
     private List<XPexComment> listOfXPexComment = new ArrayList<XPexComment>();
     private List<ITOnlyComment> listOfITOnlyComment = new ArrayList<ITOnlyComment>();
     private List<KPIsComment> listOfKPIsComment = new ArrayList<KPIsComment>();
@@ -75,32 +84,34 @@ public class TechCommentView extends VerticalLayout  {
     private Grid<ITOnlyComment> gridITOnlyComment = new Grid<>(ITOnlyComment.class);
     private Crud<KPIsComment> crudKPIsComment;
     private Grid<KPIsComment> gridKPIsComment = new Grid<>(KPIsComment.class);
+    private String xPexTableName = null;
+    private String iTOnlyTableName = null;
+    private String kPIsTableName = null;
     private String selectedDbName;
     private long contentLength = 0;
     private String mimeType = "";
     private Div textArea = new Div();
-    private Button saveButton;
-
     private Button login;
     private Button qsBtn;
 
-    QS_Grid qsGrid;
+    private QS_Grid qsGrid;
+    private String dbUser;
+    private String dbPassword;
+    private String dbUrl;
 
     private String idKey = Constants.ZEILE;
 
-    public TechCommentView(ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService) {
+    public TechCommentView(ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, ProjectQsService projectQsService) {
 
         this.projectConnectionService = projectConnectionService;
+        this.projectQsService = projectQsService;
 
         Div htmlDiv = new Div();
         htmlDiv.getElement().setProperty("innerHTML", "<h2>Input Frontend for Tech Comments");
         add(htmlDiv);
 
-        saveButton = new Button(Constants.SAVE);
-        saveButton.setEnabled(false);
-
         qsBtn = new Button("Start Job");
-     //   qsBtn.setEnabled(false);
+        qsBtn.setEnabled(false);
 
         login = new Button("Login");
         login.addClickListener(e -> {
@@ -123,12 +134,6 @@ public class TechCommentView extends VerticalLayout  {
         List<ProjectParameter> listOfProjectParameters = projectParameterService.findAll();
         String dbServer = null;
         String dbName = null;
-        String dbUser = null;
-        String dbPassword = null;
-        String xPexTableName = null;
-        String iTOnlyTableName = null;
-        String kPIsTableName = null;
-
 
         for (ProjectParameter projectParameter : listOfProjectParameters) {
             if(projectParameter.getNamespace().equals(Constants.PBI_TECH_COMMENTS)) {
@@ -149,70 +154,23 @@ public class TechCommentView extends VerticalLayout  {
                 }
             }
         }
-        String dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
+        dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
 
     //    Text databaseDetail = new Text("Connected to: "+ dbServer+ ", Database: " + dbName+ ", Table xPEX: " + xPexTableName + ", Table IT only: " + iTOnlyTableName+ ", Table KPIs: "+ kPIsTableName);
         Text databaseDetail = new Text("Connected to: "+ dbServer+ ", Database: " + dbName) ;
 
         //Componente QS-Grid:
-        qsGrid=new QS_Grid();
-        CallbackHandler callbackHandler = new CallbackHandler();
-        qsGrid.createDialog(callbackHandler, 13);  //Todo: Determination of respective project ID for this Modul.
-
+        qsGrid = new QS_Grid();
 
         HorizontalLayout hl = new HorizontalLayout();
         hl.setAlignItems(Alignment.BASELINE);
+
       //  hl.add(singleFileUpload,qsBtn,saveButton, databaseDetail, qsDialog, login);
-        hl.add(singleFileUpload,qsBtn,saveButton, databaseDetail, qsGrid, login);
+        hl.add(singleFileUpload,qsBtn, databaseDetail, qsGrid, login);
         add(hl);
-
-        String finalXPexTableName = xPexTableName;
-        String finalITOnlyTableName = iTOnlyTableName;
-        String finalKPIsTableName = kPIsTableName;
-
-        String finalDbUser = dbUser;
-        String finalDbPassword = dbPassword;
 
         qsBtn.addClickListener(e ->{
             qsGrid.showDialog(true);
-        });
-
-        saveButton.addClickListener(clickEvent -> {
-
-            List<XPexComment> allXPexData = getXPexDataProviderAllItems();
-            List<ITOnlyComment> allITOnlyData = getITOnlyDataProviderAllItems();
-            List<KPIsComment> allKPIsData = getKPIsDataProviderAllItems();
-
-            Notification notification = Notification.show(" Rows Uploaded start",2000, Notification.Position.MIDDLE);
-            notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-
-            String resultFinancial = projectConnectionService.saveXPexComments(allXPexData, finalXPexTableName, dbUrl, finalDbUser, finalDbPassword);
-            if (resultFinancial.contains("ok")){
-                notification = Notification.show(allXPexData.size() + " Financials Rows Uploaded successfully",5000, Notification.Position.MIDDLE);
-                notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-            } else {
-                notification = Notification.show("Error during Financials upload: " + resultFinancial ,5000, Notification.Position.MIDDLE);
-                notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
-            }
-
-            String resultSubscriber = projectConnectionService.saveITOnlyComments(allITOnlyData, finalITOnlyTableName, dbUrl, finalDbUser, finalDbPassword);
-            if (resultSubscriber.contains("ok")){
-                notification = Notification.show(allITOnlyData.size() + " Subscriber Rows Uploaded successfully",5000, Notification.Position.MIDDLE);
-                notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-            } else {
-                notification = Notification.show("Error during Subscriber upload: " + resultSubscriber,5000, Notification.Position.MIDDLE);
-                notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
-            }
-
-            String resultUnits = projectConnectionService.saveKPIsComments(allKPIsData, finalKPIsTableName, dbUrl, finalDbUser, finalDbPassword);
-            if (resultUnits.contains("ok")){
-                notification = Notification.show(allKPIsData.size() + " UnitsDeepDive Rows Uploaded successfully",5000, Notification.Position.MIDDLE);
-                notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-            } else {
-                notification = Notification.show("Error during UnitsDeepDive upload: " + resultUnits,5000, Notification.Position.MIDDLE);
-                notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
-            }
-
         });
 
         setupUploader();
@@ -220,8 +178,19 @@ public class TechCommentView extends VerticalLayout  {
         setHeightFull();
 
 
+    }
 
-
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+        RouteParameters parameters = event.getRouteParameters();
+        projectId = Integer.parseInt(parameters.get("project_Id").orElse(null));
+        if(projectId != 0) {
+            List<ProjectQSEntity> listOfProjectQs = projectQsService.getListOfProjectQs(projectId);
+            listOfProjectQs = projectQsService.executeSQL(dbUrl, dbUser, dbPassword, listOfProjectQs);
+            qsGrid.setListOfProjectQs(listOfProjectQs);
+            CallbackHandler callbackHandler = new CallbackHandler();
+            qsGrid.createDialog(callbackHandler, projectId);
+        }
     }
 
     // Die Klasse, die die Callback-Methode implementiert
@@ -229,10 +198,41 @@ public class TechCommentView extends VerticalLayout  {
         // Die Methode, die aufgerufen wird, wenn die externe Methode abgeschlossen ist
         @Override
         public void onComplete(String result) {
-            System.out.println("Callback received: " + result);
+            if(!result.equals("Cancel")) {
+                List<XPexComment> allXPexData = getXPexDataProviderAllItems();
+                List<ITOnlyComment> allITOnlyData = getITOnlyDataProviderAllItems();
+                List<KPIsComment> allKPIsData = getKPIsDataProviderAllItems();
 
-            //ToDo IF QS OK -> Start Jobs
+                Notification notification = Notification.show(" Rows Uploaded start", 2000, Notification.Position.MIDDLE);
+                notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
 
+                String resultFinancial = projectConnectionService.saveXPexComments(allXPexData, xPexTableName, dbUrl, dbUser, dbPassword);
+                if (resultFinancial.contains("ok")) {
+                    notification = Notification.show(allXPexData.size() + " Financials Rows Uploaded successfully", 5000, Notification.Position.MIDDLE);
+                    notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                } else {
+                    notification = Notification.show("Error during Financials upload: " + resultFinancial, 5000, Notification.Position.MIDDLE);
+                    notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+                }
+
+                String resultSubscriber = projectConnectionService.saveITOnlyComments(allITOnlyData, iTOnlyTableName, dbUrl, dbUser, dbPassword);
+                if (resultSubscriber.contains("ok")) {
+                    notification = Notification.show(allITOnlyData.size() + " Subscriber Rows Uploaded successfully", 5000, Notification.Position.MIDDLE);
+                    notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                } else {
+                    notification = Notification.show("Error during Subscriber upload: " + resultSubscriber, 5000, Notification.Position.MIDDLE);
+                    notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+                }
+
+                String resultUnits = projectConnectionService.saveKPIsComments(allKPIsData, kPIsTableName, dbUrl, dbUser, dbPassword);
+                if (resultUnits.contains("ok")) {
+                    notification = Notification.show(allKPIsData.size() + " UnitsDeepDive Rows Uploaded successfully", 5000, Notification.Position.MIDDLE);
+                    notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                } else {
+                    notification = Notification.show("Error during UnitsDeepDive upload: " + resultUnits, 5000, Notification.Position.MIDDLE);
+                    notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+                }
+            }
 
         }
     }
@@ -535,7 +535,6 @@ public class TechCommentView extends VerticalLayout  {
             gridKPIsComment.setDataProvider(dataUnitsDeepDiveProvider);
 
             singleFileUpload.clearFileList();
-            saveButton.setEnabled(true);
             qsBtn.setEnabled(true);
         });
     }
