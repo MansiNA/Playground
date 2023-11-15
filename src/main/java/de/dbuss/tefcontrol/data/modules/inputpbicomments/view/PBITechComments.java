@@ -159,6 +159,8 @@ public class PBITechComments extends VerticalLayout implements BeforeEnterObserv
         add(hl);
 
         qsBtn.addClickListener(e ->{
+            CallbackHandler callbackHandler = new CallbackHandler();
+            qsGrid.createDialog(callbackHandler, projectId);
             qsGrid.showDialog(true);
         });
 
@@ -173,13 +175,6 @@ public class PBITechComments extends VerticalLayout implements BeforeEnterObserv
     public void beforeEnter(BeforeEnterEvent event) {
         RouteParameters parameters = event.getRouteParameters();
         projectId = Integer.parseInt(parameters.get("project_Id").orElse(null));
-        if(projectId != 0) {
-         //   List<ProjectQSEntity> listOfProjectQs = projectQsService.getListOfProjectQs(projectId);
-          //  listOfProjectQs = projectQsService.executeSQL(dbUrl, dbUser, dbPassword, listOfProjectQs);
-         //   qsGrid.setListOfProjectQs(listOfProjectQs);
-            CallbackHandler callbackHandler = new CallbackHandler();
-            qsGrid.createDialog(callbackHandler, projectId);
-        }
     }
 
     // Die Klasse, die die Callback-Methode implementiert
