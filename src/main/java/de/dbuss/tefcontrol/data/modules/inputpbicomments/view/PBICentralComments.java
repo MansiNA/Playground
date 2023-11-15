@@ -4,7 +4,6 @@ import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.crud.BinderCrudEditor;
 import com.vaadin.flow.component.crud.Crud;
 import com.vaadin.flow.component.crud.CrudEditor;
@@ -29,8 +28,6 @@ import de.dbuss.tefcontrol.components.QS_Callback;
 import de.dbuss.tefcontrol.components.QS_Grid;
 import de.dbuss.tefcontrol.data.Role;
 import de.dbuss.tefcontrol.data.entity.*;
-import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.OutlookMGSR;
-import de.dbuss.tefcontrol.data.modules.b2pOutlook.view.B2POutlookView;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.Financials;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.Subscriber;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.UnitsDeepDive;
@@ -54,13 +51,12 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 
-@PageTitle("PowerBI Comments")
-@Route(value = "InputPBIComments/:project_Id", layout = MainLayout.class)
+@PageTitle("PowerBI Central Comments")
+@Route(value = "PBI_Central_Comments/:project_Id", layout = MainLayout.class)
 @RolesAllowed({"ADMIN", "MAPPING"})
-public class InputPBIComments extends VerticalLayout implements BeforeEnterObserver {
+public class PBICentralComments extends VerticalLayout implements BeforeEnterObserver {
     private final ProjectConnectionService projectConnectionService;
     private final ProjectQsService projectQsService;
     MemoryBuffer memoryBuffer = new MemoryBuffer();
@@ -91,7 +87,7 @@ public class InputPBIComments extends VerticalLayout implements BeforeEnterObser
     private QS_Grid qsGrid;
     private Button qsBtn;
 
-    public InputPBIComments(AuthenticatedUser authenticatedUser, ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, ProjectQsService projectQsService) {
+    public PBICentralComments(AuthenticatedUser authenticatedUser, ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, ProjectQsService projectQsService) {
 
         this.authenticatedUser = authenticatedUser;
         this.projectConnectionService = projectConnectionService;

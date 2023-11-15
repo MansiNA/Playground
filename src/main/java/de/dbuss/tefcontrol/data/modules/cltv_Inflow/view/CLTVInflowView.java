@@ -42,7 +42,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @PageTitle("CLTV Product-Mapping")
-@Route(value = "CLTV-Inflow/:project_Id", layout = MainLayout.class)
+@Route(value = "CLTV_Inflow/:project_Id", layout = MainLayout.class)
 @RolesAllowed({"MAPPING", "ADMIN"})
 public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserver {
     private final ProjectConnectionService projectConnectionService;

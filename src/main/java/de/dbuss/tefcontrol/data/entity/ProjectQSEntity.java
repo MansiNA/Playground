@@ -22,7 +22,7 @@ public class ProjectQSEntity {
     @Transient
     private String result;
 
-    @ManyToOne(fetch = FetchType.LAZY) // Many ProjectSql entities can belong to one Projects entity
+    @ManyToOne(fetch = FetchType.EAGER) // Many ProjectSql entities can belong to one Projects entity
     @JoinColumn(name = "project_id", referencedColumnName = "id")
     private Projects project;
 

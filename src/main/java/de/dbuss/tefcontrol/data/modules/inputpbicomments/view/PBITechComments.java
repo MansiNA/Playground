@@ -6,15 +6,12 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.crud.BinderCrudEditor;
 import com.vaadin.flow.component.crud.Crud;
 import com.vaadin.flow.component.crud.CrudEditor;
-import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Article;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
-import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.TabSheet;
@@ -34,18 +31,13 @@ import de.dbuss.tefcontrol.components.QS_Grid;
 import de.dbuss.tefcontrol.data.entity.Constants;
 import de.dbuss.tefcontrol.data.entity.ProjectParameter;
 import de.dbuss.tefcontrol.data.entity.ProjectQSEntity;
-import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.OutlookMGSR;
-import de.dbuss.tefcontrol.data.modules.cltv_Inflow.entity.CLTVInflow;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.*;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
 import de.dbuss.tefcontrol.data.service.ProjectParameterService;
 import de.dbuss.tefcontrol.data.service.ProjectQsService;
-import de.dbuss.tefcontrol.data.service.ProjectsService;
 import de.dbuss.tefcontrol.dataprovider.GenericDataProvider;
 import de.dbuss.tefcontrol.views.MainLayout;
 import jakarta.annotation.security.RolesAllowed;
-import lombok.Getter;
-import org.apache.poi.ss.format.CellFormatType;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -55,7 +47,6 @@ import javax.naming.Context;
 import javax.naming.NamingException;
 import javax.naming.directory.DirContext;
 import javax.naming.directory.InitialDirContext;
-import javax.security.auth.callback.CallbackHandler;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
@@ -64,9 +55,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Route(value = "TechComments/:project_Id", layout = MainLayout.class)
+@Route(value = "PBI_Tech_Comments/:project_Id", layout = MainLayout.class)
 @RolesAllowed({"ADMIN", "MAPPING"})
-public class TechCommentView extends VerticalLayout implements BeforeEnterObserver {
+public class PBITechComments extends VerticalLayout implements BeforeEnterObserver {
 
     // Erstellen einer Instanz des CallbackHandlers
 
@@ -99,7 +90,7 @@ public class TechCommentView extends VerticalLayout implements BeforeEnterObserv
     private String dbUrl;
     private String idKey = Constants.ZEILE;
 
-    public TechCommentView(ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, ProjectQsService projectQsService) {
+    public PBITechComments(ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, ProjectQsService projectQsService) {
 
         this.projectConnectionService = projectConnectionService;
         this.projectQsService = projectQsService;
@@ -158,7 +149,7 @@ public class TechCommentView extends VerticalLayout implements BeforeEnterObserv
         Text databaseDetail = new Text("Connected to: "+ dbServer+ ", Database: " + dbName) ;
 
         //Componente QS-Grid:
-        qsGrid = new QS_Grid();
+        qsGrid = new QS_Grid(projectConnectionService);
 
         HorizontalLayout hl = new HorizontalLayout();
         hl.setAlignItems(Alignment.BASELINE);
@@ -183,9 +174,9 @@ public class TechCommentView extends VerticalLayout implements BeforeEnterObserv
         RouteParameters parameters = event.getRouteParameters();
         projectId = Integer.parseInt(parameters.get("project_Id").orElse(null));
         if(projectId != 0) {
-            List<ProjectQSEntity> listOfProjectQs = projectQsService.getListOfProjectQs(projectId);
-            listOfProjectQs = projectQsService.executeSQL(dbUrl, dbUser, dbPassword, listOfProjectQs);
-            qsGrid.setListOfProjectQs(listOfProjectQs);
+         //   List<ProjectQSEntity> listOfProjectQs = projectQsService.getListOfProjectQs(projectId);
+          //  listOfProjectQs = projectQsService.executeSQL(dbUrl, dbUser, dbPassword, listOfProjectQs);
+         //   qsGrid.setListOfProjectQs(listOfProjectQs);
             CallbackHandler callbackHandler = new CallbackHandler();
             qsGrid.createDialog(callbackHandler, projectId);
         }
