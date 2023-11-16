@@ -15,6 +15,7 @@ import de.dbuss.tefcontrol.data.entity.*;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.QS;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
 import de.dbuss.tefcontrol.data.service.ProjectParameterService;
+import lombok.Getter;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -31,7 +32,8 @@ public class QS_Grid extends Composite<Div> {
     private ProjectConnectionService projectConnectionService;
     Dialog qsDialog = new Dialog();
     QS_Callback qs_callback;
-    private int projectId;
+    @Getter
+    public int projectId;
     private String dbUrl;
     private String dbUser;
     private String dbPassword;
