@@ -26,6 +26,7 @@ import java.util.*;
 public class QS_Grid extends Composite<Div> {
 
     private List<ProjectQSEntity> listOfProjectQs;
+    private Grid<ProjectQSEntity> grid;
     private JdbcTemplate jdbcTemplate;
     private ProjectConnectionService projectConnectionService;
     Dialog qsDialog = new Dialog();
@@ -73,7 +74,7 @@ public class QS_Grid extends Composite<Div> {
     private VerticalLayout createDialogLayout() {
         getListOfProjectQsWithResult();
 
-        Grid<ProjectQSEntity> grid = new Grid<>(ProjectQSEntity.class, false);
+        grid = new Grid<>(ProjectQSEntity.class, false);
         grid.addColumn(ProjectQSEntity::getName).setHeader("QS-Name");
        // grid.addColumn(ProjectQSEntity::getResult).setHeader("Result");
 
@@ -94,6 +95,9 @@ public class QS_Grid extends Composite<Div> {
             } else {
                 icon = VaadinIcon.SPINNER.create();
                 icon.getElement().getThemeList().add("badge spinner");
+                if(status == null) {
+                    status = "before execute...";
+                }
                 layout.add(status);
                 System.out.println(status);
             }
@@ -103,7 +107,10 @@ public class QS_Grid extends Composite<Div> {
 
         }).setHeader("Result").setFlexGrow(0).setWidth("300px").setResizable(true);
 
+
         grid.setItems(listOfProjectQs);
+
+       // updateListOfProjectQs();
 
         VerticalLayout dialogLayout = new VerticalLayout();
         dialogLayout.setPadding(false);
@@ -114,6 +121,24 @@ public class QS_Grid extends Composite<Div> {
         Paragraph paragraph = new Paragraph(
                 "Please check failed Checks. Only when all tests are ok further processing can startet");
 
+        Button okButton = new Button("Start Job");
+        okButton.setEnabled(false);
+        okButton.addClickListener(e -> {
+            qsDialog.close();
+            qs_callback.onComplete("Start further prcessing...");
+        });
+
+        // if all result Ok then okbutton enable
+
+        Button executeButton = new Button("execute");
+        executeButton.addClickListener(e -> {
+            listOfProjectQs = getResultExecuteSQL(dbUrl, dbUser, dbPassword, listOfProjectQs);
+            grid.setItems(listOfProjectQs);
+            boolean allCorrect = listOfProjectQs.stream()
+                    .allMatch(projectQs -> "Ok".equals(projectQs.getResult()));
+            okButton.setEnabled(allCorrect);
+        });
+        HorizontalLayout hlexecute = new HorizontalLayout(executeButton);
 
         Button closeButton = new Button("Close");
         closeButton.addClickListener(e -> {
@@ -121,23 +146,11 @@ public class QS_Grid extends Composite<Div> {
             qs_callback.onComplete("Cancel");
         });
 
-        Button okButton = new Button("Start Job");
-
-        // if all result Ok then okbutton enable
-        boolean allCorrect = listOfProjectQs.stream()
-                .allMatch(projectQs -> "Ok".equals(projectQs.getResult()));
-
-        okButton.setEnabled(allCorrect);
-
-        okButton.addClickListener(e -> {
-            qsDialog.close();
-            qs_callback.onComplete("Start further prcessing...");
-        });
 
         HorizontalLayout hl = new HorizontalLayout(closeButton,okButton);
 
 
-        dialogLayout.add(paragraph,grid,hl);
+        dialogLayout.add(paragraph, hlexecute, grid,hl);
 
         return dialogLayout;
 
@@ -173,11 +186,16 @@ public class QS_Grid extends Composite<Div> {
         }
         dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
 
-        listOfProjectQs = getResultExecuteSQL(dbUrl, dbUser, dbPassword, listOfProjectQs);
+
     }
 
     public  void setListOfProjectQs(List<ProjectQSEntity> listOfProjectQs) {
         this.listOfProjectQs = listOfProjectQs;
+    }
+
+    public  void updateListOfProjectQs() {
+            listOfProjectQs = getResultExecuteSQL(dbUrl, dbUser, dbPassword, listOfProjectQs);
+            grid.setItems(listOfProjectQs);
     }
     public List<ProjectQSEntity> getProjectQSList(String tableName) {
         try {
