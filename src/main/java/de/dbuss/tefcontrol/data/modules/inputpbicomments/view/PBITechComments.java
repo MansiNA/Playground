@@ -183,41 +183,52 @@ public class PBITechComments extends VerticalLayout implements BeforeEnterObserv
         @Override
         public void onComplete(String result) {
             if(!result.equals("Cancel")) {
-                List<XPexComment> allXPexData = getXPexDataProviderAllItems();
-                List<ITOnlyComment> allITOnlyData = getITOnlyDataProviderAllItems();
-                List<KPIsComment> allKPIsData = getKPIsDataProviderAllItems();
 
-                Notification notification = new Notification();
+                System.out.println("Start Agent-Jobs...");
 
 
-                String resultFinancial = projectConnectionService.saveXPexComments(allXPexData, xPexTableName, dbUrl, dbUser, dbPassword);
-                if (resultFinancial.contains("ok")) {
-                    notification = Notification.show(allXPexData.size() + " xPEX Rows Uploaded successfully", 6000, Notification.Position.MIDDLE);
-                    notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-                } else {
-                    notification = Notification.show("Error during xPEX upload: " + resultFinancial, 15000, Notification.Position.MIDDLE);
-                    notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
-                }
+                //ToDo: Start defined AgentJobs of Project
 
-                String resultSubscriber = projectConnectionService.saveITOnlyComments(allITOnlyData, iTOnlyTableName, dbUrl, dbUser, dbPassword);
-                if (resultSubscriber.contains("ok")) {
-                    notification = Notification.show(allITOnlyData.size() + " ITonly Rows Uploaded successfully", 6000, Notification.Position.MIDDLE);
-                    notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-                } else {
-                    notification = Notification.show("Error during ITonly upload: " + resultSubscriber, 15000, Notification.Position.MIDDLE);
-                    notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
-                }
 
-                String resultUnits = projectConnectionService.saveKPIsComments(allKPIsData, kPIsTableName, dbUrl, dbUser, dbPassword);
-                if (resultUnits.contains("ok")) {
-                    notification = Notification.show(allKPIsData.size() + " KPIs Rows Uploaded successfully", 6000, Notification.Position.MIDDLE);
-                    notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-                } else {
-                    notification = Notification.show("Error during KPIs upload: " + resultUnits, 15000, Notification.Position.MIDDLE);
-                    notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
-                }
+
             }
 
+        }
+    }
+
+    private void save2db(){
+        List<XPexComment> allXPexData = getXPexDataProviderAllItems();
+        List<ITOnlyComment> allITOnlyData = getITOnlyDataProviderAllItems();
+        List<KPIsComment> allKPIsData = getKPIsDataProviderAllItems();
+
+        Notification notification = new Notification();
+
+
+        String resultFinancial = projectConnectionService.saveXPexComments(allXPexData, xPexTableName, dbUrl, dbUser, dbPassword);
+        if (resultFinancial.contains("ok")) {
+            notification = Notification.show(allXPexData.size() + " xPEX Rows Uploaded successfully", 6000, Notification.Position.MIDDLE);
+            notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+        } else {
+            notification = Notification.show("Error during xPEX upload: " + resultFinancial, 15000, Notification.Position.MIDDLE);
+            notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+        }
+
+        String resultSubscriber = projectConnectionService.saveITOnlyComments(allITOnlyData, iTOnlyTableName, dbUrl, dbUser, dbPassword);
+        if (resultSubscriber.contains("ok")) {
+            notification = Notification.show(allITOnlyData.size() + " ITonly Rows Uploaded successfully", 6000, Notification.Position.MIDDLE);
+            notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+        } else {
+            notification = Notification.show("Error during ITonly upload: " + resultSubscriber, 15000, Notification.Position.MIDDLE);
+            notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+        }
+
+        String resultUnits = projectConnectionService.saveKPIsComments(allKPIsData, kPIsTableName, dbUrl, dbUser, dbPassword);
+        if (resultUnits.contains("ok")) {
+            notification = Notification.show(allKPIsData.size() + " KPIs Rows Uploaded successfully", 6000, Notification.Position.MIDDLE);
+            notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+        } else {
+            notification = Notification.show("Error during KPIs upload: " + resultUnits, 15000, Notification.Position.MIDDLE);
+            notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
         }
     }
 
@@ -519,6 +530,7 @@ public class PBITechComments extends VerticalLayout implements BeforeEnterObserv
             gridKPIsComment.setDataProvider(dataUnitsDeepDiveProvider);
 
             singleFileUpload.clearFileList();
+            save2db();
             qsBtn.setEnabled(true);
         });
     }
