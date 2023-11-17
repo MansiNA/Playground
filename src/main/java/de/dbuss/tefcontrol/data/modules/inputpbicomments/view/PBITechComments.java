@@ -42,6 +42,7 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.naming.Context;
 import javax.naming.NamingException;
@@ -187,9 +188,21 @@ public class PBITechComments extends VerticalLayout implements BeforeEnterObserv
                 System.out.println("Start Agent-Jobs...");
 
 
-                //ToDo: Start defined AgentJobs of Project
+                JdbcTemplate jdbcTemplate=new JdbcTemplate();
+
+                jdbcTemplate = projectConnectionService.getJdbcDefaultConnection();
+
+                String sql = "select pp.value from pit.dbo.project_parameter pp, [PIT].[dbo].[projects] p\n" +
+                        "  where pp.namespace=p.page_url\n" +
+                        "  and pp.name in ('DBJobs')\n" +
+                        "  and p.id=?";
 
 
+                String agents = null;
+                agents=jdbcTemplate.queryForObject(sql, new Object[]{projectId},String.class);
+                System.out.println("Start jobs: " + agents);
+
+                //ToDo: Start defined AgentJobs of Project in ordered way
 
             }
 
