@@ -1,5 +1,6 @@
 package de.dbuss.tefcontrol.data.modules.techkpi.view;
 
+import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.accordion.Accordion;
 import com.vaadin.flow.component.accordion.AccordionPanel;
@@ -20,10 +21,16 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.progressbar.ProgressBar;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
-import com.vaadin.flow.router.PageTitle;
-import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.*;
+import de.dbuss.tefcontrol.components.QS_Callback;
+import de.dbuss.tefcontrol.components.QS_Grid;
+import de.dbuss.tefcontrol.data.entity.Constants;
 import de.dbuss.tefcontrol.data.entity.ProjectConnection;
+import de.dbuss.tefcontrol.data.entity.ProjectParameter;
+import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.OutlookMGSR;
+import de.dbuss.tefcontrol.data.modules.b2pOutlook.view.B2POutlookView;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
+import de.dbuss.tefcontrol.data.service.ProjectParameterService;
 import de.dbuss.tefcontrol.views.MainLayout;
 import jakarta.annotation.security.RolesAllowed;
 import org.apache.poi.ss.usermodel.Cell;
@@ -48,12 +55,17 @@ import java.util.stream.Stream;
 @PageTitle("Tech KPI | TEF-Control")
 @Route(value = "Tech_KPI/:project_Id", layout = MainLayout.class)
 @RolesAllowed("ADMIN")
-public class Tech_KPIView extends VerticalLayout {
+public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver {
 
     private JdbcTemplate jdbcTemplate;
     private final ProjectConnectionService projectConnectionService;
-    private String selectedDbName;
     private Button saveButton;
+    private String actualsTableName;
+    private String factTableName;
+    private String planTableName;
+    private String dbUrl;
+    private String dbUser;
+    private String dbPassword;
     Article article = new Article();
 
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
@@ -97,13 +109,19 @@ public class Tech_KPIView extends VerticalLayout {
     AccordionPanel factPanel;
     AccordionPanel planPanel;
     AccordionPanel actualsPanel;
+    private int projectId;
+    private QS_Grid qsGrid;
+    private Button qsBtn;
 
     //Div htmlDivToDO;
     //CheckboxGroup<String> TodoList;
 
-    public Tech_KPIView(JdbcTemplate jdbcTemplate, ProjectConnectionService projectConnectionService) {
+    public Tech_KPIView(JdbcTemplate jdbcTemplate, ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService) {
         this.jdbcTemplate = jdbcTemplate;
         this.projectConnectionService = projectConnectionService;
+
+        qsBtn = new Button("Start Job");
+        qsBtn.setEnabled(false);
 
         progressBarPlan.setVisible(false);
         progressBarActuals.setVisible(false);
@@ -175,48 +193,54 @@ public class Tech_KPIView extends VerticalLayout {
         saveButton = new Button("Save to DB");
         saveButton.setEnabled(false);
 
-        ComboBox<String> databaseCB = new ComboBox<>("Choose Database");
-        databaseCB.setAllowCustomValue(true);
-        databaseCB.setWidth("400px");
-        databaseCB.setTooltipText("Select Database Connection");
 
-        List<ProjectConnection> listOfProjectConnections = projectConnectionService.findAll();
-        if (listOfProjectConnections.isEmpty()) {
-            Notification.show("Project Connections is empty in database", 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
-        } else {
-            List<String> connectionNames = listOfProjectConnections.stream()
-                    .flatMap(connection -> {
-                        String category = connection.getCategory();
-                        if ("Tech_PKI".equals(category)) {
-                            return Stream.of(connection.getName());
-                        }
-                        return Stream.empty();
-                    })
-                    .collect(Collectors.toList());
+        List<ProjectParameter> listOfProjectParameters = projectParameterService.findAll();
+        String dbServer = null;
+        String dbName = null;
 
-            if (connectionNames.isEmpty()) {
-                Notification.show("Connections not found in database", 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
-            } else {
-                databaseCB.setItems(connectionNames);
-                databaseCB.setValue(connectionNames.get(0));
-                selectedDbName = connectionNames.get(0);
+        for (ProjectParameter projectParameter : listOfProjectParameters) {
+            if(projectParameter.getNamespace().equals(Constants.TECH_KPI)) {
+                if (Constants.DB_SERVER.equals(projectParameter.getName())) {
+                    dbServer = projectParameter.getValue();
+                } else if (Constants.DB_NAME.equals(projectParameter.getName())) {
+                    dbName = projectParameter.getValue();
+                } else if (Constants.DB_USER.equals(projectParameter.getName())) {
+                    dbUser = projectParameter.getValue();
+                } else if (Constants.DB_PASSWORD.equals(projectParameter.getName())) {
+                    dbPassword = projectParameter.getValue();
+                }else if (Constants.TABLE_ACTUALS.equals(projectParameter.getName())) {
+                    actualsTableName = projectParameter.getValue();
+                } else if (Constants.TABLE_FACT.equals(projectParameter.getName())) {
+                    factTableName = projectParameter.getValue();
+                } else if (Constants.TABLE_PLAN.equals(projectParameter.getName())) {
+                    planTableName = projectParameter.getValue();
+                }
             }
         }
+        dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
+        //Text databaseDetail = new Text("Connected to: "+ dbServer+ ", Database: " + dbName+ ", Table Financials: " + financialsTableName + ", Table Subscriber: " + subscriberTableName+ ", Table Unitdeepdive: "+ unitTableName);
+        Text databaseDetail = new Text("Connected to: "+ dbServer+ ", Database: " + dbName);
 
-        databaseCB.addValueChangeListener(event -> {
-            selectedDbName = event.getValue();
-        });
+        //Componente QS-Grid:
+        qsGrid = new QS_Grid(projectConnectionService);
 
         hl.setAlignItems(Alignment.BASELINE);
-        hl.add(singleFileUpload, databaseCB, saveButton);
+        hl.add(singleFileUpload, qsBtn, databaseDetail, qsGrid);
+
+        qsBtn.addClickListener(e ->{
+            if (qsGrid.projectId != projectId) {
+                CallbackHandler callbackHandler = new CallbackHandler();
+                qsGrid.createDialog(callbackHandler, projectId);
+            }
+            qsGrid.showDialog(true);
+        });
 
         //  h3_Fact.add("Fact 0 rows");
         //  h3_Actuals.add("Actuals 0 rows");
         //  h3_Plan.add("Plan 0 rows");
 
         //add(hl, progressBarFact, progressBarPlan,progressBarActuals, details, h3_Fact, gridFact, h3_Actuals, gridActuals, h3_Plan, gridPlan );
-        add(hl, progressBarFact, progressBarPlan,progressBarActuals);
-
+        add(hl, progressBarFact, progressBarPlan, progressBarActuals);
 
         add(details);
 
@@ -241,21 +265,30 @@ public class Tech_KPIView extends VerticalLayout {
         // htmlDivQS.getElement().setProperty("innerHTML", "<b style=\"color:blue;\">QS-Übersicht:</b>");
         htmlDivQS.getElement().setProperty("innerHTML", "<b>QS-Übersicht:</b>");
 
-        saveButton.addClickListener(clickEvent -> {
-          
-            //  Notification.show("Connection with Server...",1500, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-            ui.setPollInterval(500);
-
-            savePlanEntities();
-            saveActualsEntities();
-            saveFactEntities();
-        });
-
         //  add(htmlDivQS,gridQS,accordion);
         add(htmlDivQS,accordion);
 
     }
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+        RouteParameters parameters = event.getRouteParameters();
+        projectId = Integer.parseInt(parameters.get("project_Id").orElse(null));
+    }
 
+    public class CallbackHandler implements QS_Callback {
+        // Die Methode, die aufgerufen wird, wenn die externe Methode abgeschlossen ist
+        @Override
+        public void onComplete(String result) {
+            if(!result.equals("Cancel")) {
+                //  Notification.show("Connection with Server...",1500, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                ui.setPollInterval(500);
+
+                savePlanEntities();
+                saveActualsEntities();
+                saveFactEntities();
+            }
+        }
+    }
    /* private void setupQSGrid() {
         gridQS = new Grid<>(QS_Status.class, false);
 
@@ -317,7 +350,7 @@ public class Tech_KPIView extends VerticalLayout {
 
                 int batchSize = 1000; // Die Anzahl der Zeilen, die auf einmal verarbeitet werden sollen
 
-                projectConnectionService.deleteKPIPlan(selectedDbName);
+                projectConnectionService.deleteTableData(dbUrl, dbUser, dbPassword, planTableName);
 
                 for (int i = 1; i < totalRows; i += batchSize) {
 
@@ -328,7 +361,7 @@ public class Tech_KPIView extends VerticalLayout {
                     System.out.println("Verarbeitete Zeilen: " + endIndex + " von " + totalRows);
 
                     //savePlanBlock(batchData);
-                    String resultKPIPlan = projectConnectionService.saveKPIPlan(batchData);
+                    String resultKPIPlan = projectConnectionService.saveKPIPlan(batchData, planTableName);
 
                     returnStatus.set(resultKPIPlan);
 
@@ -388,7 +421,7 @@ public class Tech_KPIView extends VerticalLayout {
 
                 int batchSize = 1000; // Die Anzahl der Zeilen, die auf einmal verarbeitet werden sollen
 
-                projectConnectionService.deleteKPIActuals(selectedDbName);
+                projectConnectionService.deleteTableData(dbUrl, dbUser, dbPassword, actualsTableName);
 
                 for (int i = 1; i < totalRows; i += batchSize) {
 
@@ -400,7 +433,7 @@ public class Tech_KPIView extends VerticalLayout {
 
                     // saveActualsBlock(batchData);
 
-                    String resultKPIActuals = projectConnectionService.saveKPIActuals(batchData);
+                    String resultKPIActuals = projectConnectionService.saveKPIActuals(batchData, actualsTableName);
 
                     returnStatus.set(resultKPIActuals);
 
@@ -458,7 +491,7 @@ public class Tech_KPIView extends VerticalLayout {
 
                 int batchSize = 1000; // Die Anzahl der Zeilen, die auf einmal verarbeitet werden sollen
 
-                projectConnectionService.deleteKPIFact(selectedDbName);
+                projectConnectionService.deleteTableData(dbUrl, dbUser, dbPassword, factTableName);
 
                 for (int i = 1; i < totalRows; i += batchSize) {
 
@@ -470,7 +503,7 @@ public class Tech_KPIView extends VerticalLayout {
 
                     //saveFactBlock(batchData);
 
-                    String resultKPIFact = projectConnectionService.saveKPIFact(batchData);
+                    String resultKPIFact = projectConnectionService.saveKPIFact(batchData, factTableName);
                     returnStatus.set(resultKPIFact);
 
                     int finalI = i;
@@ -690,7 +723,7 @@ public class Tech_KPIView extends VerticalLayout {
             //h3_Plan.removeAll();
             //h3_Plan.add("Plan (" + listOfKPI_Plan.size() + " rows)");
 
-            saveButton.setEnabled(true);
+            qsBtn.setEnabled(true);
 
         });
         System.out.println("setup uploader................over");
