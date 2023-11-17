@@ -30,6 +30,7 @@ import de.dbuss.tefcontrol.data.entity.ProjectQSEntity;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.OutlookMGSR;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.view.B2POutlookView;
 import de.dbuss.tefcontrol.data.modules.cltv_Inflow.entity.CLTVInflow;
+import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.PBICentralComments;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
 import de.dbuss.tefcontrol.data.service.ProjectParameterService;
 import de.dbuss.tefcontrol.data.service.ProjectQsService;
@@ -46,7 +47,6 @@ import java.util.stream.Collectors;
 @RolesAllowed({"MAPPING", "ADMIN"})
 public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserver {
     private final ProjectConnectionService projectConnectionService;
-    private final ProjectQsService projectQsService;
     private Crud<CLTVInflow> crud;
     private Grid<CLTVInflow> grid;
     private GridPro<CLTVInflow> missingGrid = new GridPro<>(CLTVInflow.class);
@@ -62,12 +62,11 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
     private QS_Grid qsGrid;
     private Button qsBtn;
 
-    public CLTVInflowView(ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, ProjectQsService projectQsService) {
+    public CLTVInflowView(ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService) {
         this.projectConnectionService = projectConnectionService;
-        this.projectQsService = projectQsService;
 
         qsBtn = new Button("Start Job");
-        // qsBtn.setEnabled(false);
+        qsBtn.setEnabled(false);
 
         addClassName("list-view");
         setSizeFull();
@@ -97,7 +96,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         Text databaseDetail = new Text("Connected to: "+ dbServer+ ", Database: " + dbName+ ", Table: " + tableName);
 
         //Componente QS-Grid:
-        qsGrid = new QS_Grid();
+        qsGrid = new QS_Grid(projectConnectionService);
 
         TabSheet tabSheet = new TabSheet();
         tabSheet.add("Missing Entries", getMissingCLTV_InflowGrid());
@@ -114,6 +113,10 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         add(hl, tabSheet );
 
         qsBtn.addClickListener(e ->{
+            if (qsGrid.projectId != projectId) {
+                CallbackHandler callbackHandler = new CallbackHandler();
+                qsGrid.createDialog(callbackHandler, projectId);
+            }
             qsGrid.showDialog(true);
         });
 
@@ -126,13 +129,6 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
     public void beforeEnter(BeforeEnterEvent event) {
         RouteParameters parameters = event.getRouteParameters();
         projectId = Integer.parseInt(parameters.get("project_Id").orElse(null));
-        if(projectId != 0) {
-            List<ProjectQSEntity> listOfProjectQs = projectQsService.getListOfProjectQs(projectId);
-            listOfProjectQs = projectQsService.executeSQL(dbUrl, dbUser, dbPassword, listOfProjectQs);
-            qsGrid.setListOfProjectQs(listOfProjectQs);
-            CallbackHandler callbackHandler = new CallbackHandler();
-            qsGrid.createDialog(callbackHandler, projectId);
-        }
     }
 
     public class CallbackHandler implements QS_Callback {
@@ -488,6 +484,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
             } else {
                 modifiedCLTVInflow.add(cltvInflow);
             }
+            qsBtn.setEnabled(true);
         } else {
             Notification.show("Please do not enter Missing value", 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
         }

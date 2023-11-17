@@ -24,6 +24,7 @@ import de.dbuss.tefcontrol.data.entity.Constants;
 import de.dbuss.tefcontrol.data.entity.ProjectParameter;
 import de.dbuss.tefcontrol.data.entity.ProjectQSEntity;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.OutlookMGSR;
+import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.PBICentralComments;
 import de.dbuss.tefcontrol.data.service.BackendService;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
 import de.dbuss.tefcontrol.data.service.ProjectParameterService;
@@ -48,7 +49,6 @@ import java.util.*;
 public class B2POutlookView extends VerticalLayout implements BeforeEnterObserver {
 
     private final ProjectConnectionService projectConnectionService;
-    private final ProjectQsService projectQsService;
     private MemoryBuffer memoryBuffer = new MemoryBuffer();
     private Upload singleFileUpload = new Upload(memoryBuffer);
     private List<List<OutlookMGSR>> listOfAllSheets = new ArrayList<>();
@@ -69,11 +69,10 @@ public class B2POutlookView extends VerticalLayout implements BeforeEnterObserve
 
     BackendService backendService;
 
-    public B2POutlookView (ProjectParameterService projectParameterService, ProjectConnectionService projectConnectionService, BackendService backendService, ProjectQsService projectQsService) {
+    public B2POutlookView (ProjectParameterService projectParameterService, ProjectConnectionService projectConnectionService, BackendService backendService) {
 
         this.backendService=backendService;
         this.projectConnectionService = projectConnectionService;
-        this.projectQsService = projectQsService;
 
         qsBtn = new Button("Start Job");
         qsBtn.setEnabled(false);
@@ -103,7 +102,7 @@ public class B2POutlookView extends VerticalLayout implements BeforeEnterObserve
         Text databaseDetail = new Text("Connected to: "+ dbServer+ " Database: " + dbName+ " Table: " + tableName);
 
         //Componente QS-Grid:
-        qsGrid = new QS_Grid();
+        qsGrid = new QS_Grid(projectConnectionService);
 
         HorizontalLayout hl = new HorizontalLayout();
         hl.setAlignItems(Alignment.BASELINE);
@@ -112,6 +111,10 @@ public class B2POutlookView extends VerticalLayout implements BeforeEnterObserve
         add(hl);
 
         qsBtn.addClickListener(e ->{
+            if (qsGrid.projectId != projectId) {
+                CallbackHandler callbackHandler = new CallbackHandler();
+                qsGrid.createDialog(callbackHandler, projectId);
+            }
             qsGrid.showDialog(true);
         });
 
@@ -134,13 +137,6 @@ public class B2POutlookView extends VerticalLayout implements BeforeEnterObserve
     public void beforeEnter(BeforeEnterEvent event) {
         RouteParameters parameters = event.getRouteParameters();
         projectId = Integer.parseInt(parameters.get("project_Id").orElse(null));
-        if(projectId != 0) {
-            List<ProjectQSEntity> listOfProjectQs = projectQsService.getListOfProjectQs(projectId);
-            listOfProjectQs = projectQsService.executeSQL(dbUrl, dbUser, dbPassword, listOfProjectQs);
-            qsGrid.setListOfProjectQs(listOfProjectQs);
-            CallbackHandler callbackHandler = new CallbackHandler();
-            qsGrid.createDialog(callbackHandler, projectId);
-        }
     }
 
     public class CallbackHandler implements QS_Callback {

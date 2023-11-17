@@ -38,9 +38,6 @@ public class QS_Grid extends Composite<Div> {
     private String dbUser;
     private String dbPassword;
 
-    public QS_Grid() {
-    }
-
     public QS_Grid(ProjectConnectionService projectConnectionService) {
         this.projectConnectionService = projectConnectionService;
         this.jdbcTemplate = projectConnectionService.getJdbcDefaultConnection();

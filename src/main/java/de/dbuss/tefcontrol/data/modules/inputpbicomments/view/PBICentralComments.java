@@ -58,7 +58,6 @@ import java.util.stream.Collectors;
 @RolesAllowed({"ADMIN", "MAPPING"})
 public class PBICentralComments extends VerticalLayout implements BeforeEnterObserver {
     private final ProjectConnectionService projectConnectionService;
-    private final ProjectQsService projectQsService;
     MemoryBuffer memoryBuffer = new MemoryBuffer();
     Upload singleFileUpload = new Upload(memoryBuffer);
     private final AuthenticatedUser authenticatedUser;
@@ -87,11 +86,10 @@ public class PBICentralComments extends VerticalLayout implements BeforeEnterObs
     private QS_Grid qsGrid;
     private Button qsBtn;
 
-    public PBICentralComments(AuthenticatedUser authenticatedUser, ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, ProjectQsService projectQsService) {
+    public PBICentralComments(AuthenticatedUser authenticatedUser, ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService) {
 
         this.authenticatedUser = authenticatedUser;
         this.projectConnectionService = projectConnectionService;
-        this.projectQsService = projectQsService;
 
         qsBtn = new Button("Start Job");
         qsBtn.setEnabled(false);
@@ -132,7 +130,7 @@ public class PBICentralComments extends VerticalLayout implements BeforeEnterObs
         Text databaseDetail = new Text("Connected to: "+ dbServer+ ", Database: " + dbName);
 
         //Componente QS-Grid:
-        qsGrid = new QS_Grid();
+        qsGrid = new QS_Grid(projectConnectionService);
 
         HorizontalLayout hl = new HorizontalLayout();
         hl.setAlignItems(Alignment.BASELINE);
@@ -141,6 +139,10 @@ public class PBICentralComments extends VerticalLayout implements BeforeEnterObs
         add(hl);
 
         qsBtn.addClickListener(e ->{
+            if (qsGrid.projectId != projectId) {
+                CallbackHandler callbackHandler = new CallbackHandler();
+                qsGrid.createDialog(callbackHandler, projectId);
+            }
             qsGrid.showDialog(true);
         });
 
@@ -153,13 +155,6 @@ public class PBICentralComments extends VerticalLayout implements BeforeEnterObs
     public void beforeEnter(BeforeEnterEvent event) {
         RouteParameters parameters = event.getRouteParameters();
         projectId = Integer.parseInt(parameters.get("project_Id").orElse(null));
-        if(projectId != 0) {
-            List<ProjectQSEntity> listOfProjectQs = projectQsService.getListOfProjectQs(projectId);
-            listOfProjectQs = projectQsService.executeSQL(dbUrl, dbUser, dbPassword, listOfProjectQs);
-            qsGrid.setListOfProjectQs(listOfProjectQs);
-            CallbackHandler callbackHandler = new CallbackHandler();
-            qsGrid.createDialog(callbackHandler, projectId);
-        }
     }
 
     public class CallbackHandler implements QS_Callback {
@@ -171,24 +166,18 @@ public class PBICentralComments extends VerticalLayout implements BeforeEnterObs
                 Notification notification = Notification.show(" Rows Uploaded start",2000, Notification.Position.MIDDLE);
                 notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
 
-
                 UI ui = UI.getCurrent();
                 progressBar.setVisible(true);
-
 
                 ListenableFuture<String> future = upload2db();;
                 future.addCallback(
                         successResult -> updateUi(ui, "Task finished: " + successResult),
                         failureException -> updateUi(ui, "Task failed: " + failureException.getMessage())
                 );
-
-
             }
-
         }
     }
     private void updateUi(UI ui, String result) {
-
 
         ui.access(() -> {
             Notification.show(result);
@@ -229,7 +218,6 @@ public class PBICentralComments extends VerticalLayout implements BeforeEnterObs
             notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
         }
         return AsyncResult.forValue("Some result");
-
 
     }
 

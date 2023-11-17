@@ -62,7 +62,6 @@ public class PBITechComments extends VerticalLayout implements BeforeEnterObserv
     // Erstellen einer Instanz des CallbackHandlers
 
     private final ProjectConnectionService projectConnectionService;
-    private final ProjectQsService projectQsService;
     private MemoryBuffer memoryBuffer = new MemoryBuffer();
     private Upload singleFileUpload = new Upload(memoryBuffer);
     private int projectId;
@@ -90,10 +89,9 @@ public class PBITechComments extends VerticalLayout implements BeforeEnterObserv
     private String dbUrl;
     private String idKey = Constants.ZEILE;
 
-    public PBITechComments(ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, ProjectQsService projectQsService) {
+    public PBITechComments(ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService) {
 
         this.projectConnectionService = projectConnectionService;
-        this.projectQsService = projectQsService;
 
         Div htmlDiv = new Div();
         htmlDiv.getElement().setProperty("innerHTML", "<h2>Input Frontend for Tech Comments");
