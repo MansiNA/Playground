@@ -169,11 +169,11 @@ public class PBICentralComments extends VerticalLayout implements BeforeEnterObs
                 UI ui = UI.getCurrent();
                 progressBar.setVisible(true);
 
-                ListenableFuture<String> future = upload2db();;
-                future.addCallback(
-                        successResult -> updateUi(ui, "Task finished: " + successResult),
-                        failureException -> updateUi(ui, "Task failed: " + failureException.getMessage())
-                );
+      //          ListenableFuture<String> future = upload2db();;
+      //          future.addCallback(
+      //                  successResult -> updateUi(ui, "Task finished: " + successResult),
+      //                  failureException -> updateUi(ui, "Task failed: " + failureException.getMessage())
+      //          );
             }
         }
     }
@@ -191,7 +191,7 @@ public class PBICentralComments extends VerticalLayout implements BeforeEnterObs
         List<UnitsDeepDive> allUnitsDeepDive = getUnitsDeepDiveDataProviderAllItems();
 
         Notification notification;
-
+        System.out.println("#################Save Financial###########");
         String resultFinancial = projectConnectionService.saveFinancials(allFinancialsItems, financialsTableName, dbUrl, dbUser, dbPassword);
         if (resultFinancial.contains("ok")){
             notification = Notification.show(allFinancialsItems.size() + " Financials Rows Uploaded successfully",5000, Notification.Position.MIDDLE);
@@ -381,6 +381,9 @@ public class PBICentralComments extends VerticalLayout implements BeforeEnterObs
             setupDataProviderEvent();
 
             singleFileUpload.clearFileList();
+
+            upload2db();
+
             qsBtn.setEnabled(true);
         });
     }

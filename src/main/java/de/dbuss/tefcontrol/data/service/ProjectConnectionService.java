@@ -215,6 +215,9 @@ public class ProjectConnectionService {
                         item.getXtd()
                 );
             }
+            String sqlUpdate ="delete from " + tableName + " where comment is null";
+            System.out.println(sqlUpdate);
+            jdbcTemplate.update(sqlUpdate);
             return "ok";
         }
            catch (CannotGetJdbcConnectionException connectionException) {
@@ -252,6 +255,7 @@ public class ProjectConnectionService {
                         item.getXtd()
                 );
             }
+            jdbcTemplate.update("delete from " + tableName + " where comment is null");
             return "ok";
         } catch (Exception e) {
             e.printStackTrace();
@@ -285,6 +289,7 @@ public class ProjectConnectionService {
                         item.getXtd()
                 );
             }
+            jdbcTemplate.update("delete from " + tableName + " where comment is null");
             return "ok";
         } catch (Exception e) {
             e.printStackTrace();
