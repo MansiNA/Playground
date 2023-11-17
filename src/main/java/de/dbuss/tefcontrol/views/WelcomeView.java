@@ -26,11 +26,7 @@ public class WelcomeView extends VerticalLayout {
                 "Viele Grüße<br /><b>Euer Consys-Team</b>" ;
 
         Html html = new Html("<text>" + yourContent + "</text>");
-        Button button  = new Button("Qs");
-        add(html,button);
+        add(html);
 
-        button.addClickListener(clickEvent -> {
-            getUI().ifPresent(ui -> ui.navigate(QsView.class));
-        });
     }
 }
