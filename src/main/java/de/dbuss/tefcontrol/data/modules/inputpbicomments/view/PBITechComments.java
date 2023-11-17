@@ -547,20 +547,21 @@ public class PBITechComments extends VerticalLayout implements BeforeEnterObserv
             XSSFWorkbook my_xls_workbook = new XSSFWorkbook(fileData);
 
             XSSFSheet sheet1 = my_xls_workbook.getSheet(Constants.XPEX);
-            listOfXPexComment = parseSheet(sheet1, XPexComment.class);
+            listOfXPexComment = parseSheet(sheet1, XPexComment.class, 6);
 
             XSSFSheet sheet2 = my_xls_workbook.getSheet(Constants.ITONLY);
-            listOfITOnlyComment = parseSheet(sheet2, ITOnlyComment.class);
+            listOfITOnlyComment = parseSheet(sheet2, ITOnlyComment.class, 6);
 
             XSSFSheet sheet3 = my_xls_workbook.getSheet(Constants.KPIS);
-            listOfKPIsComment = parseSheet(sheet3, KPIsComment.class);
+            listOfKPIsComment = parseSheet(sheet3, KPIsComment.class, 6);
 
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
-    public <T> List<T>  parseSheet(XSSFSheet my_worksheet, Class<T> targetType) {
+    public <T> List<T>  parseSheet(XSSFSheet my_worksheet, Class<T> targetType, int cntColumns) {
 
+        int column=1;
         try {
             List<T> resultList = new ArrayList<>();
             Iterator<Row> rowIterator = my_worksheet.iterator();
@@ -582,7 +583,8 @@ public class PBITechComments extends VerticalLayout implements BeforeEnterObserv
                 }
 
                 Field[] fields = targetType.getDeclaredFields();
-                for (int index = 0; index < fields.length; index++) {
+                //for (int index = 0; index < fields.length; index++) {
+                for (int index = 0; index < cntColumns +1 ; index++) {
                     Cell cell = null;
                     if (index != 0) {
                         cell = row.getCell(index - 1);
