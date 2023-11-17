@@ -39,7 +39,7 @@ public class Constants {
 
 
     // This constant is used for pfgproductmapping module
-    public static final String PFGPRODUCTMAPPING = "PFGProductMapping";
+    public static final String PFGPRODUCTMAPPING = "PFG_Product_Mapping";
     public static final String MAPPINGALLPRODUCTS = "mapping_all_products";
     public static final String AGENT_NAME = "agent_name";
     public static final String MAPPINGMISSINGPRODUCTS = "mapping_missing_products";

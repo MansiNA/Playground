@@ -1,5 +1,6 @@
 package de.dbuss.tefcontrol.data.service;
 
+import de.dbuss.tefcontrol.data.entity.ProjectQSEntity;
 import de.dbuss.tefcontrol.data.entity.*;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.OutlookMGSR;
 import de.dbuss.tefcontrol.data.modules.cltv_Inflow.entity.CLTVInflow;
@@ -10,6 +11,7 @@ import de.dbuss.tefcontrol.data.repository.ProjectConnectionRepository;
 import de.dbuss.tefcontrol.data.modules.techkpi.view.Tech_KPIView;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Primary;
 import org.springframework.dao.DataAccessException;
@@ -32,6 +34,15 @@ public class ProjectConnectionService {
 
     @Getter
     private String errorMessage = "";
+
+    @Value("${spring.datasource.url}")
+    private String dbUrl;
+
+    @Value("${spring.datasource.username}")
+    private String dbUser;
+
+    @Value("${spring.datasource.password}")
+    private String dbPassword;
 
     public ProjectConnectionService(ProjectConnectionRepository repository) {
         this.repository = repository;
@@ -86,6 +97,12 @@ public class ProjectConnectionService {
 
     public JdbcTemplate getJdbcConnection(String selectedDatabase) {
         DataSource dataSource = getDataSource(selectedDatabase);
+        jdbcTemplate = new JdbcTemplate(dataSource);
+        return jdbcTemplate;
+    }
+
+    public JdbcTemplate getJdbcDefaultConnection () {
+        DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
         jdbcTemplate = new JdbcTemplate(dataSource);
         return jdbcTemplate;
     }
@@ -410,6 +427,10 @@ public class ProjectConnectionService {
                 return "Error: Table does not exist or SQL syntax error.";
             } else {
                 e.printStackTrace();
+                if(e.getMessage().contains(";")) {
+                    String [] errorMessage = e.getMessage().split(";");
+                    return errorMessage[errorMessage.length - 1];
+                }
                 return "Database error: " + e.getMessage();
             }
         } else {
@@ -770,38 +791,6 @@ public class ProjectConnectionService {
         } catch (Exception e) {
             e.printStackTrace();
             return handleDatabaseError(e);
-        }
-    }
-
-    public List<ProjectQSEntity> getAllProjectQS(String tableName, String dbUrl, String dbUser, String dbPassword) {
-        try {
-
-            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
-            jdbcTemplate = new JdbcTemplate(dataSource);
-
-            String sqlQuery = "SELECT * FROM " +tableName;
-
-            // Create a RowMapper to map the query result to a CLTVInflow object
-            RowMapper<ProjectQSEntity> rowMapper = (rs, rowNum) -> {
-                ProjectQSEntity projectQSEntity = new ProjectQSEntity();
-                projectQSEntity.setId(rs.getInt("id"));
-                projectQSEntity.setName(rs.getString("name"));
-                projectQSEntity.setSql(rs.getString("sql"));
-                projectQSEntity.setDescription(rs.getString("description"));
-                projectQSEntity.setQs_id(rs.getInt("qs_id"));
-                projectQSEntity.setQs_group(rs.getInt("qs_group"));
-                projectQSEntity.setCreate_date(rs.getDate("create_date"));
-
-                return projectQSEntity;
-            };
-
-            List<ProjectQSEntity> fetchedData = jdbcTemplate.query(sqlQuery, rowMapper);
-
-            return fetchedData;
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            errorMessage = handleDatabaseError(ex);
-            return Collections.emptyList();
         }
     }
 }

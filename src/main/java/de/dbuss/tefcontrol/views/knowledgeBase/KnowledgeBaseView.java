@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Optional;
 
 @PageTitle("Knowledge Base")
-@Route(value = "kb", layout = MainLayout.class)
+@Route(value = "kb/:project_Id", layout = MainLayout.class)
 @RolesAllowed("ADMIN")
 public class KnowledgeBaseView  extends VerticalLayout {
 

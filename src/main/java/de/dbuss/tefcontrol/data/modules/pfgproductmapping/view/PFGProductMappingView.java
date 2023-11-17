@@ -41,8 +41,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @PageTitle("PFG Product-Mapping")
-@Route(value = "PFG-Mapping", layout = MainLayout.class)
-@RouteAlias(value = "", layout = MainLayout.class)
+@Route(value = "PFG_Product_Mapping/:project_Id", layout = MainLayout.class)
+// @RouteAlias(value = "", layout = MainLayout.class)
 @RolesAllowed({"USER", "ADMIN"})
 public class PFGProductMappingView extends VerticalLayout {
     @Autowired

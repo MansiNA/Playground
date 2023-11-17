@@ -46,7 +46,7 @@ import java.util.stream.Stream;
 
 
 @PageTitle("Tech KPI | TEF-Control")
-@Route(value = "Tech_KPI", layout = MainLayout.class)
+@Route(value = "Tech_KPI/:project_Id", layout = MainLayout.class)
 @RolesAllowed("ADMIN")
 public class Tech_KPIView extends VerticalLayout {
 

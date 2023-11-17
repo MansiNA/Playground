@@ -2,10 +2,7 @@ package de.dbuss.tefcontrol.data.service;
 
 import de.dbuss.tefcontrol.data.Role;
 import de.dbuss.tefcontrol.data.dto.ProjectAttachmentsDTO;
-import de.dbuss.tefcontrol.data.entity.ProjectAttachments;
-import de.dbuss.tefcontrol.data.entity.ProjectSql;
-import de.dbuss.tefcontrol.data.entity.Projects;
-import de.dbuss.tefcontrol.data.entity.User;
+import de.dbuss.tefcontrol.data.entity.*;
 import de.dbuss.tefcontrol.data.repository.ProjectsRepository;
 import de.dbuss.tefcontrol.security.AuthenticatedUser;
 import lombok.extern.slf4j.Slf4j;
@@ -68,8 +65,13 @@ public class ProjectsService {
     }
 
     public List<ProjectSql> getProjectSqls(Projects projects) {
-        log.info("Executing getProjectAttachments() in projectsService");
+        log.info("Executing getProjectSqls() in projectsService");
         return projects.getListOfSqls();
+    }
+
+    public List<ProjectQSEntity> getListOfProjectQs(Projects projects) {
+        log.info("Executing getListOfProjectQs() in projectsService");
+        return projects.getListOfProjectQs();
     }
 
     public List<Projects> getRootProjects() {

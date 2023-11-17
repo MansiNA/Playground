@@ -4,7 +4,6 @@ import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.crud.BinderCrudEditor;
 import com.vaadin.flow.component.crud.Crud;
 import com.vaadin.flow.component.crud.CrudEditor;
@@ -24,8 +23,9 @@ import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.provider.*;
-import com.vaadin.flow.router.PageTitle;
-import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.*;
+import de.dbuss.tefcontrol.components.QS_Callback;
+import de.dbuss.tefcontrol.components.QS_Grid;
 import de.dbuss.tefcontrol.data.Role;
 import de.dbuss.tefcontrol.data.entity.*;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.Financials;
@@ -33,6 +33,7 @@ import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.Subscriber;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.UnitsDeepDive;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
 import de.dbuss.tefcontrol.data.service.ProjectParameterService;
+import de.dbuss.tefcontrol.data.service.ProjectQsService;
 import de.dbuss.tefcontrol.dataprovider.GenericDataProvider;
 import de.dbuss.tefcontrol.security.AuthenticatedUser;
 import de.dbuss.tefcontrol.views.MainLayout;
@@ -50,18 +51,16 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 
-@PageTitle("PowerBI Comments")
-@Route(value = "InputPBIComments", layout = MainLayout.class)
+@PageTitle("PowerBI Central Comments")
+@Route(value = "PBI_Central_Comments/:project_Id", layout = MainLayout.class)
 @RolesAllowed({"ADMIN", "MAPPING"})
-public class InputPBIComments extends VerticalLayout {
-
+public class PBICentralComments extends VerticalLayout implements BeforeEnterObserver {
+    private final ProjectConnectionService projectConnectionService;
     MemoryBuffer memoryBuffer = new MemoryBuffer();
     Upload singleFileUpload = new Upload(memoryBuffer);
     private final AuthenticatedUser authenticatedUser;
-    private final ProjectConnectionService projectConnectionService;
     private List<Financials> listOfFinancials = new ArrayList<Financials>();
     private List<Subscriber> listOfSubscriber = new ArrayList<Subscriber>();
     private List<UnitsDeepDive> listOfUnitsDeepDive = new ArrayList<UnitsDeepDive>();
@@ -82,16 +81,18 @@ public class InputPBIComments extends VerticalLayout {
     String mimeType = "";
     private Button saveButton;
     Div textArea = new Div();
-
     private String idKey = "row";
+    private int projectId;
+    private QS_Grid qsGrid;
+    private Button qsBtn;
 
-    public InputPBIComments(AuthenticatedUser authenticatedUser, ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService) {
+    public PBICentralComments(AuthenticatedUser authenticatedUser, ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService) {
 
         this.authenticatedUser = authenticatedUser;
         this.projectConnectionService = projectConnectionService;
 
-        saveButton = new Button("Save to DB");
-        saveButton.setEnabled(false);
+        qsBtn = new Button("Start Job");
+        qsBtn.setEnabled(false);
 
         progressBar.setWidth("15em");
         progressBar.setIndeterminate(true);
@@ -128,28 +129,21 @@ public class InputPBIComments extends VerticalLayout {
         //Text databaseDetail = new Text("Connected to: "+ dbServer+ ", Database: " + dbName+ ", Table Financials: " + financialsTableName + ", Table Subscriber: " + subscriberTableName+ ", Table Unitdeepdive: "+ unitTableName);
         Text databaseDetail = new Text("Connected to: "+ dbServer+ ", Database: " + dbName);
 
+        //Componente QS-Grid:
+        qsGrid = new QS_Grid(projectConnectionService);
+
         HorizontalLayout hl = new HorizontalLayout();
         hl.setAlignItems(Alignment.BASELINE);
-        hl.add(singleFileUpload, saveButton, databaseDetail, progressBar);
+        // hl.add(singleFileUpload, saveButton, databaseDetail, progressBar);
+        hl.add(singleFileUpload, qsBtn, databaseDetail, progressBar, qsGrid);
         add(hl);
 
-        saveButton.addClickListener(clickEvent -> {
-
-            Notification notification = Notification.show(" Rows Uploaded start",2000, Notification.Position.MIDDLE);
-            notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-
-
-            UI ui = clickEvent.getSource().getUI().orElseThrow();
-            progressBar.setVisible(true);
-
-
-            ListenableFuture<String> future = upload2db();;
-            future.addCallback(
-                    successResult -> updateUi(ui, "Task finished: " + successResult),
-                    failureException -> updateUi(ui, "Task failed: " + failureException.getMessage())
-            );
-
-
+        qsBtn.addClickListener(e ->{
+            if (qsGrid.projectId != projectId) {
+                CallbackHandler callbackHandler = new CallbackHandler();
+                qsGrid.createDialog(callbackHandler, projectId);
+            }
+            qsGrid.showDialog(true);
         });
 
         add(textArea);
@@ -157,8 +151,33 @@ public class InputPBIComments extends VerticalLayout {
         add(getTabsheet());
         setHeightFull();
     }
-    private void updateUi(UI ui, String result) {
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+        RouteParameters parameters = event.getRouteParameters();
+        projectId = Integer.parseInt(parameters.get("project_Id").orElse(null));
+    }
 
+    public class CallbackHandler implements QS_Callback {
+        // Die Methode, die aufgerufen wird, wenn die externe Methode abgeschlossen ist
+        @Override
+        public void onComplete(String result) {
+            if(!result.equals("Cancel")) {
+
+                Notification notification = Notification.show(" Rows Uploaded start",2000, Notification.Position.MIDDLE);
+                notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+
+                UI ui = UI.getCurrent();
+                progressBar.setVisible(true);
+
+                ListenableFuture<String> future = upload2db();;
+                future.addCallback(
+                        successResult -> updateUi(ui, "Task finished: " + successResult),
+                        failureException -> updateUi(ui, "Task failed: " + failureException.getMessage())
+                );
+            }
+        }
+    }
+    private void updateUi(UI ui, String result) {
 
         ui.access(() -> {
             Notification.show(result);
@@ -199,7 +218,6 @@ public class InputPBIComments extends VerticalLayout {
             notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
         }
         return AsyncResult.forValue("Some result");
-
 
     }
 
@@ -363,7 +381,7 @@ public class InputPBIComments extends VerticalLayout {
             setupDataProviderEvent();
 
             singleFileUpload.clearFileList();
-            saveButton.setEnabled(true);
+            qsBtn.setEnabled(true);
         });
     }
 

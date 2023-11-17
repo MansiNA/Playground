@@ -2,22 +2,21 @@ package de.dbuss.tefcontrol.views;
 
 import com.vaadin.flow.component.Html;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.H2;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.server.auth.AnonymousAllowed;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import com.vaadin.flow.router.RouteAlias;
+import jakarta.annotation.security.RolesAllowed;
 
-@PageTitle("Info")
-@Route(value = "info", layout = MainLayout.class)
-@AnonymousAllowed
-public class InfoView extends VerticalLayout {
+@PageTitle("Welcome")
+@Route(value = "Welcome", layout = MainLayout.class)
+@RouteAlias(value = "", layout = MainLayout.class)
+@RolesAllowed({"MAPPING", "ADMIN", "USER"})
+// @AnonymousAllowed
+public class WelcomeView extends VerticalLayout {
 
-    public InfoView() {
+    public WelcomeView() {
         add(new H2("Hallo und willkommen"));
 
         String yourContent ="Auf dieser Seite werden Tools und Hilfsmittel bereitgestellt, um Administrative-Tätigkeiten zu vereinfachen.<br />" +

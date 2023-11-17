@@ -23,8 +23,8 @@ import de.dbuss.tefcontrol.data.entity.Projects;
 import de.dbuss.tefcontrol.data.entity.User;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.view.B2POutlookView;
 import de.dbuss.tefcontrol.data.modules.cltv_Inflow.view.CLTVInflowView;
-import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.InputPBIComments;
-import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.TechCommentView;
+import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.PBICentralComments;
+import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.PBITechComments;
 import de.dbuss.tefcontrol.data.modules.techkpi.view.Tech_KPIView;
 import de.dbuss.tefcontrol.data.service.ProjectsService;
 import de.dbuss.tefcontrol.security.AuthenticatedUser;
@@ -81,23 +81,20 @@ public class MainLayout extends AppLayout {
 
 
         // Add mappings for URLs and view classes
-        urlToViewMap.put("PFG-Mapping", PFGProductMappingView.class);
+        urlToViewMap.put("PFG_Product_Mapping", PFGProductMappingView.class);
         urlToViewMap.put("HWMapping", HWMappingView.class);
         urlToViewMap.put("kb", KnowledgeBaseView.class);
         urlToViewMap.put("Default-Mapping", DefaultView.class );
-        urlToViewMap.put("InputPBIComments", InputPBIComments.class );
+        urlToViewMap.put("PBI_Central_Comments", PBICentralComments.class );
         urlToViewMap.put("Tech_KPI", Tech_KPIView.class );
-        urlToViewMap.put("CLTV-Inflow", CLTVInflowView.class );
-        urlToViewMap.put("B2P_Outlook_Excel", B2POutlookView.class);
-        urlToViewMap.put("TechComments", TechCommentView.class);
+        urlToViewMap.put("CLTV_Inflow", CLTVInflowView.class );
+        urlToViewMap.put("B2P_Outlook", B2POutlookView.class);
+        urlToViewMap.put("PBI_Tech_Comments", PBITechComments.class);
 
         setPrimarySection(Section.DRAWER);
         addDrawerContent();
         addHeaderContent();
      //   createHeader();
-        if (accessChecker.hasAccess(InfoView.class)) {
-            UI.getCurrent().navigate(InfoView.class);
-        }
 
         logService.addLogMessage(LogService.INFO, "Ending application in MainLayout");
     }
@@ -221,7 +218,7 @@ public class MainLayout extends AppLayout {
                 Class<? extends Component> viewClass = urlToViewMap.get(pageUrl);
                 Class<? extends Component> defaultViewClass = DefaultView.class;
                 if (viewClass != null && accessChecker.hasAccess(viewClass)) {
-                    UI.getCurrent().navigate(viewClass);
+                    UI.getCurrent().navigate(viewClass, new RouteParameters("project_Id",selectedProject.getId().toString()));
                 } else if (accessChecker.hasAccess(defaultViewClass)) {
                     UI.getCurrent().navigate(defaultViewClass, new RouteParameters("project_Id",selectedProject.getId().toString()));
                 } else {
@@ -289,6 +286,9 @@ public class MainLayout extends AppLayout {
         if (accessChecker.hasAccess(AboutView.class)) {
             nav.addItem(new SideNavItem("About", AboutView.class, LineAwesomeIcon.INFO_CIRCLE_SOLID.create()));
 
+        }
+        if (accessChecker.hasAccess(WelcomeView.class)) {
+            UI.getCurrent().navigate(WelcomeView.class);
         }
 
         log.info("Ending createNavigation() in mainlayout");
