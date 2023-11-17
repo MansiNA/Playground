@@ -45,4 +45,11 @@ public class Constants {
     public static final String MAPPINGMISSINGPRODUCTS = "mapping_missing_products";
     public static final String PFG_TABLE = "PFG_Table";
 
+    // This constant is used for Tech_KPI module
+    public static final String TECH_KPI = "Tech_KPI";
+    public static final String TABLE_ACTUALS = "Table_Actuals";
+    public static final String TABLE_FACT = "Table_Fact";
+    public static final String TABLE_PLAN = "Table_Plan";
+
+
 }

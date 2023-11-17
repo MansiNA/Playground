@@ -1,6 +1,5 @@
 package de.dbuss.tefcontrol.data.service;
 
-import de.dbuss.tefcontrol.data.entity.ProjectQSEntity;
 import de.dbuss.tefcontrol.data.entity.*;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.OutlookMGSR;
 import de.dbuss.tefcontrol.data.modules.cltv_Inflow.entity.CLTVInflow;
@@ -304,11 +303,11 @@ public class ProjectConnectionService {
         }
     }
 
-    public String saveKPIFact(List<Tech_KPIView.KPI_Fact> data) {
+    public String saveKPIFact(List<Tech_KPIView.KPI_Fact> data, String tableName) {
 
         try {
 
-            String sqlInsert = "INSERT INTO [Stage_Tech_KPI].[KPI_Fact] (Zeile, NT_ID, Runrate, Scenario,[Date],Wert) VALUES (?, ?, ?, ?, ?, ?)";
+            String sqlInsert = "INSERT INTO "+ tableName +" (Zeile, NT_ID, Runrate, Scenario,[Date],Wert) VALUES (?, ?, ?, ?, ?, ?)";
 
 
             jdbcTemplate.batchUpdate(sqlInsert, data, data.size(), (ps, entity) -> {
@@ -330,20 +329,21 @@ public class ProjectConnectionService {
         }
     }
 
-    public void deleteKPIPlan(String selectedDatabase) {
-        getJdbcConnection(selectedDatabase);
+    public void deleteTableData(String dbUrl, String dbUser, String dbPassword, String tableName) {
+        DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+        jdbcTemplate = new JdbcTemplate(dataSource);
         try {
-            String sqlDelete = "DELETE FROM [Stage_Tech_KPI].[KPI_Plan]";
+            String sqlDelete = "DELETE FROM "+tableName;
             jdbcTemplate.update(sqlDelete);
         } catch (Exception e) {
             e.printStackTrace();
             errorMessage = handleDatabaseError(e);
         }
     }
-    public String saveKPIPlan(List<Tech_KPIView.KPI_Plan> data) {
+    public String saveKPIPlan(List<Tech_KPIView.KPI_Plan> data, String tableName) {
 
         try {
-            String sql = "INSERT INTO [Stage_Tech_KPI].[KPI_Plan] (Zeile, NT_ID, Spalte1, Scenario, VersionDate, VersionComment, Runrate) VALUES (?, ?, ?, ?, ?, ?, ?)";
+            String sql = "INSERT INTO "+ tableName +" (Zeile, NT_ID, Spalte1, Scenario, VersionDate, VersionComment, Runrate) VALUES (?, ?, ?, ?, ?, ?, ?)";
 
             jdbcTemplate.batchUpdate(sql, data, data.size(), (ps, entity) -> {
 
@@ -382,10 +382,10 @@ public class ProjectConnectionService {
             errorMessage = handleDatabaseError(e);
         }
     }
-    public String saveKPIActuals(List<Tech_KPIView.KPI_Actuals> data) {
+    public String saveKPIActuals(List<Tech_KPIView.KPI_Actuals> data, String tableName) {
 
         try {
-            String sqlInsert = "INSERT INTO [Stage_Tech_KPI].[KPI_Actuals] (Zeile, [NT_ID],[WTAC_ID],[sort],[M2_Area],[M1_Network],[M3_Service],[M4_Dimension],[M5_Tech],[M6_Detail],[KPI_long],[Runrate],[Unit],[Description],[SourceReport],[SourceInput],[SourceComment] ,[SourceContact] ,[SourceLink] ) VALUES (?, ?, ?, ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+            String sqlInsert = "INSERT INTO "+ tableName +" (Zeile, [NT_ID],[WTAC_ID],[sort],[M2_Area],[M1_Network],[M3_Service],[M4_Dimension],[M5_Tech],[M6_Detail],[KPI_long],[Runrate],[Unit],[Description],[SourceReport],[SourceInput],[SourceComment] ,[SourceContact] ,[SourceLink] ) VALUES (?, ?, ?, ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
             jdbcTemplate.batchUpdate(sqlInsert, data, data.size(), (ps, entity) -> {
 
