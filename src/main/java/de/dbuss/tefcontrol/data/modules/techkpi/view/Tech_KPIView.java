@@ -225,7 +225,18 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
         qsGrid = new QS_Grid(projectConnectionService);
 
         hl.setAlignItems(Alignment.BASELINE);
-        hl.add(singleFileUpload, qsBtn, databaseDetail, qsGrid);
+        hl.add(singleFileUpload, saveButton, qsBtn, databaseDetail, qsGrid);
+
+        saveButton.addClickListener(e->{
+
+            ui.setPollInterval(500);
+
+            savePlanEntities();
+            saveActualsEntities();
+            saveFactEntities();
+
+
+        });
 
         qsBtn.addClickListener(e ->{
             if (qsGrid.projectId != projectId) {
@@ -281,11 +292,34 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
         public void onComplete(String result) {
             if(!result.equals("Cancel")) {
                 //  Notification.show("Connection with Server...",1500, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-                ui.setPollInterval(500);
+                System.out.println("Start Agent-Jobs...");
 
-                savePlanEntities();
-                saveActualsEntities();
-                saveFactEntities();
+                JdbcTemplate jdbcTemplate=new JdbcTemplate();
+
+                jdbcTemplate = projectConnectionService.getJdbcDefaultConnection();
+
+                String sql = "select pp.value from pit.dbo.project_parameter pp, [PIT].[dbo].[projects] p\n" +
+                        "  where pp.namespace=p.page_url\n" +
+                        "  and pp.name in ('DBJobs')\n" +
+                        "  and p.id=?";
+
+
+                String agents = null;
+                agents=jdbcTemplate.queryForObject(sql, new Object[]{projectId},String.class);
+
+
+
+
+                if (agents != null) {
+                    String[] jobs = agents.split(";");
+                    for (String job : jobs) {
+                        //ToDo: Start AgentJob on SQL-Server
+                        System.out.println("Start job: " + job);
+                    }
+                }
+
+
+
             }
         }
     }
@@ -558,6 +592,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                 if (returnStatus.toString().contains("ok"))
                 {
                     Notification.show("KPI_Fact saved " + totalRows + " rows.",5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                    qsBtn.setEnabled(true);
                 }
                 else
                 {
@@ -753,7 +788,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
             //h3_Plan.removeAll();
             //h3_Plan.add("Plan (" + listOfKPI_Plan.size() + " rows)");
 
-            qsBtn.setEnabled(true);
+            saveButton.setEnabled(true);
 
         });
         System.out.println("setup uploader................over");
