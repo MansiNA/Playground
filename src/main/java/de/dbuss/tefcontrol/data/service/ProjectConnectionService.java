@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 
 import javax.sql.DataSource;
 import java.sql.ResultSetMetaData;
+import java.sql.Types;
 import java.util.*;
 
 @Slf4j
@@ -312,7 +313,7 @@ public class ProjectConnectionService {
 
         try {
 
-            String sqlInsert = "INSERT INTO "+ tableName +" (Zeile, NT_ID, Runrate, Scenario,[Date],Wert) VALUES (?, ?, ?, ?, ?, ?)";
+            String sqlInsert = "INSERT INTO "+ tableName +" (Zeile, NT_ID, XTD, Scenario_Name,[Date],Amount) VALUES (?, ?, ?, ?, ?, ?)";
 
 
             jdbcTemplate.batchUpdate(sqlInsert, data, data.size(), (ps, entity) -> {
@@ -325,13 +326,22 @@ public class ProjectConnectionService {
                 java.sql.Date sqlDate = (entity.getDate() != null) ? new java.sql.Date(entity.getDate().getTime()) : null;
                 ps.setDate(5, sqlDate);
                 //  ps.setDate(5, new java.sql.Date(entity.getDate().getTime() ));
-                ps.setDouble (6, entity.getWert());
+                //ps.setDouble (6, entity.getWert());
+                if (entity.getWert() == null){
+                    ps.setString(6,null);
+                }
+                else
+                {
+                    ps.setDouble (6, entity.getWert());
+                }
+
             });
             return "ok";
         } catch (Exception e) {
             e.printStackTrace();
             return handleDatabaseError(e);
         }
+
     }
 
     public void deleteTableData(String dbUrl, String dbUser, String dbPassword, String tableName) {

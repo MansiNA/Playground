@@ -495,6 +495,15 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
                 for (int i = 1; i < totalRows; i += batchSize) {
 
+                    if (Thread.interrupted()) {
+                        System.out.println("Thread hat interrupt bekommen");
+                        // Hier könntest du aufräumen oder andere Aktionen ausführen, bevor der Thread beendet wird
+                        return; // Verlässt den Thread
+                    }
+                    else {
+                        System.out.println("Thread läuft noch...");
+                    }
+
                     int endIndex = Math.min(i + batchSize, totalRows);
 
                     List<KPI_Fact> batchData = listOfKPI_Fact.subList(i, endIndex);
@@ -505,6 +514,27 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
                     String resultKPIFact = projectConnectionService.saveKPIFact(batchData, factTableName);
                     returnStatus.set(resultKPIFact);
+
+                    System.out.println("ResultKPIFact: " + returnStatus.toString());
+                    //ToDO: Check why for-loop not exited in event of an error
+                    if (returnStatus.toString().equals("ok")){
+                        System.out.println("Alles in Butter...");
+                    }
+                    else{
+                        System.out.println("Fehler aufgetreten...");
+                        Thread.currentThread().interrupt(); // Interrupt-Signal setzen
+
+                        ui.access(() -> {
+                            progressBarFact.setVisible(false);
+                            Notification.show("Error during KPI_Fact upload! " + returnStatus.toString(), 15000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                            ui.setPollInterval(-1);
+                        });
+
+
+                        return;
+
+                    }
+
 
                     int finalI = i;
                     ui.access(() -> {
@@ -517,7 +547,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
             } catch (Exception e) {
                 ui.access(() -> {
 
-                    Notification.show("Error during KPI_Fact upload! ", 4000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                    Notification.show("Error during KPI_Fact upload! ", 15000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
                   
                 });
                 e.printStackTrace();
@@ -527,11 +557,11 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
                 if (returnStatus.toString().contains("ok"))
                 {
-                    Notification.show("KPI_Fact saved " + totalRows + " rows.",3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                    Notification.show("KPI_Fact saved " + totalRows + " rows.",5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
                 }
                 else
                 {
-                    Notification.show("Error during KPI_Fact upload! " + returnStatus.toString(), 4000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                    Notification.show("Error during KPI_Fact upload! " + returnStatus.toString(), 15000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
                 }
 
                 ui.setPollInterval(-1);
@@ -1381,15 +1411,15 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                 case Cell.CELL_TYPE_NUMERIC:
                     return  (double) cell.getNumericCellValue();
                 case Cell.CELL_TYPE_STRING:
-                    return 0.0;
+                    return null;
                 case Cell.CELL_TYPE_FORMULA:
-                    return 0.0;
+                    return null;
                 case Cell.CELL_TYPE_BLANK:
-                    return 0.0;
+                    return null;
                 case Cell.CELL_TYPE_BOOLEAN:
-                    return 0.0;
+                    return null;
                 case Cell.CELL_TYPE_ERROR:
-                    return 0.0;
+                    return null;
 
             }
             article.add("\n" + sheetName + " Zeile " + zeile.toString() + ", column >" + spalte + "< konnte in checkCellDouble nicht aufgelöst werden. Typ=" + cell.getCellType());
@@ -1404,14 +1434,14 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                     article.setText("\n" + sheetName + ": Info: row >" + zeile.toString() + "<, column " + spalte + ": formula cell error => replaced to 0");
                     textArea.add(article);
 
-                    return  0.0;
+                    return  null;
 
             }
             System.out.println("Zeile " + zeile.toString() + ", Spalte " + spalte + " konnte in checkCellDouble nicht aufgelöst werden. Typ=" + cell.getCellType() + e.getMessage());
         }
 
 
-        return  0.0;
+        return  null;
 
 
 
@@ -1591,7 +1621,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
         private Date Date;
 
-        private Double Wert=0.0;
+        private Double Wert;
 
         public int getRow() {
             return row;
