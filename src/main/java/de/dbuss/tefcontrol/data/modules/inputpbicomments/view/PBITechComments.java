@@ -84,6 +84,7 @@ public class PBITechComments extends VerticalLayout implements BeforeEnterObserv
     private Div textArea = new Div();
     private Button login;
     private Button qsBtn;
+    private Button uploadBtn;
     private QS_Grid qsGrid;
     private String dbUser;
     private String dbPassword;
@@ -98,8 +99,13 @@ public class PBITechComments extends VerticalLayout implements BeforeEnterObserv
         htmlDiv.getElement().setProperty("innerHTML", "<h2>Input Frontend for Tech Comments");
         add(htmlDiv);
 
-        qsBtn = new Button("Start Job");
+        uploadBtn = new Button("Upload");
+        uploadBtn.setEnabled(false);
+
+        qsBtn = new Button("QS and Start Job");
         qsBtn.setEnabled(false);
+
+
 
         login = new Button("Login");
         login.addClickListener(e -> {
@@ -154,10 +160,16 @@ public class PBITechComments extends VerticalLayout implements BeforeEnterObserv
         hl.setAlignItems(Alignment.BASELINE);
 
       //  hl.add(singleFileUpload,qsBtn,saveButton, databaseDetail, qsDialog, login);
-        hl.add(singleFileUpload,qsBtn, databaseDetail, qsGrid, login);
+        hl.add(singleFileUpload,uploadBtn,qsBtn, databaseDetail, qsGrid, login);
         add(hl);
 
+        uploadBtn.addClickListener(e ->{
+            save2db();
+            qsBtn.setEnabled(true);
+        });
+
         qsBtn.addClickListener(e ->{
+
             if (qsGrid.projectId != projectId) {
                 CallbackHandler callbackHandler = new CallbackHandler();
                 qsGrid.createDialog(callbackHandler, projectId);
@@ -200,9 +212,17 @@ public class PBITechComments extends VerticalLayout implements BeforeEnterObserv
 
                 String agents = null;
                 agents=jdbcTemplate.queryForObject(sql, new Object[]{projectId},String.class);
-                System.out.println("Start jobs: " + agents);
+
 
                 //ToDo: Start defined AgentJobs of Project in ordered way
+
+                if (agents != null) {
+                    String[] jobs = agents.split(";");
+                    for (String job : jobs) {
+                        System.out.println("Start job: " + job);
+                    }
+                }
+
 
             }
 
@@ -543,8 +563,7 @@ public class PBITechComments extends VerticalLayout implements BeforeEnterObserv
             gridKPIsComment.setDataProvider(dataUnitsDeepDiveProvider);
 
             singleFileUpload.clearFileList();
-            save2db();
-            qsBtn.setEnabled(true);
+            uploadBtn.setEnabled(true);
         });
     }
 

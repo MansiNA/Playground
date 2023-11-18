@@ -728,7 +728,10 @@ public class ProjectConnectionService {
                 ps.setString(7, entity.getScenario());
                 ps.setString(8, entity.getXtd());
             });
-
+            //delete rows with Empty Comments
+            String sqlUpdate ="delete from " + tableName + " where comment is null";
+            System.out.println(sqlUpdate);
+            jdbcTemplate.update(sqlUpdate);
             return "ok";
         } catch (Exception e) {
             e.printStackTrace();
@@ -760,7 +763,10 @@ public class ProjectConnectionService {
                 ps.setString(7, entity.getScenario());
                 ps.setString(8, entity.getXtd());
             });
-
+            //delete rows with Empty Comments
+            String sqlUpdate ="delete from " + tableName + " where comment is null";
+            System.out.println(sqlUpdate);
+            jdbcTemplate.update(sqlUpdate);
             return "ok";
         } catch (Exception e) {
             e.printStackTrace();
@@ -792,6 +798,10 @@ public class ProjectConnectionService {
                 ps.setString(7, entity.getPlanScenario());
             });
 
+            //delete rows with Empty Comments
+            String sqlUpdate ="delete from " + tableName + " where comment is null";
+            System.out.println(sqlUpdate);
+            jdbcTemplate.update(sqlUpdate);
             return "ok";
         } catch (Exception e) {
             e.printStackTrace();
