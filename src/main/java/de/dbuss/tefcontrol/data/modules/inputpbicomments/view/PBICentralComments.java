@@ -42,9 +42,12 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.jdbc.CannotGetJdbcConnectionException;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.util.concurrent.ListenableFuture;
 
+import javax.sql.DataSource;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
@@ -84,12 +87,17 @@ public class PBICentralComments extends VerticalLayout implements BeforeEnterObs
     private String idKey = "row";
     private int projectId;
     private QS_Grid qsGrid;
+
+    private Button uploadBtn;
     private Button qsBtn;
 
     public PBICentralComments(AuthenticatedUser authenticatedUser, ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService) {
 
         this.authenticatedUser = authenticatedUser;
         this.projectConnectionService = projectConnectionService;
+
+        uploadBtn = new Button("Upload");
+        uploadBtn.setEnabled(false);
 
         qsBtn = new Button("Start Job");
         qsBtn.setEnabled(false);
@@ -135,8 +143,13 @@ public class PBICentralComments extends VerticalLayout implements BeforeEnterObs
         HorizontalLayout hl = new HorizontalLayout();
         hl.setAlignItems(Alignment.BASELINE);
         // hl.add(singleFileUpload, saveButton, databaseDetail, progressBar);
-        hl.add(singleFileUpload, qsBtn, databaseDetail, progressBar, qsGrid);
+        hl.add(singleFileUpload, uploadBtn, qsBtn, databaseDetail, progressBar, qsGrid);
         add(hl);
+
+        uploadBtn.addClickListener(e ->{
+            save2db();
+            qsBtn.setEnabled(true);
+        });
 
         qsBtn.addClickListener(e ->{
             if (qsGrid.projectId != projectId) {
@@ -162,19 +175,86 @@ public class PBICentralComments extends VerticalLayout implements BeforeEnterObs
         @Override
         public void onComplete(String result) {
             if(!result.equals("Cancel")) {
+                System.out.println("Start Agent-Jobs...");
 
-                Notification notification = Notification.show(" Rows Uploaded start",2000, Notification.Position.MIDDLE);
-                notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                JdbcTemplate jdbcTemplate=new JdbcTemplate();
 
-                UI ui = UI.getCurrent();
-                progressBar.setVisible(true);
+                jdbcTemplate = projectConnectionService.getJdbcDefaultConnection();
 
-      //          ListenableFuture<String> future = upload2db();;
-      //          future.addCallback(
-      //                  successResult -> updateUi(ui, "Task finished: " + successResult),
-      //                  failureException -> updateUi(ui, "Task failed: " + failureException.getMessage())
-      //          );
+                String sql = "select pp.value from pit.dbo.project_parameter pp, [PIT].[dbo].[projects] p\n" +
+                        "  where pp.namespace=p.page_url\n" +
+                        "  and pp.name in ('DBJobs')\n" +
+                        "  and p.id=?";
+
+
+                String agents = null;
+
+                try{
+                    agents=jdbcTemplate.queryForObject(sql, new Object[]{projectId},String.class);
+                }
+                catch(Exception e)
+                {
+                    Notification.show("Problem to find relevant Jobs in project_parameter for job_id " + projectId+ "!",10000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                    return;
+                }
+
+
+                sql = "select pp.name, pp.value from pit.dbo.project_parameter pp, [PIT].[dbo].[projects] p\n" +
+                        "  where pp.namespace=p.page_url\n" +
+                        "  and pp.name in ('DB_Server','DB_Name', 'DB_User','DB_Password')\n" +
+                        "  and p.id="+projectId ;
+
+                List<ProjectParameter> resultList = jdbcTemplate.query(sql, (rs, rowNum) -> {
+                    ProjectParameter projectParameter = new ProjectParameter();
+                    projectParameter.setName(rs.getString("name"));
+                    projectParameter.setValue(rs.getString("value"));
+                    return projectParameter;
+                });
+                String dbName = null;
+                String dbServer = null;
+                for (ProjectParameter projectParameter : resultList) {
+                    if (Constants.DB_NAME.equals(projectParameter.getName())) {
+                        dbName = projectParameter.getValue();
+                    } else if (Constants.DB_USER.equals(projectParameter.getName())) {
+                        dbUser = projectParameter.getValue();
+                    } else if (Constants.DB_PASSWORD.equals(projectParameter.getName())) {
+                        dbPassword = projectParameter.getValue();
+                    } else if (Constants.DB_SERVER.equals(projectParameter.getName())) {
+                        dbServer = projectParameter.getValue();
+                    }
+                }
+                dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
+
+                DataSource dataSource = projectConnectionService.getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+
+                jdbcTemplate.setDataSource(dataSource);
+
+
+                if (agents != null) {
+                    String[] jobs = agents.split(";");
+                    for (String job : jobs) {
+                        System.out.println("Start job: " + job);
+
+                        try {
+                            sql = "msdb.dbo.sp_start_job @job_name='" + job + "'";
+                            jdbcTemplate.execute(sql);
+                            Notification.show(job + " startet..." ,5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                        }
+                        catch (CannotGetJdbcConnectionException connectionException) {
+                            Notification.show("Error connection to DB", 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+
+                        } catch (Exception e) {
+                            // Handle other exceptions
+                            Notification.show("Error: " + e.getMessage(), 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+
+                        }
+
+                    }
+                }
+
             }
+
+
         }
     }
     private void updateUi(UI ui, String result) {
@@ -185,7 +265,7 @@ public class PBICentralComments extends VerticalLayout implements BeforeEnterObs
         });
     }
 
-    private ListenableFuture<String> upload2db() {
+    private void save2db() {
         List<Financials> allFinancialsItems = getFinancialsDataProviderAllItems();
         List<Subscriber> allSubscriber = getSubscriberDataProviderAllItems();
         List<UnitsDeepDive> allUnitsDeepDive = getUnitsDeepDiveDataProviderAllItems();
@@ -217,7 +297,6 @@ public class PBICentralComments extends VerticalLayout implements BeforeEnterObs
             notification = Notification.show("Error during UnitsDeepDive upload: " + resultUnits,5000, Notification.Position.MIDDLE);
             notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
         }
-        return AsyncResult.forValue("Some result");
 
     }
 
@@ -382,9 +461,8 @@ public class PBICentralComments extends VerticalLayout implements BeforeEnterObs
 
             singleFileUpload.clearFileList();
 
-            upload2db();
 
-            qsBtn.setEnabled(true);
+            uploadBtn.setEnabled(true);
         });
     }
 

@@ -37,6 +37,7 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
@@ -308,13 +309,55 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                 agents=jdbcTemplate.queryForObject(sql, new Object[]{projectId},String.class);
 
 
+                sql = "select pp.name, pp.value from pit.dbo.project_parameter pp, [PIT].[dbo].[projects] p\n" +
+                        "  where pp.namespace=p.page_url\n" +
+                        "  and pp.name in ('DB_Server','DB_Name', 'DB_User','DB_Password')\n" +
+                        "  and p.id="+projectId ;
+
+                List<ProjectParameter> resultList = jdbcTemplate.query(sql, (rs, rowNum) -> {
+                    ProjectParameter projectParameter = new ProjectParameter();
+                    projectParameter.setName(rs.getString("name"));
+                    projectParameter.setValue(rs.getString("value"));
+                    return projectParameter;
+                });
+                String dbName = null;
+                String dbServer = null;
+                for (ProjectParameter projectParameter : resultList) {
+                    if (Constants.DB_NAME.equals(projectParameter.getName())) {
+                        dbName = projectParameter.getValue();
+                    } else if (Constants.DB_USER.equals(projectParameter.getName())) {
+                        dbUser = projectParameter.getValue();
+                    } else if (Constants.DB_PASSWORD.equals(projectParameter.getName())) {
+                        dbPassword = projectParameter.getValue();
+                    } else if (Constants.DB_SERVER.equals(projectParameter.getName())) {
+                        dbServer = projectParameter.getValue();
+                    }
+                }
+                dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
+
+                DataSource dataSource = projectConnectionService.getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+
+                jdbcTemplate.setDataSource(dataSource);
 
 
                 if (agents != null) {
                     String[] jobs = agents.split(";");
                     for (String job : jobs) {
-                        //ToDo: Start AgentJob on SQL-Server
                         System.out.println("Start job: " + job);
+
+                        try {
+                            sql = "msdb.dbo.sp_start_job @job_name='" + job + "'";
+                            jdbcTemplate.execute(sql);
+                        }
+                        catch (CannotGetJdbcConnectionException connectionException) {
+                            Notification.show("Error connection to DB", 4000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+
+                        } catch (Exception e) {
+                            // Handle other exceptions
+                            Notification.show("Error: " + e.getMessage(), 4000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+
+                        }
+
                     }
                 }
 
