@@ -139,6 +139,10 @@ public class QS_Grid extends Composite<Div> {
         });
         HorizontalLayout hlexecute = new HorizontalLayout(executeButton);
 
+        if (listOfProjectQs.isEmpty()) {
+            executeButton.setEnabled(false);
+            okButton.setEnabled(true);
+        }
         Button closeButton = new Button("Close");
         closeButton.addClickListener(e -> {
             qsDialog.close();
