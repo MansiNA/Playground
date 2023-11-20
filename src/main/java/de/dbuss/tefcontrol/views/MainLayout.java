@@ -24,6 +24,7 @@ import de.dbuss.tefcontrol.data.entity.User;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.view.B2POutlookView;
 import de.dbuss.tefcontrol.data.modules.cltv_Inflow.view.CLTVInflowView;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.PBICentralComments;
+import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.PBIFlashFinancials;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.PBITechComments;
 import de.dbuss.tefcontrol.data.modules.techkpi.view.Tech_KPIView;
 import de.dbuss.tefcontrol.data.service.ProjectsService;
@@ -90,6 +91,7 @@ public class MainLayout extends AppLayout {
         urlToViewMap.put("CLTV_Inflow", CLTVInflowView.class );
         urlToViewMap.put("B2P_Outlook", B2POutlookView.class);
         urlToViewMap.put("PBI_Tech_Comments", PBITechComments.class);
+        urlToViewMap.put("PBI_FlashFinancials", PBIFlashFinancials.class);
 
         setPrimarySection(Section.DRAWER);
         addDrawerContent();
