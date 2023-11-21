@@ -287,21 +287,26 @@ public class QS_Grid extends Composite<Div> {
             // Create a grid for rows
             Grid<Map<String, Object>> rowsGrid = new Grid<>();
             // Set the data for the grid
-            rowsGrid.setItems(rowsMap.get(selectedProjectQS.getId()));
+            List<Map<String, Object>> rowsData = rowsMap.get(selectedProjectQS.getId());
 
-            // Add columns dynamically based on the keys in the first row (assuming all rows have the same keys)
-            Set<String> columns = rowsMap.get(selectedProjectQS.getId()).isEmpty() ?
-                    Collections.emptySet() : rowsMap.get(selectedProjectQS.getId()).get(0).keySet();
+            if (rowsData != null) {
 
-            for (String column : columns) {
-                rowsGrid.addColumn(row -> row.get(column)).setHeader(column);
+                rowsGrid.setItems(rowsData);
+
+                // Add columns dynamically based on the keys in the first row (assuming all rows have the same keys)
+                Set<String> columns = rowsData.isEmpty() ?
+                        Collections.emptySet() : rowsData.get(0).keySet();
+
+                for (String column : columns) {
+                    rowsGrid.addColumn(row -> row.get(column)).setHeader(column);
+                }
+                // Add components to the rowsDialog layout
+                VerticalLayout rowsDialogContent = new VerticalLayout();
+                rowsDialogContent.add(rowsGrid, cancelContextButton);
+                contextDialog.add(rowsDialogContent);
+                contextDialog.open();
+                // Notification.show("Show rows for QS ID: " + selectedProjectQS.getId());
             }
-            // Add components to the rowsDialog layout
-            VerticalLayout rowsDialogContent = new VerticalLayout();
-            rowsDialogContent.add(rowsGrid, cancelContextButton);
-            contextDialog.add(rowsDialogContent);
-            contextDialog.open();
-            Notification.show("Show rows for QS ID: " + selectedProjectQS.getId());
         }
     }
 
