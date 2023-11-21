@@ -818,4 +818,39 @@ public class ProjectConnectionService {
             return handleDatabaseError(e);
         }
     }
+
+    public String saveFlashFinancials(List<FlashFinancials> data, String tableName, String dbUrl, String dbUser, String dbPassword) {
+
+        try {
+
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
+            String sqlDelete = "DELETE FROM " + tableName;
+
+            jdbcTemplate.update(sqlDelete);
+
+            String sqlInsert = "INSERT INTO "+ tableName +" (Zeile, Month, Category, Comment,Scenario, XTD) VALUES (?, ?, ?, ?, ?, ?)";
+
+            jdbcTemplate.batchUpdate(sqlInsert, data, data.size(), (ps, entity) -> {
+
+                ps.setInt(1, entity.getZeile());
+                ps.setInt(2, entity.getMonth());
+                ps.setString(3, entity.getCategory());
+                ps.setString(4, entity.getComment());
+                ps.setString(5, entity.getScenario());
+                ps.setString(6, entity.getXtd());
+            });
+
+            //delete rows with Empty Comments
+            String sqlUpdate ="delete from " + tableName + " where comment is null";
+            System.out.println(sqlUpdate);
+            jdbcTemplate.update(sqlUpdate);
+            return "ok";
+        } catch (Exception e) {
+            e.printStackTrace();
+            return handleDatabaseError(e);
+        }
+    }
+
 }

@@ -4,10 +4,12 @@ import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.contextmenu.GridContextMenu;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -31,12 +33,15 @@ public class QS_Grid extends Composite<Div> {
     private JdbcTemplate jdbcTemplate;
     private ProjectConnectionService projectConnectionService;
     Dialog qsDialog = new Dialog();
+    private Dialog contextDialog;
+    private Button cancelContextButton;
     QS_Callback qs_callback;
     @Getter
     public int projectId;
     private String dbUrl;
     private String dbUser;
     private String dbPassword;
+    private Map<Integer, List<Map<String, Object>>> rowsMap = new HashMap<>();
 
     public QS_Grid(ProjectConnectionService projectConnectionService) {
         this.projectConnectionService = projectConnectionService;
@@ -54,6 +59,8 @@ public class QS_Grid extends Composite<Div> {
         qsDialog.setVisible(false);
         qsDialog.setHeaderTitle("QS for Project-ID " + projectId );
         getContent().add(qsDialog);
+
+        createContextMenu();
     }
 
     public void showDialog(boolean show)
@@ -139,20 +146,21 @@ public class QS_Grid extends Composite<Div> {
         });
         HorizontalLayout hlexecute = new HorizontalLayout(executeButton);
 
+        if (listOfProjectQs.isEmpty()) {
+            executeButton.setEnabled(false);
+            okButton.setEnabled(true);
+        }
         Button closeButton = new Button("Close");
         closeButton.addClickListener(e -> {
             qsDialog.close();
             qs_callback.onComplete("Cancel");
         });
 
-
         HorizontalLayout hl = new HorizontalLayout(closeButton,okButton);
-
 
         dialogLayout.add(paragraph, hlexecute, grid,hl);
 
         return dialogLayout;
-
     }
 
     private void getListOfProjectQsWithResult() {
@@ -184,7 +192,6 @@ public class QS_Grid extends Composite<Div> {
                 }
         }
         dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
-
 
     }
 
@@ -238,6 +245,7 @@ public class QS_Grid extends Composite<Div> {
                     if (rows.isEmpty()) {
                         projectQSEntity.setResult("Ok");
                     } else {
+                        rowsMap.put(projectQSEntity.getId(), rows);
                         projectQSEntity.setResult("Failed");
                     }
 
@@ -252,6 +260,70 @@ public class QS_Grid extends Composite<Div> {
         }
         return listOfProjectQs;
     }
+    private void createContextMenu() {
+        // Add a context menu to the grid
+        GridContextMenu<ProjectQSEntity> contextMenu = new GridContextMenu<>(grid);
+
+        // Add a menu item for "Show rows"
+        contextMenu.addItem("Show rows", this::showRows);
+
+        // Add a menu item for "Show Description"
+        contextMenu.addItem("Show Description", this::showDescription);
+
+        contextDialog = new Dialog();
+        cancelContextButton = new Button("Cancel");
+        cancelContextButton.addClickListener(e -> contextDialog.close());
+    }
+
+    private void showRows(GridContextMenu.GridContextMenuItemClickEvent<ProjectQSEntity> event) {
+        // Get the selected ProjectQSEntity
+        ProjectQSEntity selectedProjectQS = event.getItem().orElse(null);
+
+        // Check if a row is selected
+        if (selectedProjectQS != null) {
+            contextDialog.removeAll();
+            contextDialog.setWidth("800px"); // Set the width as per your requirement
+
+            // Create a grid for rows
+            Grid<Map<String, Object>> rowsGrid = new Grid<>();
+            // Set the data for the grid
+            List<Map<String, Object>> rowsData = rowsMap.get(selectedProjectQS.getId());
+
+            if (rowsData != null) {
+
+                rowsGrid.setItems(rowsData);
+
+                // Add columns dynamically based on the keys in the first row (assuming all rows have the same keys)
+                Set<String> columns = rowsData.isEmpty() ?
+                        Collections.emptySet() : rowsData.get(0).keySet();
+
+                for (String column : columns) {
+                    rowsGrid.addColumn(row -> row.get(column)).setHeader(column);
+                }
+                // Add components to the rowsDialog layout
+                VerticalLayout rowsDialogContent = new VerticalLayout();
+                rowsDialogContent.add(rowsGrid, cancelContextButton);
+                contextDialog.add(rowsDialogContent);
+                contextDialog.open();
+                // Notification.show("Show rows for QS ID: " + selectedProjectQS.getId());
+            }
+        }
+    }
+
+    private void showDescription(GridContextMenu.GridContextMenuItemClickEvent<ProjectQSEntity> event) {
+        // Get the selected ProjectQSEntity
+        ProjectQSEntity selectedProjectQS = event.getItem().orElse(null);
+
+        // Check if a row is selected
+        if (selectedProjectQS != null && (selectedProjectQS.getProject().getId() == projectId)) {
+            contextDialog.removeAll();
+            contextDialog.add(new Paragraph(selectedProjectQS.getDescription()));
+            contextDialog.add(cancelContextButton);
+            contextDialog.open();
+            Notification.show("Show Description for QS ID: " + selectedProjectQS.getId());
+        }
+    }
+
     public DataSource getDataSourceUsingParameter(String dbUrl, String dbUser, String dbPassword) {
 
         if(dbUser != null) {
