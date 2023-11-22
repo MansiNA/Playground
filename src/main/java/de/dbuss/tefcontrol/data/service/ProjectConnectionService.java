@@ -514,7 +514,7 @@ public class ProjectConnectionService {
             // Create a RowMapper to map the query result to a ProductHierarchie object
             RowMapper<ProductHierarchie> rowMapper = (rs, rowNum) -> {
                 ProductHierarchie productHierarchie = new ProductHierarchie();
-                productHierarchie.setId(rs.getLong("id"));
+           //     productHierarchie.setId(rs.getLong("id"));
                 productHierarchie.setPfg_Type(rs.getString("PFG_PO/PP"));
                 productHierarchie.setNode(rs.getString("Knoten"));
                 productHierarchie.setProduct_name(rs.getString("Product"));

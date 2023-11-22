@@ -10,7 +10,7 @@ import java.util.Date;
 @Getter
 @Setter
 @Entity
-@Table(schema = "dbo", name = "IN_FRONT_CLTV_Product_Hier_PFG")
+
 public class ProductHierarchie {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
