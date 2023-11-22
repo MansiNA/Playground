@@ -60,7 +60,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
     private JdbcTemplate jdbcTemplate;
     private final ProjectConnectionService projectConnectionService;
-    private Button saveButton;
+    private Button uploadBtn;
     private String actualsTableName;
     private String factTableName;
     private String planTableName;
@@ -121,7 +121,10 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
         this.jdbcTemplate = jdbcTemplate;
         this.projectConnectionService = projectConnectionService;
 
-        qsBtn = new Button("Start Job");
+        uploadBtn = new Button("Upload");
+        uploadBtn.setEnabled(false);
+
+        qsBtn = new Button("QS and Start Job");
         qsBtn.setEnabled(false);
 
         progressBarPlan.setVisible(false);
@@ -191,10 +194,6 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
    //     add(TodoList);
 
-        saveButton = new Button("Save to DB");
-        saveButton.setEnabled(false);
-
-
         List<ProjectParameter> listOfProjectParameters = projectParameterService.findAll();
         String dbServer = null;
         String dbName = null;
@@ -226,16 +225,15 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
         qsGrid = new QS_Grid(projectConnectionService);
 
         hl.setAlignItems(Alignment.BASELINE);
-        hl.add(singleFileUpload, saveButton, qsBtn, databaseDetail, qsGrid);
+        hl.add(singleFileUpload, uploadBtn, qsBtn, databaseDetail, qsGrid);
 
-        saveButton.addClickListener(e->{
+        uploadBtn.addClickListener(e->{
 
             ui.setPollInterval(500);
 
             savePlanEntities();
             saveActualsEntities();
             saveFactEntities();
-
 
         });
 
@@ -292,77 +290,12 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
         @Override
         public void onComplete(String result) {
             if(!result.equals("Cancel")) {
-                //  Notification.show("Connection with Server...",1500, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-                System.out.println("Start Agent-Jobs...");
-
-                JdbcTemplate jdbcTemplate=new JdbcTemplate();
-
-                jdbcTemplate = projectConnectionService.getJdbcDefaultConnection();
-
-                String sql = "select pp.value from pit.dbo.project_parameter pp, [PIT].[dbo].[projects] p\n" +
-                        "  where pp.namespace=p.page_url\n" +
-                        "  and pp.name in ('DBJobs')\n" +
-                        "  and p.id=?";
-
-
-                String agents = null;
-                agents=jdbcTemplate.queryForObject(sql, new Object[]{projectId},String.class);
-
-
-                sql = "select pp.name, pp.value from pit.dbo.project_parameter pp, [PIT].[dbo].[projects] p\n" +
-                        "  where pp.namespace=p.page_url\n" +
-                        "  and pp.name in ('DB_Server','DB_Name', 'DB_User','DB_Password')\n" +
-                        "  and p.id="+projectId ;
-
-                List<ProjectParameter> resultList = jdbcTemplate.query(sql, (rs, rowNum) -> {
-                    ProjectParameter projectParameter = new ProjectParameter();
-                    projectParameter.setName(rs.getString("name"));
-                    projectParameter.setValue(rs.getString("value"));
-                    return projectParameter;
-                });
-                String dbName = null;
-                String dbServer = null;
-                for (ProjectParameter projectParameter : resultList) {
-                    if (Constants.DB_NAME.equals(projectParameter.getName())) {
-                        dbName = projectParameter.getValue();
-                    } else if (Constants.DB_USER.equals(projectParameter.getName())) {
-                        dbUser = projectParameter.getValue();
-                    } else if (Constants.DB_PASSWORD.equals(projectParameter.getName())) {
-                        dbPassword = projectParameter.getValue();
-                    } else if (Constants.DB_SERVER.equals(projectParameter.getName())) {
-                        dbServer = projectParameter.getValue();
-                    }
+                String message = projectConnectionService.startAgent(projectId);
+                if (!message.contains("Error")) {
+                    Notification.show(message, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                } else {
+                    Notification.show(message, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
                 }
-                dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
-
-                DataSource dataSource = projectConnectionService.getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
-
-                jdbcTemplate.setDataSource(dataSource);
-
-
-                if (agents != null) {
-                    String[] jobs = agents.split(";");
-                    for (String job : jobs) {
-                        System.out.println("Start job: " + job);
-
-                        try {
-                            sql = "msdb.dbo.sp_start_job @job_name='" + job + "'";
-                            jdbcTemplate.execute(sql);
-                        }
-                        catch (CannotGetJdbcConnectionException connectionException) {
-                            Notification.show("Error connection to DB", 4000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
-
-                        } catch (Exception e) {
-                            // Handle other exceptions
-                            Notification.show("Error: " + e.getMessage(), 4000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
-
-                        }
-
-                    }
-                }
-
-
-
             }
         }
     }
@@ -831,7 +764,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
             //h3_Plan.removeAll();
             //h3_Plan.add("Plan (" + listOfKPI_Plan.size() + " rows)");
 
-            saveButton.setEnabled(true);
+            uploadBtn.setEnabled(true);
 
         });
         System.out.println("setup uploader................over");

@@ -64,6 +64,7 @@ public class B2POutlookView extends VerticalLayout implements BeforeEnterObserve
     private int projectId;
     private QS_Grid qsGrid;
     private Button qsBtn;
+    private Button uploadBtn;
 
     ListenableFuture<String> future;
 
@@ -74,7 +75,10 @@ public class B2POutlookView extends VerticalLayout implements BeforeEnterObserve
         this.backendService=backendService;
         this.projectConnectionService = projectConnectionService;
 
-        qsBtn = new Button("Start Job");
+        uploadBtn = new Button("Upload");
+        uploadBtn.setEnabled(false);
+
+        qsBtn = new Button("QS and Start Job");
         qsBtn.setEnabled(false);
 
         List<ProjectParameter> listOfProjectParameters = projectParameterService.findAll();
@@ -107,8 +111,13 @@ public class B2POutlookView extends VerticalLayout implements BeforeEnterObserve
         HorizontalLayout hl = new HorizontalLayout();
         hl.setAlignItems(Alignment.BASELINE);
         // hl.add(singleFileUpload,saveButton, databaseDetail);
-        hl.add(singleFileUpload,qsBtn, databaseDetail, qsGrid);
+        hl.add(singleFileUpload,uploadBtn, qsBtn, databaseDetail, qsGrid);
         add(hl);
+
+        uploadBtn.addClickListener(e ->{
+            save2db();
+            qsBtn.setEnabled(true);
+        });
 
         qsBtn.addClickListener(e ->{
             if (qsGrid.projectId != projectId) {
@@ -144,27 +153,36 @@ public class B2POutlookView extends VerticalLayout implements BeforeEnterObserve
         @Override
         public void onComplete(String result) {
             if(!result.equals("Cancel")) {
-
-                Notification notification = Notification.show(" Rows Uploaded start",2000, Notification.Position.MIDDLE);
-                notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-
-                List<OutlookMGSR> listOfAllData = new ArrayList<>();
-
-                for (List<OutlookMGSR> sheetData : listOfAllSheets) {
-                    listOfAllData.addAll(sheetData);
-                }
-                String resultFinancial = projectConnectionService.saveOutlookMGSR(listOfAllData, tableName, dbUrl, dbUser, dbPassword);
-                if (resultFinancial.contains("ok")){
-                    notification = Notification.show(listOfAllData.size() + " B2P_Outlook Rows Uploaded successfully",5000, Notification.Position.MIDDLE);
-                    notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                String message = projectConnectionService.startAgent(projectId);
+                if (!message.contains("Error")) {
+                    Notification.show(message, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
                 } else {
-                    notification = Notification.show("Error during B2P_Outlook upload: " + resultFinancial ,5000, Notification.Position.MIDDLE);
-                    notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+                    Notification.show(message, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
                 }
             }
-
         }
     }
+
+    private void save2db(){
+
+        Notification notification = Notification.show(" Rows Uploaded start",2000, Notification.Position.MIDDLE);
+        notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+
+        List<OutlookMGSR> listOfAllData = new ArrayList<>();
+
+        for (List<OutlookMGSR> sheetData : listOfAllSheets) {
+            listOfAllData.addAll(sheetData);
+        }
+        String resultFinancial = projectConnectionService.saveOutlookMGSR(listOfAllData, tableName, dbUrl, dbUser, dbPassword);
+        if (resultFinancial.contains("ok")){
+            notification = Notification.show(listOfAllData.size() + " B2P_Outlook Rows Uploaded successfully",5000, Notification.Position.MIDDLE);
+            notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+        } else {
+            notification = Notification.show("Error during B2P_Outlook upload: " + resultFinancial ,5000, Notification.Position.MIDDLE);
+            notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+        }
+    }
+
     private void start_thread() {
 
         Notification.show("starte Thread");
@@ -290,7 +308,7 @@ public class B2POutlookView extends VerticalLayout implements BeforeEnterObserve
             GenericDataProvider dataFinancialsProvider = new GenericDataProvider(listOfAllData, "Zeile");
             gridMGSR.setDataProvider(dataFinancialsProvider);
             singleFileUpload.clearFileList();
-            qsBtn.setEnabled(true);
+            uploadBtn.setEnabled(true);
         });
     }
 
