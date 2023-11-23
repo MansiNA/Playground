@@ -2,6 +2,7 @@ package de.dbuss.tefcontrol.data.service;
 
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
+import de.dbuss.tefcontrol.data.entity.Constants;
 import de.dbuss.tefcontrol.data.entity.ProjectQSEntity;
 import de.dbuss.tefcontrol.data.entity.ProjectSql;
 import de.dbuss.tefcontrol.data.entity.Projects;
@@ -56,9 +57,9 @@ public class ProjectQsService {
                     List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql);
 
                     if (rows.isEmpty()) {
-                        projectQSEntity.setResult("Ok");
+                        projectQSEntity.setResult(Constants.OK);
                     } else {
-                        projectQSEntity.setResult("Failed");
+                        projectQSEntity.setResult(Constants.Failed);
                     }
 
                 } catch ( Exception e) {

@@ -6,6 +6,8 @@ package de.dbuss.tefcontrol.data.entity;
 public class Constants {
 
     // This constant is used for common purposes
+    public static final String OK = "Ok";
+    public static final String Failed = "Failed";
     public static final String SAVE = "Save";
     public static final String DB_SERVER = "DB_Server";
     public static final String DB_NAME = "DB_Name";

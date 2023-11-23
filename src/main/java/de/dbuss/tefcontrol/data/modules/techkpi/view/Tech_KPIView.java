@@ -331,7 +331,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
     }*/
 
     private Icon createStatusIcon(String status) {
-        boolean isAvailable = "OK".equals(status);
+        boolean isAvailable = Constants.OK.equals(status);
         Icon icon;
         if (isAvailable) {
             icon = VaadinIcon.CHECK.create();
@@ -393,7 +393,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
             ui.access(() -> {
                 progressBarPlan.setVisible(false);
 
-                if (returnStatus.toString().contains("ok"))
+                if (returnStatus.toString().equals(Constants.OK))
                 {
                     Notification.show("KPI_Plan saved " + totalRows + " rows.",3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
                 }
@@ -401,8 +401,6 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                 {
                     Notification.show("Error during KPI_Plan upload! " + returnStatus.toString(), 4000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
                 }
-
-
                 //     message.setText(LocalDateTime.now().format(formatter) + ": Info: KPI_Plan saved " + totalRows + " rows");
 
             });
@@ -467,7 +465,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
                 progressBarActuals.setVisible(false);
 
-                if (returnStatus.toString().contains("ok"))
+                if (returnStatus.toString().equals(Constants.OK))
                 {
                     Notification.show("KPI_Actuals saved " + totalRows + " rows.",3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
                 }
@@ -527,7 +525,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
                     System.out.println("ResultKPIFact: " + returnStatus.toString());
                     //ToDO: Check why for-loop not exited in event of an error
-                    if (returnStatus.toString().equals("ok")){
+                    if (returnStatus.toString().equals(Constants.OK)){
                         System.out.println("Alles in Butter...");
                     }
                     else{
@@ -565,7 +563,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
             ui.access(() -> {
                 progressBarFact.setVisible(false);
 
-                if (returnStatus.toString().contains("ok"))
+                if (returnStatus.toString().equals(Constants.OK))
                 {
                     Notification.show("KPI_Fact saved " + totalRows + " rows.",5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
                     qsBtn.setEnabled(true);

@@ -1,5 +1,6 @@
 package de.dbuss.tefcontrol.data.service;
 
+import de.dbuss.tefcontrol.data.entity.Constants;
 import de.dbuss.tefcontrol.data.modules.pfgproductmapping.entity.ProductHierarchie;
 import de.dbuss.tefcontrol.data.repository.ProductHierarchieRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,7 +71,7 @@ public class MSMService {
             // Handle other exceptions
             return e.getMessage();
         }
-        return "OK";
+        return Constants.OK;
 
     }
 

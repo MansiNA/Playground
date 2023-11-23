@@ -215,7 +215,7 @@ public class PBITechComments extends VerticalLayout implements BeforeEnterObserv
         Notification notification = new Notification();
 
         String resultFinancial = projectConnectionService.saveXPexComments(allXPexData, xPexTableName, dbUrl, dbUser, dbPassword);
-        if (resultFinancial.contains("ok")) {
+        if (resultFinancial.equals(Constants.OK)) {
             notification = Notification.show(allXPexData.size() + " xPEX Rows Uploaded successfully", 6000, Notification.Position.MIDDLE);
             notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
         } else {
@@ -224,7 +224,7 @@ public class PBITechComments extends VerticalLayout implements BeforeEnterObserv
         }
 
         String resultSubscriber = projectConnectionService.saveITOnlyComments(allITOnlyData, iTOnlyTableName, dbUrl, dbUser, dbPassword);
-        if (resultSubscriber.contains("ok")) {
+        if (resultSubscriber.equals(Constants.OK)) {
             notification = Notification.show(allITOnlyData.size() + " ITonly Rows Uploaded successfully", 6000, Notification.Position.MIDDLE);
             notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
         } else {
@@ -233,7 +233,7 @@ public class PBITechComments extends VerticalLayout implements BeforeEnterObserv
         }
 
         String resultUnits = projectConnectionService.saveKPIsComments(allKPIsData, kPIsTableName, dbUrl, dbUser, dbPassword);
-        if (resultUnits.contains("ok")) {
+        if (resultUnits.equals(Constants.OK)) {
             notification = Notification.show(allKPIsData.size() + " KPIs Rows Uploaded successfully", 6000, Notification.Position.MIDDLE);
             notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
         } else {

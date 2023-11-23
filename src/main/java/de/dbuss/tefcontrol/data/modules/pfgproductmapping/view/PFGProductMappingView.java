@@ -154,7 +154,7 @@ public class PFGProductMappingView extends VerticalLayout {
         saveButton.addClickListener(e -> {
             if (modifiedProducts != null && !modifiedProducts.isEmpty()) {
                     String result = projectConnectionService.saveListOfProductHierarchie(modifiedProducts, selectedDbName, targetTable);
-                    if (result.contains("ok")){
+                    if (result.equals(Constants.OK)){
                         Notification.show(modifiedProducts.size()+" Uploaded successfully",2000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
                         modifiedProducts.clear();
                     } else {
@@ -216,7 +216,7 @@ public class PFGProductMappingView extends VerticalLayout {
 
            String erg= startJob(selectedDbName,finalAgentJobName);
 
-           if(!erg.contains("OK"))
+           if(!erg.equals(Constants.OK))
            {
                Notification notification = Notification.show("ERROR: " + erg,10000, Notification.Position.MIDDLE);
                notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
@@ -259,7 +259,7 @@ public class PFGProductMappingView extends VerticalLayout {
             return e.getMessage();
         }
 
-        return "OK";
+        return Constants.OK;
 
 
     }
@@ -367,7 +367,7 @@ public class PFGProductMappingView extends VerticalLayout {
         }
 
         String result = projectConnectionService.saveProductHierarchie(event.getProduct(), selectedDbName, targetTable);
-        if (result.contains("ok")){
+        if (result.equals(Constants.OK)){
             Notification.show(" Uploaded successfully",2000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
         } else {
             Notification.show( "Error during upload: "+ result,3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);

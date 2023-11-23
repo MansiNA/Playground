@@ -206,7 +206,7 @@ public class PBIFlashFinancials extends VerticalLayout implements BeforeEnterObs
         Notification notification = new Notification();
 
         String resultFinancial = projectConnectionService.saveFlashFinancials(flashFinancialsData, tableName, dbUrl, dbUser, dbPassword);
-        if (resultFinancial.contains("ok")) {
+        if (resultFinancial.equals(Constants.OK)) {
             notification = Notification.show(flashFinancialsData.size() + " Flash Financials Rows Uploaded successfully", 6000, Notification.Position.MIDDLE);
             notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
         } else {
