@@ -26,7 +26,6 @@ import de.dbuss.tefcontrol.components.QS_Grid;
 import de.dbuss.tefcontrol.data.entity.Constants;
 import de.dbuss.tefcontrol.data.entity.ProjectParameter;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.B2pOutlookSub;
-import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.OutlookMGSR;
 import de.dbuss.tefcontrol.data.service.BackendService;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
 import de.dbuss.tefcontrol.data.service.ProjectParameterService;
@@ -55,8 +54,8 @@ public class B2POutlookSUBView extends VerticalLayout implements BeforeEnterObse
     private MemoryBuffer memoryBuffer = new MemoryBuffer();
     private Upload singleFileUpload = new Upload(memoryBuffer);
     private List<List<B2pOutlookSub>> listOfAllSheets = new ArrayList<>();
-    private Crud<B2pOutlookSub> crudMGSR;
-    private Grid<B2pOutlookSub> gridMGSR = new Grid<>(B2pOutlookSub.class, false);
+    private Crud<B2pOutlookSub> crudOutlookSub;
+    private Grid<B2pOutlookSub> gridOutlookSub = new Grid<>(B2pOutlookSub.class, false);
     private String tableName;
     private String dbUrl;
     private String dbUser;
@@ -131,7 +130,7 @@ public class B2POutlookSUBView extends VerticalLayout implements BeforeEnterObse
         });
 
         setupUploader();
-        add(getMGSRGrid());
+        add(getOutlookSubGrid());
         setSizeFull();
         setHeightFull();
 
@@ -209,28 +208,28 @@ public class B2POutlookSUBView extends VerticalLayout implements BeforeEnterObse
         });
     }
 
-    private Component getMGSRGrid() {
+    private Component getOutlookSubGrid() {
         VerticalLayout content = new VerticalLayout();
         content.setSizeFull();
         content.setHeightFull();
-        crudMGSR = new Crud<>(B2pOutlookSub.class, createMGSREditor());
-        crudMGSR.setToolbarVisible(false);
-        crudMGSR.setHeightFull();
-        crudMGSR.setSizeFull();
-        setupMGSRGrid();
-        content.add(crudMGSR);
+        crudOutlookSub = new Crud<>(B2pOutlookSub.class, createOutlookSubEditor());
+        crudOutlookSub.setToolbarVisible(false);
+        crudOutlookSub.setHeightFull();
+        crudOutlookSub.setSizeFull();
+        setupOutlookSubGrid();
+        content.add(crudOutlookSub);
 
         return content;
     }
 
-    private CrudEditor<B2pOutlookSub> createMGSREditor() {
+    private CrudEditor<B2pOutlookSub> createOutlookSubEditor() {
 
         FormLayout editForm = new FormLayout();
         Binder<B2pOutlookSub> binder = new Binder<>(B2pOutlookSub.class);
         return new BinderCrudEditor<>(binder, editForm);
     }
 
-    private void setupMGSRGrid() {
+    private void setupOutlookSubGrid() {
 
         String ZEILE = "zeile";
         String MONTH = "month";
@@ -245,41 +244,39 @@ public class B2POutlookSUBView extends VerticalLayout implements BeforeEnterObse
 
         String EDIT_COLUMN = "vaadin-crud-edit-column";
 
-        gridMGSR = crudMGSR.getGrid();
+        gridOutlookSub = crudOutlookSub.getGrid();
 
-        gridMGSR.getColumnByKey(BLATT).setHeader("Blatt").setWidth("120px").setFlexGrow(0).setResizable(true);
-        gridMGSR.getColumnByKey(ZEILE).setHeader("Zeile").setWidth("60px").setFlexGrow(0).setResizable(true);
-        gridMGSR.getColumnByKey(MONTH).setHeader("Month").setWidth("80px").setFlexGrow(0).setResizable(true);
-        gridMGSR.getColumnByKey(SCENARIO).setHeader("Scenario").setWidth("200px").setFlexGrow(0).setResizable(true);
-        gridMGSR.getColumnByKey(MEASURE).setHeader("measure").setWidth("80px").setFlexGrow(0).setResizable(true);
-        gridMGSR.getColumnByKey(PHYSICALSLINE).setHeader("physicalsLine").setWidth("80px").setFlexGrow(0).setResizable(true);
-        gridMGSR.getColumnByKey(SEGMENT).setHeader("Segment").setWidth("200px").setFlexGrow(0).setResizable(true);
-        gridMGSR.getColumnByKey(PAYMENTTYPE).setHeader("PaymentType").setWidth("80px").setFlexGrow(0).setResizable(true);
-        gridMGSR.getColumnByKey(CONTRACTTYPE).setHeader("contractType").setWidth("200px").setFlexGrow(0).setResizable(true);
-        gridMGSR.getColumnByKey(VALUE).setHeader("Value").setWidth("80px").setFlexGrow(0).setResizable(true);
+        gridOutlookSub.getColumnByKey(BLATT).setHeader("Blatt").setWidth("120px").setFlexGrow(0).setResizable(true);
+        gridOutlookSub.getColumnByKey(ZEILE).setHeader("Zeile").setWidth("60px").setFlexGrow(0).setResizable(true);
+        gridOutlookSub.getColumnByKey(MONTH).setHeader("Month").setWidth("80px").setFlexGrow(0).setResizable(true);
+        gridOutlookSub.getColumnByKey(SCENARIO).setHeader("Scenario").setWidth("200px").setFlexGrow(0).setResizable(true);
+        gridOutlookSub.getColumnByKey(MEASURE).setHeader("KPI").setWidth("80px").setFlexGrow(0).setResizable(true);
+        gridOutlookSub.getColumnByKey(PHYSICALSLINE).setHeader("PhysicalsLine").setWidth("80px").setFlexGrow(0).setResizable(true);
+        gridOutlookSub.getColumnByKey(SEGMENT).setHeader("Segment").setWidth("200px").setFlexGrow(0).setResizable(true);
+        gridOutlookSub.getColumnByKey(PAYMENTTYPE).setHeader("PaymentType").setWidth("80px").setFlexGrow(0).setResizable(true);
+        gridOutlookSub.getColumnByKey(CONTRACTTYPE).setHeader("Contract_Type").setWidth("200px").setFlexGrow(0).setResizable(true);
+        gridOutlookSub.getColumnByKey(VALUE).setHeader("Value").setWidth("80px").setFlexGrow(0).setResizable(true);
 
 
-        gridMGSR.getColumns().forEach(col -> col.setAutoWidth(true));
-        // gridMGSR.setHeightFull();
-        // gridMGSR.setSizeFull();
+        gridOutlookSub.getColumns().forEach(col -> col.setAutoWidth(true));
 
-        gridMGSR.removeColumn(gridMGSR.getColumnByKey(EDIT_COLUMN));
+        gridOutlookSub.removeColumn(gridOutlookSub.getColumnByKey(EDIT_COLUMN));
 
         // Reorder the columns (alphabetical by default)
-        gridMGSR.setColumnOrder(gridMGSR.getColumnByKey(BLATT)
-                , gridMGSR.getColumnByKey(ZEILE)
-                , gridMGSR.getColumnByKey(MONTH)
-                , gridMGSR.getColumnByKey(SCENARIO)
-                , gridMGSR.getColumnByKey(MEASURE)
-                , gridMGSR.getColumnByKey(PHYSICALSLINE)
-                , gridMGSR.getColumnByKey(SEGMENT)
-                , gridMGSR.getColumnByKey(PAYMENTTYPE)
-                , gridMGSR.getColumnByKey(CONTRACTTYPE)
-                , gridMGSR.getColumnByKey(VALUE)
+        gridOutlookSub.setColumnOrder(gridOutlookSub.getColumnByKey(BLATT)
+                , gridOutlookSub.getColumnByKey(ZEILE)
+                , gridOutlookSub.getColumnByKey(MONTH)
+                , gridOutlookSub.getColumnByKey(SCENARIO)
+                , gridOutlookSub.getColumnByKey(MEASURE)
+                , gridOutlookSub.getColumnByKey(PHYSICALSLINE)
+                , gridOutlookSub.getColumnByKey(SEGMENT)
+                , gridOutlookSub.getColumnByKey(PAYMENTTYPE)
+                , gridOutlookSub.getColumnByKey(CONTRACTTYPE)
+                , gridOutlookSub.getColumnByKey(VALUE)
                 );
         //    , gridFinancials.getColumnByKey(EDIT_COLUMN));
 
-        gridMGSR.addThemeVariants(GridVariant.LUMO_COMPACT);
+        gridOutlookSub.addThemeVariants(GridVariant.LUMO_COMPACT);
 
     }
     private void setupUploader() {
@@ -299,7 +296,7 @@ public class B2POutlookSUBView extends VerticalLayout implements BeforeEnterObse
                 listOfAllData.addAll(sheetData);
             }
             GenericDataProvider dataFinancialsProvider = new GenericDataProvider(listOfAllData, "Zeile");
-            gridMGSR.setDataProvider(dataFinancialsProvider);
+            gridOutlookSub.setDataProvider(dataFinancialsProvider);
             singleFileUpload.clearFileList();
             uploadBtn.setEnabled(true);
         });
