@@ -88,7 +88,7 @@ public class QS_Grid extends Composite<Div> {
             Icon icon = new Icon();
             String status = projectQs.getResult();
 
-            if (Constants.Failed.equals(status)) {
+            if (Constants.FAILED.equals(status)) {
                 icon = VaadinIcon.CLOSE_CIRCLE.create();
                 icon.getElement().getThemeList().add("badge error");
                 layout.add(icon);
@@ -244,7 +244,7 @@ public class QS_Grid extends Composite<Div> {
                         projectQSEntity.setResult(Constants.OK);
                     } else {
                         rowsMap.put(projectQSEntity.getId(), rows);
-                        projectQSEntity.setResult(Constants.Failed);
+                        projectQSEntity.setResult(Constants.FAILED);
                     }
 
                 } catch ( Exception e) {

@@ -75,7 +75,7 @@ public class PFGProductMappingView extends VerticalLayout {
         String pfg_mapping_target = null;
 
         for (ProjectParameter projectParameter : listOfProjectParameters) {
-            if(projectParameter.getNamespace().equals(Constants.PFGPRODUCTMAPPING)) {
+            if(projectParameter.getNamespace().equals(Constants.PFG_PRODUCT_MAPPING)) {
                 if (Constants.MAPPINGALLPRODUCTS.equals(projectParameter.getName())) {
                     productsDb = projectParameter.getValue();
                 } else if (Constants.AGENT_NAME.equals(projectParameter.getName())) {

@@ -22,13 +22,10 @@ import de.dbuss.tefcontrol.components.QS_Callback;
 import de.dbuss.tefcontrol.components.QS_Grid;
 import de.dbuss.tefcontrol.data.entity.Constants;
 import de.dbuss.tefcontrol.data.entity.ProjectParameter;
-import de.dbuss.tefcontrol.data.entity.ProjectQSEntity;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.OutlookMGSR;
-import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.PBICentralComments;
 import de.dbuss.tefcontrol.data.service.BackendService;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
 import de.dbuss.tefcontrol.data.service.ProjectParameterService;
-import de.dbuss.tefcontrol.data.service.ProjectQsService;
 import de.dbuss.tefcontrol.dataprovider.GenericDataProvider;
 import de.dbuss.tefcontrol.views.MainLayout;
 import jakarta.annotation.security.RolesAllowed;
@@ -44,9 +41,9 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
-@Route(value = "B2P_Outlook/:project_Id", layout = MainLayout.class)
+@Route(value = "B2P_Outlook_FIN/:project_Id", layout = MainLayout.class)
 @RolesAllowed({"MAPPING", "ADMIN"})
-public class B2POutlookView extends VerticalLayout implements BeforeEnterObserver {
+public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObserver {
 
     private final ProjectConnectionService projectConnectionService;
     private MemoryBuffer memoryBuffer = new MemoryBuffer();
@@ -70,7 +67,7 @@ public class B2POutlookView extends VerticalLayout implements BeforeEnterObserve
 
     BackendService backendService;
 
-    public B2POutlookView (ProjectParameterService projectParameterService, ProjectConnectionService projectConnectionService, BackendService backendService) {
+    public B2POutlookFINView(ProjectParameterService projectParameterService, ProjectConnectionService projectConnectionService, BackendService backendService) {
 
         this.backendService=backendService;
         this.projectConnectionService = projectConnectionService;
@@ -86,7 +83,7 @@ public class B2POutlookView extends VerticalLayout implements BeforeEnterObserve
         String dbName = null;
 
         for (ProjectParameter projectParameter : listOfProjectParameters) {
-            if(projectParameter.getNamespace().equals(Constants.B2P_OUTLOOK)) {
+            if(projectParameter.getNamespace().equals(Constants.B2P_OUTLOOK_FIN)) {
                 if (Constants.DB_SERVER.equals(projectParameter.getName())) {
                     dbServer = projectParameter.getValue();
                 } else if (Constants.DB_NAME.equals(projectParameter.getName())) {
