@@ -138,7 +138,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
             if(!result.equals("Cancel")) {
                 if (modifiedCLTVInflow != null && !modifiedCLTVInflow.isEmpty()) {
                     String resultString = projectConnectionService.updateListOfCLTVInflow(modifiedCLTVInflow, tableName, dbUrl, dbUser, dbPassword);
-                    if (resultString.contains("ok")){
+                    if (resultString.equals(Constants.OK)){
                         Notification.show(modifiedCLTVInflow.size()+" Uploaded successfully",2000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
                         modifiedCLTVInflow.clear();
                     } else {
@@ -178,7 +178,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         saveButton.addClickListener(e -> {
             if (modifiedCLTVInflow != null && !modifiedCLTVInflow.isEmpty()) {
                 String result = projectConnectionService.updateListOfCLTVInflow(modifiedCLTVInflow, tableName, dbUrl, dbUser, dbPassword);
-                if (result.contains("ok")){
+                if (result.equals(Constants.OK)){
                     Notification.show(modifiedCLTVInflow.size()+" Uploaded successfully",2000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
                     modifiedCLTVInflow.clear();
                 } else {

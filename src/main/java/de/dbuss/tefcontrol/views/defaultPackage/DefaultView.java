@@ -998,7 +998,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
         String dbName= projects.isPresent()? projects.get().getAgent_db() : "";
         var erg= msmService.startJob(jobName, dbName);
 
-        if (erg.contains("OK"))
+        if (erg.equals(de.dbuss.tefcontrol.data.entity.Constants.OK))
         {
             Notification notification = Notification.show("Job " + jobName + " wurde gestartet...",6000, Notification.Position.TOP_END);
             notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);

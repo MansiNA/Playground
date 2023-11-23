@@ -174,7 +174,7 @@ public class B2POutlookView extends VerticalLayout implements BeforeEnterObserve
             listOfAllData.addAll(sheetData);
         }
         String resultFinancial = projectConnectionService.saveOutlookMGSR(listOfAllData, tableName, dbUrl, dbUser, dbPassword);
-        if (resultFinancial.contains("ok")){
+        if (resultFinancial.equals(Constants.OK)){
             notification = Notification.show(listOfAllData.size() + " B2P_Outlook Rows Uploaded successfully",5000, Notification.Position.MIDDLE);
             notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
         } else {

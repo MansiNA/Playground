@@ -14,9 +14,7 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import de.dbuss.tefcontrol.data.entity.*;
-import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.QS;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
-import de.dbuss.tefcontrol.data.service.ProjectParameterService;
 import lombok.Getter;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.dao.DataAccessException;
@@ -82,7 +80,7 @@ public class QS_Grid extends Composite<Div> {
 
         grid = new Grid<>(ProjectQSEntity.class, false);
         grid.addColumn(ProjectQSEntity::getName).setHeader("QS-Name");
-       // grid.addColumn(ProjectQSEntity::getResult).setHeader("Result");
+        // grid.addColumn(ProjectQSEntity::getResult).setHeader("Result");
 
         grid.addComponentColumn(projectQs -> {
 
@@ -90,11 +88,11 @@ public class QS_Grid extends Composite<Div> {
             Icon icon = new Icon();
             String status = projectQs.getResult();
 
-            if ("Failed".equals(status)) {
+            if (Constants.Failed.equals(status)) {
                 icon = VaadinIcon.CLOSE_CIRCLE.create();
                 icon.getElement().getThemeList().add("badge error");
                 layout.add(icon);
-            } else if ("Ok".equals(status)) {
+            } else if (Constants.OK.equals(status)) {
                 icon = VaadinIcon.CHECK.create();
                 icon.getElement().getThemeList().add("badge success");
                 layout.add(icon);
@@ -116,7 +114,7 @@ public class QS_Grid extends Composite<Div> {
 
         grid.setItems(listOfProjectQs);
 
-       // updateListOfProjectQs();
+        // updateListOfProjectQs();
 
         VerticalLayout dialogLayout = new VerticalLayout();
         dialogLayout.setPadding(false);
@@ -141,7 +139,7 @@ public class QS_Grid extends Composite<Div> {
             listOfProjectQs = getResultExecuteSQL(dbUrl, dbUser, dbPassword, listOfProjectQs);
             grid.setItems(listOfProjectQs);
             boolean allCorrect = listOfProjectQs.stream()
-                    .allMatch(projectQs -> "Ok".equals(projectQs.getResult()));
+                    .allMatch(projectQs -> Constants.OK.equals(projectQs.getResult()));
             okButton.setEnabled(allCorrect);
         });
         HorizontalLayout hlexecute = new HorizontalLayout(executeButton);
@@ -181,15 +179,15 @@ public class QS_Grid extends Composite<Div> {
         String dbName = null;
         String dbServer = null;
         for (ProjectParameter projectParameter : resultList) {
-                if (Constants.DB_NAME.equals(projectParameter.getName())) {
-                    dbName = projectParameter.getValue();
-                } else if (Constants.DB_USER.equals(projectParameter.getName())) {
-                    dbUser = projectParameter.getValue();
-                } else if (Constants.DB_PASSWORD.equals(projectParameter.getName())) {
-                    dbPassword = projectParameter.getValue();
-                } else if (Constants.DB_SERVER.equals(projectParameter.getName())) {
-                    dbServer = projectParameter.getValue();
-                }
+            if (Constants.DB_NAME.equals(projectParameter.getName())) {
+                dbName = projectParameter.getValue();
+            } else if (Constants.DB_USER.equals(projectParameter.getName())) {
+                dbUser = projectParameter.getValue();
+            } else if (Constants.DB_PASSWORD.equals(projectParameter.getName())) {
+                dbPassword = projectParameter.getValue();
+            } else if (Constants.DB_SERVER.equals(projectParameter.getName())) {
+                dbServer = projectParameter.getValue();
+            }
         }
         dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
 
@@ -200,8 +198,8 @@ public class QS_Grid extends Composite<Div> {
     }
 
     public  void updateListOfProjectQs() {
-            listOfProjectQs = getResultExecuteSQL(dbUrl, dbUser, dbPassword, listOfProjectQs);
-            grid.setItems(listOfProjectQs);
+        listOfProjectQs = getResultExecuteSQL(dbUrl, dbUser, dbPassword, listOfProjectQs);
+        grid.setItems(listOfProjectQs);
     }
     public List<ProjectQSEntity> getProjectQSList(String tableName) {
         try {
@@ -227,7 +225,7 @@ public class QS_Grid extends Composite<Div> {
             return fetchedData;
         } catch (Exception ex) {
             ex.printStackTrace();
-             String errorMessage = handleDatabaseError(ex);
+            String errorMessage = handleDatabaseError(ex);
             return Collections.emptyList();
         }
     }
@@ -243,10 +241,10 @@ public class QS_Grid extends Composite<Div> {
                     List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql);
 
                     if (rows.isEmpty()) {
-                        projectQSEntity.setResult("Ok");
+                        projectQSEntity.setResult(Constants.OK);
                     } else {
                         rowsMap.put(projectQSEntity.getId(), rows);
-                        projectQSEntity.setResult("Failed");
+                        projectQSEntity.setResult(Constants.Failed);
                     }
 
                 } catch ( Exception e) {

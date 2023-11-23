@@ -35,6 +35,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.StreamResource;
 import de.dbuss.tefcontrol.data.entity.CLTV_HW_Measures;
+import de.dbuss.tefcontrol.data.entity.Constants;
 import de.dbuss.tefcontrol.data.entity.ProjectConnection;
 import de.dbuss.tefcontrol.data.service.CLTV_HW_MeasureService;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
@@ -204,8 +205,8 @@ public class HWMappingView extends VerticalLayout {
             Notification notification = Notification.show(allItems.size() + " Rows Uploaded start",2000, Notification.Position.MIDDLE);
             notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
 
-            String result=projectConnectionService.write2DB(allItems, selectedDbName);
-            if (result.contains("ok")){
+            String result = projectConnectionService.write2DB(allItems, selectedDbName);
+            if (result.equals(Constants.OK)){
                 notification = Notification.show(allItems.size() + " Rows Uploaded successfully",3000, Notification.Position.MIDDLE);
                 notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
             }

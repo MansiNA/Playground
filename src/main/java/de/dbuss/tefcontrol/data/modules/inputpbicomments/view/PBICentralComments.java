@@ -198,9 +198,8 @@ public class PBICentralComments extends VerticalLayout implements BeforeEnterObs
         List<UnitsDeepDive> allUnitsDeepDive = getUnitsDeepDiveDataProviderAllItems();
 
         Notification notification;
-        System.out.println("#################Save Financial###########");
         String resultFinancial = projectConnectionService.saveFinancials(allFinancialsItems, financialsTableName, dbUrl, dbUser, dbPassword);
-        if (resultFinancial.contains("ok")){
+        if (resultFinancial.equals(Constants.OK)){
             notification = Notification.show(allFinancialsItems.size() + " Financials Rows Uploaded successfully",5000, Notification.Position.MIDDLE);
             notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
         } else {
@@ -208,7 +207,7 @@ public class PBICentralComments extends VerticalLayout implements BeforeEnterObs
             notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
         }
         String resultSubscriber = projectConnectionService.saveSubscriber(allSubscriber, subscriberTableName, dbUrl, dbUser, dbPassword);
-        if (resultSubscriber.contains("ok")){
+        if (resultSubscriber.equals(Constants.OK)){
             notification = Notification.show(allSubscriber.size() + " Subscriber Rows Uploaded successfully",5000, Notification.Position.MIDDLE);
             notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
         } else {
@@ -217,7 +216,7 @@ public class PBICentralComments extends VerticalLayout implements BeforeEnterObs
         }
 
         String resultUnits = projectConnectionService.saveUnitsDeepDive(allUnitsDeepDive, unitTableName, dbUrl, dbUser, dbPassword);
-        if (resultUnits.contains("ok")){
+        if (resultUnits.equals(Constants.OK)){
             notification = Notification.show(allUnitsDeepDive.size() + " UnitsDeepDive Rows Uploaded successfully",5000, Notification.Position.MIDDLE);
             notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
         } else {

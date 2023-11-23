@@ -155,7 +155,7 @@ public class ProjectConnectionService {
                         item.getValue()
                 );
             }
-            return "ok";
+            return Constants.OK;
         } catch (Exception e) {
             e.printStackTrace();
             return handleDatabaseError(e);
@@ -221,7 +221,7 @@ public class ProjectConnectionService {
             String sqlUpdate ="delete from " + tableName + " where comment is null";
             System.out.println(sqlUpdate);
             jdbcTemplate.update(sqlUpdate);
-            return "ok";
+            return Constants.OK;
         }
            catch (CannotGetJdbcConnectionException connectionException) {
             return connectionException.getMessage();
@@ -259,7 +259,7 @@ public class ProjectConnectionService {
                 );
             }
             jdbcTemplate.update("delete from " + tableName + " where comment is null");
-            return "ok";
+            return Constants.OK;
         } catch (Exception e) {
             e.printStackTrace();
             return handleDatabaseError(e);
@@ -293,7 +293,7 @@ public class ProjectConnectionService {
                 );
             }
             jdbcTemplate.update("delete from " + tableName + " where comment is null");
-            return "ok";
+            return Constants.OK;
         } catch (Exception e) {
             e.printStackTrace();
             return handleDatabaseError(e);
@@ -338,7 +338,7 @@ public class ProjectConnectionService {
                 }
 
             });
-            return "ok";
+            return Constants.OK;
         } catch (Exception e) {
             e.printStackTrace();
             return handleDatabaseError(e);
@@ -382,7 +382,7 @@ public class ProjectConnectionService {
                 //ps.setDouble (4, entity.getWert());
             });
 
-            return "ok";
+            return Constants.OK;
         } catch (Exception e) {
             e.printStackTrace();
             return handleDatabaseError(e);
@@ -428,7 +428,7 @@ public class ProjectConnectionService {
                 ps.setString(19, entity.getSourceLink());
             });
 
-            return "ok";
+            return Constants.OK;
         } catch (Exception e) {
             return handleDatabaseError(e);
         }
@@ -567,7 +567,7 @@ public class ProjectConnectionService {
                 );
             }
 
-            return "ok";
+            return Constants.OK;
         } catch (Exception e) {
             e.printStackTrace();
             return handleDatabaseError(e);
@@ -606,7 +606,7 @@ public class ProjectConnectionService {
                 ps.setString(3, productHierarchie.getNode());
             });
 
-            return "ok";
+            return Constants.OK;
         } catch (Exception e) {
             e.printStackTrace();
             return handleDatabaseError(e);
@@ -671,7 +671,7 @@ public class ProjectConnectionService {
                 ps.setLong(5, cltvInflow.getContractFeatureId());
             });
 
-            return "ok";
+            return Constants.OK;
         } catch (Exception e) {
             e.printStackTrace();
             return handleDatabaseError(e);
@@ -709,7 +709,7 @@ public class ProjectConnectionService {
               //  ps.setDate(12, sqlDate);
             });
 
-            return "ok";
+            return Constants.OK;
         } catch (Exception e) {
             e.printStackTrace();
             return handleDatabaseError(e);
@@ -744,7 +744,7 @@ public class ProjectConnectionService {
             String sqlUpdate ="delete from " + tableName + " where comment is null";
             System.out.println(sqlUpdate);
             jdbcTemplate.update(sqlUpdate);
-            return "ok";
+            return Constants.OK;
         } catch (Exception e) {
             e.printStackTrace();
             return handleDatabaseError(e);
@@ -779,7 +779,7 @@ public class ProjectConnectionService {
             String sqlUpdate ="delete from " + tableName + " where comment is null";
             System.out.println(sqlUpdate);
             jdbcTemplate.update(sqlUpdate);
-            return "ok";
+            return Constants.OK;
         } catch (Exception e) {
             e.printStackTrace();
             return handleDatabaseError(e);
@@ -814,7 +814,7 @@ public class ProjectConnectionService {
             String sqlUpdate ="delete from " + tableName + " where comment is null";
             System.out.println(sqlUpdate);
             jdbcTemplate.update(sqlUpdate);
-            return "ok";
+            return Constants.OK;
         } catch (Exception e) {
             e.printStackTrace();
             return handleDatabaseError(e);
@@ -848,7 +848,7 @@ public class ProjectConnectionService {
             String sqlUpdate ="delete from " + tableName + " where comment is null";
             System.out.println(sqlUpdate);
             jdbcTemplate.update(sqlUpdate);
-            return "ok";
+            return Constants.OK;
         } catch (Exception e) {
             e.printStackTrace();
             return handleDatabaseError(e);
