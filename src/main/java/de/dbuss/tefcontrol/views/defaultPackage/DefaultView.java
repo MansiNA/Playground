@@ -208,14 +208,38 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
         configureAgentJobGrid();
 
         VerticalLayout content = new VerticalLayout(gridAgentJobs);
-
+        gridAgentJobs.setHeight("250px");
         content.setSizeFull();
-        content.setHeight("250px");
+       // content.setHeight("250px");
 
         content.add(getAgentJobToolbar());
+        gridAgentJobs.addSelectionListener(event -> {
+            Optional<AgentJobs> selectedItems = event.getFirstSelectedItem();
+            if (selectedItems.isPresent()) {
+                AgentJobs selectedJob = selectedItems.get();
+                content.add(getJobDetailsGrid(selectedJob));
+            }
+        });
+
         log.info("Ending getAgentJobTab() for DB-jobs tab");
         return content;
 
+    }
+
+    private Component getJobDetailsGrid(AgentJobs selectedJob) {
+        log.info("Starting getJobDetailsGrid() for DB-jobs tab");
+        VerticalLayout content = new VerticalLayout();
+        Grid<JobDetails> detailGrid = new Grid<>(JobDetails.class, false);
+        detailGrid.addColumn(JobDetails::getRun_date).setHeader("Run_Date").setResizable(true);
+        detailGrid.addColumn(JobDetails::getRun_time).setHeader("Run_Time").setResizable(true);
+        detailGrid.addColumn(JobDetails::getMessage).setHeader("Message").setResizable(true);
+
+        List<JobDetails> listOfDetails = projectConnectionService.getJobDetails("838F34B3-A444-4F29-8229-DB076E9434E9");
+        detailGrid.setItems(listOfDetails);
+        content.add(detailGrid);
+      //  content.setSizeFull();
+        log.info("Ending getJobDetailsGrid() for DB-jobs tab");
+        return content;
     }
 
     private Component getAgentJobToolbar() {
