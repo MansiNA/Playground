@@ -269,6 +269,8 @@ public class QS_Grid extends Composite<Div> {
         contextMenu.addItem("Show Description", this::showDescription);
 
         contextDialog = new Dialog();
+        contextDialog.setDraggable(true);
+        contextDialog.setResizable(true);
         cancelContextButton = new Button("Cancel");
         cancelContextButton.addClickListener(e -> contextDialog.close());
     }
@@ -306,7 +308,15 @@ public class QS_Grid extends Composite<Div> {
                 contextDialog.open();
                 // Notification.show("Show rows for QS ID: " + selectedProjectQS.getId());
             }
+
+            contextDialog.addResizeListener(e -> {
+                // Adjust the grid's width when the dialog is resized
+                rowsGrid.setWidth(e.getWidth());
+                rowsGrid.setHeight(e.getHeight());
+            });
+
         }
+
     }
 
     private void showDescription(GridContextMenu.GridContextMenuItemClickEvent<ProjectQSEntity> event) {
