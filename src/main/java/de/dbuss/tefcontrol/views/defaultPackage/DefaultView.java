@@ -73,11 +73,10 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-
 //@PageTitle("Default Mapping")
 @Slf4j
 @Route(value = "Default-Mapping/:project_Id", layout = MainLayout.class)
-@RolesAllowed({"MAPPING", "USER"})
+@RolesAllowed({"ADMIN", "MAPPING", "USER" , "KPI", "OUTLOOK"})
 public class DefaultView extends VerticalLayout  implements BeforeEnterObserver  {
 
     private final ProjectsService projectsService;
