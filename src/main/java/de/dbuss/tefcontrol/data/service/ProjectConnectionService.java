@@ -728,7 +728,7 @@ public class ProjectConnectionService {
 
             jdbcTemplate.update(sqlDelete);
 
-            String sqlInsert = "INSERT INTO "+ tableName +" (Zeile, Blatt, Month, Scenario, KPI, PHY_Line, Segment, Payment_Type, Contract_Type, Value) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            String sqlInsert = "INSERT INTO "+ tableName +" (Zeile, Blatt, Month, Scenario, Measure, PHY_Line, Segment, Payment_Type, Contract_Type, Value) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
             jdbcTemplate.batchUpdate(sqlInsert, data, data.size(), (ps, entity) -> {
 
