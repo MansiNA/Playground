@@ -19,9 +19,11 @@ import com.vaadin.flow.router.RouteParameters;
 import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.server.auth.AccessAnnotationChecker;
 import com.vaadin.flow.theme.lumo.LumoUtility;
+import de.dbuss.tefcontrol.data.entity.Constants;
 import de.dbuss.tefcontrol.data.entity.Projects;
 import de.dbuss.tefcontrol.data.entity.User;
-import de.dbuss.tefcontrol.data.modules.b2pOutlook.view.B2POutlookView;
+import de.dbuss.tefcontrol.data.modules.b2pOutlook.view.B2POutlookFINView;
+import de.dbuss.tefcontrol.data.modules.b2pOutlook.view.B2POutlookSUBView;
 import de.dbuss.tefcontrol.data.modules.cltv_Inflow.view.CLTVInflowView;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.PBICentralComments;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.PBIFlashFinancials;
@@ -82,16 +84,17 @@ public class MainLayout extends AppLayout {
 
 
         // Add mappings for URLs and view classes
-        urlToViewMap.put("PFG_Product_Mapping", PFGProductMappingView.class);
-        urlToViewMap.put("HWMapping", HWMappingView.class);
-        urlToViewMap.put("kb", KnowledgeBaseView.class);
-        urlToViewMap.put("Default-Mapping", DefaultView.class );
-        urlToViewMap.put("PBI_Central_Comments", PBICentralComments.class );
-        urlToViewMap.put("Tech_KPI", Tech_KPIView.class );
-        urlToViewMap.put("CLTV_Inflow", CLTVInflowView.class );
-        urlToViewMap.put("B2P_Outlook", B2POutlookView.class);
-        urlToViewMap.put("PBI_Tech_Comments", PBITechComments.class);
-        urlToViewMap.put("PBI_FlashFinancials", PBIFlashFinancials.class);
+        urlToViewMap.put(Constants.PFG_PRODUCT_MAPPING, PFGProductMappingView.class);
+        urlToViewMap.put(Constants.HWMAPPING, HWMappingView.class);
+       // urlToViewMap.put("kb", KnowledgeBaseView.class);
+        urlToViewMap.put(Constants.Default_Mapping, DefaultView.class );
+        urlToViewMap.put(Constants.PBI_CENTRAL_COMMENTS, PBICentralComments.class );
+        urlToViewMap.put(Constants.TECH_KPI, Tech_KPIView.class );
+        urlToViewMap.put(Constants.CLTV_INFLOW, CLTVInflowView.class );
+        urlToViewMap.put(Constants.B2P_OUTLOOK_FIN, B2POutlookFINView.class);
+        urlToViewMap.put(Constants.B2P_OUTLOOK_SUB, B2POutlookSUBView.class);
+        urlToViewMap.put(Constants.PBI_TECH_COMMENTS, PBITechComments.class);
+        urlToViewMap.put(Constants.PBI_FLASH_FINANCIALS, PBIFlashFinancials.class);
 
         setPrimarySection(Section.DRAWER);
         addDrawerContent();

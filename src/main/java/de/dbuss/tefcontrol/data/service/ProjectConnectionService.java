@@ -3,6 +3,7 @@ package de.dbuss.tefcontrol.data.service;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import de.dbuss.tefcontrol.data.entity.*;
+import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.B2pOutlookSub;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.OutlookMGSR;
 import de.dbuss.tefcontrol.data.modules.cltv_Inflow.entity.CLTVInflow;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.*;
@@ -707,6 +708,42 @@ public class ProjectConnectionService {
                 ps.setDouble(11, entity.getValue());
               //  java.sql.Date sqlDate = (entity.getLoadDate() != null) ? new java.sql.Date(entity.getLoadDate().getTime()) : null;
               //  ps.setDate(12, sqlDate);
+            });
+
+            return Constants.OK;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return handleDatabaseError(e);
+        }
+    }
+
+    public String saveB2POutlookSub(List<B2pOutlookSub> data, String tableName, String dbUrl, String dbUser, String dbPassword) {
+
+        try {
+
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
+            String sqlDelete = "DELETE FROM " + tableName;
+
+            jdbcTemplate.update(sqlDelete);
+
+            String sqlInsert = "INSERT INTO "+ tableName +" (Zeile, Blatt, Month, Scenario, KPI, PHY_Line, Segment, Payment_Type, Contract_Type, Value) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+            jdbcTemplate.batchUpdate(sqlInsert, data, data.size(), (ps, entity) -> {
+
+                ps.setInt(1, entity.getZeile());
+                ps.setString(2, entity.getBlatt());
+                ps.setInt(3, entity.getMonth());
+                ps.setString(4, entity.getScenario());
+                ps.setString(5, entity.getMeasure());
+                ps.setString(6, entity.getPhysicalsLine());
+                ps.setString(7, entity.getSegment());
+                ps.setString(8, entity.getPaymentType());
+                ps.setString(9, entity.getContractType());
+                ps.setDouble(10, entity.getValue());
+                //  java.sql.Date sqlDate = (entity.getLoadDate() != null) ? new java.sql.Date(entity.getLoadDate().getTime()) : null;
+                //  ps.setDate(12, sqlDate);
             });
 
             return Constants.OK;

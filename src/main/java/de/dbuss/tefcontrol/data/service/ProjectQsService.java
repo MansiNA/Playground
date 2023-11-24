@@ -59,7 +59,7 @@ public class ProjectQsService {
                     if (rows.isEmpty()) {
                         projectQSEntity.setResult(Constants.OK);
                     } else {
-                        projectQSEntity.setResult(Constants.Failed);
+                        projectQSEntity.setResult(Constants.FAILED);
                     }
 
                 } catch ( Exception e) {
