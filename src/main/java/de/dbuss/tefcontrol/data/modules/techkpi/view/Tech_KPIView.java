@@ -75,6 +75,8 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
     Grid<KPI_Actuals> gridActuals;
     Grid<KPI_Plan> gridPlan;
 
+    Integer Error_count=0;
+
   //  Grid<QS_Status> gridQS;
 
     //H3 h3_Fact= new H3();
@@ -776,7 +778,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
             }
 
             System.out.println("Excel import: "+  fileName + " => Mime-Type: " + mimeType  + " Größe " + contentLength + " Byte");
-            textArea.setText(LocalDateTime.now().format(formatter) + ": Info: Verarbeite Datei: " + fileName + " (" + contentLength + " Byte)");
+            //textArea.setText(LocalDateTime.now().format(formatter) + ": Info: Verarbeite Datei: " + fileName + " (" + contentLength + " Byte)");
             //message.setText(LocalDateTime.now().format(formatter) + ": Info: reading file: " + fileName);
 
             //addRowsBT.setEnabled(false);
@@ -790,7 +792,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
             Iterator<Row> rowIterator = my_worksheet.iterator();
 
             Integer RowNumber=0;
-            Integer Error_count=0;
+            Error_count=0;
 
             while(rowIterator.hasNext() )
             {
@@ -883,6 +885,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                         try {
                             kPI_Fact.setWert(checkCellDouble(sheetName, cell, RowNumber,ColumnName));
                         }
+
                         catch(Exception e)
                         {
                             article=new Article();
@@ -902,7 +905,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
             article=new Article();
             article.getStyle().set("white-space","pre-line");
             article.add("\n");
-            article.add(LocalDateTime.now().format(formatter) + " " + sheetName + ": Count Rows: " + listOfKPI_Fact.size() + " Count Errrors: " + Error_count);
+            article.add(LocalDateTime.now().format(formatter) + " ==> " + sheetName + ": Count Rows: " + listOfKPI_Fact.size() + " Count Errrors: " + Error_count);
             article.add("\n");
             textArea.add(article);
 
@@ -1250,7 +1253,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
             Iterator<Row> rowIterator = my_worksheet.iterator();
 
             Integer RowNumber=0;
-            Integer Error_count=0;
+            Error_count=0;
             Boolean sheedEnd=false;
 
 
@@ -1401,15 +1404,35 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
     }
 
-    private Double checkCellDouble(String sheetName, Cell cell, Integer zeile, String spalte) {
+    class Convert2Double extends Exception{
+        public Convert2Double(String message){
+            super(message);
+        }
+    }
 
+    private Double checkCellDouble(String sheetName, Cell cell, Integer zeile, String spalte) throws Convert2Double {
+
+        Double wert;
         try {
 
             switch (cell.getCellType()){
                 case Cell.CELL_TYPE_NUMERIC:
-                    return  (double) cell.getNumericCellValue();
+
+                    try {
+                       wert = (double) cell.getNumericCellValue();
+                    }
+                    catch (Exception e){
+                        throw new Convert2Double("Konvertierung in Double nicht möglich");
+                    }
+
+                    return  wert;
+
+
                 case Cell.CELL_TYPE_STRING:
-                    return null;
+
+                    throw new Convert2Double("Konvertierung in Double nicht möglich");
+
+                    //return null;
                 case Cell.CELL_TYPE_FORMULA:
                     return null;
                 case Cell.CELL_TYPE_BLANK:
@@ -1435,6 +1458,13 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                     return  null;
 
             }
+
+            article=new Article();
+            article.setText(LocalDateTime.now().format(formatter) + " " + sheetName + ": Error: Zeile " + zeile.toString() + ", Spalte " + spalte + ": " + e.getMessage());
+            textArea.add(article);
+            Error_count++;
+
+
             System.out.println("Zeile " + zeile.toString() + ", Spalte " + spalte + " konnte in checkCellDouble nicht aufgelöst werden. Typ=" + cell.getCellType() + e.getMessage());
         }
 
