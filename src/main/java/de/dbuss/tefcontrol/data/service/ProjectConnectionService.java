@@ -219,9 +219,9 @@ public class ProjectConnectionService {
                         item.getXtd()
                 );
             }
-            String sqlUpdate ="delete from " + tableName + " where comment is null";
-            System.out.println(sqlUpdate);
-            jdbcTemplate.update(sqlUpdate);
+      //      String sqlUpdate ="delete from " + tableName + " where comment is null";
+      //      System.out.println(sqlUpdate);
+      //      jdbcTemplate.update(sqlUpdate);
             return Constants.OK;
         }
            catch (CannotGetJdbcConnectionException connectionException) {
@@ -259,7 +259,7 @@ public class ProjectConnectionService {
                         item.getXtd()
                 );
             }
-            jdbcTemplate.update("delete from " + tableName + " where comment is null");
+        //    jdbcTemplate.update("delete from " + tableName + " where comment is null");
             return Constants.OK;
         } catch (Exception e) {
             e.printStackTrace();
@@ -293,7 +293,7 @@ public class ProjectConnectionService {
                         item.getXtd()
                 );
             }
-            jdbcTemplate.update("delete from " + tableName + " where comment is null");
+         //   jdbcTemplate.update("delete from " + tableName + " where comment is null");
             return Constants.OK;
         } catch (Exception e) {
             e.printStackTrace();
@@ -778,9 +778,9 @@ public class ProjectConnectionService {
                 ps.setString(8, entity.getXtd());
             });
             //delete rows with Empty Comments
-            String sqlUpdate ="delete from " + tableName + " where comment is null";
-            System.out.println(sqlUpdate);
-            jdbcTemplate.update(sqlUpdate);
+        //    String sqlUpdate ="delete from " + tableName + " where comment is null";
+        //    System.out.println(sqlUpdate);
+        //    jdbcTemplate.update(sqlUpdate);
             return Constants.OK;
         } catch (Exception e) {
             e.printStackTrace();
@@ -813,9 +813,9 @@ public class ProjectConnectionService {
                 ps.setString(8, entity.getXtd());
             });
             //delete rows with Empty Comments
-            String sqlUpdate ="delete from " + tableName + " where comment is null";
-            System.out.println(sqlUpdate);
-            jdbcTemplate.update(sqlUpdate);
+        //    String sqlUpdate ="delete from " + tableName + " where comment is null";
+        //    System.out.println(sqlUpdate);
+        //    jdbcTemplate.update(sqlUpdate);
             return Constants.OK;
         } catch (Exception e) {
             e.printStackTrace();
@@ -848,9 +848,9 @@ public class ProjectConnectionService {
             });
 
             //delete rows with Empty Comments
-            String sqlUpdate ="delete from " + tableName + " where comment is null";
-            System.out.println(sqlUpdate);
-            jdbcTemplate.update(sqlUpdate);
+      //      String sqlUpdate ="delete from " + tableName + " where comment is null";
+      //      System.out.println(sqlUpdate);
+      //      jdbcTemplate.update(sqlUpdate);
             return Constants.OK;
         } catch (Exception e) {
             e.printStackTrace();
@@ -882,9 +882,9 @@ public class ProjectConnectionService {
             });
 
             //delete rows with Empty Comments
-            String sqlUpdate ="delete from " + tableName + " where comment is null";
-            System.out.println(sqlUpdate);
-            jdbcTemplate.update(sqlUpdate);
+     //       String sqlUpdate ="delete from " + tableName + " where comment is null";
+     //       System.out.println(sqlUpdate);
+     //       jdbcTemplate.update(sqlUpdate);
             return Constants.OK;
         } catch (Exception e) {
             e.printStackTrace();

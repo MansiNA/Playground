@@ -250,7 +250,7 @@ public class B2POutlookSUBView extends VerticalLayout implements BeforeEnterObse
         gridOutlookSub.getColumnByKey(ZEILE).setHeader("Zeile").setWidth("60px").setFlexGrow(0).setResizable(true);
         gridOutlookSub.getColumnByKey(MONTH).setHeader("Month").setWidth("80px").setFlexGrow(0).setResizable(true);
         gridOutlookSub.getColumnByKey(SCENARIO).setHeader("Scenario").setWidth("200px").setFlexGrow(0).setResizable(true);
-        gridOutlookSub.getColumnByKey(MEASURE).setHeader("KPI").setWidth("80px").setFlexGrow(0).setResizable(true);
+        gridOutlookSub.getColumnByKey(MEASURE).setHeader("Measure").setWidth("80px").setFlexGrow(0).setResizable(true);
         gridOutlookSub.getColumnByKey(PHYSICALSLINE).setHeader("PhysicalsLine").setWidth("80px").setFlexGrow(0).setResizable(true);
         gridOutlookSub.getColumnByKey(SEGMENT).setHeader("Segment").setWidth("200px").setFlexGrow(0).setResizable(true);
         gridOutlookSub.getColumnByKey(PAYMENTTYPE).setHeader("PaymentType").setWidth("80px").setFlexGrow(0).setResizable(true);
