@@ -283,6 +283,7 @@ public class QS_Grid extends Composite<Div> {
             contextDialog.setWidth("800px"); // Set the width as per your requirement
 
             // Create a grid for rows
+
             Grid<Map<String, Object>> rowsGrid = new Grid<>();
             // Set the data for the grid
             List<Map<String, Object>> rowsData = rowsMap.get(selectedProjectQS.getId());
@@ -296,7 +297,7 @@ public class QS_Grid extends Composite<Div> {
                         Collections.emptySet() : rowsData.get(0).keySet();
 
                 for (String column : columns) {
-                    rowsGrid.addColumn(row -> row.get(column)).setHeader(column);
+                    rowsGrid.addColumn(row -> row.get(column)).setHeader(column).setAutoWidth(true);
                 }
                 // Add components to the rowsDialog layout
                 VerticalLayout rowsDialogContent = new VerticalLayout();
