@@ -79,7 +79,7 @@ public class QS_Grid extends Composite<Div> {
         getListOfProjectQsWithResult();
 
         grid = new Grid<>(ProjectQSEntity.class, false);
-        grid.addColumn(ProjectQSEntity::getName).setHeader("QS-Name");
+        grid.addColumn(ProjectQSEntity::getName).setHeader("QS-Name").setResizable(true);
         // grid.addColumn(ProjectQSEntity::getResult).setHeader("Result");
 
         grid.addComponentColumn(projectQs -> {
@@ -299,7 +299,7 @@ public class QS_Grid extends Composite<Div> {
                         Collections.emptySet() : rowsData.get(0).keySet();
 
                 for (String column : columns) {
-                    rowsGrid.addColumn(row -> row.get(column)).setHeader(column).setAutoWidth(true);
+                    rowsGrid.addColumn(row -> row.get(column)).setHeader(column).setAutoWidth(true).setResizable(true);
                 }
                 // Add components to the rowsDialog layout
                 VerticalLayout rowsDialogContent = new VerticalLayout();
