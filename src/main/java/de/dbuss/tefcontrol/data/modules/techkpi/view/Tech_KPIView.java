@@ -684,50 +684,50 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
         gridActuals.setHeight("300px");
 
-        gridActuals.addColumn(KPI_Actuals::getRow).setHeader("Zeile").setAutoWidth(true);
+        gridActuals.addColumn(KPI_Actuals::getRow).setHeader("Zeile").setAutoWidth(true).setSortable(true).setResizable(true);
 
-        gridActuals.addColumn(KPI_Actuals::getNT_ID).setHeader("NT ID").setAutoWidth(true);
-        gridActuals.addColumn(KPI_Actuals::getWTAC_ID).setHeader("WTAC ID").setAutoWidth(true);
-        gridActuals.addColumn(KPI_Actuals::getSort).setHeader("Sort").setAutoWidth(true);
-        gridActuals.addColumn(KPI_Actuals::getM2_Area).setHeader("M2_Area").setAutoWidth(true);
-        gridActuals.addColumn(KPI_Actuals::getM1_Network).setHeader("M1_Network").setAutoWidth(true);
-        gridActuals.addColumn(KPI_Actuals::getM3_Service).setHeader("M3_Service").setAutoWidth(true);
-        gridActuals.addColumn(KPI_Actuals::getM4_Dimension).setHeader("M4_Dimension").setAutoWidth(true);
-        gridActuals.addColumn(KPI_Actuals::getM5_Tech).setHeader("M5_Tech").setAutoWidth(true);
-        gridActuals.addColumn(KPI_Actuals::getM6_Detail).setHeader("M6_Detail").setAutoWidth(true);
-        gridActuals.addColumn(KPI_Actuals::getKPI_long).setHeader("KPI long").setAutoWidth(true);
-        gridActuals.addColumn(KPI_Actuals::getRunrate).setHeader("Runrate").setAutoWidth(true);
-        gridActuals.addColumn(KPI_Actuals::getUnit).setHeader("Unit").setAutoWidth(true);
-        gridActuals.addColumn(KPI_Actuals::getDescription).setHeader("Description").setAutoWidth(true);
-        gridActuals.addColumn(KPI_Actuals::getSourceReport).setHeader("SourceReport").setAutoWidth(true);
-        gridActuals.addColumn(KPI_Actuals::getSourceInput).setHeader("SourceInput").setAutoWidth(true);
-        gridActuals.addColumn(KPI_Actuals::getSourceComment).setHeader("SourceComment").setAutoWidth(true);
-        gridActuals.addColumn(KPI_Actuals::getSourceContact).setHeader("SourceContact").setAutoWidth(true);
-        gridActuals.addColumn(KPI_Actuals::getSourceLink).setHeader("SourceLink").setAutoWidth(true);
+        gridActuals.addColumn(KPI_Actuals::getNT_ID).setHeader("NT ID").setAutoWidth(true).setSortable(true).setResizable(true);
+        gridActuals.addColumn(KPI_Actuals::getWTAC_ID).setHeader("WTAC ID").setAutoWidth(true).setSortable(true).setResizable(true);
+        gridActuals.addColumn(KPI_Actuals::getSort).setHeader("Sort").setAutoWidth(true).setSortable(true).setResizable(true);
+        gridActuals.addColumn(KPI_Actuals::getM2_Area).setHeader("M2_Area").setAutoWidth(true).setSortable(true).setResizable(true);
+        gridActuals.addColumn(KPI_Actuals::getM1_Network).setHeader("M1_Network").setAutoWidth(true).setSortable(true).setResizable(true);
+        gridActuals.addColumn(KPI_Actuals::getM3_Service).setHeader("M3_Service").setAutoWidth(true).setSortable(true).setResizable(true);
+        gridActuals.addColumn(KPI_Actuals::getM4_Dimension).setHeader("M4_Dimension").setAutoWidth(true).setSortable(true).setResizable(true);
+        gridActuals.addColumn(KPI_Actuals::getM5_Tech).setHeader("M5_Tech").setAutoWidth(true).setSortable(true).setResizable(true);
+        gridActuals.addColumn(KPI_Actuals::getM6_Detail).setHeader("M6_Detail").setAutoWidth(true).setSortable(true).setResizable(true);
+        gridActuals.addColumn(KPI_Actuals::getKPI_long).setHeader("KPI long").setAutoWidth(true).setSortable(true).setResizable(true);
+        gridActuals.addColumn(KPI_Actuals::getRunrate).setHeader("Runrate").setAutoWidth(true).setSortable(true).setResizable(true);
+        gridActuals.addColumn(KPI_Actuals::getUnit).setHeader("Unit").setAutoWidth(true).setSortable(true).setResizable(true);
+        gridActuals.addColumn(KPI_Actuals::getDescription).setHeader("Description").setAutoWidth(true).setSortable(true).setResizable(true);
+        gridActuals.addColumn(KPI_Actuals::getSourceReport).setHeader("SourceReport").setAutoWidth(true).setSortable(true).setResizable(true);
+        gridActuals.addColumn(KPI_Actuals::getSourceInput).setHeader("SourceInput").setAutoWidth(true).setSortable(true).setResizable(true);
+        gridActuals.addColumn(KPI_Actuals::getSourceComment).setHeader("SourceComment").setAutoWidth(true).setSortable(true).setResizable(true);
+        gridActuals.addColumn(KPI_Actuals::getSourceContact).setHeader("SourceContact").setAutoWidth(true).setSortable(true).setResizable(true);
+        gridActuals.addColumn(KPI_Actuals::getSourceLink).setHeader("SourceLink").setAutoWidth(true).setSortable(true).setResizable(true);
         gridActuals.setHeightFull();
 
     }
 
     private void setupKPIFactGrid() {
         gridFact = new Grid<>(KPI_Fact.class, false);
-        gridFact.addColumn(KPI_Fact::getRow).setHeader("Zeile").setAutoWidth(true);
-        gridFact.addColumn(KPI_Fact::getNT_ID).setHeader("NT ID").setAutoWidth(true);
-        gridFact.addColumn(KPI_Fact::getScenario).setHeader("Scenario").setAutoWidth(true);
-        gridFact.addColumn(KPI_Fact::getRunrate).setHeader("Runrate").setAutoWidth(true);
-        gridFact.addColumn(KPI_Fact::getDate).setHeader("Date").setAutoWidth(true);
-        gridFact.addColumn(KPI_Fact::getWert).setHeader("Wert").setAutoWidth(true);
+        gridFact.addColumn(KPI_Fact::getRow).setHeader("Zeile").setAutoWidth(true).setSortable(true).setResizable(true);
+        gridFact.addColumn(KPI_Fact::getNT_ID).setHeader("NT ID").setAutoWidth(true).setSortable(true).setResizable(true);
+        gridFact.addColumn(KPI_Fact::getScenario).setHeader("Scenario").setAutoWidth(true).setSortable(true).setResizable(true);
+        gridFact.addColumn(KPI_Fact::getRunrate).setHeader("Runrate").setAutoWidth(true).setSortable(true).setResizable(true);
+        gridFact.addColumn(KPI_Fact::getDate).setHeader("Date").setAutoWidth(true).setSortable(true).setResizable(true);
+        gridFact.addColumn(KPI_Fact::getWert).setHeader("Wert").setAutoWidth(true).setSortable(true).setResizable(true);
         gridFact.setHeightFull();
     }
 
     private void setupKPIPlanGrid() {
         gridPlan = new Grid<>(KPI_Plan.class, false);
-        gridPlan.addColumn(KPI_Plan::getRow).setHeader("Zeile").setAutoWidth(true);
-        gridPlan.addColumn(KPI_Plan::getNT_ID).setHeader("NT ID").setAutoWidth(true);
-        gridPlan.addColumn(KPI_Plan::getSpalte1).setHeader("Spalte1").setAutoWidth(true);
-        gridPlan.addColumn(KPI_Plan::getScenario).setHeader("Scenario").setAutoWidth(true);
-        gridPlan.addColumn(KPI_Plan::getVersionDate).setHeader("VersionDate").setAutoWidth(true);
-        gridPlan.addColumn(KPI_Plan::getVersionComment).setHeader("VersionComment").setAutoWidth(true);
-        gridPlan.addColumn(KPI_Plan::getRunrate).setHeader("Runrate").setAutoWidth(true);
+        gridPlan.addColumn(KPI_Plan::getRow).setHeader("Zeile").setAutoWidth(true).setSortable(true).setResizable(true);
+        gridPlan.addColumn(KPI_Plan::getNT_ID).setHeader("NT ID").setAutoWidth(true).setSortable(true).setResizable(true);
+        gridPlan.addColumn(KPI_Plan::getSpalte1).setHeader("Spalte1").setAutoWidth(true).setSortable(true).setResizable(true);
+        gridPlan.addColumn(KPI_Plan::getScenario).setHeader("Scenario").setAutoWidth(true).setSortable(true).setResizable(true);
+        gridPlan.addColumn(KPI_Plan::getVersionDate).setHeader("VersionDate").setAutoWidth(true).setSortable(true).setResizable(true);
+        gridPlan.addColumn(KPI_Plan::getVersionComment).setHeader("VersionComment").setAutoWidth(true).setSortable(true).setResizable(true);
+        gridPlan.addColumn(KPI_Plan::getRunrate).setHeader("Runrate").setAutoWidth(true).setSortable(true).setResizable(true);
         gridPlan.setHeightFull();
 
 
@@ -1240,6 +1240,8 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
 
                 }
+
+                //ToDO: Nicht betrachten, falls alle Spalte leer sind:
 
                 listOfKPI_Actuals.add(kPI_Actuals);
             }
