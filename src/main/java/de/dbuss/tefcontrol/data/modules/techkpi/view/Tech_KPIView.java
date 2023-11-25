@@ -933,7 +933,15 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
                 }
 
-                listOfKPI_Fact.add(kPI_Fact);
+                if(kPI_Fact.isValid() )
+                {
+                    System.out.println("skip row : " + kPI_Fact.getRow());
+                }
+                else
+                {
+                    listOfKPI_Fact.add(kPI_Fact);
+                }
+
 
             }
 
@@ -954,6 +962,8 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
             errors_Count+=errors_Fact;
             return listOfKPI_Fact;
+
+
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -1241,26 +1251,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
                 }
 
-                //ToDO: Nicht betrachten, falls alle Spalte leer sind:
-
-                if(kPI_Actuals.getNT_ID().length()==0
-                        && kPI_Actuals.getWTAC_ID().length() == 0
-                        && kPI_Actuals.getM2_Area().length() == 0
-                        && kPI_Actuals.getM1_Network().length() == 0
-                        && kPI_Actuals.getM3_Service().length() == 0
-                        && kPI_Actuals.getM4_Dimension().length() == 0
-                        && kPI_Actuals.getM5_Tech().length() == 0
-                        && kPI_Actuals.getM6_Detail().length() == 0
-                        && kPI_Actuals.getKPI_long().length() == 0
-                        && kPI_Actuals.getRunrate().length() == 0
-                        && kPI_Actuals.getUnit().length() == 0
-                        && kPI_Actuals.getDescription().length() == 0
-//                        && kPI_Actuals.getSourceReport().length() == 0
-                        && kPI_Actuals.getSourceInput().length() == 0
-                        && kPI_Actuals.getSourceComment().length() == 0
-                        && kPI_Actuals.getSourceContact().length() == 0
-                        && kPI_Actuals.getSourceLink().length() == 0
-                )
+                if(kPI_Actuals.isValid() )
                 {
                     System.out.println("skip row : " + kPI_Actuals.getRow());
                 }
@@ -1446,7 +1437,15 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
                 }
 
-                listOfKPI_Plan.add(kPI_Plan);
+                if(kPI_Plan.isValid() )
+                {
+                    System.out.println("skip row : " + kPI_Plan.getRow());
+                }
+                else
+                {
+                    listOfKPI_Plan.add(kPI_Plan);
+                }
+
             }
 
 
@@ -1699,7 +1698,6 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
         private int row;
 
-
         private String NT_ID ;
 
         private String Scenario = "";
@@ -1757,6 +1755,26 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
         public void setRunrate(String runrate) {
             Runrate = runrate;
         }
+
+        public boolean isValid() {
+            if (
+                    NT_ID ==null     || NT_ID.length() == 0
+                 && Scenario == null || Scenario.length() == 0
+                 && Runrate == null || Runrate.length() == 0
+            )
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+
+
+        }
+
+
+
     }
 
     public class KPI_Actuals {
@@ -1943,6 +1961,36 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
         public void setSourceLink(String sourceLink) {
             SourceLink = sourceLink;
         }
+
+        public boolean isValid() {
+            if (
+                       WTAC_ID ==null     || WTAC_ID.length() == 0
+                    && M2_Area ==null     || M2_Area.length() == 0
+                    && M1_Network == null || M1_Network .length() == 0
+                    && M3_Service == null || M3_Service.length() == 0
+                    && M4_Dimension == null || M4_Dimension.length() == 0
+                    && M5_Tech == null || M5_Tech .length() == 0
+                    && M6_Detail == null || M6_Detail.length() == 0
+                    && KPI_long == null || KPI_long.length() == 0
+                    && Runrate == null || Runrate.length() == 0
+                    && Unit == null || Unit.length() == 0
+                    && Description == null || Description.length() == 0
+                    && SourceReport==null || SourceReport.isEmpty()
+                    && SourceInput == null || SourceInput.length() == 0
+                    && SourceComment == null || SourceComment.length() == 0
+                    && SourceContact == null || SourceContact.length() == 0
+                    && SourceLink == null || SourceLink.length() == 0
+            )
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+
+
+        }
     }
 
     public class KPI_Plan {
@@ -2016,6 +2064,31 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
         public void setRunrate(String runrate) {
             Runrate = runrate;
         }
+
+
+        public boolean isValid() {
+
+            try{
+                if (
+                        NT_ID == null || NT_ID.length() == 0
+                                && Spalte1 == null || Spalte1.length() == 0
+                                && Scenario == null || Scenario.length() == 0
+                                && VersionComment == null || VersionComment.length() == 0
+                                && Runrate == null || Runrate.length() == 0
+
+                ) {
+                    return false;
+                } else {
+                    return true;
+                }
+
+            }catch (Exception e)
+            {
+                return false;
+            }
+
+        }
+
     }
 
     public class QS_Status{
