@@ -1243,7 +1243,33 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
                 //ToDO: Nicht betrachten, falls alle Spalte leer sind:
 
-                listOfKPI_Actuals.add(kPI_Actuals);
+                if(kPI_Actuals.getNT_ID().length()==0
+                        && kPI_Actuals.getWTAC_ID().length() == 0
+                        && kPI_Actuals.getM2_Area().length() == 0
+                        && kPI_Actuals.getM1_Network().length() == 0
+                        && kPI_Actuals.getM3_Service().length() == 0
+                        && kPI_Actuals.getM4_Dimension().length() == 0
+                        && kPI_Actuals.getM5_Tech().length() == 0
+                        && kPI_Actuals.getM6_Detail().length() == 0
+                        && kPI_Actuals.getKPI_long().length() == 0
+                        && kPI_Actuals.getRunrate().length() == 0
+                        && kPI_Actuals.getUnit().length() == 0
+                        && kPI_Actuals.getDescription().length() == 0
+//                        && kPI_Actuals.getSourceReport().length() == 0
+                        && kPI_Actuals.getSourceInput().length() == 0
+                        && kPI_Actuals.getSourceComment().length() == 0
+                        && kPI_Actuals.getSourceContact().length() == 0
+                        && kPI_Actuals.getSourceLink().length() == 0
+                )
+                {
+                    System.out.println("skip row : " + kPI_Actuals.getRow());
+                }
+                else
+                {
+                    listOfKPI_Actuals.add(kPI_Actuals);
+                }
+
+
             }
 
             article=new Article();
