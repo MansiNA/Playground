@@ -75,7 +75,13 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
     Grid<KPI_Actuals> gridActuals;
     Grid<KPI_Plan> gridPlan;
 
-    Integer Error_count=0;
+    Integer errors_Count=0;
+
+    Integer errors_Fact=0;
+    Integer errors_Actuals=0;
+    Integer errors_Plan=0;
+
+
 
   //  Grid<QS_Status> gridQS;
 
@@ -262,12 +268,9 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
         accordion.setHeightFull();
         accordion.close();
 
-        Div htmlDivQS = new Div();
-        // htmlDivQS.getElement().setProperty("innerHTML", "<b style=\"color:blue;\">QS-Übersicht:</b>");
-        htmlDivQS.getElement().setProperty("innerHTML", "<b>QS-Übersicht:</b>");
 
         //  add(htmlDivQS,gridQS,accordion);
-        add(htmlDivQS,accordion);
+        add(accordion);
 
     }
     @Override
@@ -753,7 +756,11 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
             //h3_Plan.removeAll();
             //h3_Plan.add("Plan (" + listOfKPI_Plan.size() + " rows)");
 
-            uploadBtn.setEnabled(true);
+            if (errors_Count==0)
+            {
+                uploadBtn.setEnabled(true);
+            }
+
 
         });
         System.out.println("setup uploader................over");
@@ -792,7 +799,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
             Iterator<Row> rowIterator = my_worksheet.iterator();
 
             Integer RowNumber=0;
-            Error_count=0;
+            errors_Fact=0;
 
             while(rowIterator.hasNext() )
             {
@@ -827,7 +834,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                             article=new Article();
                             article.setText(LocalDateTime.now().format(formatter) + " " + sheetName + ": Error: Zeile " + RowNumber.toString() + ", Spalte " + ColumnName + ": " + e.getMessage());
                             textArea.add(article);
-                            Error_count++;
+                            errors_Fact++;
 
                         }
                     }
@@ -843,7 +850,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                             article=new Article();
                             article.setText(LocalDateTime.now().format(formatter) + " " + sheetName + ": Error: Zeile " + RowNumber.toString() + ", Spalte " + ColumnName + ": " + e.getMessage());
                             textArea.add(article);
-                            Error_count++;
+                            errors_Fact++;
 
                         }
                     }
@@ -858,7 +865,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                             article=new Article();
                             article.setText(LocalDateTime.now().format(formatter) + " " + sheetName + ": Error: Zeile " + RowNumber.toString() + ", Spalte " + ColumnName + ": " + e.getMessage());
                             textArea.add(article);
-                            Error_count++;
+                            errors_Fact++;
 
                         }
                     }
@@ -874,7 +881,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                             article=new Article();
                             article.setText(LocalDateTime.now().format(formatter) + " " + sheetName + ": Error: Zeile " + RowNumber.toString() + ", Spalte " + ColumnName + ": " + e.getMessage());
                             textArea.add(article);
-                            Error_count++;
+                            errors_Fact++;
 
                         }
                     }
@@ -889,9 +896,9 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                         catch(Exception e)
                         {
                             article=new Article();
-                            article.setText(LocalDateTime.now().format(formatter) + " " + sheetName + ": Error: Zeile " + RowNumber.toString() + ", Spalte " + ColumnName + ": " + e.getMessage());
+                            article.setText(sheetName + ": Error: Zeile " + RowNumber.toString() + ", Spalte >" + ColumnName + "<  " + e.getMessage());
                             textArea.add(article);
-                            Error_count++;
+                            errors_Fact++;
 
                         }
                     }
@@ -905,7 +912,8 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
             article=new Article();
             article.getStyle().set("white-space","pre-line");
             article.add("\n");
-            article.add(LocalDateTime.now().format(formatter) + " ==> " + sheetName + ": Count Rows: " + listOfKPI_Fact.size() + " Count Errrors: " + Error_count);
+            //article.add(LocalDateTime.now().format(formatter) + " ==> " + sheetName + ": Count Rows: " + listOfKPI_Fact.size() + " Count Errrors: " + errors_Fact);
+            article.add("==> Summary: " + sheetName + ": Count Rows: " + listOfKPI_Fact.size() + " Count Errrors: " + errors_Fact);
             article.add("\n");
             textArea.add(article);
 
@@ -916,6 +924,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
             factPanel = new AccordionPanel( "KPI_Fact (" + listOfKPI_Fact.size()+ " rows)", gridFact);
             accordion.add(factPanel);
 
+            errors_Count+=errors_Fact;
             return listOfKPI_Fact;
         } catch (Exception e) {
             e.printStackTrace();
@@ -948,7 +957,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
             Iterator<Row> rowIterator = my_worksheet.iterator();
 
             Integer RowNumber=0;
-            Integer Error_count=0;
+            errors_Actuals=0;
 
 
 
@@ -985,7 +994,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                             article=new Article();
                             article.setText(LocalDateTime.now().format(formatter) + " " + sheetName + ": Error: Zeile " + RowNumber.toString() + ", Spalte " + ColumnName + ": " + e.getMessage());
                             textArea.add(article);
-                            Error_count++;
+                            errors_Actuals++;
                         }
                     }
 
@@ -999,7 +1008,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                             article = new Article();
                             article.setText(LocalDateTime.now().format(formatter) + " " + sheetName + ": Error: Zeile " + RowNumber.toString() + ", Spalte " + ColumnName + ": " + e.getMessage());
                             textArea.add(article);
-                            Error_count++;
+                            errors_Actuals++;
                         }
 
                     }
@@ -1012,7 +1021,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                             article = new Article();
                             article.setText(LocalDateTime.now().format(formatter) + " " + sheetName + ": Error: Zeile " + RowNumber.toString() + ", Spalte " + ColumnName + ": " + e.getMessage());
                             textArea.add(article);
-                            Error_count++;
+                            errors_Actuals++;
                         }
 
                     }
@@ -1025,7 +1034,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                             article = new Article();
                             article.setText(LocalDateTime.now().format(formatter) + " " + sheetName + ": Error: Zeile " + RowNumber.toString() + ", Spalte " + ColumnName + ": " + e.getMessage());
                             textArea.add(article);
-                            Error_count++;
+                            errors_Actuals++;
                         }
 
                     }
@@ -1038,7 +1047,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                             article = new Article();
                             article.setText(LocalDateTime.now().format(formatter) + " " + sheetName + ": Error: Zeile " + RowNumber.toString() + ", Spalte " + ColumnName + ": " + e.getMessage());
                             textArea.add(article);
-                            Error_count++;
+                            errors_Actuals++;
                         }
 
                     }
@@ -1051,7 +1060,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                             article = new Article();
                             article.setText(LocalDateTime.now().format(formatter) + " " + sheetName + ": Error: Zeile " + RowNumber.toString() + ", Spalte " + ColumnName + ": " + e.getMessage());
                             textArea.add(article);
-                            Error_count++;
+                            errors_Actuals++;
                         }
                     }
 
@@ -1063,7 +1072,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                             article = new Article();
                             article.setText(LocalDateTime.now().format(formatter) + " " + sheetName + ": Error: Zeile " + RowNumber.toString() + ", Spalte " + ColumnName + ": " + e.getMessage());
                             textArea.add(article);
-                            Error_count++;
+                            errors_Actuals++;
                         }
                     }
 
@@ -1076,7 +1085,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                             article = new Article();
                             article.setText(LocalDateTime.now().format(formatter) + " " + sheetName + ": Error: Zeile " + RowNumber.toString() + ", Spalte " + ColumnName + ": " + e.getMessage());
                             textArea.add(article);
-                            Error_count++;
+                            errors_Actuals++;
                         }
                     }
 
@@ -1088,7 +1097,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                             article = new Article();
                             article.setText(LocalDateTime.now().format(formatter) + " " + sheetName + ": Error: Zeile " + RowNumber.toString() + ", Spalte " + ColumnName + ": " + e.getMessage());
                             textArea.add(article);
-                            Error_count++;
+                            errors_Actuals++;
                         }
                     }
 
@@ -1100,7 +1109,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                             article = new Article();
                             article.setText(LocalDateTime.now().format(formatter) + " " + sheetName + ": Error: Zeile " + RowNumber.toString() + ", Spalte " + ColumnName + ": " + e.getMessage());
                             textArea.add(article);
-                            Error_count++;
+                            errors_Actuals++;
                         }
                     }
 
@@ -1112,7 +1121,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                             article = new Article();
                             article.setText(LocalDateTime.now().format(formatter) + " " + sheetName + ": Error: Zeile " + RowNumber.toString() + ", Spalte " + ColumnName + ": " + e.getMessage());
                             textArea.add(article);
-                            Error_count++;
+                            errors_Actuals++;
                         }
                     }
 
@@ -1124,7 +1133,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                             article = new Article();
                             article.setText(LocalDateTime.now().format(formatter) + " " + sheetName + ": Error: Zeile " + RowNumber.toString() + ", Spalte " + ColumnName + ": " + e.getMessage());
                             textArea.add(article);
-                            Error_count++;
+                            errors_Actuals++;
                         }
                     }
 
@@ -1136,7 +1145,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                             article = new Article();
                             article.setText(LocalDateTime.now().format(formatter) + " " + sheetName + ": Error: Zeile " + RowNumber.toString() + ", Spalte " + ColumnName + ": " + e.getMessage());
                             textArea.add(article);
-                            Error_count++;
+                            errors_Actuals++;
                         }
                     }
 
@@ -1148,7 +1157,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                             article = new Article();
                             article.setText(LocalDateTime.now().format(formatter) + " " + sheetName + ": Error: Zeile " + RowNumber.toString() + ", Spalte " + ColumnName + ": " + e.getMessage());
                             textArea.add(article);
-                            Error_count++;
+                            errors_Actuals++;
                         }
                     }
 
@@ -1160,7 +1169,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                             article = new Article();
                             article.setText(LocalDateTime.now().format(formatter) + " " + sheetName + ": Error: Zeile " + RowNumber.toString() + ", Spalte " + ColumnName + ": " + e.getMessage());
                             textArea.add(article);
-                            Error_count++;
+                            errors_Actuals++;
                         }
                     }
 
@@ -1172,7 +1181,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                             article = new Article();
                             article.setText(LocalDateTime.now().format(formatter) + " " + sheetName + ": Error: Zeile " + RowNumber.toString() + ", Spalte " + ColumnName + ": " + e.getMessage());
                             textArea.add(article);
-                            Error_count++;
+                            errors_Actuals++;
                         }
                     }
 
@@ -1184,7 +1193,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                             article = new Article();
                             article.setText(LocalDateTime.now().format(formatter) + " " + sheetName + ": Error: Zeile " + RowNumber.toString() + ", Spalte " + ColumnName + ": " + e.getMessage());
                             textArea.add(article);
-                            Error_count++;
+                            errors_Actuals++;
                         }
                     }
 
@@ -1196,7 +1205,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                             article = new Article();
                             article.setText(LocalDateTime.now().format(formatter) + " " + sheetName + ": Error: Zeile " + RowNumber.toString() + ", Spalte " + ColumnName + ": " + e.getMessage());
                             textArea.add(article);
-                            Error_count++;
+                            errors_Actuals++;
                         }
                     }
 
@@ -1210,7 +1219,8 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
             article=new Article();
             article.getStyle().set("white-space","pre-line");
             article.add("\n");
-            article.add(LocalDateTime.now().format(formatter) + " " + sheetName + ": Count Rows: " + listOfKPI_Actuals.size() + " Count Errrors: " + Error_count);
+           // article.add(LocalDateTime.now().format(formatter) + " " + sheetName + ": Count Rows: " + listOfKPI_Actuals.size() + " Count Errrors: " + errors_Actuals);
+            article.add("==> Summary: " + sheetName + ": Count Rows: " + listOfKPI_Actuals.size() + " Count Errrors: " + errors_Actuals);
             article.add("\n");
             textArea.add(article);
 
@@ -1218,8 +1228,10 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
             System.out.println("Anzahl Zeilen im Excel: " + listOfKPI_Actuals.size());
             accordion.remove(actualsPanel);
             actualsPanel = new AccordionPanel( "KPI_Actuals (" + listOfKPI_Actuals.size()+ " rows)", gridActuals);
+            article.add("\n");
             accordion.add(actualsPanel);
 
+            errors_Count+=errors_Actuals;
             return listOfKPI_Actuals;
         } catch (Exception e) {
             e.printStackTrace();
@@ -1253,7 +1265,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
             Iterator<Row> rowIterator = my_worksheet.iterator();
 
             Integer RowNumber=0;
-            Error_count=0;
+            errors_Plan=0;
             Boolean sheedEnd=false;
 
 
@@ -1300,7 +1312,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                             article=new Article();
                             article.setText(LocalDateTime.now().format(formatter) + " " + sheetName + ": Error: Zeile " + RowNumber.toString() + ", Spalte " + ColumnName + ": " + e.getMessage());
                             textArea.add(article);
-                            Error_count++;
+                            errors_Plan++;
 
                         }
                     }
@@ -1315,7 +1327,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                             article = new Article();
                             article.setText(LocalDateTime.now().format(formatter) + " " + sheetName + ": Error: Zeile " + RowNumber.toString() + ", Spalte " + ColumnName + ": " + e.getMessage());
                             textArea.add(article);
-                            Error_count++;
+                            errors_Plan++;
 
                         }
                     }
@@ -1328,7 +1340,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                             article = new Article();
                             article.setText(LocalDateTime.now().format(formatter) + " " + sheetName + ": Error: Zeile " + RowNumber.toString() + ", Spalte " + ColumnName + ": " + e.getMessage());
                             textArea.add(article);
-                            Error_count++;
+                            errors_Plan++;
 
                         }
                     }
@@ -1341,7 +1353,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                             article = new Article();
                             article.setText(LocalDateTime.now().format(formatter) + " " + sheetName + ": Error: Zeile " + RowNumber.toString() + ", Spalte " + ColumnName + ": " + e.getMessage());
                             textArea.add(article);
-                            Error_count++;
+                            errors_Plan++;
 
                         }
                     }
@@ -1355,7 +1367,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                             article = new Article();
                             article.setText(LocalDateTime.now().format(formatter) + " " + sheetName + ": Error: Zeile " + RowNumber.toString() + ", Spalte " + ColumnName + ": " + e.getMessage());
                             textArea.add(article);
-                            Error_count++;
+                            errors_Plan++;
 
                         }
                     }
@@ -1369,7 +1381,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                             article = new Article();
                             article.setText(LocalDateTime.now().format(formatter) + " " + sheetName + ": Error: Zeile " + RowNumber.toString() + ", Spalte " + ColumnName + ": " + e.getMessage());
                             textArea.add(article);
-                            Error_count++;
+                            errors_Plan++;
 
                         }
                     }
@@ -1386,7 +1398,8 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
             article=new Article();
             article.getStyle().set("white-space","pre-line");
             article.add("\n");
-            article.add(LocalDateTime.now().format(formatter) + " " + sheetName + ": Count Rows: " + listOfKPI_Plan.size() + " Count Errrors: " + Error_count);
+            //article.add(LocalDateTime.now().format(formatter) + " " + sheetName + ": Count Rows: " + listOfKPI_Plan.size() + " Count Errrors: " + errors_Plan);
+            article.add("==> Summary: " + sheetName + ": Count Rows: " + listOfKPI_Plan.size() + " Count Errrors: " + errors_Plan);
             article.add("\n");
             textArea.add(article);
 
@@ -1396,6 +1409,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
             planPanel = new AccordionPanel( "KPI_Plan (" + listOfKPI_Plan.size()+ " rows)", gridPlan);
             accordion.add(planPanel);
 
+            errors_Count+=errors_Plan;
             return listOfKPI_Plan;
         } catch (Exception e) {
             e.printStackTrace();
@@ -1410,7 +1424,17 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
         }
     }
 
-    private Double checkCellDouble(String sheetName, Cell cell, Integer zeile, String spalte) throws Convert2Double {
+
+    private Double checkCellDouble(String sheetName, Cell cell, Integer zeile, String spalte)  {
+
+        Double wert;
+
+        wert = (double) cell.getNumericCellValue();
+        return  wert;
+
+    }
+
+    private Double checkCellDouble_old(String sheetName, Cell cell, Integer zeile, String spalte) throws Convert2Double {
 
         Double wert;
         try {
@@ -1460,37 +1484,15 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
             }
 
             article=new Article();
-            article.setText(LocalDateTime.now().format(formatter) + " " + sheetName + ": Error: Zeile " + zeile.toString() + ", Spalte " + spalte + ": " + e.getMessage());
+            article.setText(sheetName + ": Error: Zeile " + zeile.toString() + ", Spalte >" + spalte + "< " + e.getMessage());
             textArea.add(article);
-            Error_count++;
+            errors_Count++;
 
-
-            System.out.println("Zeile " + zeile.toString() + ", Spalte " + spalte + " konnte in checkCellDouble nicht aufgelöst werden. Typ=" + cell.getCellType() + e.getMessage());
+            System.out.println("Zeile " + zeile.toString() + ", Spalte >" + spalte + "< konnte in Tech_KPIView checkCellDouble nicht umgewandelt werden: " + e.getMessage());
         }
 
 
         return  null;
-
-
-
-        /*
-
-
-        if (cell.getCellType()!=Cell.CELL_TYPE_NUMERIC)
-        {
-            System.out.println("Zeile " + zeile.toString() + ", Spalte " + spalte + " konnte nicht gelesen werden, da ExcelTyp nicht numerisch!");
-            //     textArea.setValue(textArea.getValue() + "\n" + LocalDateTime.now().format(formatter) + ": Error: Zeile " + zeile.toString() + ", Spalte " + spalte + " konnte nicht gelesen werden, da ExcelTyp nicht Numeric!");
-            article.add("\nZeile " + zeile.toString() + ", Spalte " + spalte + "  konnte nicht gelesen werden, da ExcelTyp nicht Numeric!");
-            textArea.add(article);
-            return 0.0;
-        }
-        else
-        {
-            //System.out.println("Spalte: " + spalte + " Zeile: " + zeile.toString() + " Wert: " + cell.getNumericCellValue());
-            return  (double) cell.getNumericCellValue();
-        }
-
-         */
 
     }
 
