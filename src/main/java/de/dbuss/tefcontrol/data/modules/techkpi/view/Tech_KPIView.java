@@ -1,5 +1,6 @@
 package de.dbuss.tefcontrol.data.modules.techkpi.view;
 
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.accordion.Accordion;
@@ -15,6 +16,8 @@ import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.progressbar.ProgressBar;
+import com.vaadin.flow.component.tabs.TabSheet;
+import com.vaadin.flow.component.tabs.TabSheetVariant;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.router.*;
@@ -103,10 +106,10 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
     private List<KPI_Actuals> listOfKPI_Actuals = new ArrayList<KPI_Actuals>();
 
     private List<KPI_Plan> listOfKPI_Plan = new ArrayList<KPI_Plan>();
-    Accordion accordion;
-    AccordionPanel factPanel;
-    AccordionPanel planPanel;
-    AccordionPanel actualsPanel;
+    //Accordion accordion;
+  //  AccordionPanel factPanel;
+  //  AccordionPanel planPanel;
+  //  AccordionPanel actualsPanel;
     private int projectId;
     private QS_Grid qsGrid;
     private Button qsBtn;
@@ -251,6 +254,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
         add(details);
 
+/*
         accordion = new Accordion();
 
         factPanel = new AccordionPanel("KPI_Fact (not loaded)", gridFact);
@@ -268,11 +272,34 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
         accordion.setHeightFull();
         accordion.close();
 
-
-        //  add(htmlDivQS,gridQS,accordion);
         add(accordion);
+*/
+
+        add(getTabsheet());
+
+        setHeightFull();
 
     }
+
+    private TabSheet getTabsheet() {
+
+        Component getActuals=gridActuals;
+        Component getFact=gridFact;
+        Component getPlan = gridPlan;
+
+        TabSheet tabSheet = new TabSheet();
+        tabSheet.add("Actuals", getActuals);
+        tabSheet.add("Fact", getFact);
+        tabSheet.add("Plan", getPlan);
+
+        tabSheet.setSizeFull();
+        tabSheet.setHeightFull();
+        tabSheet.addThemeVariants(TabSheetVariant.MATERIAL_BORDERED);
+        tabSheet.setHeightFull();
+        return tabSheet;
+
+    }
+
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
         RouteParameters parameters = event.getRouteParameters();
@@ -657,63 +684,64 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
         gridActuals.setHeight("300px");
 
-        gridActuals.addColumn(KPI_Actuals::getRow).setHeader("Zeile");
+        gridActuals.addColumn(KPI_Actuals::getRow).setHeader("Zeile").setAutoWidth(true);
 
-        gridActuals.addColumn(KPI_Actuals::getNT_ID).setHeader("NT ID");
-        gridActuals.addColumn(KPI_Actuals::getWTAC_ID).setHeader("WTAC ID");
-        gridActuals.addColumn(KPI_Actuals::getSort).setHeader("Sort");
-        gridActuals.addColumn(KPI_Actuals::getM2_Area).setHeader("M2_Area");
-        gridActuals.addColumn(KPI_Actuals::getM1_Network).setHeader("M1_Network");
-        gridActuals.addColumn(KPI_Actuals::getM3_Service).setHeader("M3_Service");
-        gridActuals.addColumn(KPI_Actuals::getM4_Dimension).setHeader("M4_Dimension");
-        gridActuals.addColumn(KPI_Actuals::getM5_Tech).setHeader("M5_Tech");
-        gridActuals.addColumn(KPI_Actuals::getM6_Detail).setHeader("M6_Detail");
-        gridActuals.addColumn(KPI_Actuals::getKPI_long).setHeader("KPI long");
-        gridActuals.addColumn(KPI_Actuals::getRunrate).setHeader("Runrate");
-        gridActuals.addColumn(KPI_Actuals::getUnit).setHeader("Unit");
-        gridActuals.addColumn(KPI_Actuals::getDescription).setHeader("Description");
-        gridActuals.addColumn(KPI_Actuals::getSourceReport).setHeader("SourceReport");
-        gridActuals.addColumn(KPI_Actuals::getSourceInput).setHeader("SourceInput");
-        gridActuals.addColumn(KPI_Actuals::getSourceComment).setHeader("SourceComment");
-        gridActuals.addColumn(KPI_Actuals::getSourceContact).setHeader("SourceContact");
-        gridActuals.addColumn(KPI_Actuals::getSourceLink).setHeader("SourceLink");
+        gridActuals.addColumn(KPI_Actuals::getNT_ID).setHeader("NT ID").setAutoWidth(true);
+        gridActuals.addColumn(KPI_Actuals::getWTAC_ID).setHeader("WTAC ID").setAutoWidth(true);
+        gridActuals.addColumn(KPI_Actuals::getSort).setHeader("Sort").setAutoWidth(true);
+        gridActuals.addColumn(KPI_Actuals::getM2_Area).setHeader("M2_Area").setAutoWidth(true);
+        gridActuals.addColumn(KPI_Actuals::getM1_Network).setHeader("M1_Network").setAutoWidth(true);
+        gridActuals.addColumn(KPI_Actuals::getM3_Service).setHeader("M3_Service").setAutoWidth(true);
+        gridActuals.addColumn(KPI_Actuals::getM4_Dimension).setHeader("M4_Dimension").setAutoWidth(true);
+        gridActuals.addColumn(KPI_Actuals::getM5_Tech).setHeader("M5_Tech").setAutoWidth(true);
+        gridActuals.addColumn(KPI_Actuals::getM6_Detail).setHeader("M6_Detail").setAutoWidth(true);
+        gridActuals.addColumn(KPI_Actuals::getKPI_long).setHeader("KPI long").setAutoWidth(true);
+        gridActuals.addColumn(KPI_Actuals::getRunrate).setHeader("Runrate").setAutoWidth(true);
+        gridActuals.addColumn(KPI_Actuals::getUnit).setHeader("Unit").setAutoWidth(true);
+        gridActuals.addColumn(KPI_Actuals::getDescription).setHeader("Description").setAutoWidth(true);
+        gridActuals.addColumn(KPI_Actuals::getSourceReport).setHeader("SourceReport").setAutoWidth(true);
+        gridActuals.addColumn(KPI_Actuals::getSourceInput).setHeader("SourceInput").setAutoWidth(true);
+        gridActuals.addColumn(KPI_Actuals::getSourceComment).setHeader("SourceComment").setAutoWidth(true);
+        gridActuals.addColumn(KPI_Actuals::getSourceContact).setHeader("SourceContact").setAutoWidth(true);
+        gridActuals.addColumn(KPI_Actuals::getSourceLink).setHeader("SourceLink").setAutoWidth(true);
+        gridActuals.setHeightFull();
 
     }
 
     private void setupKPIFactGrid() {
         gridFact = new Grid<>(KPI_Fact.class, false);
-
-        gridFact.setHeight("300px");
-
-        gridFact.addColumn(KPI_Fact::getRow).setHeader("Zeile");
-
-        gridFact.addColumn(KPI_Fact::getNT_ID).setHeader("NT ID");
-        gridFact.addColumn(KPI_Fact::getScenario).setHeader("Scenario");
-        gridFact.addColumn(KPI_Fact::getRunrate).setHeader("Runrate");
-        gridFact.addColumn(KPI_Fact::getDate).setHeader("Date");
-        gridFact.addColumn(KPI_Fact::getWert).setHeader("Wert");
-
+        gridFact.addColumn(KPI_Fact::getRow).setHeader("Zeile").setAutoWidth(true);
+        gridFact.addColumn(KPI_Fact::getNT_ID).setHeader("NT ID").setAutoWidth(true);
+        gridFact.addColumn(KPI_Fact::getScenario).setHeader("Scenario").setAutoWidth(true);
+        gridFact.addColumn(KPI_Fact::getRunrate).setHeader("Runrate").setAutoWidth(true);
+        gridFact.addColumn(KPI_Fact::getDate).setHeader("Date").setAutoWidth(true);
+        gridFact.addColumn(KPI_Fact::getWert).setHeader("Wert").setAutoWidth(true);
+        gridFact.setHeightFull();
     }
 
     private void setupKPIPlanGrid() {
         gridPlan = new Grid<>(KPI_Plan.class, false);
-
-        gridPlan.setHeight("300px");
-
-        gridPlan.addColumn(KPI_Plan::getRow).setHeader("Zeile");
-
-        gridPlan.addColumn(KPI_Plan::getNT_ID).setHeader("NT ID");
-        gridPlan.addColumn(KPI_Plan::getSpalte1).setHeader("Spalte1");
-        gridPlan.addColumn(KPI_Plan::getScenario).setHeader("Scenario");
-        gridPlan.addColumn(KPI_Plan::getVersionDate).setHeader("VersionDate");
-        gridPlan.addColumn(KPI_Plan::getVersionComment).setHeader("VersionComment");
-        gridPlan.addColumn(KPI_Plan::getRunrate).setHeader("Runrate");
+        gridPlan.addColumn(KPI_Plan::getRow).setHeader("Zeile").setAutoWidth(true);
+        gridPlan.addColumn(KPI_Plan::getNT_ID).setHeader("NT ID").setAutoWidth(true);
+        gridPlan.addColumn(KPI_Plan::getSpalte1).setHeader("Spalte1").setAutoWidth(true);
+        gridPlan.addColumn(KPI_Plan::getScenario).setHeader("Scenario").setAutoWidth(true);
+        gridPlan.addColumn(KPI_Plan::getVersionDate).setHeader("VersionDate").setAutoWidth(true);
+        gridPlan.addColumn(KPI_Plan::getVersionComment).setHeader("VersionComment").setAutoWidth(true);
+        gridPlan.addColumn(KPI_Plan::getRunrate).setHeader("Runrate").setAutoWidth(true);
+        gridPlan.setHeightFull();
 
 
     }
     private void setupUploader() {
         System.out.println("setup uploader................start");
         singleFileUpload.setWidth("450px");
+
+        singleFileUpload.addStartedListener(e->{
+            errors_Count=0;
+            textArea.setText("");
+            uploadBtn.setEnabled(false);
+            qsBtn.setEnabled(false);
+        });
 
         singleFileUpload.addSucceededListener(event -> {
             // Get information about the uploaded file
@@ -920,9 +948,9 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
             planInfo = "KPI Plan 0 rows";
 
             System.out.println("Anzahl Zeilen im Excel: " + listOfKPI_Fact.size());
-            accordion.remove(factPanel);
-            factPanel = new AccordionPanel( "KPI_Fact (" + listOfKPI_Fact.size()+ " rows)", gridFact);
-            accordion.add(factPanel);
+     //      accordion.remove(factPanel);
+     //       factPanel = new AccordionPanel( "KPI_Fact (" + listOfKPI_Fact.size()+ " rows)", gridFact);
+     //       accordion.add(factPanel);
 
             errors_Count+=errors_Fact;
             return listOfKPI_Fact;
@@ -1226,10 +1254,10 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
 
             System.out.println("Anzahl Zeilen im Excel: " + listOfKPI_Actuals.size());
-            accordion.remove(actualsPanel);
-            actualsPanel = new AccordionPanel( "KPI_Actuals (" + listOfKPI_Actuals.size()+ " rows)", gridActuals);
+          //  accordion.remove(actualsPanel);
+          //  actualsPanel = new AccordionPanel( "KPI_Actuals (" + listOfKPI_Actuals.size()+ " rows)", gridActuals);
             article.add("\n");
-            accordion.add(actualsPanel);
+          //  accordion.add(actualsPanel);
 
             errors_Count+=errors_Actuals;
             return listOfKPI_Actuals;
@@ -1405,9 +1433,9 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
             System.out.println("Anzahl Zeilen im Excel: " + listOfKPI_Plan.size());
 
-            accordion.remove(planPanel);
-            planPanel = new AccordionPanel( "KPI_Plan (" + listOfKPI_Plan.size()+ " rows)", gridPlan);
-            accordion.add(planPanel);
+        //    accordion.remove(planPanel);
+        //    planPanel = new AccordionPanel( "KPI_Plan (" + listOfKPI_Plan.size()+ " rows)", gridPlan);
+        //    accordion.add(planPanel);
 
             errors_Count+=errors_Plan;
             return listOfKPI_Plan;
