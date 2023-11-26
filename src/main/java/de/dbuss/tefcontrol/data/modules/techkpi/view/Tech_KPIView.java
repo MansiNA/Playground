@@ -59,6 +59,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
     private String dbUrl;
     private String dbUser;
     private String dbPassword;
+    private String agentName;
     Article article = new Article();
 
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
@@ -214,12 +215,14 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                     factTableName = projectParameter.getValue();
                 } else if (Constants.TABLE_PLAN.equals(projectParameter.getName())) {
                     planTableName = projectParameter.getValue();
+                } else if (Constants.DB_JOBS.equals(projectParameter.getName())) {
+                    agentName = projectParameter.getValue();
                 }
             }
         }
         dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
         //Text databaseDetail = new Text("Connected to: "+ dbServer+ ", Database: " + dbName+ ", Table Financials: " + financialsTableName + ", Table Subscriber: " + subscriberTableName+ ", Table Unitdeepdive: "+ unitTableName);
-        Text databaseDetail = new Text("Connected to: "+ dbServer+ ", Database: " + dbName);
+        Text databaseDetail = new Text("Connected to: "+ dbServer+ ", Database: " + dbName + " AgentJob: " + agentName);
 
         //Componente QS-Grid:
         qsGrid = new QS_Grid(projectConnectionService);
