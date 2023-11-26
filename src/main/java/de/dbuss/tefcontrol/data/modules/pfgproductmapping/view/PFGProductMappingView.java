@@ -390,7 +390,7 @@ public class PFGProductMappingView extends VerticalLayout {
         grid.setColumns("product_name","pfg_Type", "node");
 
         grid.getColumnByKey("product_name").setHeader("Product").setWidth("350px").setFlexGrow(0).setResizable(true);
-        grid.getColumnByKey("pfg_Type").setHeader("PFG-Type").setWidth("100px").setFlexGrow(0).setResizable(true);
+        grid.getColumnByKey("pfg_Type").setHeader("PFG-Type").setWidth("150px").setFlexGrow(0).setResizable(true);
         grid.getColumnByKey("node").setHeader("Node").setWidth("650px").setFlexGrow(0).setResizable(true);
 
         grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
@@ -419,7 +419,7 @@ public class PFGProductMappingView extends VerticalLayout {
             ComboBox<String> comboBox = new ComboBox<>();
             comboBox.setItems("PFG (PO)", "PFG (PP)");
             comboBox.setValue("PFG (PO)");
-            comboBox.setWidth("100px");
+            comboBox.setWidth("150px");
          //   comboBox.setHeight("40px");
             productHierarchie.setPfg_Type("PFG (PO)");
             comboBox.addValueChangeListener(event -> {
