@@ -52,6 +52,8 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
     private Crud<OutlookMGSR> crudMGSR;
     private Grid<OutlookMGSR> gridMGSR = new Grid<>(OutlookMGSR.class, false);
     private String tableName;
+
+    private String agentName;
     private String dbUrl;
     private String dbUser;
     private String dbPassword;
@@ -94,13 +96,15 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
                     dbPassword = projectParameter.getValue();
                 }else if (Constants.TABLE.equals(projectParameter.getName())) {
                     tableName = projectParameter.getValue();
+                } else if (Constants.DB_JOBS.equals(projectParameter.getName())){
+                    agentName = projectParameter.getValue();
                 }
             }
         }
 
         dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
 
-        Text databaseDetail = new Text("Connected to: "+ dbServer+ " Database: " + dbName+ " Table: " + tableName);
+        Text databaseDetail = new Text("Connected to: "+ dbServer+ " Database: " + dbName+ " Table: " + tableName + " AgentJob: " + agentName);
 
         //Componente QS-Grid:
         qsGrid = new QS_Grid(projectConnectionService);
