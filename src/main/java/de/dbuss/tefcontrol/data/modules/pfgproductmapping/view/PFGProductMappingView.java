@@ -419,7 +419,7 @@ public class PFGProductMappingView extends VerticalLayout {
             ComboBox<String> comboBox = new ComboBox<>();
             comboBox.setItems("PFG (PO)", "PFG (PP)");
             comboBox.setValue("PFG (PO)");
-            comboBox.setWidth("150px");
+            comboBox.setWidth("130px");
          //   comboBox.setHeight("40px");
             productHierarchie.setPfg_Type("PFG (PO)");
             comboBox.addValueChangeListener(event -> {
@@ -434,7 +434,7 @@ public class PFGProductMappingView extends VerticalLayout {
                 }
             });
             return comboBox;
-        }).setHeader("PFG-Type").setFlexGrow(0).setWidth("200px").setResizable(true);
+        }).setHeader("PFG-Type").setFlexGrow(0).setWidth("140px");
 
         missingGrid.addComponentColumn(productHierarchie -> {
             ComboBox<String> nodeComboBox = new ComboBox<>();
@@ -444,7 +444,7 @@ public class PFGProductMappingView extends VerticalLayout {
              //   nodeComboBox.setValue(listOfNodes.get(0));
             }
             nodeComboBox.setAllowCustomValue(true);
-            nodeComboBox.setWidth("550px");
+            nodeComboBox.setWidth("500px");
             nodeComboBox.addCustomValueSetListener(e -> {
                 String customValue = e.getDetail();
                 if(isValidNode(customValue)) {
@@ -478,7 +478,7 @@ public class PFGProductMappingView extends VerticalLayout {
             });
 
             return nodeComboBox;
-        }).setHeader("Node").setFlexGrow(0).setWidth("600px").setResizable(true);
+        }).setHeader("Node").setFlexGrow(0).setWidth("510px");
 
       //  missingGrid.addThemeVariants(GridVariant.LUMO_COMPACT);
         missingGrid.setSelectionMode(Grid.SelectionMode.NONE);
