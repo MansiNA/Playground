@@ -530,7 +530,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                         return; // Verlässt den Thread
                     }
                     else {
-                        System.out.println("Thread läuft noch...");
+                       // System.out.println("Thread läuft noch...");
                     }
 
                     int endIndex = Math.min(i + batchSize, totalRows);
@@ -545,12 +545,12 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                     returnStatus.set(resultKPIFact);
 
                     System.out.println("ResultKPIFact: " + returnStatus.toString());
-                    //ToDO: Check why for-loop not exited in event of an error
+
                     if (returnStatus.toString().equals(Constants.OK)){
-                        System.out.println("Alles in Butter...");
+                        //System.out.println("Alles in Butter...");
                     }
                     else{
-                        System.out.println("Fehler aufgetreten...");
+                        //System.out.println("Fehler aufgetreten...");
                         Thread.currentThread().interrupt(); // Interrupt-Signal setzen
 
                         ui.access(() -> {
@@ -568,7 +568,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                     int finalI = i;
                     ui.access(() -> {
                         progressBarFact.setValue((double) finalI);
-                        System.out.println("Fortschritt aktualisiert auf: " + finalI);
+                       // System.out.println("Fortschritt aktualisiert auf: " + finalI);
                         //         message.setText(LocalDateTime.now().format(formatter) + ": Info: saving to database (" + endIndex + "/" + totalRows +")");
                     });
 
@@ -924,7 +924,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                         catch(Exception e)
                         {
                             article=new Article();
-                            article.setText(sheetName + ": Error: Zeile " + RowNumber.toString() + ", Spalte >" + ColumnName + "<  " + e.getMessage());
+                            article.setText(sheetName + ": Error: row " + RowNumber.toString() + ", column >" + ColumnName + "<  " + e.getMessage());
                             textArea.add(article);
                             errors_Fact++;
 
@@ -935,11 +935,11 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
                 if(kPI_Fact.isValid() )
                 {
-                    System.out.println("skip row : " + kPI_Fact.getRow());
+                    listOfKPI_Fact.add(kPI_Fact);
                 }
                 else
                 {
-                    listOfKPI_Fact.add(kPI_Fact);
+                    System.out.println("Fact: skip empty row : " + kPI_Fact.getRow());
                 }
 
 
@@ -961,6 +961,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
      //       accordion.add(factPanel);
 
             errors_Count+=errors_Fact;
+
             return listOfKPI_Fact;
 
 
@@ -1253,11 +1254,11 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
                 if(kPI_Actuals.isValid() )
                 {
-                    System.out.println("skip row : " + kPI_Actuals.getRow());
+                    listOfKPI_Actuals.add(kPI_Actuals);
                 }
                 else
                 {
-                    listOfKPI_Actuals.add(kPI_Actuals);
+                    System.out.println("Actuals skip row : " + kPI_Actuals.getRow());
                 }
 
 
@@ -1439,11 +1440,12 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
                 if(kPI_Plan.isValid() )
                 {
-                    System.out.println("skip row : " + kPI_Plan.getRow());
+                    listOfKPI_Plan.add(kPI_Plan);
+
                 }
                 else
                 {
-                    listOfKPI_Plan.add(kPI_Plan);
+                    System.out.println("Plan skip empty row : " + kPI_Plan.getRow());
                 }
 
             }
@@ -1570,7 +1572,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                     return  "";
 
             }
-            article.add("\n" + sheetName + " Zeile " + zeile.toString() + ", column >" + spalte + "< konnte in checkCellString nicht aufgelöst werden. Typ=" + cell.getCellType());
+            article.add("\n" + sheetName + " Error: row  >" + zeile.toString() + "<, column >" + spalte + "< konnte in checkCellString nicht aufgelöst werden. Typ=" + cell.getCellType());
             textArea.add(article);
 
         }
@@ -1579,13 +1581,13 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                 case "Cannot get a text value from a error formula cell":
 
                     article = new Article();
-                    article.setText("\n" + sheetName + ": Info: row >" + zeile.toString() + "<, column " + spalte + ": formula cell error => replaced to empty cell");
+                    article.setText("\n" + sheetName + ": Info: row >" + zeile.toString() + "<, column >" + spalte + "<  formula cell error (replaced to empty string)");
                     textArea.add(article);
 
                     return "";
 
             }
-            System.out.println("Zeile " + zeile.toString() + ", Spalte " + spalte + " konnte in checkCellString nicht aufgelöst werden. Typ=" + cell.getCellType() + e.getMessage());
+            //System.out.println("Zeile " + zeile.toString() + ", Spalte " + spalte + " konnte in checkCellString nicht aufgelöst werden. Typ=" + cell.getCellType() + e.getMessage());
         }
 
 
@@ -1757,57 +1759,49 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
         }
 
         public boolean isValid() {
-            if (
-                    NT_ID ==null     || NT_ID.length() == 0
-                 && Scenario == null || Scenario.length() == 0
-                 && Runrate == null || Runrate.length() == 0
-            )
-            {
-                return true;
+            if (NT_ID == null || NT_ID.isEmpty()) {
+                if (Scenario == null || Scenario.isEmpty()) {
+                    if (Runrate == null || Runrate.isEmpty()) {
+                        return false;
+                    }
+                }
             }
-            else
-            {
-                return false;
-            }
-
-
+        return true;
         }
-
-
 
     }
 
     public class KPI_Actuals {
 
         private int row;
-        private String NT_ID="" ;
+        private String NT_ID = "";
 
-        private String WTAC_ID="" ;
+        private String WTAC_ID = "";
 
-        private Integer sort=0;
-        private String M2_Area="" ;
+        private Integer sort = 0;
+        private String M2_Area = "";
 
-        private String M1_Network="" ;
+        private String M1_Network = "";
 
-        private String M3_Service="";
+        private String M3_Service = "";
 
-        private String M4_Dimension="";
+        private String M4_Dimension = "";
 
-        private String M5_Tech="";
+        private String M5_Tech = "";
 
-        private String M6_Detail="";
+        private String M6_Detail = "";
 
-        private String KPI_long="";
+        private String KPI_long = "";
 
-        private String Runrate="";
+        private String Runrate = "";
 
-        private String Unit="";
-        private String Description="";
+        private String Unit = "";
+        private String Description = "";
         private String SourceReport;
-        private String SourceInput="";
-        private String SourceComment="";
-        private String SourceContact="";
-        private String SourceLink="";
+        private String SourceInput = "";
+        private String SourceComment = "";
+        private String SourceContact = "";
+        private String SourceLink = "";
 
         public int getRow() {
             return row;
@@ -1962,34 +1956,48 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
             SourceLink = sourceLink;
         }
 
+
         public boolean isValid() {
-            if (
-                       WTAC_ID ==null     || WTAC_ID.length() == 0
-                    && M2_Area ==null     || M2_Area.length() == 0
-                    && M1_Network == null || M1_Network .length() == 0
-                    && M3_Service == null || M3_Service.length() == 0
-                    && M4_Dimension == null || M4_Dimension.length() == 0
-                    && M5_Tech == null || M5_Tech .length() == 0
-                    && M6_Detail == null || M6_Detail.length() == 0
-                    && KPI_long == null || KPI_long.length() == 0
-                    && Runrate == null || Runrate.length() == 0
-                    && Unit == null || Unit.length() == 0
-                    && Description == null || Description.length() == 0
-                    && SourceReport==null || SourceReport.isEmpty()
-                    && SourceInput == null || SourceInput.length() == 0
-                    && SourceComment == null || SourceComment.length() == 0
-                    && SourceContact == null || SourceContact.length() == 0
-                    && SourceLink == null || SourceLink.length() == 0
-            )
-            {
-                return true;
-            }
-            else
-            {
-                return false;
+
+            if (NT_ID == null || NT_ID.isEmpty()) {
+            if (WTAC_ID == null || WTAC_ID.isEmpty()) {
+                if (M2_Area == null || M2_Area.isEmpty()) {
+                    if (M1_Network == null || M1_Network.isEmpty()) {
+                        if (M3_Service == null || M3_Service.isEmpty()) {
+                            if (M1_Network == null || M1_Network.isEmpty()) {
+                                if (M4_Dimension == null || M4_Dimension.isEmpty()) {
+                                    if (M5_Tech == null || M5_Tech.isEmpty()) {
+                                        if (M6_Detail == null || M6_Detail.isEmpty()) {
+                                            if (KPI_long == null || KPI_long.isEmpty()) {
+                                                if (Runrate == null || Runrate.isEmpty()) {
+                                                    if (Unit == null || Unit.isEmpty()) {
+                                                        if (Description == null || Description.isEmpty()) {
+                                                            if (SourceReport == null || SourceReport.isEmpty()) {
+                                                                if (SourceInput == null || SourceInput.isEmpty()) {
+                                                                    if (SourceComment == null || SourceComment.isEmpty()) {
+                                                                        if (SourceContact == null || SourceContact.isEmpty()) {
+                                                                            if (SourceLink == null || SourceLink.isEmpty()) {
+                                                                                return false;
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
-
+            }
+            return true;
         }
     }
 
@@ -2067,27 +2075,20 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
 
         public boolean isValid() {
-
-            try{
-                if (
-                        NT_ID == null || NT_ID.length() == 0
-                                && Spalte1 == null || Spalte1.length() == 0
-                                && Scenario == null || Scenario.length() == 0
-                                && VersionComment == null || VersionComment.length() == 0
-                                && Runrate == null || Runrate.length() == 0
-
-                ) {
-                    return false;
-                } else {
-                    return true;
+            if (NT_ID == null || NT_ID.isEmpty()) {
+                if (Spalte1 == null || Spalte1.isEmpty()) {
+                    if (Scenario == null || Scenario.isEmpty()) {
+                        if (VersionComment == null || VersionComment.isEmpty()) {
+                            if (Runrate == null || Runrate.isEmpty()) {
+                                return false;
+                                }
+                            }
+                        }
+                    }
                 }
-
-            }catch (Exception e)
-            {
-                return false;
-            }
-
+            return true;
         }
+
 
     }
 
