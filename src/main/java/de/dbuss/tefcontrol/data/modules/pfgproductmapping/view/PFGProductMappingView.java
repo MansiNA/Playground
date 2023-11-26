@@ -389,12 +389,13 @@ public class PFGProductMappingView extends VerticalLayout {
         grid.setHeightFull();
         grid.setColumns("product_name","pfg_Type", "node");
 
-        grid.getColumnByKey("product_name").setHeader("Product").setWidth("400px").setFlexGrow(0).setResizable(true);
-        grid.getColumnByKey("pfg_Type").setHeader("PFG-Type").setWidth("120px").setFlexGrow(0).setResizable(true);
-        grid.getColumnByKey("node").setHeader("Node").setWidth("400px").setFlexGrow(0).setResizable(true);
+        grid.getColumnByKey("product_name").setHeader("Product").setWidth("350px").setFlexGrow(0).setResizable(true);
+        grid.getColumnByKey("pfg_Type").setHeader("PFG-Type").setWidth("100px").setFlexGrow(0).setResizable(true);
+        grid.getColumnByKey("node").setHeader("Node").setWidth("650px").setFlexGrow(0).setResizable(true);
 
         grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         grid.addThemeVariants(GridVariant.LUMO_COMPACT);
+        grid.setWidthFull();
 
 //        grid.addItemDoubleClickListener(event ->
 //                editProduct(event.getItem()));
@@ -413,12 +414,12 @@ public class PFGProductMappingView extends VerticalLayout {
         missingGrid.setHeightFull();
         missingGrid.setColumns("product_name");
 
-        missingGrid.getColumnByKey("product_name").setHeader("Product").setWidth("400px").setFlexGrow(0).setResizable(true);
+        missingGrid.getColumnByKey("product_name").setHeader("Product").setWidth("350px").setFlexGrow(0).setResizable(true);
         missingGrid.addComponentColumn(productHierarchie -> {
             ComboBox<String> comboBox = new ComboBox<>();
             comboBox.setItems("PFG (PO)", "PFG (PP)");
             comboBox.setValue("PFG (PO)");
-            comboBox.setWidth("120px");
+            comboBox.setWidth("100px");
          //   comboBox.setHeight("40px");
             productHierarchie.setPfg_Type("PFG (PO)");
             comboBox.addValueChangeListener(event -> {
@@ -443,6 +444,7 @@ public class PFGProductMappingView extends VerticalLayout {
              //   nodeComboBox.setValue(listOfNodes.get(0));
             }
             nodeComboBox.setAllowCustomValue(true);
+            nodeComboBox.setWidth("550px");
             nodeComboBox.addCustomValueSetListener(e -> {
                 String customValue = e.getDetail();
                 if(isValidNode(customValue)) {
@@ -476,7 +478,7 @@ public class PFGProductMappingView extends VerticalLayout {
             });
 
             return nodeComboBox;
-        }).setHeader("Node").setFlexGrow(0).setWidth("300px").setResizable(true);
+        }).setHeader("Node").setFlexGrow(0).setWidth("600px").setResizable(true);
 
       //  missingGrid.addThemeVariants(GridVariant.LUMO_COMPACT);
         missingGrid.setSelectionMode(Grid.SelectionMode.NONE);
