@@ -203,7 +203,7 @@ public class QS_Grid extends Composite<Div> {
     }
     public List<ProjectQSEntity> getProjectQSList(String tableName) {
         try {
-
+            jdbcTemplate = projectConnectionService.getJdbcDefaultConnection();
             String sqlQuery = "SELECT * FROM " + tableName + " WHERE [project_id] =" + projectId;
 
             // Create a RowMapper to map the query result to a ProjectQSEntity object
