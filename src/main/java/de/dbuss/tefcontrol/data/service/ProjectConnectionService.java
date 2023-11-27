@@ -967,4 +967,31 @@ public class ProjectConnectionService {
         return result;
     }
 
+    public List<JobDetails> getJobDetails(String job_id) {
+        try {
+
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
+            String sqlQuery = "select run_date, run_time, message from msdb.dbo.sysjobhistory AS jh where job_id='"+job_id+"' order by run_date desc, run_time desc";
+
+            // Create a RowMapper to map the query result to a CLTVInflow object
+            RowMapper<JobDetails> rowMapper = (rs, rowNum) -> {
+                JobDetails jobDetails = new JobDetails();
+                jobDetails.setRun_date(rs.getInt("run_date"));
+                jobDetails.setRun_time(rs.getString("run_time"));
+                jobDetails.setMessage(rs.getString("message"));
+
+                return jobDetails;
+            };
+
+            List<JobDetails> fetchedData = jdbcTemplate.query(sqlQuery, rowMapper);
+
+            return fetchedData;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            errorMessage = handleDatabaseError(ex);
+            return Collections.emptyList();
+        }
+    }
 }
