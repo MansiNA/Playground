@@ -90,6 +90,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
     private Optional<Projects> projects;
     Optional<ProjectSql> selectedProjectSql;
     private Grid<ProjectAttachmentsDTO> attachmentGrid;
+    private Grid<JobDetails> detailGrid;
     private List<ProjectAttachmentsDTO> listOfProjectAttachments;
     private List<LinkedHashMap<String, Object>> rows;
     private Grid<AgentJobs> gridAgentJobs;
@@ -159,7 +160,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
         updateAttachmentGrid(listOfProjectAttachments);
         updateAgentJobGrid();
         setSelectedSql();
-
+        detailGrid.setVisible(false);
 
     }
 
@@ -213,14 +214,25 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
        // content.setHeight("250px");
 
         content.add(getAgentJobToolbar());
+
+        detailGrid = new Grid<>(JobDetails.class, false);
+        detailGrid.addColumn(JobDetails::getRun_date).setHeader("Run_Date").setResizable(true);
+        detailGrid.addColumn(JobDetails::getRun_time).setHeader("Run_Time").setResizable(true);
+        detailGrid.addColumn(JobDetails::getMessage).setHeader("Message").setResizable(true);
+        detailGrid.setVisible(false);
+       // content.remove(detailGrid);
         gridAgentJobs.addSelectionListener(event -> {
             Optional<AgentJobs> selectedItems = event.getFirstSelectedItem();
             if (selectedItems.isPresent()) {
                 AgentJobs selectedJob = selectedItems.get();
-                content.add(getJobDetailsGrid(selectedJob));
+                List<JobDetails> listOfDetails = projectConnectionService.getJobDetails(selectedJob.getJob_id());
+                detailGrid.setItems(listOfDetails);
+                detailGrid.setVisible(true);
+
+               // content.add(getJobDetailsGrid(selectedJob));
             }
         });
-
+        content.add(detailGrid);
         log.info("Ending getAgentJobTab() for DB-jobs tab");
         return content;
 
@@ -234,7 +246,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
         detailGrid.addColumn(JobDetails::getRun_time).setHeader("Run_Time").setResizable(true);
         detailGrid.addColumn(JobDetails::getMessage).setHeader("Message").setResizable(true);
 
-        List<JobDetails> listOfDetails = projectConnectionService.getJobDetails("838F34B3-A444-4F29-8229-DB076E9434E9");
+        List<JobDetails> listOfDetails = projectConnectionService.getJobDetails(selectedJob.getJob_id());
         detailGrid.setItems(listOfDetails);
         content.add(detailGrid);
       //  content.setSizeFull();

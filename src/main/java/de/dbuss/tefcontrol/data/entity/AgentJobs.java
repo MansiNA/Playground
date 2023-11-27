@@ -35,5 +35,6 @@ public class AgentJobs {
     private String jobStopDate;
     private String jobNextRunDate;
     private String result;
+    private String job_id;
 
 }

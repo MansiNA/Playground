@@ -11,6 +11,7 @@ import de.dbuss.tefcontrol.data.modules.pfgproductmapping.entity.CltvAllProduct;
 import de.dbuss.tefcontrol.data.modules.pfgproductmapping.entity.ProductHierarchie;
 import de.dbuss.tefcontrol.data.repository.ProjectConnectionRepository;
 import de.dbuss.tefcontrol.data.modules.techkpi.view.Tech_KPIView;
+import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -47,10 +48,19 @@ public class ProjectConnectionService {
     @Value("${spring.datasource.password}")
     private String dbPassword;
 
+    HashMap<String, String> defaultConnectionParams;
+
     public ProjectConnectionService(ProjectConnectionRepository repository) {
         this.repository = repository;
     }
 
+    @PostConstruct
+    private void init() {
+        defaultConnectionParams = new HashMap<>();
+        defaultConnectionParams.put("dbUrl", dbUrl);
+        defaultConnectionParams.put("dbUser", dbUser);
+        defaultConnectionParams.put("dbPassword", dbPassword);
+    }
     public Optional<ProjectConnection> findByName(String name) {
         return repository.findByName(name);
     }
@@ -105,6 +115,9 @@ public class ProjectConnectionService {
     }
 
     public JdbcTemplate getJdbcDefaultConnection () {
+        String dbUrl = defaultConnectionParams.get("dbUrl");
+        String dbUser = defaultConnectionParams.get("dbUser");
+        String dbPassword = defaultConnectionParams.get("dbPassword");
         DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
         jdbcTemplate = new JdbcTemplate(dataSource);
         return jdbcTemplate;
