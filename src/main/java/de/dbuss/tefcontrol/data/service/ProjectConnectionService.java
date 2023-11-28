@@ -27,7 +27,6 @@ import org.springframework.stereotype.Service;
 
 import javax.sql.DataSource;
 import java.sql.ResultSetMetaData;
-import java.sql.Types;
 import java.util.*;
 
 @Slf4j
@@ -980,10 +979,10 @@ public class ProjectConnectionService {
         return result;
     }
 
-    public List<JobDetails> getJobDetails(String job_id) {
+    public List<JobDetails> getJobDetails(String job_id, String agent_db) {
         try {
 
-            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            DataSource dataSource = getDataSource(agent_db);
             jdbcTemplate = new JdbcTemplate(dataSource);
 
             String sqlQuery = "select run_date, run_time, message from msdb.dbo.sysjobhistory AS jh where job_id='"+job_id+"' order by run_date desc, run_time desc";
@@ -1006,5 +1005,47 @@ public class ProjectConnectionService {
             errorMessage = handleDatabaseError(ex);
             return Collections.emptyList();
         }
+    }
+
+    public List<AgentJobs> getAgentJobListFindbyName(String agentNames, String agent_db) {
+
+        try {
+            if (agentNames != null) {
+                String[] jobs = agentNames.split(";");
+                DataSource dataSource = getDataSource(agent_db);
+                jdbcTemplate = new JdbcTemplate(dataSource);
+
+                // String sqlQuery = "SELECT * FROM job_status WHERE name IN (" + String.join(",", "?".repeat(jobs.length)) + ")";
+                   String sqlQuery = "SELECT * FROM job_status WHERE name IN (" + String.join(",", Collections.nCopies(jobs.length, "?")) + ")";
+
+                // Create a RowMapper to map the query result to an AgentJobs object
+                RowMapper<AgentJobs> rowMapper = (rs, rowNum) -> {
+                    AgentJobs agentJobs = new AgentJobs();
+                    agentJobs.setJob_id(rs.getString("job_id")); // Assuming job_id is the correct column name
+                    agentJobs.setName(rs.getString("Name"));
+                    agentJobs.setJobEnabled(rs.getString("Job_Enabled"));
+                    agentJobs.setJobDescription(rs.getString("Job_Description"));
+                    agentJobs.setJob_activity(rs.getString("Job_Activity"));
+                    agentJobs.setDuration_Min(rs.getString("Duration_Min"));
+                    agentJobs.setJobStartDate(rs.getString("Job_Start_Date"));
+                    agentJobs.setJobLastExecutedStep(rs.getString("Job_Last_Executed_Step"));
+                    agentJobs.setJobExecutedStepDate(rs.getString("Job_Executed_Step_Date"));
+                    agentJobs.setJobStopDate(rs.getString("Job_Stop_Date"));
+                    agentJobs.setJobNextRunDate(rs.getString("Job_Next_Run_Date"));
+                    agentJobs.setResult(rs.getString("result"));
+                    return agentJobs;
+                };
+
+                List<AgentJobs> fetchedData = jdbcTemplate.query(sqlQuery, jobs, rowMapper);
+
+                return fetchedData;
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            errorMessage = handleDatabaseError(ex);
+            System.out.println(errorMessage);
+            return Collections.emptyList();
+        }
+        return Collections.emptyList();
     }
 }

@@ -101,7 +101,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
     private ComboBox<String> select;
     private Select<String> selectConnection;
     private TextArea sqlDescriptionTextArea;
-    private UI ui ;
+    private UI ui;
     private String selectedDbName;
     Button executeButton;
     Button exportButton;
@@ -186,7 +186,18 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
     }
     private void updateAgentJobGrid() {
         log.info("executing updateAgentJobGrid() for Agent Job grid");
-        projects.ifPresent(value -> gridAgentJobs.setItems(agentJobsService.findbyJobName(value.getAgent_Jobs())));
+        if(projects != null && projects.isPresent()) {
+            String agent_db = projects.get().getAgent_db();
+            String agentJobs = projects.get().getAgent_Jobs();
+            if(agentJobs != null) {
+                List<AgentJobs> listOfAgent = projectConnectionService.getAgentJobListFindbyName(agentJobs, agent_db);
+                gridAgentJobs.setItems(listOfAgent);
+                if (listOfAgent.isEmpty() && !projectConnectionService.getErrorMessage().isEmpty()) {
+                    Notification.show("Agent not found :" + projectConnectionService.getErrorMessage(), 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                }
+            }
+        }
+       // projects.ifPresent(value -> gridAgentJobs.setItems(agentJobsService.findbyJobName(value.getAgent_Jobs())));
     }
     private TabSheet getTabsheet() {
 
@@ -225,7 +236,8 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
             Optional<AgentJobs> selectedItems = event.getFirstSelectedItem();
             if (selectedItems.isPresent()) {
                 AgentJobs selectedJob = selectedItems.get();
-                List<JobDetails> listOfDetails = projectConnectionService.getJobDetails(selectedJob.getJob_id());
+                String agent_db = projects.get().getAgent_db();
+                List<JobDetails> listOfDetails = projectConnectionService.getJobDetails(selectedJob.getJob_id(), agent_db);
                 detailGrid.setItems(listOfDetails);
                 detailGrid.setVisible(true);
 
@@ -236,22 +248,6 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
         log.info("Ending getAgentJobTab() for DB-jobs tab");
         return content;
 
-    }
-
-    private Component getJobDetailsGrid(AgentJobs selectedJob) {
-        log.info("Starting getJobDetailsGrid() for DB-jobs tab");
-        VerticalLayout content = new VerticalLayout();
-        Grid<JobDetails> detailGrid = new Grid<>(JobDetails.class, false);
-        detailGrid.addColumn(JobDetails::getRun_date).setHeader("Run_Date").setResizable(true);
-        detailGrid.addColumn(JobDetails::getRun_time).setHeader("Run_Time").setResizable(true);
-        detailGrid.addColumn(JobDetails::getMessage).setHeader("Message").setResizable(true);
-
-        List<JobDetails> listOfDetails = projectConnectionService.getJobDetails(selectedJob.getJob_id());
-        detailGrid.setItems(listOfDetails);
-        content.add(detailGrid);
-      //  content.setSizeFull();
-        log.info("Ending getJobDetailsGrid() for DB-jobs tab");
-        return content;
     }
 
     private Component getAgentJobToolbar() {
@@ -1057,9 +1053,11 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
     private List<AgentJobs> getAgentJobs() {
         log.info("Starting getAgentJobs() for DB-jobs tab");
         if (projects != null && projects.isPresent()) {
-            String jobName = projects.get().getAgent_Jobs();
+            String agentJobs = projects.get().getAgent_Jobs();
+            String agent_db = projects.get().getAgent_db();
             log.info("Ending getAgentJobs() for DB-jobs tab");
-            return agentJobsService.findbyJobName(jobName);
+            return projectConnectionService.getAgentJobListFindbyName(agentJobs, agent_db);
+           // return agentJobsService.findbyJobName(jobName);
         }
         log.info("Ending getAgentJobs() for DB-jobs tab");
         return Collections.emptyList();
