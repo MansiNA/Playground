@@ -186,7 +186,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
     }
     private void updateAgentJobGrid() {
         log.info("executing updateAgentJobGrid() for Agent Job grid");
-        gridAgentJobs.setItems(agentJobsService.findbyJobName(projects.get().getAgent_Jobs()));
+        projects.ifPresent(value -> gridAgentJobs.setItems(agentJobsService.findbyJobName(value.getAgent_Jobs())));
     }
     private TabSheet getTabsheet() {
 
@@ -509,10 +509,10 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
     }
 
     private void setSelectedSql() {
-        if(projects != null) {
+        if(projects != null && projects.isPresent()) {
             Optional<Projects> projectsOptional = projectsService.findById(projects.get().getId());
             List<ProjectSql> listOfSql = projectsService.getProjectSqls(projectsOptional.get());
-            if(listOfSql.size() != 0) {
+            if(!listOfSql.isEmpty()) {
                 select.setItems(listOfSql.stream()
                         .map(ProjectSql::getName)
                         .collect(Collectors.toList()));
@@ -845,9 +845,12 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
                 System.out.println(selectedAttachment.getId());
                 projectAttachmentsService.delete(selectedAttachment.getId());
                 // Refresh the 'projects' entity to reflect the changes
-                projects = projectsService.findById(projects.get().getId());
-                List<ProjectAttachmentsDTO> listOfAttachments = projectsService.getProjectAttachmentsWithoutFileContent(projects.get());
-                attachmentGrid.setItems(listOfAttachments);
+                projects = projectsService.findById(projects.isPresent() ? projects.get().getId() : 1);
+                if (projects.isPresent()) {
+                    List<ProjectAttachmentsDTO> listOfAttachments = projectsService.getProjectAttachmentsWithoutFileContent(projects.get());
+                    attachmentGrid.setItems(listOfAttachments);
+                }
+
             }
             confirmationDialog.close(); // Close the confirmation dialog
         });
@@ -923,7 +926,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
             fileUpload.clearFileList();
 
         });
-        if(projects != null) {
+        if(projects != null && projects.isPresent()) {
             attachmentGrid.setItems(projectsService.getProjectAttachmentsWithoutFileContent(projects.get()));
         }
         attachmentsTabContent.add(attachmentGrid,fileUpload);
@@ -994,7 +997,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
 
         content.add(editor,editBtn,saveBtn);
 
-        if(projects != null) {
+        if(projects != null && projects.isPresent()) {
             editor.setValue(projects.map(Projects::getDescription).orElse(""));
         }
         log.info("Ending getProjectsDescription() for Description tab");
@@ -1053,16 +1056,13 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
 
     private List<AgentJobs> getAgentJobs() {
         log.info("Starting getAgentJobs() for DB-jobs tab");
-        if (projects != null) {
+        if (projects != null && projects.isPresent()) {
             String jobName = projects.get().getAgent_Jobs();
             log.info("Ending getAgentJobs() for DB-jobs tab");
             return agentJobsService.findbyJobName(jobName);
         }
-        else {
-            Projects projects = projectsService.findByName("PFG_Cube");
-            log.info("Ending getAgentJobs() for DB-jobs tab");
-            return agentJobsService.findbyJobName(projects.getAgent_Jobs());
-        }
+        log.info("Ending getAgentJobs() for DB-jobs tab");
+        return Collections.emptyList();
     }
     private CrudEditor<ProjectAttachmentsDTO> createEditor() {
         log.info("Starting createEditor() for ProjectAttachments Attachment tab");
