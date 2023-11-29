@@ -189,12 +189,11 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
         if(projects != null && projects.isPresent()) {
             String agent_db = projects.get().getAgent_db();
             String agentJobs = projects.get().getAgent_Jobs();
-            if(agentJobs != null) {
-                List<AgentJobs> listOfAgent = projectConnectionService.getAgentJobListFindbyName(agentJobs, agent_db);
-                gridAgentJobs.setItems(listOfAgent);
-                if (listOfAgent.isEmpty() && !projectConnectionService.getErrorMessage().isEmpty()) {
-                    Notification.show("Agent not found :" + projectConnectionService.getErrorMessage(), 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
-                }
+            List<AgentJobs> listOfAgent = agentJobs != null ? projectConnectionService.getAgentJobListFindbyName(agentJobs, agent_db) : Collections.emptyList();
+            gridAgentJobs.setItems(listOfAgent);
+
+            if (listOfAgent.isEmpty() && !projectConnectionService.getErrorMessage().isEmpty()) {
+                Notification.show("Agent not found: " + projectConnectionService.getErrorMessage(), 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
             }
         }
        // projects.ifPresent(value -> gridAgentJobs.setItems(agentJobsService.findbyJobName(value.getAgent_Jobs())));
