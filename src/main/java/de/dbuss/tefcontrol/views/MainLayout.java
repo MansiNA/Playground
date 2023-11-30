@@ -25,6 +25,7 @@ import de.dbuss.tefcontrol.data.entity.User;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.view.B2POutlookFINView;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.view.B2POutlookSUBView;
 import de.dbuss.tefcontrol.data.modules.cltv_Inflow.view.CLTVInflowView;
+import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.GenericCommentsView;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.PBICentralComments;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.PBIFlashFinancials;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.PBITechComments;
@@ -60,7 +61,6 @@ public class MainLayout extends AppLayout {
     Projects selectedProject=new Projects();
     private AuthenticatedUser authenticatedUser;
     private AccessAnnotationChecker accessChecker;
-
     private ProjectsService projectsService;
     private LogService logService;
 
@@ -95,6 +95,7 @@ public class MainLayout extends AppLayout {
         urlToViewMap.put(Constants.B2P_OUTLOOK_SUB, B2POutlookSUBView.class);
         urlToViewMap.put(Constants.PBI_TECH_COMMENTS, PBITechComments.class);
         urlToViewMap.put(Constants.PBI_FLASH_FINANCIALS, PBIFlashFinancials.class);
+        urlToViewMap.put(Constants.GENERIC_COMMENTS, GenericCommentsView.class);
 
         setPrimarySection(Section.DRAWER);
         addDrawerContent();

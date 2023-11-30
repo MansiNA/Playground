@@ -28,6 +28,7 @@ import org.springframework.stereotype.Service;
 import javax.sql.DataSource;
 import java.sql.ResultSetMetaData;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -1047,5 +1048,55 @@ public class ProjectConnectionService {
             return Collections.emptyList();
         }
         return Collections.emptyList();
+    }
+
+    public String saveGenericComments(List<GenericComments> data, String tableName, String dbUrl, String dbUser, String dbPassword) {
+
+        try {
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
+            String deleteSql = "DELETE FROM " + tableName + " WHERE [File_Name] = ?";
+            List<String> distinctFileNames = data.stream()
+                    .map(GenericComments::getFileName)
+                    .distinct()
+                    .collect(Collectors.toList());
+
+            // Print the distinct file names
+            System.out.println("Distinct File Names: " + distinctFileNames);
+            for (String fileName : distinctFileNames) {
+
+                // Delete existing records with the same 'File_Name'
+                jdbcTemplate.update(deleteSql, fileName);
+            }
+
+            String sqlInsert = "INSERT INTO " + tableName + " ([File_Name], [Register_Name], [Line_Number], [Responsible], [Topic], [Month], " +
+                    "[Category_1], [Category_2], [Scenario], [XTD], [Segment], [Payment_Type], [Comment]) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+            // Loop through the data and insert new records
+            for (GenericComments item : data) {
+                jdbcTemplate.update(
+                        sqlInsert,
+                        item.getFileName(),
+                        item.getRegisterName(),
+                        item.getLineNumber(),
+                        item.getResponsible(),
+                        item.getTopic(),
+                        item.getMonth(),
+                        item.getCategory1(),
+                        item.getCategory2(),
+                        item.getScenario(),
+                        item.getXtd(),
+                        item.getSegment(),
+                        item.getPaymentType(),
+                        item.getComment()
+                );
+            }
+            return Constants.OK;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return handleDatabaseError(e);
+        }
     }
 }
