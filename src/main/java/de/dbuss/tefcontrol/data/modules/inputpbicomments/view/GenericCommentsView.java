@@ -71,6 +71,7 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
     private QS_Grid qsGrid;
     private Button uploadBtn;
     private Button qsBtn;
+    private int id;
 
     public GenericCommentsView(AuthenticatedUser authenticatedUser, ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService) {
 
@@ -283,12 +284,14 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
         String SEGMENT = "segment";
         String PAYMENTTYPE = "paymentType";
         String COMMENT = "comment";
+        String ID = "id";
 
         String EDIT_COLUMN = "vaadin-crud-edit-column";
 
         gridGenericComments = crudGenericComments.getGrid();
 
         gridGenericComments.removeColumn(gridGenericComments.getColumnByKey(EDIT_COLUMN));
+        gridGenericComments.removeColumn(gridGenericComments.getColumnByKey(ID));
 
         gridGenericComments.getColumnByKey(FILENAME).setHeader("File_Name").setWidth("80px").setFlexGrow(0).setResizable(true);
         gridGenericComments.getColumnByKey(REGISTERNAME).setHeader("Register_Name").setWidth("100px").setFlexGrow(0).setResizable(true);
@@ -328,16 +331,16 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
             List<T> resultList = new ArrayList<>();
             Iterator<Row> rowIterator = my_worksheet.iterator();
 
-            int RowNumber=0;
+            int rowNumber=0;
             Integer Error_count=0;
             System.out.println(my_worksheet.getPhysicalNumberOfRows()+"$$$$$$$$$");
 
             while (rowIterator.hasNext() ) {
                 Row row = rowIterator.next();
                 T entity = targetType.newInstance();
-                RowNumber++;
+                rowNumber++;
 
-                if (RowNumber == 1) {
+                if (rowNumber == 1) {
                     continue;
                 }
                 if(row.getCell(0).toString().isEmpty()) {
@@ -357,9 +360,8 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
                     field.setAccessible(true);
                     if (cell != null && !cell.toString().isEmpty()) {
                         if (index == 0) {
-                            field.set(entity, RowNumber);
+                            field.set(entity, rowNumber);
                         } else {
-                            System.out.println(field.getName()+"------------------------------------"+cell.getCellType());
                             if (field.getType() == int.class || field.getType() == Integer.class) {
                                 if (cell.getCellType() == cell.CELL_TYPE_NUMERIC) {
                                     field.set(entity, (int) cell.getNumericCellValue());
@@ -378,6 +380,8 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
                         field.set(entity, fileName);
                     } else if (field.getName().equals("registerName")) {
                         field.set(entity, my_worksheet.getSheetName());
+                    } else if (field.getName().equals("id")) {
+                        field.set(entity, id++);
                     }
                 }
                 resultList.add(entity);

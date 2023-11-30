@@ -19,5 +19,6 @@ public class GenericComments {
     private String comment;
     private String fileName;
     private String registerName;
+    private int id;
 }
 
