@@ -162,7 +162,7 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
         Notification notification;
         String resultComments = projectConnectionService.saveGenericComments(allGenericCommentsItems, tableName, dbUrl, dbUser, dbPassword);
         if (resultComments.equals(Constants.OK)){
-            notification = Notification.show(allGenericCommentsItems.size() + " Financials Rows Uploaded successfully",5000, Notification.Position.MIDDLE);
+            notification = Notification.show(allGenericCommentsItems.size() + "X Comments Rows uploaded successfully",5000, Notification.Position.MIDDLE);
             notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
         } else {
             notification = Notification.show("Error during Financials upload: " + resultComments ,5000, Notification.Position.MIDDLE);
@@ -217,7 +217,12 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
             contentLength = event.getContentLength();
             mimeType = event.getMIMEType();
 
-            parseExcelFile(fileData,fileName);
+            boolean isFileAlredyUploaded = isFileNameAvailable(fileName);
+            if(!isFileAlredyUploaded) {
+                parseExcelFile(fileData, fileName);
+            } else {
+                Notification.show("this file alredy uploaded " ,5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+            }
             List<GenericComments> listOfAllData = new ArrayList<>();
 
             for (List<GenericComments> sheetData : listOfAllSheets) {
@@ -269,6 +274,12 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
         }
     }
 
+    private boolean isFileNameAvailable(String fileName) {
+        // Use stream to check if the fileName is present in any list within listOfAllSheets
+        return listOfAllSheets.stream()
+                .anyMatch(sheet -> sheet.stream()
+                        .anyMatch(comment -> comment.getFileName().equals(fileName)));
+    }
     private void setupGenericCommentsGrid() {
 
         String FILENAME = "fileName";
