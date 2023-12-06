@@ -277,6 +277,13 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver,
                 System.out.println("Autorefresh wird eingeschaltet.");
                 startCountdown(Duration.ofSeconds(60));
                 countdownLabel.setVisible(true);
+                executor.schedule(() -> {
+                    ui.access(() -> {
+                        autorefresh.setValue(false);
+                        countdownLabel.setVisible(false);
+                        stopCountdown(); // Stop the executor after 30 minutes
+                    });
+                }, 30, java.util.concurrent.TimeUnit.MINUTES);
             }
             else{
                 System.out.println("Autorefresh wird ausgeschaltet.");
