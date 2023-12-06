@@ -70,6 +70,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -77,7 +79,7 @@ import java.util.stream.Stream;
 @Slf4j
 @Route(value = "Default-Mapping/:project_Id", layout = MainLayout.class)
 @RolesAllowed({"ADMIN", "MAPPING", "USER" , "KPI", "OUTLOOK"})
-public class DefaultView extends VerticalLayout  implements BeforeEnterObserver  {
+public class DefaultView extends VerticalLayout  implements BeforeEnterObserver, BeforeLeaveObserver  {
 
     private final ProjectsService projectsService;
     private final ProjectAttachmentsService projectAttachmentsService;
@@ -96,6 +98,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
     private Grid<AgentJobs> gridAgentJobs;
     private Label lastRefreshLabel;
     private Label countdownLabel;
+    private Instant startTime;
     private ScheduledExecutorService executor;
     //private Select<String> select;
     private ComboBox<String> select;
@@ -106,6 +109,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
     Button executeButton;
     Button exportButton;
     private TextField queryNameField;
+    Checkbox autorefresh = new Checkbox();
 
     public DefaultView(ProjectsService projectsService, ProjectAttachmentsService projectAttachmentsService, AgentJobsService agentJobsService, MSMService msmService, ProjectSqlService projectSqlService, ProjectConnectionService projectConnectionService, AuthenticatedUser authenticatedUser) {
         this.projectsService = projectsService;
@@ -161,9 +165,13 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
         updateAgentJobGrid();
         setSelectedSql();
         detailGrid.setVisible(false);
-
     }
-
+    @Override
+    public void beforeLeave(BeforeLeaveEvent beforeLeaveEvent) {
+        stopCountdown();
+        countdownLabel.setVisible(false);
+        autorefresh.setValue(false);
+    }
     private void updatesqlDescription(Optional<ProjectSql> selectedProjectSql) {
         log.info("executing updatesqlDescription() for project description....."+selectedProjectSql);
         String sqlDescription = "No description available";
@@ -252,7 +260,6 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
     private Component getAgentJobToolbar() {
         log.info("Starting getAgentJobToolbar() for DB-jobs tab");
         Button refreshBtn = new Button("refresh");
-        Checkbox autorefresh = new Checkbox();
 
         refreshBtn.addClickListener(e->{
             log.info("executing refreshBtn.addClickListener for DB-jobs tab");
@@ -265,27 +272,11 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
         autorefresh.setLabel("Auto-Refresh");
 
         autorefresh.addClickListener(e->{
+            log.info("executing autorefresh.addClickListener for DB-jobs tab");
             if (autorefresh.getValue()){
-                log.info("executing autorefresh.addClickListener for DB-jobs tab");
+                System.out.println("Autorefresh wird eingeschaltet.");
                 startCountdown(Duration.ofSeconds(60));
-                //  countdownLabel.setText("timer on");
                 countdownLabel.setVisible(true);
-             /*   Integer count = 0;
-                while (count < 10) {
-                    // Sleep to emulate background work
-                    try {
-                        Thread.sleep(500);
-                    } catch (InterruptedException ex) {
-                        throw new RuntimeException(ex);
-                    }
-                    String message = "This is update " + count++;
-
-                    ui.access(() -> add(new Span(message)));
-                }*/
-                // Inform that we are done
-                ui.access(() -> {
-                    add(new Span("Done updating"));
-                });
             }
             else{
                 System.out.println("Autorefresh wird ausgeschaltet.");
@@ -304,33 +295,34 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
 
     }
 
+    private void updateCountdownLabel(Duration remainingTime) {
+        long seconds = remainingTime.getSeconds();
+        String formattedTime = String.format("%02d", (seconds % 60));
+
+        if (remainingTime.isNegative()){
+            startTime = Instant.now();
+            updateAgentJobGrid();
+            updateLastRefreshLabel();
+            return;
+        }
+        countdownLabel.setText("in " + formattedTime + " Sekunden");
+    }
+
     private void startCountdown(Duration duration) {
         log.info("Starting startCountdown() for DB-jobs tab");
         executor = Executors.newSingleThreadScheduledExecutor();
 
-        Instant startTime = Instant.now();
-        updateLastRefreshLabel();
+        startTime = Instant.now();
 
         executor.scheduleAtFixedRate(() -> {
-            log.info("executing executor.scheduleAtFixedRate for start count down in DB-jobs tab");
-           /* Command com = new Command() {
-                @Override
-                public void execute() {
-                    countdownLabel.setText("ongoing");
-                }
-            };
-            ui.access(com);*/
             ui.access(() -> {
                 Duration remainingTime = calculateRemainingTime(duration, startTime);
-                //       updateCountdownLabel(remainingTime);
-                countdownLabel.setText("ongoing");
-                //System.out.println("UI-ID: " + ui.toString());
+                updateCountdownLabel(remainingTime);
             });
-            ui.notify();
-        }, 0, 1, java.util.concurrent.TimeUnit.SECONDS);
+        }, 0, 1, TimeUnit.SECONDS);
         log.info("Ending startCountdown() for DB-jobs tab");
     }
-  
+
     private Component getProjectSQL() {
         log.info("Starting getProjectSQL() for QS tab");
         VerticalLayout content = new VerticalLayout();
