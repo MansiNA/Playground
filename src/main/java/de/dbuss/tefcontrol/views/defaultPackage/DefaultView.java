@@ -79,7 +79,7 @@ import java.util.stream.Stream;
 @Slf4j
 @Route(value = "Default-Mapping/:project_Id", layout = MainLayout.class)
 @RolesAllowed({"ADMIN", "MAPPING", "USER" , "KPI", "OUTLOOK"})
-public class DefaultView extends VerticalLayout  implements BeforeEnterObserver  {
+public class DefaultView extends VerticalLayout  implements BeforeEnterObserver, BeforeLeaveObserver  {
 
     private final ProjectsService projectsService;
     private final ProjectAttachmentsService projectAttachmentsService;
@@ -109,6 +109,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
     Button executeButton;
     Button exportButton;
     private TextField queryNameField;
+    Checkbox autorefresh = new Checkbox();
 
     public DefaultView(ProjectsService projectsService, ProjectAttachmentsService projectAttachmentsService, AgentJobsService agentJobsService, MSMService msmService, ProjectSqlService projectSqlService, ProjectConnectionService projectConnectionService, AuthenticatedUser authenticatedUser) {
         this.projectsService = projectsService;
@@ -165,7 +166,12 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
         setSelectedSql();
         detailGrid.setVisible(false);
     }
-
+    @Override
+    public void beforeLeave(BeforeLeaveEvent beforeLeaveEvent) {
+        stopCountdown();
+        countdownLabel.setVisible(false);
+        autorefresh.setValue(false);
+    }
     private void updatesqlDescription(Optional<ProjectSql> selectedProjectSql) {
         log.info("executing updatesqlDescription() for project description....."+selectedProjectSql);
         String sqlDescription = "No description available";
@@ -254,7 +260,6 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver 
     private Component getAgentJobToolbar() {
         log.info("Starting getAgentJobToolbar() for DB-jobs tab");
         Button refreshBtn = new Button("refresh");
-        Checkbox autorefresh = new Checkbox();
 
         refreshBtn.addClickListener(e->{
             log.info("executing refreshBtn.addClickListener for DB-jobs tab");
