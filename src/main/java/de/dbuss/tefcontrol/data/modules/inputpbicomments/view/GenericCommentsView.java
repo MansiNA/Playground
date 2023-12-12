@@ -351,10 +351,12 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
                 T entity = targetType.newInstance();
                 rowNumber++;
 
-                if (rowNumber == 1) {
+                if (rowNumber == 1 || row.getCell(0) == null ) {
+                  //  System.out.println(row.getCell(0).getCellType()+"..............................type");
                     continue;
                 }
-                if(row.getCell(0).toString().isEmpty()) {
+                System.out.println(row.getRowNum() +"............."+ my_worksheet.getSheetName());
+                if(row.getCell(0) != null && row.getCell(0).toString().isEmpty()) {
                     break;
                 }
 
