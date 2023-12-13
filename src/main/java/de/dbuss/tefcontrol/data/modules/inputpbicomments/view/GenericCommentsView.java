@@ -159,6 +159,18 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
     private void save2db() {
         List<GenericComments> allGenericCommentsItems = getGenericCommentsDataProviderAllItems();
 
+        List<String> allFileNames = allGenericCommentsItems.stream()
+                .map(GenericComments::getFileName)
+                .distinct()
+                .collect(Collectors.toList());
+
+        for (String fileName : allFileNames) {
+            ProjectUpload projectUpload = new ProjectUpload();
+            projectUpload.setFileName(fileName);
+            projectUpload.setUserName(MainLayout.userName);
+            projectConnectionService.saveUploadedGenericFileData(projectUpload);
+        }
+
         Notification notification;
         String resultComments = projectConnectionService.saveGenericComments(allGenericCommentsItems, tableName, dbUrl, dbUser, dbPassword);
         if (resultComments.equals(Constants.OK)){
@@ -296,6 +308,7 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
         String PAYMENTTYPE = "paymentType";
         String COMMENT = "comment";
         String ID = "id";
+        String UPLOADID = "uploadId";
 
         String EDIT_COLUMN = "vaadin-crud-edit-column";
 
@@ -303,6 +316,7 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
 
         gridGenericComments.removeColumn(gridGenericComments.getColumnByKey(EDIT_COLUMN));
         gridGenericComments.removeColumn(gridGenericComments.getColumnByKey(ID));
+        gridGenericComments.removeColumn(gridGenericComments.getColumnByKey(UPLOADID));
 
         gridGenericComments.getColumnByKey(FILENAME).setHeader("File_Name").setWidth("80px").setFlexGrow(0).setResizable(true);
         gridGenericComments.getColumnByKey(REGISTERNAME).setHeader("Register_Name").setWidth("100px").setFlexGrow(0).setResizable(true);
