@@ -36,6 +36,7 @@ public class QS_Grid extends Composite<Div> {
     QS_Callback qs_callback;
     @Getter
     public int projectId;
+    private int uploadId;
     private String dbUrl;
     private String dbUser;
     private String dbPassword;
@@ -60,7 +61,21 @@ public class QS_Grid extends Composite<Div> {
 
         createContextMenu();
     }
+    public void createDialog(QS_Callback callback, int projectId, int uploadId) {
+        this.qs_callback = callback;
+        this.projectId = projectId;
+        this.uploadId = uploadId;
 
+        VerticalLayout dialogLayout = createDialogLayout();
+        qsDialog.add(dialogLayout);
+        qsDialog.setDraggable(true);
+        qsDialog.setResizable(true);
+        qsDialog.setVisible(false);
+        qsDialog.setHeaderTitle("QS for Project-ID " + projectId );
+        getContent().add(qsDialog);
+
+        createContextMenu();
+    }
     public void showDialog(boolean show)
     {
         if (show){
@@ -235,6 +250,10 @@ public class QS_Grid extends Composite<Div> {
 
             if(sql != null ) {
                 try {
+                    if(sql.contains("UPLOAD_ID")) {
+                        sql = sql.replace("UPLOAD_ID", uploadId + "");
+                        System.out.println(sql+"++++++++++++++++++++++++++++++++++++++");
+                    }
 
                     DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
                     jdbcTemplate = new JdbcTemplate(dataSource);

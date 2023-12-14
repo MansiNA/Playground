@@ -7,6 +7,7 @@ import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.B2pOutlookSub;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.OutlookMGSR;
 import de.dbuss.tefcontrol.data.modules.cltv_Inflow.entity.CLTVInflow;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.*;
+import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.GenericCommentsView;
 import de.dbuss.tefcontrol.data.modules.pfgproductmapping.entity.CltvAllProduct;
 import de.dbuss.tefcontrol.data.modules.pfgproductmapping.entity.ProductHierarchie;
 import de.dbuss.tefcontrol.data.repository.ProjectConnectionRepository;
@@ -21,12 +22,18 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.CannotGetJdbcConnectionException;
 
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Service;
 
 import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -1055,7 +1062,7 @@ public class ProjectConnectionService {
         try {
             jdbcTemplate = getJdbcDefaultConnection();
 
-            Map<String, Integer> uploadIdMap = getUploadIdMap();
+            Map<String, Integer> uploadIdMap = GenericCommentsView.projectUploadIdMap;
             DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
             jdbcTemplate = new JdbcTemplate(dataSource);
 
@@ -1097,9 +1104,27 @@ public class ProjectConnectionService {
             jdbcTemplate = getJdbcDefaultConnection();
             String sql = "INSERT INTO " + tableName + " ([File_Name], [User_Name]) VALUES (?, ?)";
 
-            jdbcTemplate.update(sql, entity.getFileName(), entity.getUserName());
+            KeyHolder keyHolder = new GeneratedKeyHolder();
 
-            return Constants.OK;
+            int affectedRows = jdbcTemplate.update(new PreparedStatementCreator() {
+                @Override
+                public PreparedStatement createPreparedStatement(Connection connection) throws SQLException {
+                    PreparedStatement ps = connection.prepareStatement(sql, new String[]{"Upload_ID"});
+                    ps.setString(1, entity.getFileName());
+                    ps.setString(2, entity.getUserName());
+                    return ps;
+                }
+            }, keyHolder);
+
+            // Check if the insertion was successful
+            if (affectedRows > 0) {
+                // Retrieve the generated ID from the KeyHolder
+                long generatedId = keyHolder.getKey().longValue();
+                GenericCommentsView.projectUploadIdMap.put(entity.getFileName(), (int) generatedId);
+                return Constants.OK;
+            } else {
+                return "Failed to insert data into the database";
+            }
         } catch (Exception e) {
             e.printStackTrace();
             return handleDatabaseError(e);
