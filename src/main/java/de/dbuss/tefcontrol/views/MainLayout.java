@@ -70,6 +70,7 @@ public class MainLayout extends AppLayout {
     Image image = new Image("images/telefonica.svg", "Telefonica Image");
 
     private static final Logger logInfo = LoggerFactory.getLogger(MainLayout.class);
+    public static String userName;
 
     public MainLayout(AuthenticatedUser authenticatedUser, AccessAnnotationChecker accessChecker, ProjectsService projectsService, LogService logService) {
         this.authenticatedUser = authenticatedUser;
@@ -193,6 +194,7 @@ public class MainLayout extends AppLayout {
         Optional<User> maybeUser = authenticatedUser.get();
         if (maybeUser.isPresent()) {
             User user = maybeUser.get();
+            userName = user.getUsername();
             projectsService.setUser(user);
         }
 

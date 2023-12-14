@@ -1053,31 +1053,21 @@ public class ProjectConnectionService {
     public String saveGenericComments(List<GenericComments> data, String tableName, String dbUrl, String dbUser, String dbPassword) {
 
         try {
+            jdbcTemplate = getJdbcDefaultConnection();
+
+            Map<String, Integer> uploadIdMap = getUploadIdMap();
             DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
             jdbcTemplate = new JdbcTemplate(dataSource);
 
-            String deleteSql = "DELETE FROM " + tableName + " WHERE [File_Name] = ?";
-            List<String> distinctFileNames = data.stream()
-                    .map(GenericComments::getFileName)
-                    .distinct()
-                    .collect(Collectors.toList());
-
-            // Print the distinct file names
-            System.out.println("Distinct File Names: " + distinctFileNames);
-            for (String fileName : distinctFileNames) {
-
-                // Delete existing records with the same 'File_Name'
-                jdbcTemplate.update(deleteSql, fileName);
-            }
-
-            String sqlInsert = "INSERT INTO " + tableName + " ([File_Name], [Register_Name], [Line_Number], [Responsible], [Topic], [Month], " +
+            String sqlInsert = "INSERT INTO " + tableName + " ([Upload_ID], [File_Name], [Register_Name], [Line_Number], [Responsible], [Topic], [Month], " +
                     "[Category_1], [Category_2], [Scenario], [XTD], [Segment], [Payment_Type], [Comment]) " +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
             // Loop through the data and insert new records
             for (GenericComments item : data) {
                 jdbcTemplate.update(
                         sqlInsert,
+                        uploadIdMap.get(item.getFileName()),
                         item.getFileName(),
                         item.getRegisterName(),
                         item.getLineNumber(),
@@ -1099,4 +1089,43 @@ public class ProjectConnectionService {
             return handleDatabaseError(e);
         }
     }
+
+    public String saveUploadedGenericFileData(ProjectUpload entity) {
+
+        try {
+            String tableName = "project_uploads";
+            jdbcTemplate = getJdbcDefaultConnection();
+            String sql = "INSERT INTO " + tableName + " ([File_Name], [User_Name]) VALUES (?, ?)";
+
+            jdbcTemplate.update(sql, entity.getFileName(), entity.getUserName());
+
+            return Constants.OK;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return handleDatabaseError(e);
+        }
+    }
+    public Map<String, Integer> getUploadIdMap() {
+        try {
+            String sql = "SELECT [Upload_ID], [File_Name] FROM [PIT].[dbo].[project_uploads]";
+
+            // Execute the query and get a list of maps
+            List<Map<String, Object>> resultList = jdbcTemplate.queryForList(sql);
+
+            // Create a Map with file name as key and upload ID as value
+            Map<String, Integer> uploadIdMap = new HashMap<>();
+            for (Map<String, Object> row : resultList) {
+                int uploadId = (int) row.get("Upload_ID");
+                String fileName = (String) row.get("File_Name");
+                uploadIdMap.put(fileName, uploadId);
+            }
+
+            return uploadIdMap;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Collections.emptyMap();
+        }
+    }
+
+
 }

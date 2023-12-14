@@ -20,5 +20,6 @@ public class GenericComments {
     private String fileName;
     private String registerName;
     private int id;
+    private int uploadId;
 }
 
