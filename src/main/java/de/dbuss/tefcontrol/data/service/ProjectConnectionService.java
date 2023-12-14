@@ -1095,9 +1095,9 @@ public class ProjectConnectionService {
         try {
             String tableName = "project_uploads";
             jdbcTemplate = getJdbcDefaultConnection();
-            String sql = "INSERT INTO " + tableName + " ([Upload_Date], [File_Name], [User_Name]) VALUES (?, ?, ?)";
+            String sql = "INSERT INTO " + tableName + " ([File_Name], [User_Name]) VALUES (?, ?)";
 
-            jdbcTemplate.update(sql, entity.getUploadDate(), entity.getFileName(), entity.getUserName());
+            jdbcTemplate.update(sql, entity.getFileName(), entity.getUserName());
 
             return Constants.OK;
         } catch (Exception e) {
