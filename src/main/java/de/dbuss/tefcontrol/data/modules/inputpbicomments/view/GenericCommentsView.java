@@ -72,7 +72,7 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
     private Button uploadBtn;
     private Button qsBtn;
     private int id;
-
+    public static Map<String, Integer> projectUploadIdMap = new HashMap<>();
     public GenericCommentsView(AuthenticatedUser authenticatedUser, ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService) {
 
         this.projectConnectionService = projectConnectionService;
@@ -126,7 +126,12 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
         qsBtn.addClickListener(e ->{
             if (qsGrid.projectId != projectId) {
                 CallbackHandler callbackHandler = new CallbackHandler();
-                qsGrid.createDialog(callbackHandler, projectId);
+                Map.Entry<String, Integer> lastEntry = projectUploadIdMap.entrySet().stream()
+                        .reduce((first, second) -> second)
+                        .orElse(null);
+                int upload_id = lastEntry.getValue();
+                qsGrid.createDialog(callbackHandler, projectId, upload_id);
+                projectUploadIdMap = new HashMap<>();
             }
             qsGrid.showDialog(true);
         });
@@ -176,8 +181,14 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
         if (resultComments.equals(Constants.OK)){
             notification = Notification.show(allGenericCommentsItems.size() + "X Comments Rows uploaded successfully",5000, Notification.Position.MIDDLE);
             notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+           // ListDataProvider<GenericComments> emptyDataProvider = new ListDataProvider<>(Collections.emptyList());
+            GenericDataProvider emptyDataProvider = new GenericDataProvider<>(Collections.emptyList());
+            gridGenericComments.setDataProvider(emptyDataProvider);
+            // Refresh the grid to reflect the changes
+            gridGenericComments.getDataProvider().refreshAll();
+            listOfAllSheets.clear();
         } else {
-            notification = Notification.show("Error during Financials upload: " + resultComments ,5000, Notification.Position.MIDDLE);
+            notification = Notification.show("Error during file upload: " + resultComments ,5000, Notification.Position.MIDDLE);
             notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
         }
 
