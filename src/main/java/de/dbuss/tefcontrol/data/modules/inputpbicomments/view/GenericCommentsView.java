@@ -52,7 +52,7 @@ import java.util.stream.Collectors;
 
 @PageTitle("Generic Comments")
 @Route(value = "Generic_Comments/:project_Id", layout = MainLayout.class)
-@RolesAllowed({"ADMIN", "MAPPING"})
+@RolesAllowed({"ADMIN", "MAPPING", "FLIP"})
 public class GenericCommentsView extends VerticalLayout implements BeforeEnterObserver {
     private final ProjectConnectionService projectConnectionService;
     MemoryBuffer memoryBuffer = new MemoryBuffer();
@@ -61,6 +61,7 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
     private Crud<GenericComments> crudGenericComments;
     private Grid<GenericComments> gridGenericComments = new Grid<>(GenericComments.class, false);
     private String tableName;
+    private String agentName;
     private String dbUrl;
     private String dbUser;
     private String dbPassword;
@@ -103,11 +104,13 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
                     dbPassword = projectParameter.getValue();
                 }else if (Constants.TABLE.equals(projectParameter.getName())) {
                     tableName = projectParameter.getValue();
+                } else if (Constants.DB_JOBS.equals(projectParameter.getName())) {
+                    agentName = projectParameter.getValue();
                 }
             }
         }
         dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
-        Text databaseDetail = new Text("Connected to: "+ dbServer+ ", Database: " + dbName);
+        Text databaseDetail = new Text("Connected to: "+ dbServer+ ", Database: " + dbName + " Table: " + tableName + " AgentJob: " + agentName);
 
         //Componente QS-Grid:
         qsGrid = new QS_Grid(projectConnectionService);
@@ -181,12 +184,16 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
         if (resultComments.equals(Constants.OK)){
             notification = Notification.show(allGenericCommentsItems.size() + "X Comments Rows uploaded successfully",5000, Notification.Position.MIDDLE);
             notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+
+            /*
            // ListDataProvider<GenericComments> emptyDataProvider = new ListDataProvider<>(Collections.emptyList());
             GenericDataProvider emptyDataProvider = new GenericDataProvider<>(Collections.emptyList());
             gridGenericComments.setDataProvider(emptyDataProvider);
             // Refresh the grid to reflect the changes
             gridGenericComments.getDataProvider().refreshAll();
             listOfAllSheets.clear();
+            */
+
         } else {
             notification = Notification.show("Error during file upload: " + resultComments ,5000, Notification.Position.MIDDLE);
             notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
