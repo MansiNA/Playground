@@ -12,7 +12,7 @@ import jakarta.annotation.security.RolesAllowed;
 @PageTitle("Welcome")
 @Route(value = "Welcome", layout = MainLayout.class)
 @RouteAlias(value = "", layout = MainLayout.class)
-@RolesAllowed({"MAPPING", "ADMIN", "USER", "KPI", "OUTLOOK"})
+@RolesAllowed({"MAPPING", "ADMIN", "USER", "KPI", "OUTLOOK", "FLIP"})
 // @AnonymousAllowed
 public class WelcomeView extends VerticalLayout {
 
