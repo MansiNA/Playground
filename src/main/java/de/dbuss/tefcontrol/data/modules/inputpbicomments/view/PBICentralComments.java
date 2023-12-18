@@ -58,7 +58,7 @@ import java.util.stream.Collectors;
 
 @PageTitle("PowerBI Central Comments")
 @Route(value = "PBI_Central_Comments/:project_Id", layout = MainLayout.class)
-@RolesAllowed({"ADMIN", "MAPPING"})
+@RolesAllowed({"ADMIN", "MAPPING", "FLIP"})
 public class PBICentralComments extends VerticalLayout implements BeforeEnterObserver {
     private final ProjectConnectionService projectConnectionService;
     MemoryBuffer memoryBuffer = new MemoryBuffer();
