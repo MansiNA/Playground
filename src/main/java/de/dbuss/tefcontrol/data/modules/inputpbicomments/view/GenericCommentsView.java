@@ -210,6 +210,7 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
             projectConnectionService.saveUploadedGenericFileData(projectUpload);
         }
 
+        ui.setPollInterval(500);
         saveAllCommentsdata(allGenericCommentsItems);
     }
 
@@ -225,7 +226,7 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
             projectConnectionService.getJdbcConnection(dbUrl, dbUser, dbPassword);
             // Do some long running task
             try {
-                int batchSize = 200; // Die Anzahl der Zeilen, die auf einmal verarbeitet werden sollen
+                int batchSize = 50; // Die Anzahl der Zeilen, die auf einmal verarbeitet werden sollen
 
                 for (int i = 0; i < totalRows; i += batchSize) {
 
@@ -247,7 +248,7 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
                     String resultComments = projectConnectionService.saveGenericComments(batchData, tableName, dbUrl, dbUser, dbPassword);
                     returnStatus.set(resultComments);
 
-                    System.out.println("ResultKPIFact: " + returnStatus.toString());
+                    System.out.println("ResultComment: " + returnStatus.toString());
 
                     if (returnStatus.toString().equals(Constants.OK)){
                         //System.out.println("Alles in Butter...");
