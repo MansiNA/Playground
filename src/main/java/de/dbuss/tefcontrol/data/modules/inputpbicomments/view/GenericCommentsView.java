@@ -176,6 +176,7 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
                     e.printStackTrace();
                     String errormessage = projectConnectionService.handleDatabaseError(e);
                     Notification.show(errormessage, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                    return;
                 }
 
                 String message = projectConnectionService.startAgent(projectId);
