@@ -206,7 +206,7 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
         Notification notification;
         String resultComments = projectConnectionService.saveGenericComments(allGenericCommentsItems, tableName, dbUrl, dbUser, dbPassword);
         if (resultComments.equals(Constants.OK)){
-            notification = Notification.show(allGenericCommentsItems.size() + "X Comments Rows uploaded successfully",5000, Notification.Position.MIDDLE);
+            notification = Notification.show(allGenericCommentsItems.size() + " Rows uploaded successfully",5000, Notification.Position.MIDDLE);
             notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
         } else {
             notification = Notification.show("Error during file upload: " + resultComments ,5000, Notification.Position.MIDDLE);
