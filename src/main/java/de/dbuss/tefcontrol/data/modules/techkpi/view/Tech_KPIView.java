@@ -386,7 +386,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
                 projectConnectionService.deleteTableData(dbUrl, dbUser, dbPassword, planTableName);
 
-                for (int i = 1; i < totalRows; i += batchSize) {
+                for (int i = 0; i < totalRows; i += batchSize) {
 
                     int endIndex = Math.min(i + batchSize, totalRows);
 
@@ -455,7 +455,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
                 projectConnectionService.deleteTableData(dbUrl, dbUser, dbPassword, actualsTableName);
 
-                for (int i = 1; i < totalRows; i += batchSize) {
+                for (int i = 0; i < totalRows; i += batchSize) {
 
                     int endIndex = Math.min(i + batchSize, totalRows);
 
@@ -525,7 +525,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
                 projectConnectionService.deleteTableData(dbUrl, dbUser, dbPassword, factTableName);
 
-                for (int i = 1; i < totalRows; i += batchSize) {
+                for (int i = 0; i < totalRows; i += batchSize) {
 
                     if (Thread.interrupted()) {
                         System.out.println("Thread hat interrupt bekommen");
@@ -851,7 +851,8 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                     if(RowNumber==1 ) //Überschrift nicht betrachten, aber Anzahl Spalten kontrollieren
                     {
 
-                        if (row.getLastCellNum()!=5)
+
+                        if (row.getLastCellNum()<5)
                         {
                             article=new Article();
                             article.setText(LocalDateTime.now().format(formatter) + ": Error: Count Columns: " + row.getLastCellNum() + " Expected: 5! (NT ID | XTD | Scenario_Name | Date | Amount)");

@@ -174,15 +174,16 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
                         .orElse(null);
                 int upload_id = lastEntry.getValue();
                 try {
-                    String sql = "EXECUTE sp_load_comments @p_Upload_ID="+upload_id;
+                    String sql = "EXECUTE Core_Comment.sp_Load_Comments @p_Upload_ID="+upload_id;
                     DataSource dataSource = projectConnectionService.getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
                     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
                     jdbcTemplate.execute(sql);
-                    System.out.println("worked.....");
+                    System.out.println("SQL executed: " + sql);
                 } catch (Exception e) {
                     e.printStackTrace();
                     String errormessage = projectConnectionService.handleDatabaseError(e);
                     Notification.show(errormessage, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                    return;
                 }
 
                 String message = projectConnectionService.startAgent(projectId);
