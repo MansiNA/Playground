@@ -132,6 +132,7 @@ public class QS_Grid extends Composite<Div> {
         // updateListOfProjectQs();
 
         VerticalLayout dialogLayout = new VerticalLayout();
+        dialogLayout.removeAll();
         dialogLayout.setPadding(false);
         dialogLayout.setAlignItems(FlexComponent.Alignment.STRETCH);
         dialogLayout.getStyle().set("min-width", "300px")
