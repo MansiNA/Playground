@@ -120,6 +120,11 @@ public class ProjectConnectionService {
         jdbcTemplate = new JdbcTemplate(dataSource);
         return jdbcTemplate;
     }
+    public JdbcTemplate getJdbcConnection(String dbUrl, String dbUser, String dbPassword) {
+        DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+        jdbcTemplate = new JdbcTemplate(dataSource);
+        return jdbcTemplate;
+    }
 
     public JdbcTemplate getJdbcDefaultConnection () {
         String dbUrl = defaultConnectionParams.get("dbUrl");
@@ -1060,11 +1065,10 @@ public class ProjectConnectionService {
     public String saveGenericComments(List<GenericComments> data, String tableName, String dbUrl, String dbUser, String dbPassword) {
 
         try {
-            jdbcTemplate = getJdbcDefaultConnection();
 
             Map<String, Integer> uploadIdMap = GenericCommentsView.projectUploadIdMap;
-            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
-            jdbcTemplate = new JdbcTemplate(dataSource);
+          //  DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+          //  jdbcTemplate = new JdbcTemplate(dataSource);
 
             String sqlInsert = "INSERT INTO " + tableName + " ([Upload_ID], [File_Name], [Register_Name], [Line_Number], [Responsible], [Topic], [Month], " +
                     "[Category_1], [Category_2], [Scenario], [XTD], [Segment], [Payment_Type], [Comment]) " +
