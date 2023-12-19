@@ -41,7 +41,9 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.jdbc.core.JdbcTemplate;
 
+import javax.sql.DataSource;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
@@ -157,6 +159,20 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
         @Override
         public void onComplete(String result) {
             if(!result.equals("Cancel")) {
+                Map.Entry<String, Integer> lastEntry = projectUploadIdMap.entrySet().stream()
+                        .reduce((first, second) -> second)
+                        .orElse(null);
+                int upload_id = lastEntry.getValue();
+                try {
+                    String sql = "EXECUTE sp_load_comments @p_Upload_ID="+upload_id;
+                    DataSource dataSource = projectConnectionService.getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+                    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+                    jdbcTemplate.execute(sql);
+                    System.out.println("worked.....");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
                 String message = projectConnectionService.startAgent(projectId);
                 if (!message.contains("Error")) {
                     Notification.show(message, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
