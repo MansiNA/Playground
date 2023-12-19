@@ -2,6 +2,7 @@ package de.dbuss.tefcontrol.data.modules.inputpbicomments.view;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.crud.BinderCrudEditor;
 import com.vaadin.flow.component.crud.Crud;
@@ -14,6 +15,7 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.progressbar.ProgressBar;
 import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.component.tabs.TabSheetVariant;
 import com.vaadin.flow.component.textfield.TextArea;
@@ -31,6 +33,7 @@ import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.Financials;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.GenericComments;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.Subscriber;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.UnitsDeepDive;
+import de.dbuss.tefcontrol.data.modules.techkpi.view.Tech_KPIView;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
 import de.dbuss.tefcontrol.data.service.ProjectParameterService;
 import de.dbuss.tefcontrol.dataprovider.GenericDataProvider;
@@ -49,6 +52,7 @@ import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 
@@ -62,6 +66,8 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
     private List<List<GenericComments>> listOfAllSheets = new ArrayList<>();
     private Crud<GenericComments> crudGenericComments;
     private Grid<GenericComments> gridGenericComments = new Grid<>(GenericComments.class, false);
+    private ProgressBar progressBar = new ProgressBar();
+    private UI ui=UI.getCurrent();
     private String tableName;
     private String agentName;
     private String dbUrl;
@@ -85,6 +91,7 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
 
         qsBtn = new Button("QS and Start Job");
         qsBtn.setEnabled(false);
+        progressBar.setVisible(false);
 
         Div htmlDiv = new Div();
         htmlDiv.getElement().setProperty("innerHTML", "<h2>Input Frontend for Generic Comments");
@@ -122,10 +129,10 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
         // hl.add(singleFileUpload, saveButton, databaseDetail, progressBar);
         hl.add(singleFileUpload, uploadBtn, qsBtn, databaseDetail, qsGrid);
         add(hl);
-
+        add(progressBar);
         uploadBtn.addClickListener(e ->{
             save2db();
-            qsBtn.setEnabled(true);
+            //qsBtn.setEnabled(true);
         });
 
         qsBtn.addClickListener(e ->{
@@ -203,15 +210,96 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
             projectConnectionService.saveUploadedGenericFileData(projectUpload);
         }
 
-        Notification notification;
-        String resultComments = projectConnectionService.saveGenericComments(allGenericCommentsItems, tableName, dbUrl, dbUser, dbPassword);
-        if (resultComments.equals(Constants.OK)){
-            notification = Notification.show(allGenericCommentsItems.size() + " Rows uploaded successfully",5000, Notification.Position.MIDDLE);
-            notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-        } else {
-            notification = Notification.show("Error during file upload: " + resultComments ,5000, Notification.Position.MIDDLE);
-            notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
-        }
+        saveAllCommentsdata(allGenericCommentsItems);
+    }
+
+    private void saveAllCommentsdata(List<GenericComments> allGenericCommentsItems) {
+        AtomicReference<String> returnStatus = new AtomicReference<>("false");
+        int totalRows = allGenericCommentsItems.size();
+        progressBar.setVisible(true);
+        progressBar.setMin(0);
+        progressBar.setMax(totalRows);
+        progressBar.setValue(0);
+
+        new Thread(() -> {
+            projectConnectionService.getJdbcConnection(dbUrl, dbUser, dbPassword);
+            // Do some long running task
+            try {
+                int batchSize = 200; // Die Anzahl der Zeilen, die auf einmal verarbeitet werden sollen
+
+                for (int i = 0; i < totalRows; i += batchSize) {
+
+                    if (Thread.interrupted()) {
+                        System.out.println("Thread hat interrupt bekommen");
+                        // Hier könntest du aufräumen oder andere Aktionen ausführen, bevor der Thread beendet wird
+                        return; // Verlässt den Thread
+                    }
+                    else {
+                        // System.out.println("Thread läuft noch...");
+                    }
+
+                    int endIndex = Math.min(i + batchSize, totalRows);
+
+                    List<GenericComments> batchData = allGenericCommentsItems.subList(i, endIndex);
+
+                    System.out.println("Verarbeitete Zeilen: " + endIndex + " von " + totalRows);
+
+                    String resultComments = projectConnectionService.saveGenericComments(batchData, tableName, dbUrl, dbUser, dbPassword);
+                    returnStatus.set(resultComments);
+
+                    System.out.println("ResultKPIFact: " + returnStatus.toString());
+
+                    if (returnStatus.toString().equals(Constants.OK)){
+                        //System.out.println("Alles in Butter...");
+                    }
+                    else{
+                        //System.out.println("Fehler aufgetreten...");
+                        Thread.currentThread().interrupt(); // Interrupt-Signal setzen
+
+                        ui.access(() -> {
+                            progressBar.setVisible(false);
+                            Notification.show("Error during Comments upload! " + returnStatus.toString(), 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                            ui.setPollInterval(-1);
+                        });
+
+
+                        return;
+
+                    }
+
+                    int finalI = i;
+                    ui.access(() -> {
+                        progressBar.setValue((double) finalI);
+                        // System.out.println("Fortschritt aktualisiert auf: " + finalI);
+                        //         message.setText(LocalDateTime.now().format(formatter) + ": Info: saving to database (" + endIndex + "/" + totalRows +")");
+                    });
+
+                }
+            } catch (Exception e) {
+                ui.access(() -> {
+
+                    Notification.show("Error during Comments upload! ", 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+
+                });
+                e.printStackTrace();
+            }
+            ui.access(() -> {
+                progressBar.setVisible(false);
+
+                if (returnStatus.toString().equals(Constants.OK))
+                {
+                    Notification.show("Comments saved " + totalRows + " rows.",5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                    qsBtn.setEnabled(true);
+                }
+                else
+                {
+                    Notification.show("Error during Comments upload! " + returnStatus.toString(), 15000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                }
+
+                ui.setPollInterval(-1);
+            });
+
+        }).start();
 
     }
 
@@ -401,10 +489,9 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
                 rowNumber++;
 
                 if (rowNumber == 1 || row.getCell(0) == null ) {
-                  //  System.out.println(row.getCell(0).getCellType()+"..............................type");
                     continue;
                 }
-                System.out.println(row.getRowNum() +"............."+ my_worksheet.getSheetName());
+
                 if(row.getCell(0) != null && row.getCell(0).toString().isEmpty()) {
                     break;
                 }
