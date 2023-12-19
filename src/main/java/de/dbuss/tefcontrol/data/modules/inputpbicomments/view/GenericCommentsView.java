@@ -270,7 +270,6 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
                     ui.access(() -> {
                         progressBar.setValue((double) finalI);
                         // System.out.println("Fortschritt aktualisiert auf: " + finalI);
-                        Notification.show("Info: saving to database (" + endIndex + "/" + totalRows +")", 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
                         //         message.setText(LocalDateTime.now().format(formatter) + ": Info: saving to database (" + endIndex + "/" + totalRows +")");
                     });
 
