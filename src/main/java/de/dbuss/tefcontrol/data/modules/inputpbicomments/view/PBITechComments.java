@@ -59,7 +59,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Route(value = "PBI_Tech_Comments/:project_Id", layout = MainLayout.class)
-@RolesAllowed({"ADMIN", "MAPPING"})
+@RolesAllowed({"ADMIN", "MAPPING", "FLIP"})
 public class PBITechComments extends VerticalLayout implements BeforeEnterObserver {
 
     // Erstellen einer Instanz des CallbackHandlers

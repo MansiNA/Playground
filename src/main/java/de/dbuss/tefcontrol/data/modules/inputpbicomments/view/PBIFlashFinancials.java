@@ -63,7 +63,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Route(value = "PBI_FlashFinancials/:project_Id", layout = MainLayout.class)
-@RolesAllowed({"ADMIN", "MAPPING"})
+@RolesAllowed({"ADMIN", "MAPPING","FLIP"})
 public class PBIFlashFinancials extends VerticalLayout implements BeforeEnterObserver {
 
     private final ProjectConnectionService projectConnectionService;
