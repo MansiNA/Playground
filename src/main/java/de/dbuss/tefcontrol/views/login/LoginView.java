@@ -31,7 +31,7 @@ public class LoginView extends LoginOverlay implements BeforeEnterObserver {
         LoginI18n i18n = LoginI18n.createDefault();
         i18n.setHeader(new LoginI18n.Header());
         i18n.getHeader().setTitle("TEF Control");
-        i18n.getHeader().setDescription("Login using mapping/mapping");
+        i18n.getHeader().setDescription("Login using User flip");
         i18n.setAdditionalInformation(null);
         setI18n(i18n);
 

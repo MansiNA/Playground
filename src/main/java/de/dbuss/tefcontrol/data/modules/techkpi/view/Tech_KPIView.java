@@ -47,7 +47,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 @PageTitle("Tech KPI | TEF-Control")
 @Route(value = "Tech_KPI/:project_Id", layout = MainLayout.class)
-@RolesAllowed({"ADMIN", "KPI"})
+@RolesAllowed({"ADMIN", "KPI", "FLIP"})
 public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver {
 
     private JdbcTemplate jdbcTemplate;
@@ -838,15 +838,27 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                 Row row = rowIterator.next();
                 RowNumber++;
 
-                //if (RowNumber>200){ break; }
+                if (errors_Fact>0){ break; } //Wenn bereits Fehler aufgetreten ist, beenden.
 
 
 
                 Iterator<Cell> cellIterator = row.cellIterator();
+
+
+
                 while(cellIterator.hasNext()) {
 
-                    if(RowNumber==1 ) //Überschrift nicht betrachten
+                    if(RowNumber==1 ) //Überschrift nicht betrachten, aber Anzahl Spalten kontrollieren
                     {
+
+                        if (row.getLastCellNum()!=5)
+                        {
+                            article=new Article();
+                            article.setText(LocalDateTime.now().format(formatter) + ": Error: Count Columns: " + row.getLastCellNum() + " Expected: 5! (NT ID | XTD | Scenario_Name | Date | Amount)");
+                            textArea.add(article);
+                            errors_Fact=1;
+                        }
+
                         break;
                     }
 
