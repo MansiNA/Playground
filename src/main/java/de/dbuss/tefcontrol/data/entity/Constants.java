@@ -40,6 +40,7 @@ public class Constants {
     public static final String TABLE_SUBSCRIBER = "Table_Subscriber";
     public static final String TABLE_UNITDEEPDIVE = "Table_UnitDeepDive";
     public static final String GENERIC_COMMENTS = "Generic_Comments";
+    public static final String COBI_ADMINISTRATION = "CobiAdministration";
 
     // This constant is used for pfgproductmapping module
     public static final String PFG_PRODUCT_MAPPING = "PFG_Product_Mapping";
