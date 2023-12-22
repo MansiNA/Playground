@@ -1180,6 +1180,10 @@ public class ProjectConnectionService {
     public String saveCobiAdminCurrentPeriods(CurrentPeriods data, String dbUrl, String dbUser, String dbPassword, String targetTable) {
         try {
             jdbcTemplate = getJdbcConnection(dbUrl, dbUser, dbPassword);
+
+            String sqlDelete = "DELETE FROM " + targetTable;
+            jdbcTemplate.update(sqlDelete);
+
             String sql = "INSERT INTO " + targetTable + " (Upload_ID, Current_Month, Preliminary_Month) VALUES (?, ?, ?)";
             jdbcTemplate.update(sql, data.getUpload_ID(), data.getCurrent_month(), data.getPreliminary_month());
 
@@ -1194,6 +1198,10 @@ public class ProjectConnectionService {
         try {
 
             jdbcTemplate = getJdbcConnection(dbUrl, dbUser, dbPassword);
+
+            String sqlDelete = "DELETE FROM " + targetTable;
+            jdbcTemplate.update(sqlDelete);
+
             String sql = "INSERT INTO " + targetTable + " (Upload_ID, Current_Plan, Current_Outlook, Current_QFC) VALUES (?, ?, ?, ?)";
             jdbcTemplate.update(sql, data.getUpload_ID(), data.getCurrent_Plan(), data.getCurrent_Outlook(), data.getCurrent_QFC());
 

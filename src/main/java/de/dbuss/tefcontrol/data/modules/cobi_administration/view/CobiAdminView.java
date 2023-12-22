@@ -16,6 +16,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import de.dbuss.tefcontrol.data.entity.Constants;
 import de.dbuss.tefcontrol.data.entity.ProjectParameter;
+import de.dbuss.tefcontrol.data.entity.ProjectUpload;
 import de.dbuss.tefcontrol.data.modules.cobi_administration.entity.CurrentPeriods;
 import de.dbuss.tefcontrol.data.modules.cobi_administration.entity.CurrentScenarios;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.GenericCommentsView;
@@ -43,7 +44,6 @@ public class CobiAdminView extends VerticalLayout {
     private String dbUser;
     private String dbPassword;
     private Button startBtn;
-    private int upload_id;
     private CurrentScenarios currentScenarios;
     private CurrentPeriods currentPeriods;
 
@@ -81,15 +81,6 @@ public class CobiAdminView extends VerticalLayout {
 
         startBtn = new Button("Start");
 
-        Map<String, Integer> uploadIdMap = projectConnectionService.getUploadIdMap();
-        upload_id = uploadIdMap.values().stream()
-                .mapToInt(Integer::intValue)
-                .max()
-                .orElse(1);
-
-
-        System.out.println(upload_id+"mmmmmmmmmmmmmmmmmmmmmmmmm");
-
         H1 h1 = new H1("Cobi Administration");
         Article p1 = new Article();
         p1.setText("Auf diese Seite lässt verschiedene Einstellungen zur COBI-Beladung vornehmen.");
@@ -97,7 +88,22 @@ public class CobiAdminView extends VerticalLayout {
         add(h1, p1, getDimPeriodGrid(), getDimScenarioGrid());
 
         Button okBtn = new Button("OK");
+
         okBtn.addClickListener(e -> {
+
+            ProjectUpload projectUpload = new ProjectUpload();
+            projectUpload.setFileName("");
+            projectUpload.setUserName(MainLayout.userName);
+            projectConnectionService.saveUploadedGenericFileData(projectUpload);
+
+            Map<String, Integer> uploadIdMap = projectConnectionService.getUploadIdMap();
+            int upload_id = uploadIdMap.values().stream()
+                    .mapToInt(Integer::intValue)
+                    .max()
+                    .orElse(1);
+
+            currentPeriods.setUpload_ID(upload_id);
+            currentScenarios.setUpload_ID(upload_id);
 
             String resultOfPeriods = projectConnectionService.saveCobiAdminCurrentPeriods(currentPeriods, dbUrl, dbUser, dbPassword, tableCurrentPeriods);
             Notification notification;
@@ -130,7 +136,6 @@ public class CobiAdminView extends VerticalLayout {
 
         List<CurrentPeriods> periods = new ArrayList<>();
         currentPeriods = new CurrentPeriods();
-        currentPeriods.setUpload_ID(upload_id);
         currentPeriods.setCurrent_month(YearMonth.now().toString().replace("-", ""));
         periods.add(currentPeriods);
 
@@ -180,7 +185,6 @@ public class CobiAdminView extends VerticalLayout {
 
         List<CurrentScenarios> scenarios = new ArrayList<>();
         currentScenarios = new CurrentScenarios();
-        currentScenarios.setUpload_ID(upload_id);
 
         H3 p3 = new H3();
         p3.setText("Dim Scenario:");
