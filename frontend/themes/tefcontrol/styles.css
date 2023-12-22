@@ -7,5 +7,20 @@
 
 .pvtTotal, .pvtTotalLabel, .pvtGrandTotal {display: none}
 
-.scenario-grid
-{background-color: transparent}
+.grid_scenario
+{
+    background-color: transparent;
+
+}
+
+:host(.grid_scenario) [pat~="cell"]{
+    background-color: silver;
+}
+
+.header{
+    background-color: silver;
+}
+
+.items{
+    background-color: silver;
+}
