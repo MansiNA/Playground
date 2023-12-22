@@ -6,6 +6,8 @@ import de.dbuss.tefcontrol.data.entity.*;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.B2pOutlookSub;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.OutlookMGSR;
 import de.dbuss.tefcontrol.data.modules.cltv_Inflow.entity.CLTVInflow;
+import de.dbuss.tefcontrol.data.modules.cobi_administration.entity.CurrentPeriods;
+import de.dbuss.tefcontrol.data.modules.cobi_administration.entity.CurrentScenarios;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.*;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.GenericCommentsView;
 import de.dbuss.tefcontrol.data.modules.pfgproductmapping.entity.CltvAllProduct;
@@ -35,7 +37,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -1136,6 +1137,8 @@ public class ProjectConnectionService {
     }
     public Map<String, Integer> getUploadIdMap() {
         try {
+
+            jdbcTemplate = getJdbcDefaultConnection();
             String sql = "SELECT [Upload_ID], [File_Name] FROM [PIT].[dbo].[project_uploads]";
 
             // Execute the query and get a list of maps
@@ -1153,6 +1156,59 @@ public class ProjectConnectionService {
         } catch (Exception e) {
             e.printStackTrace();
             return Collections.emptyMap();
+        }
+    }
+
+    public List<String> getCobiAdminQFCPlanOutlook(String dbUrl, String dbUser, String dbPassword, String sql) {
+        try {
+
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
+            // Execute SQL query and retrieve the result as a list of maps
+            List<Map<String, Object>> result = jdbcTemplate.queryForList(sql);
+
+            // Process the result and construct a list of strings
+            List<String> resultList = new ArrayList<>();
+            for (Map<String, Object> row : result) {
+                StringBuilder rowString = new StringBuilder();
+                for (Map.Entry<String, Object> entry : row.entrySet()) {
+                    rowString.append(entry.getKey()).append(": ").append(entry.getValue()).append(", ");
+                }
+                resultList.add(rowString.toString());
+            }
+
+            return resultList;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Collections.emptyList();
+        }
+    }
+
+    public String saveCobiAdminCurrentPeriods(CurrentPeriods data, String dbUrl, String dbUser, String dbPassword, String targetTable) {
+        try {
+            jdbcTemplate = getJdbcConnection(dbUrl, dbUser, dbPassword);
+            String sql = "INSERT INTO " + targetTable + " (Upload_ID, Current_Month, Preliminary_Month) VALUES (?, ?, ?)";
+            jdbcTemplate.update(sql, data.getUpload_ID(), data.getCurrent_month(), data.getPreliminary_month());
+
+            return Constants.OK;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return handleDatabaseError(e);
+        }
+    }
+
+    public String saveCobiAdminCurrentScenarios(CurrentScenarios data, String dbUrl, String dbUser, String dbPassword, String targetTable) {
+        try {
+
+            jdbcTemplate = getJdbcConnection(dbUrl, dbUser, dbPassword);
+            String sql = "INSERT INTO " + targetTable + " (Upload_ID, Current_Plan, Current_Outlook, Current_QFC) VALUES (?, ?, ?, ?)";
+            jdbcTemplate.update(sql, data.getUpload_ID(), data.getCurrent_Plan(), data.getCurrent_Outlook(), data.getCurrent_QFC());
+
+            return Constants.OK;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return handleDatabaseError(e);
         }
     }
 
