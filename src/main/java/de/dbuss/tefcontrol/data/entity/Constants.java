@@ -40,7 +40,7 @@ public class Constants {
     public static final String TABLE_SUBSCRIBER = "Table_Subscriber";
     public static final String TABLE_UNITDEEPDIVE = "Table_UnitDeepDive";
     public static final String GENERIC_COMMENTS = "Generic_Comments";
-    public static final String COBI_ADMINISTRATION = "CobiAdministration";
+    public static final String COBI_ADMINISTRATION = "COBI_Administration";
 
     // This constant is used for pfgproductmapping module
     public static final String PFG_PRODUCT_MAPPING = "PFG_Product_Mapping";
@@ -59,8 +59,14 @@ public class Constants {
     public static final String PBI_FLASH_FINANCIALS = "PBI_FlashFinancials";
     public static final String B2P_FLASH_FINANCIALS = "B2P Flash Financials";
 
-
     // This constant is used for HWMapping module
     public static final String HWMAPPING = "HWMapping";
+
+    // This constant is used for CobiAdmin module
+    public static final String TABLE_CURRENTPERIODS = "Table_CurrentPeriods";
+    public static final String TABLE_CURRENTSCENARIOS = "Table_CurrentScenarios";
+    public static final String SQL_Plan_Scenarios = "SQL_Plan_Scenarios";
+    public static final String SQL_OUTLOOK_SCENARIOS = "SQL_Outlook_Scenarios";
+    public static final String SQL_QFC_SCENARIOS = "SQL_QFC_Scenarios";
 
 }
