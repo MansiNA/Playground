@@ -6,3 +6,6 @@
 }
 
 .pvtTotal, .pvtTotalLabel, .pvtGrandTotal {display: none}
+
+.scenario-grid
+{background-color: transparent}

@@ -132,7 +132,7 @@ public class CobiAdminView extends VerticalLayout {
         VerticalLayout content = new VerticalLayout();
 
         H3 p2 = new H3();
-        p2.setText("Dim Period:");
+        p2.setText("Period:");
 
         List<CurrentPeriods> periods = new ArrayList<>();
         currentPeriods = new CurrentPeriods();
@@ -181,8 +181,8 @@ public class CobiAdminView extends VerticalLayout {
             });
             return comboBox;
         }).setHeader("Preliminary-Month").setFlexGrow(0).setAutoWidth(true);
-        grid_period.setWidth("500px");
-        grid_period.setHeight("110px");
+        grid_period.setWidth("350px");
+        grid_period.setHeight("68px");
         grid_period.addThemeVariants(GridVariant.LUMO_COLUMN_BORDERS);
         grid_period.addThemeVariants(GridVariant.LUMO_COMPACT);
         grid_period.getColumns().forEach(e -> e.setResizable(Boolean.TRUE));
@@ -205,9 +205,10 @@ public class CobiAdminView extends VerticalLayout {
         currentScenarios = new CurrentScenarios();
 
         H3 p3 = new H3();
-        p3.setText("Dim Scenario:");
+        p3.setText("Scenario:");
 
         Grid<CurrentScenarios> grid_scenario = new Grid<>(CurrentScenarios.class, false);
+        grid_scenario.setClassName("scenario-grid");
         grid_scenario.addComponentColumn(cs -> {
             ComboBox<String> comboBox = new ComboBox<>();
             comboBox.setItems(qfc);
@@ -245,8 +246,8 @@ public class CobiAdminView extends VerticalLayout {
             return comboBox;
         }).setHeader("Current Outlook").setFlexGrow(0).setAutoWidth(true);
 
-        grid_scenario.setWidth("700px");
-        grid_scenario.setHeight("110px");
+        grid_scenario.setWidth("480px");
+        grid_scenario.setHeight("68px");
         grid_scenario.addThemeVariants(GridVariant.LUMO_COLUMN_BORDERS);
         grid_scenario.addThemeVariants(GridVariant.LUMO_COMPACT);
         grid_scenario.getColumns().forEach(e -> e.setResizable(Boolean.TRUE));
