@@ -250,10 +250,13 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
         });
 
         qsBtn.addClickListener(e ->{
-            if (qsGrid.projectId != projectId) {
-                CallbackHandler callbackHandler = new CallbackHandler();
-                qsGrid.createDialog(callbackHandler, projectId);
-            }
+         //   if (qsGrid.projectId != projectId) {
+            hl.remove(qsGrid);
+            qsGrid = new QS_Grid(projectConnectionService);
+            hl.add(qsGrid);
+            CallbackHandler callbackHandler = new CallbackHandler();
+            qsGrid.createDialog(callbackHandler, projectId, upload_id);
+         //   }
             qsGrid.showDialog(true);
         });
 

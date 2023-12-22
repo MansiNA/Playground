@@ -66,6 +66,7 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
     private Button qsBtn;
     private Button uploadBtn;
     private String fileName;
+    private int upload_id;
     ListenableFuture<String> future;
 
     BackendService backendService;
@@ -122,10 +123,13 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
         });
 
         qsBtn.addClickListener(e ->{
-            if (qsGrid.projectId != projectId) {
-                CallbackHandler callbackHandler = new CallbackHandler();
-                qsGrid.createDialog(callbackHandler, projectId);
-            }
+         //   if (qsGrid.projectId != projectId) {
+            hl.remove(qsGrid);
+            qsGrid = new QS_Grid(projectConnectionService);
+            hl.add(qsGrid);
+            CallbackHandler callbackHandler = new CallbackHandler();
+            qsGrid.createDialog(callbackHandler, projectId, upload_id);
+          //  }
             qsGrid.showDialog(true);
         });
 
@@ -172,7 +176,7 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
         projectConnectionService.saveUploadedGenericFileData(projectUpload);
 
         Map<String, Integer> uploadIdMap = projectConnectionService.getUploadIdMap();
-        int upload_id = uploadIdMap.values().stream()
+        upload_id = uploadIdMap.values().stream()
                 .mapToInt(Integer::intValue)
                 .max()
                 .orElse(1);
