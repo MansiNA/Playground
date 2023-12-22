@@ -145,9 +145,7 @@ public class CobiAdminView extends VerticalLayout {
             YearMonth currentYearMonth = YearMonth.now();
 
             for (int i = -3; i <= 3; i++) {
-                if(i != 0) {
-                    monthPeriod.add(currentYearMonth.plusMonths(i).toString().replace("-", ""));
-                }
+                monthPeriod.add(currentYearMonth.plusMonths(i).toString().replace("-", ""));
             }
 
             comboBox.setItems(monthPeriod);

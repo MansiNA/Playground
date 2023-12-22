@@ -1175,7 +1175,9 @@ public class ProjectConnectionService {
                 for (Map.Entry<String, Object> entry : row.entrySet()) {
                     rowString.append(entry.getKey()).append(": ").append(entry.getValue()).append(", ");
                 }
-                resultList.add(rowString.toString());
+                String resultString = rowString.toString().replace("scenario:", "");
+                resultString = resultString.replace("," , "");
+                resultList.add(resultString);
             }
 
             return resultList;
