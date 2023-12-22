@@ -136,12 +136,30 @@ public class CobiAdminView extends VerticalLayout {
 
         List<CurrentPeriods> periods = new ArrayList<>();
         currentPeriods = new CurrentPeriods();
-        currentPeriods.setCurrent_month(YearMonth.now().toString().replace("-", ""));
         periods.add(currentPeriods);
 
         Grid<CurrentPeriods> grid_period = new Grid<>(CurrentPeriods.class, false);
-        grid_period.setColumns("current_month");
-        grid_period.getColumnByKey("current_month").setHeader("Current-Month").setAutoWidth(true).setFlexGrow(0).setResizable(true);
+        grid_period.addComponentColumn(cp -> {
+            ComboBox<String> comboBox = new ComboBox<>();
+            List<String> monthPeriod = new ArrayList<>();
+
+            // Get the current YearMonth
+            YearMonth currentYearMonth = YearMonth.now();
+
+            for (int i = -3; i <= 3; i++) {
+                monthPeriod.add(currentYearMonth.plusMonths(i).toString().replace("-", ""));
+            }
+
+            comboBox.setItems(monthPeriod);
+            comboBox.setValue(monthPeriod.get(0));
+            cp.setCurrent_month(monthPeriod.get(0));
+            currentPeriods.setCurrent_month(monthPeriod.get(0));
+            comboBox.addValueChangeListener(event -> {
+                cp.setCurrent_month(event.getValue());
+                currentPeriods.setCurrent_month(event.getValue());
+            });
+            return comboBox;
+        }).setHeader("Current-Month").setFlexGrow(0).setAutoWidth(true);
         grid_period.addComponentColumn(cp -> {
             ComboBox<String> comboBox = new ComboBox<>();
             List<String> monthPeriod = new ArrayList<>();
