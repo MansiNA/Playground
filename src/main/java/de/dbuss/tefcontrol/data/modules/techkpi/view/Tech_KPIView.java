@@ -25,6 +25,7 @@ import de.dbuss.tefcontrol.components.QS_Callback;
 import de.dbuss.tefcontrol.components.QS_Grid;
 import de.dbuss.tefcontrol.data.entity.Constants;
 import de.dbuss.tefcontrol.data.entity.ProjectParameter;
+import de.dbuss.tefcontrol.data.entity.ProjectUpload;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
 import de.dbuss.tefcontrol.data.service.ProjectParameterService;
 import de.dbuss.tefcontrol.views.MainLayout;
@@ -36,12 +37,9 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.io.InputStream;
-import java.util.Date;
+import java.util.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 
@@ -114,7 +112,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
     private int projectId;
     private QS_Grid qsGrid;
     private Button qsBtn;
-
+    private int upload_id;
     //Div htmlDivToDO;
     //CheckboxGroup<String> TodoList;
 
@@ -234,6 +232,17 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
             ui.setPollInterval(500);
 
+            ProjectUpload projectUpload = new ProjectUpload();
+            projectUpload.setFileName(fileName);
+            projectUpload.setUserName(MainLayout.userName);
+            projectConnectionService.saveUploadedGenericFileData(projectUpload);
+
+            Map<String, Integer> uploadIdMap = projectConnectionService.getUploadIdMap();
+            upload_id = uploadIdMap.values().stream()
+                    .mapToInt(Integer::intValue)
+                    .max()
+                    .orElse(1);
+
             savePlanEntities();
             saveActualsEntities();
             saveFactEntities();
@@ -241,10 +250,13 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
         });
 
         qsBtn.addClickListener(e ->{
-            if (qsGrid.projectId != projectId) {
-                CallbackHandler callbackHandler = new CallbackHandler();
-                qsGrid.createDialog(callbackHandler, projectId);
-            }
+         //   if (qsGrid.projectId != projectId) {
+            hl.remove(qsGrid);
+            qsGrid = new QS_Grid(projectConnectionService);
+            hl.add(qsGrid);
+            CallbackHandler callbackHandler = new CallbackHandler();
+            qsGrid.createDialog(callbackHandler, projectId, upload_id);
+         //   }
             qsGrid.showDialog(true);
         });
 
@@ -395,7 +407,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                     System.out.println("Verarbeitete Zeilen: " + endIndex + " von " + totalRows);
 
                     //savePlanBlock(batchData);
-                    String resultKPIPlan = projectConnectionService.saveKPIPlan(batchData, planTableName);
+                    String resultKPIPlan = projectConnectionService.saveKPIPlan(batchData, planTableName, upload_id);
 
                     returnStatus.set(resultKPIPlan);
 
@@ -465,7 +477,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
                     // saveActualsBlock(batchData);
 
-                    String resultKPIActuals = projectConnectionService.saveKPIActuals(batchData, actualsTableName);
+                    String resultKPIActuals = projectConnectionService.saveKPIActuals(batchData, actualsTableName, upload_id);
 
                     returnStatus.set(resultKPIActuals);
 
@@ -544,7 +556,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
                     //saveFactBlock(batchData);
 
-                    String resultKPIFact = projectConnectionService.saveKPIFact(batchData, factTableName);
+                    String resultKPIFact = projectConnectionService.saveKPIFact(batchData, factTableName, upload_id);
                     returnStatus.set(resultKPIFact);
 
                     System.out.println("ResultKPIFact: " + returnStatus.toString());
@@ -1818,6 +1830,15 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
         private String SourceComment = "";
         private String SourceContact = "";
         private String SourceLink = "";
+        private int upload_id;
+
+        public int getUpload_id() {
+            return upload_id;
+        }
+
+        public void setUpload_id(int upload_id) {
+            this.upload_id = upload_id;
+        }
 
         public int getRow() {
             return row;
@@ -2032,6 +2053,15 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
         private String VersionComment;
 
         private String Runrate;
+        private int upload_id;
+
+        public int getUpload_id() {
+            return upload_id;
+        }
+
+        public void setUpload_id(int upload_id) {
+            this.upload_id = upload_id;
+        }
 
         public int getRow() {
             return row;

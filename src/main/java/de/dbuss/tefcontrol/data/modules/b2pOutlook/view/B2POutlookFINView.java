@@ -22,6 +22,7 @@ import de.dbuss.tefcontrol.components.QS_Callback;
 import de.dbuss.tefcontrol.components.QS_Grid;
 import de.dbuss.tefcontrol.data.entity.Constants;
 import de.dbuss.tefcontrol.data.entity.ProjectParameter;
+import de.dbuss.tefcontrol.data.entity.ProjectUpload;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.OutlookMGSR;
 import de.dbuss.tefcontrol.data.service.BackendService;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
@@ -64,7 +65,8 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
     private QS_Grid qsGrid;
     private Button qsBtn;
     private Button uploadBtn;
-
+    private String fileName;
+    private int upload_id;
     ListenableFuture<String> future;
 
     BackendService backendService;
@@ -121,10 +123,13 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
         });
 
         qsBtn.addClickListener(e ->{
-            if (qsGrid.projectId != projectId) {
-                CallbackHandler callbackHandler = new CallbackHandler();
-                qsGrid.createDialog(callbackHandler, projectId);
-            }
+         //   if (qsGrid.projectId != projectId) {
+            hl.remove(qsGrid);
+            qsGrid = new QS_Grid(projectConnectionService);
+            hl.add(qsGrid);
+            CallbackHandler callbackHandler = new CallbackHandler();
+            qsGrid.createDialog(callbackHandler, projectId, upload_id);
+          //  }
             qsGrid.showDialog(true);
         });
 
@@ -165,6 +170,16 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
     }
 
     private void save2db(){
+        ProjectUpload projectUpload = new ProjectUpload();
+        projectUpload.setFileName(fileName);
+        projectUpload.setUserName(MainLayout.userName);
+        projectConnectionService.saveUploadedGenericFileData(projectUpload);
+
+        Map<String, Integer> uploadIdMap = projectConnectionService.getUploadIdMap();
+        upload_id = uploadIdMap.values().stream()
+                .mapToInt(Integer::intValue)
+                .max()
+                .orElse(1);
 
         Notification notification = Notification.show(" Rows Uploaded start",2000, Notification.Position.MIDDLE);
         notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
@@ -174,7 +189,7 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
         for (List<OutlookMGSR> sheetData : listOfAllSheets) {
             listOfAllData.addAll(sheetData);
         }
-        String resultFinancial = projectConnectionService.saveOutlookMGSR(listOfAllData, tableName, dbUrl, dbUser, dbPassword);
+        String resultFinancial = projectConnectionService.saveOutlookMGSR(listOfAllData, tableName, dbUrl, dbUser, dbPassword, upload_id);
         if (resultFinancial.equals(Constants.OK)){
             notification = Notification.show(listOfAllData.size() + " B2P_Outlook Rows Uploaded successfully",5000, Notification.Position.MIDDLE);
             notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
@@ -296,7 +311,7 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
         singleFileUpload.addSucceededListener(event -> {
             // Get information about the uploaded file
             InputStream fileData = memoryBuffer.getInputStream();
-            String fileName = event.getFileName();
+            fileName = event.getFileName();
             contentLength = event.getContentLength();
             mimeType = event.getMIMEType();
 

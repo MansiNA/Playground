@@ -137,7 +137,6 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
 
         qsBtn.addClickListener(e ->{
            // if (qsGrid.projectId != projectId) {
-                System.out.println("qs btn click..........");
                 hl.remove(qsGrid);
                 qsGrid = new QS_Grid(projectConnectionService);
                 hl.add(qsGrid);
@@ -147,7 +146,6 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
                         .orElse(null);
                 int upload_id = lastEntry.getValue();
                 qsGrid.createDialog(callbackHandler, projectId, upload_id);
-                System.out.println(projectUploadIdMap.size());
              //   projectUploadIdMap = new HashMap<>();
         //    }
             qsGrid.showDialog(true);

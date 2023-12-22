@@ -338,11 +338,11 @@ public class ProjectConnectionService {
         }
     }
 
-    public String saveKPIFact(List<Tech_KPIView.KPI_Fact> data, String tableName) {
+    public String saveKPIFact(List<Tech_KPIView.KPI_Fact> data, String tableName, int upload_id) {
 
         try {
 
-            String sqlInsert = "INSERT INTO "+ tableName +" (Zeile, NT_ID, XTD, Scenario_Name,[Date],Amount) VALUES (?, ?, ?, ?, ?, ?)";
+            String sqlInsert = "INSERT INTO "+ tableName +" (Zeile, NT_ID, XTD, Scenario_Name,[Date],Amount, Upload_ID) VALUES (?, ?, ?, ?, ?, ?, ?)";
 
 
             jdbcTemplate.batchUpdate(sqlInsert, data, data.size(), (ps, entity) -> {
@@ -363,7 +363,7 @@ public class ProjectConnectionService {
                 {
                     ps.setDouble (6, entity.getWert());
                 }
-
+                ps.setInt(7, upload_id);
             });
             return Constants.OK;
         } catch (Exception e) {
@@ -384,19 +384,18 @@ public class ProjectConnectionService {
             errorMessage = handleDatabaseError(e);
         }
     }
-    public String saveKPIPlan(List<Tech_KPIView.KPI_Plan> data, String tableName) {
+    public String saveKPIPlan(List<Tech_KPIView.KPI_Plan> data, String tableName, int upload_id) {
 
         try {
-            String sql = "INSERT INTO "+ tableName +" (Zeile, NT_ID, Spalte1, Scenario, VersionDate, VersionComment, Runrate) VALUES (?, ?, ?, ?, ?, ?, ?)";
+            String sql = "INSERT INTO "+ tableName +" (Zeile, NT_ID, Spalte1, Scenario, VersionDate, VersionComment, Runrate, Upload_ID) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
             jdbcTemplate.batchUpdate(sql, data, data.size(), (ps, entity) -> {
 
                 java.sql.Date versionDate = null;
                 if(entity.getVersionDate() != null)
                 {
-                    versionDate=new java.sql.Date(entity.getVersionDate().getTime());
+                    versionDate = new java.sql.Date(entity.getVersionDate().getTime());
                 }
-
                 ps.setInt(1,entity.getRow());
                 ps.setString(2, entity.getNT_ID());
                 ps.setString(3, entity.getSpalte1());
@@ -404,6 +403,7 @@ public class ProjectConnectionService {
                 ps.setDate(5, versionDate);
                 ps.setString(6, entity.getVersionComment());
                 ps.setString(7, entity.getRunrate());
+                ps.setInt(8, upload_id);
                 //  ps.setDate(3, new java.sql.Date(2023,01,01));
                 //ps.setDate(3, new java.sql.Date(entity.getDate().getTime() ));
                 //ps.setDouble (4, entity.getWert());
@@ -426,10 +426,10 @@ public class ProjectConnectionService {
             errorMessage = handleDatabaseError(e);
         }
     }
-    public String saveKPIActuals(List<Tech_KPIView.KPI_Actuals> data, String tableName) {
+    public String saveKPIActuals(List<Tech_KPIView.KPI_Actuals> data, String tableName, int upload_id) {
 
         try {
-            String sqlInsert = "INSERT INTO "+ tableName +" (Zeile, [NT_ID],[WTAC_ID],[sort],[M2_Area],[M1_Network],[M3_Service],[M4_Dimension],[M5_Tech],[M6_Detail],[KPI_long],[Runrate],[Unit],[Description],[SourceReport],[SourceInput],[SourceComment] ,[SourceContact] ,[SourceLink] ) VALUES (?, ?, ?, ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+            String sqlInsert = "INSERT INTO "+ tableName +" (Zeile, [NT_ID],[WTAC_ID],[sort],[M2_Area],[M1_Network],[M3_Service],[M4_Dimension],[M5_Tech],[M6_Detail],[KPI_long],[Runrate],[Unit],[Description],[SourceReport],[SourceInput],[SourceComment] ,[SourceContact] ,[SourceLink], [Upload_ID] ) VALUES (?, ?, ?, ?, ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
             jdbcTemplate.batchUpdate(sqlInsert, data, data.size(), (ps, entity) -> {
 
@@ -453,6 +453,7 @@ public class ProjectConnectionService {
                 ps.setString(17, entity.getSourceComment());
                 ps.setString(18, entity.getSourceContact());
                 ps.setString(19, entity.getSourceLink());
+                ps.setInt(20, upload_id);
             });
 
             return Constants.OK;
@@ -706,7 +707,7 @@ public class ProjectConnectionService {
     }
 
 
-    public String saveOutlookMGSR(List<OutlookMGSR> data, String tableName, String dbUrl, String dbUser, String dbPassword) {
+    public String saveOutlookMGSR(List<OutlookMGSR> data, String tableName, String dbUrl, String dbUser, String dbPassword, int upload_id) {
 
         try {
 
@@ -717,7 +718,7 @@ public class ProjectConnectionService {
 
             jdbcTemplate.update(sqlDelete);
 
-            String sqlInsert = "INSERT INTO "+ tableName +" (Zeile, Blatt, month, PL_Line, profit_center, scenario, block, segment, payment_type, type_of_data, value) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            String sqlInsert = "INSERT INTO "+ tableName +" (Zeile, Blatt, month, PL_Line, profit_center, scenario, block, segment, payment_type, type_of_data, value, Upload_ID) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
             jdbcTemplate.batchUpdate(sqlInsert, data, data.size(), (ps, entity) -> {
 
@@ -732,6 +733,7 @@ public class ProjectConnectionService {
                 ps.setString(9, entity.getPaymentType());
                 ps.setString(10, entity.getTypeOfData());
                 ps.setDouble(11, entity.getValue());
+                ps.setInt(12, upload_id);
               //  java.sql.Date sqlDate = (entity.getLoadDate() != null) ? new java.sql.Date(entity.getLoadDate().getTime()) : null;
               //  ps.setDate(12, sqlDate);
             });
@@ -743,7 +745,7 @@ public class ProjectConnectionService {
         }
     }
 
-    public String saveB2POutlookSub(List<B2pOutlookSub> data, String tableName, String dbUrl, String dbUser, String dbPassword) {
+    public String saveB2POutlookSub(List<B2pOutlookSub> data, String tableName, String dbUrl, String dbUser, String dbPassword, int upload_id) {
 
         try {
 
@@ -754,7 +756,7 @@ public class ProjectConnectionService {
 
             jdbcTemplate.update(sqlDelete);
 
-            String sqlInsert = "INSERT INTO "+ tableName +" (Zeile, Blatt, Month, Scenario, Measure, PHY_Line, Segment, Payment_Type, Contract_Type, Value) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            String sqlInsert = "INSERT INTO "+ tableName +" (Zeile, Blatt, Month, Scenario, Measure, PHY_Line, Segment, Payment_Type, Contract_Type, Value, Upload_ID) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
             jdbcTemplate.batchUpdate(sqlInsert, data, data.size(), (ps, entity) -> {
 
@@ -768,6 +770,7 @@ public class ProjectConnectionService {
                 ps.setString(8, entity.getPaymentType());
                 ps.setString(9, entity.getContractType());
                 ps.setDouble(10, entity.getValue());
+                ps.setInt(11, upload_id);
                 //  java.sql.Date sqlDate = (entity.getLoadDate() != null) ? new java.sql.Date(entity.getLoadDate().getTime()) : null;
                 //  ps.setDate(12, sqlDate);
             });
