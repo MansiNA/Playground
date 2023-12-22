@@ -1161,32 +1161,22 @@ public class ProjectConnectionService {
 
     public List<String> getCobiAdminQFCPlanOutlook(String dbUrl, String dbUser, String dbPassword, String sql) {
         try {
-
             DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
             jdbcTemplate = new JdbcTemplate(dataSource);
-
-            // Execute SQL query and retrieve the result as a list of maps
+// Execute SQL query and retrieve the result as a list of maps
             List<Map<String, Object>> result = jdbcTemplate.queryForList(sql);
-
-            // Process the result and construct a list of strings
             List<String> resultList = new ArrayList<>();
             for (Map<String, Object> row : result) {
-                StringBuilder rowString = new StringBuilder();
                 for (Map.Entry<String, Object> entry : row.entrySet()) {
-                    rowString.append(entry.getKey()).append(": ").append(entry.getValue()).append(", ");
+                    resultList.add(entry.getValue().toString());
                 }
-                String resultString = rowString.toString().replace("scenario:", "");
-                resultString = resultString.replace("," , "");
-                resultList.add(resultString);
             }
-
             return resultList;
         } catch (Exception e) {
             e.printStackTrace();
             return Collections.emptyList();
         }
     }
-
     public String saveCobiAdminCurrentPeriods(CurrentPeriods data, String dbUrl, String dbUser, String dbPassword, String targetTable) {
         try {
             jdbcTemplate = getJdbcConnection(dbUrl, dbUser, dbPassword);
