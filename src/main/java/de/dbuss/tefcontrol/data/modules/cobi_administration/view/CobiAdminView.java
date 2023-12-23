@@ -80,9 +80,9 @@ public class CobiAdminView extends VerticalLayout {
         dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
 
 
-        H1 h1 = new H1("Cobi Administration");
+        H1 h1 = new H1("CoBI Administration");
         Article p1 = new Article();
-        p1.setText("Auf diese Seite lässt verschiedene Einstellungen zur COBI-Beladung vornehmen.");
+        p1.setText("Auf diese Seite lassen sich verschiedene Einstellungen zur COBI-Beladung vornehmen.");
         add();
         add(h1, p1, getDimPeriodGrid(), getDimScenarioGrid());
 
@@ -185,8 +185,14 @@ public class CobiAdminView extends VerticalLayout {
         //grid_period.addThemeVariants(GridVariant.LUMO_COLUMN_BORDERS);
         grid_period.addThemeVariants(GridVariant.LUMO_COMPACT);
         grid_period.addThemeVariants(GridVariant.LUMO_NO_BORDER);
-        grid_period.getStyle().set( "border" , "2px solid black" ) ;
-        grid_period.getStyle().set( "box-shadow" , "0 10px 6px -6px black" ) ;
+        grid_period.getStyle().set( "border" , "0.5px solid black" ) ;
+        //grid_period.getStyle().set( "box-shadow" , "0 10px 6px -6px black" ) ;
+        grid_period.getStyle().set( "box-shadow" , "5px 6px 4px gray" ) ;
+        grid_period.getStyle().set( "border-radius" , "2px" ) ;
+        grid_period.getStyle().set( "padding" , "25px" ) ;
+
+        grid_period.getElement().getStyle().set("padding", "20px");
+
         grid_period.getColumns().forEach(e -> e.setResizable(Boolean.TRUE));
 
         grid_period.setItems(periods);
@@ -256,8 +262,12 @@ public class CobiAdminView extends VerticalLayout {
         grid_scenario.addThemeVariants(GridVariant.LUMO_COMPACT);
         grid_scenario.addThemeVariants(GridVariant.LUMO_NO_BORDER);
         grid_scenario.getColumns().forEach(e -> e.setResizable(Boolean.TRUE));
-        grid_scenario.getStyle().set( "border" , "2px solid black" ) ;
-        grid_scenario.getStyle().set( "box-shadow" , "0 10px 6px -6px black" ) ;
+        grid_scenario.getStyle().set( "border" , "0.5px solid black" ) ;
+        //grid_scenario.getStyle().set( "box-shadow" , "0 10px 6px -6px black" ) ;
+        grid_scenario.getStyle().set( "box-shadow" , "5px 6px 4px gray" ) ;
+        grid_scenario.getStyle().set( "border-radius" , "1px" ) ;
+
+
 
 
         scenarios.add(currentScenarios);

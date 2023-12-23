@@ -7,20 +7,18 @@
 
 .pvtTotal, .pvtTotalLabel, .pvtGrandTotal {display: none}
 
-.grid_scenario
-{
-    background-color: transparent;
+/** {
+    font-family: "Lucida Console", "Courier New", monospace;
+    font-size: 1rem;
+}*/
 
+
+#table {
+    padding-top: 5px !important;
+    padding-left: 20px !important;
 }
+#scroller {
 
-:host(.grid_scenario) [pat~="cell"]{
-    background-color: silver;
-}
-
-.header{
-    background-color: silver;
-}
-
-.items{
-    background-color: silver;
+    padding-top: 5px !important;
+    padding-left: 20px !important;
 }
