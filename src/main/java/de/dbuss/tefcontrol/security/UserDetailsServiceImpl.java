@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserDetailsServiceImpl implements UserDetailsService {
 
     private final UserRepository userRepository;
+    private boolean is_Userloggedid = false;
 
     public UserDetailsServiceImpl(UserRepository userRepository) {
         this.userRepository = userRepository;
@@ -38,4 +39,13 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 .collect(Collectors.toList());
     }
 
+    public void set_isUserloggedin(Boolean isLoggedIn)
+    {
+        is_Userloggedid=isLoggedIn;
+    }
+
+
+    public boolean get_isUserloggedin() {
+        return is_Userloggedid;
+    }
 }
