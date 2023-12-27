@@ -4,6 +4,7 @@ import com.vaadin.flow.spring.security.VaadinWebSecurity;
 import de.dbuss.tefcontrol.data.entity.User;
 import de.dbuss.tefcontrol.data.service.UserService;
 import de.dbuss.tefcontrol.views.login.LoginView;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -30,10 +31,17 @@ public class SecurityConfiguration extends VaadinWebSecurity {
 
     private final UserDetailsService userDetailsService;
     private final UserService userService;
+    private final String ldapUrl;
+    private final String p_ldapUserPrefix;
+    private final String p_ldapUserPostfix;
 
-    public SecurityConfiguration(UserDetailsService userDetailsService,  UserService userService) {
+    public SecurityConfiguration(@Value("${ldap.url}") String p_ldapUrl, @Value("${ldap.user.prefix}") String p_ldapUserPrefix, @Value("${ldap.user.postfix}") String p_ldapUserPostfix, UserDetailsService userDetailsService, UserService userService) {
         this.userDetailsService = userDetailsService;
         this.userService = userService;
+
+        this.ldapUrl = p_ldapUrl;
+        this.p_ldapUserPrefix=p_ldapUserPrefix;
+        this.p_ldapUserPostfix=p_ldapUserPostfix;
     }
 
 
@@ -112,14 +120,18 @@ public class SecurityConfiguration extends VaadinWebSecurity {
     private boolean connectToLdap(String username, String password) {
         //String ldapUrl = "ldap://viaginterkom.de:389";
         //String ldapUrl = "ldap://fhhnet.stadt.hamburg.de:389";
-        String ldapUrl = "ldap://91.107.232.133:10389";
+        //String ldapUrl = "ldap://91.107.232.133:10389";
+
+
+
 
         //String ldapUser= username + "@viaginterkom.de";
         //String ldapUser= username + "@fhhnet.stadt.hamburg.de";
 //        String ldapUser= username + "@wimpi.net";
 
-        String ldapUser = "uid=" + username + ",ou=users,dc=wimpi,dc=net"; // Adjust the DN pattern
+    //    String ldapUser = "uid=" + username + ",ou=users,dc=wimpi,dc=net"; // Adjust the DN pattern
 
+        String ldapUser = p_ldapUserPrefix + username + p_ldapUserPostfix;
 
         String ldapPassword = password;
 
