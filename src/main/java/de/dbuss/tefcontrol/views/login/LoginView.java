@@ -7,6 +7,7 @@ import com.vaadin.flow.component.login.LoginI18n;
 import com.vaadin.flow.component.login.LoginOverlay;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
@@ -35,14 +36,14 @@ import java.util.Optional;
 @AnonymousAllowed
 @PageTitle("Login")
 @Route(value = "login")
-public class LoginView extends LoginOverlay implements BeforeEnterObserver {
+public class LoginView extends VerticalLayout implements BeforeEnterObserver {
 
     UI ui = new UI();
     private static final String LOGIN_SUCCESS_URL = "/";
     private static final String LOGIN_ERROR_URL = "/login";
-    private final AuthenticatedUser authenticatedUser;
+   // private final AuthenticatedUser authenticatedUser;
     private LogService logService;
-    private final UserService userService;
+    //private final UserService userService;
 
     private final LoginForm login = new LoginForm();
 
@@ -50,30 +51,28 @@ public class LoginView extends LoginOverlay implements BeforeEnterObserver {
     private AuthenticationProvider authenticationProvider;
 
     public LoginView(AuthenticatedUser authenticatedUser, LogService logService, UserService userService) {
-        logService.addLogMessage("Info", "Starting login on LoginView");
-        this.authenticatedUser = authenticatedUser;
-        this.logService = logService;
-        this.userService = userService;
 
-        setAction(RouteUtil.getRoutePath(VaadinService.getCurrent().getContext(), getClass()));
+        login.setForgotPasswordButtonVisible(false);
 
-        LoginI18n i18n = LoginI18n.createDefault();
-        i18n.setHeader(new LoginI18n.Header());
-        i18n.getHeader().setTitle("TEF Control");
-        i18n.getHeader().setDescription("Login using User flip");
-        i18n.setAdditionalInformation(null);
-        setI18n(i18n);
+        login.setAction("login");
 
-        setForgotPasswordButtonVisible(false);
-        setOpened(true);
-        logService.addLogMessage(LogService.INFO, "Ending login on LoginView");
+      /*  login.addLoginListener(e -> {
+            //System.out.println("Im Login-Listener...");
+            if (authenticate(e.getUsername(), e.getPassword())) {
+                login.setError(false);
+                login.getUI().ifPresent(ui -> ui.navigate("/"));
 
-        // Add a listener to handle login events
-        addLoginListener(this::onLogin);
 
+            } else {
+                login.setError(true);
+            }
+        });*/
+
+
+        add(login);
     }
 
-    private boolean connectToLdap(String username, String password) {
+  /*  private boolean connectToLdap(String username, String password) {
         //String ldapUrl = "ldap://viaginterkom.de:389";
         //String ldapUrl = "ldap://fhhnet.stadt.hamburg.de:389";
         String ldapUrl = "ldap://91.107.232.133:10389";
@@ -120,10 +119,35 @@ public class LoginView extends LoginOverlay implements BeforeEnterObserver {
             return false;
         }
 
-    }
+    }*/
     private void onLogin(AbstractLogin.LoginEvent event) {
+       // this.authenticatedUser = authenticatedUser;
+       // this.userService = userService;
+        // setAction(RouteUtil.getRoutePath(VaadinService.getCurrent().getContext(), getClass()));
 
-        String userName = event.getUsername();
+
+        login.setForgotPasswordButtonVisible(false);
+
+        login.setAction("login");
+
+      /*  login.addLoginListener(e -> {
+            //System.out.println("Im Login-Listener...");
+            if (authenticate(e.getUsername(), e.getPassword())) {
+                login.setError(false);
+                login.getUI().ifPresent(ui -> ui.navigate("/"));
+
+
+            } else {
+                login.setError(true);
+            }
+        });*/
+
+
+        add(login);
+
+
+
+      /*  String userName = event.getUsername();
         String password = event.getPassword();
 
         System.out.println("Anmeldeversuch von User:" + userName);
@@ -171,18 +195,18 @@ public class LoginView extends LoginOverlay implements BeforeEnterObserver {
             Notification.show("Login successful", 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
         } else {
             Notification.show("Login failed. Please check your credentials.", 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
-        }
+        }*/
     }
 
     @Override
-    public void beforeEnter(BeforeEnterEvent event) {
-        if (authenticatedUser.get().isPresent()) {
-            logService.addLogMessage(LogService.INFO, "user already login in application");
-            // Already logged in
-            setOpened(false);
-            event.forwardTo("");
+    public void beforeEnter(BeforeEnterEvent beforeEnterEvent) {
+        if(beforeEnterEvent.getLocation()
+                .getQueryParameters()
+                .getParameters()
+                .containsKey("error")) {
+            login.setError(true);
         }
 
-        setError(event.getLocation().getQueryParameters().getParameters().containsKey("error"));
+    //    setError(event.getLocation().getQueryParameters().getParameters().containsKey("error"));
     }
 }

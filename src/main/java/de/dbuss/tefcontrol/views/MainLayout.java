@@ -133,9 +133,8 @@ public class MainLayout extends AppLayout {
 
         HorizontalLayout header= new HorizontalLayout(new DrawerToggle(),logo);
 
-        Span sp= new Span("V1.02");
 
-        header.add(image,sp);
+        header.add(image);
 
 
         header.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.CENTER);
@@ -156,7 +155,7 @@ public class MainLayout extends AppLayout {
         viewTitle.setText("");
         //viewTitle.addClassNames(LumoUtility.FontSize.LARGE, LumoUtility.Margin.NONE);
 
-        Span version= new Span("V1.01");
+        Span version= new Span("V1.02");
 
         image.setHeight("60px");
         image.setWidth("150px");
