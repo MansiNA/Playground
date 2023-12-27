@@ -13,9 +13,11 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.Scroller;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.sidenav.SideNav;
 import com.vaadin.flow.component.sidenav.SideNavItem;
 import com.vaadin.flow.router.RouteParameters;
+import com.vaadin.flow.router.RouterLink;
 import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.server.auth.AccessAnnotationChecker;
 import com.vaadin.flow.theme.lumo.LumoUtility;
@@ -43,6 +45,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import de.dbuss.tefcontrol.views.login.LoginView;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -175,15 +178,29 @@ public class MainLayout extends AppLayout {
 
     private void addDrawerContent() {
         log.info("Starting addDrawerContent() in mainlayout");
+        System.out.println("Starting addDrawerContent() in mainlayout");
+        RouterLink link = new RouterLink("login", LoginView.class);
         H2 appName = new H2("PIT");
         appName.addClassNames("text-l","m-m");
         appName.addClassNames(LumoUtility.FontSize.LARGE, LumoUtility.Margin.NONE);
         Header header = new Header(appName);
 
-        Scroller scroller = new Scroller(createTree());
+        Optional<User> maybeUser = authenticatedUser.get();
+        if (maybeUser.isPresent()) {
+
+            Scroller scroller = new Scroller(createTree());
+            addToDrawer(header, scroller,createFooter());
+
+        } else
+        {
+            addToDrawer(new VerticalLayout(link));
+        }
+
+
+        //Scroller scroller = new Scroller(createTree());
         //scroller.addClassNames("AboutView");
 
-        addToDrawer(header, scroller,createFooter());
+
         log.info("Ending addDrawerContent() in mainlayout");
 
 

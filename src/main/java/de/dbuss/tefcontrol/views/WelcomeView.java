@@ -7,13 +7,13 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
+import com.vaadin.flow.server.auth.AnonymousAllowed;
 import jakarta.annotation.security.RolesAllowed;
 
 @PageTitle("Welcome")
 @Route(value = "Welcome", layout = MainLayout.class)
 @RouteAlias(value = "", layout = MainLayout.class)
-@RolesAllowed({"MAPPING", "ADMIN", "USER", "KPI", "OUTLOOK", "FLIP"})
-// @AnonymousAllowed
+ @AnonymousAllowed
 public class WelcomeView extends VerticalLayout {
 
     public WelcomeView() {
@@ -22,7 +22,7 @@ public class WelcomeView extends VerticalLayout {
         String yourContent ="Auf dieser Seite werden Tools und Hilfsmittel bereitgestellt, um Administrative-Tätigkeiten zu vereinfachen.<br />" +
                 "Ebenso werden Funktionen bereitgestellt, Informationen direkt aus DB-Tabellen zu entnehmen.<br />" +
                 "Ideen, Anregungen oder Verbesserungsvorschläge sind herzlich willkommen!&#128512;<br /><br />" +
-                "Bitte im linken Auswahlmenü die gewünschte Funktionalität auswählen.<br /><br />" +
+                "Bitte mit Telefonica AD-User einloggen und die gewünschte Funktionalität auswählen.<br /><br />" +
                 "Viele Grüße<br /><b>Euer Consys-Team</b>" ;
 
         Html html = new Html("<text>" + yourContent + "</text>");
