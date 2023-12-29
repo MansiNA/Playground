@@ -206,9 +206,9 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
                 .getParameters()
                 .containsKey("error")) {
             login.setError(true);
-            beforeEnterEvent.forwardTo("/");
+            beforeEnterEvent.forwardTo("/login");
         }
 
-    //    setError(event.getLocation().getQueryParameters().getParameters().containsKey("error"));
+        login.setError(beforeEnterEvent.getLocation().getQueryParameters().getParameters().containsKey("error"));
     }
 }
