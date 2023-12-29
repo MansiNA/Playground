@@ -112,42 +112,6 @@ public class MainLayout extends AppLayout {
         logService.addLogMessage(LogService.INFO, "Ending application in MainLayout");
     }
 
-    private void createHeader() {
-        H1 logo = new H1("eKP Web-Admin");
-        logo.addClassNames("text-l","m-m");
-
-      /*  String principal = "Michael@dbuss.de";
-        String credentials ="gfdgfd";
-        Authentication user= new UsernamePasswordAuthenticationToken(principal, credentials);
-        SecurityContextHolder.getContext().setAuthentication(user);*/
-
-
-
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String currentUserName = authentication.getName();
-
-
-        Image image = new Image("images/telefonica.svg", "Telefonica Image");
-
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-
-        System.out.println("angemeldeter User: " + auth.getName());
-
-
-        HorizontalLayout header= new HorizontalLayout(new DrawerToggle(),logo);
-
-
-        header.add(image);
-
-
-        header.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.CENTER);
-        header.expand(logo);
-        header.setWidthFull();
-        header.addClassNames("py-0", "px-m");
-        addToNavbar(header);
-    }
-
-
     private void addHeaderContent() {
         log.info("Starting addHeaderContent() in mainlayout");
 

@@ -54,8 +54,8 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
 
         login.setForgotPasswordButtonVisible(false);
 
-        login.setAction("login");
-
+        //login.setAction("login");
+        login.setAction(RouteUtil.getRoutePath(VaadinService.getCurrent().getContext(), getClass()));
       /*  login.addLoginListener(e -> {
             //System.out.println("Im Login-Listener...");
             if (authenticate(e.getUsername(), e.getPassword())) {
@@ -128,7 +128,8 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
 
         login.setForgotPasswordButtonVisible(false);
 
-        login.setAction("login");
+        //login.setAction("login");
+
 
       /*  login.addLoginListener(e -> {
             //System.out.println("Im Login-Listener...");
@@ -205,6 +206,7 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
                 .getParameters()
                 .containsKey("error")) {
             login.setError(true);
+            beforeEnterEvent.forwardTo("/");
         }
 
     //    setError(event.getLocation().getQueryParameters().getParameters().containsKey("error"));

@@ -1,8 +1,10 @@
 package de.dbuss.tefcontrol.security;
 
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.spring.security.VaadinWebSecurity;
 import de.dbuss.tefcontrol.data.entity.User;
 import de.dbuss.tefcontrol.data.service.UserService;
+import de.dbuss.tefcontrol.views.WelcomeView;
 import de.dbuss.tefcontrol.views.login.LoginView;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -85,7 +87,6 @@ public class SecurityConfiguration extends VaadinWebSecurity {
 
                 if (isLoginSuccessful) {
                     System.out.println("AD says successfully login...");
-
 
                     return new UsernamePasswordAuthenticationToken(userDetails, password, userDetails.getAuthorities());
                 }
@@ -188,6 +189,7 @@ public class SecurityConfiguration extends VaadinWebSecurity {
         http.authorizeHttpRequests().requestMatchers(new AntPathRequestMatcher("/line-awesome/**/*.svg")).permitAll();
         super.configure(http);
         setLoginView(http, LoginView.class);
+        http.formLogin().defaultSuccessUrl("/",true);
     }
 
 }
