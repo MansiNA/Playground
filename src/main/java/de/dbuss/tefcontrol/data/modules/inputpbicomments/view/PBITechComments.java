@@ -32,6 +32,7 @@ import de.dbuss.tefcontrol.data.entity.Constants;
 import de.dbuss.tefcontrol.data.entity.ProjectParameter;
 import de.dbuss.tefcontrol.data.entity.ProjectQSEntity;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.*;
+import de.dbuss.tefcontrol.data.service.BackendService;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
 import de.dbuss.tefcontrol.data.service.ProjectParameterService;
 import de.dbuss.tefcontrol.data.service.ProjectQsService;
@@ -65,6 +66,7 @@ public class PBITechComments extends VerticalLayout implements BeforeEnterObserv
     // Erstellen einer Instanz des CallbackHandlers
 
     private final ProjectConnectionService projectConnectionService;
+    private final BackendService backendService;
     private MemoryBuffer memoryBuffer = new MemoryBuffer();
     private Upload singleFileUpload = new Upload(memoryBuffer);
     private int projectId;
@@ -93,9 +95,10 @@ public class PBITechComments extends VerticalLayout implements BeforeEnterObserv
     private String dbUrl;
     private String idKey = Constants.ZEILE;
 
-    public PBITechComments(ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService) {
+    public PBITechComments(ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, BackendService backendService) {
 
         this.projectConnectionService = projectConnectionService;
+        this.backendService = backendService;
 
         Div htmlDiv = new Div();
         htmlDiv.getElement().setProperty("innerHTML", "<h2>Input Frontend for Tech Comments");
@@ -154,7 +157,7 @@ public class PBITechComments extends VerticalLayout implements BeforeEnterObserv
         Text databaseDetail = new Text("Connected to: "+ dbServer+ ", Database: " + dbName) ;
 
         //Componente QS-Grid:
-        qsGrid = new QS_Grid(projectConnectionService);
+        qsGrid = new QS_Grid(projectConnectionService, backendService);
 
         HorizontalLayout hl = new HorizontalLayout();
         hl.setAlignItems(Alignment.BASELINE);

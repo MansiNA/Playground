@@ -1,11 +1,14 @@
 package de.dbuss.tefcontrol.components;
 
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Composite;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.contextmenu.GridContextMenu;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -13,16 +16,28 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.progressbar.ProgressBar;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.provider.DataProvider;
+import com.vaadin.flow.data.provider.Query;
 import de.dbuss.tefcontrol.data.entity.*;
+import de.dbuss.tefcontrol.data.service.BackendService;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
 import lombok.Getter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.AsyncResult;
+import org.springframework.stereotype.Service;
+import org.springframework.util.concurrent.ListenableFuture;
 
 import javax.sql.DataSource;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 public class QS_Grid extends Composite<Div> {
 
@@ -30,6 +45,7 @@ public class QS_Grid extends Composite<Div> {
     private Grid<ProjectQSEntity> grid;
     private JdbcTemplate jdbcTemplate;
     private ProjectConnectionService projectConnectionService;
+    private BackendService backendService;
     Dialog qsDialog = new Dialog();
     private Dialog contextDialog;
     private Button cancelContextButton;
@@ -40,16 +56,31 @@ public class QS_Grid extends Composite<Div> {
     private String dbUrl;
     private String dbUser;
     private String dbPassword;
+    private ProgressBar progressBar = new ProgressBar();
+    private AtomicInteger threadCount = new AtomicInteger(0);
+    private TextField threadCountField;
     private Map<Integer, List<Map<String, Object>>> rowsMap = new HashMap<>();
 
     public QS_Grid(ProjectConnectionService projectConnectionService) {
         this.projectConnectionService = projectConnectionService;
+     //   this.backendService = backendService;
         this.jdbcTemplate = projectConnectionService.getJdbcDefaultConnection();
+
     }
 
+    public QS_Grid(ProjectConnectionService projectConnectionService, BackendService backendService) {
+        this.projectConnectionService = projectConnectionService;
+        this.backendService = backendService;
+        this.jdbcTemplate = projectConnectionService.getJdbcDefaultConnection();
+
+    }
     public void createDialog(QS_Callback callback, int projectId) {
         this.qs_callback=callback;
         this.projectId=projectId;
+
+        progressBar.setWidth("15em");
+        progressBar.setIndeterminate(true);
+        progressBar.setVisible(false);
 
         VerticalLayout dialogLayout = createDialogLayout();
         qsDialog.add(dialogLayout);
@@ -113,12 +144,14 @@ public class QS_Grid extends Composite<Div> {
                 layout.add(icon);
             } else {
                 icon = VaadinIcon.SPINNER.create();
+
                 icon.getElement().getThemeList().add("badge spinner");
                 if(status == null) {
                     status = "before execute...";
                 }
-                layout.add(status);
-                System.out.println(status);
+                //layout.add(status);
+                layout.add(createIcon());
+                //  System.out.println(status);
             }
             icon.getStyle().set("padding", "var(--lumo-space-xs");
 
@@ -149,16 +182,32 @@ public class QS_Grid extends Composite<Div> {
         });
 
         // if all result Ok then okbutton enable
+        Button isBlockedButton = new Button("Is UI blocked?", clickEvent -> {
+            Notification.show("UI isn't blocked!");
+        });
 
         Button executeButton = new Button("execute");
         executeButton.addClickListener(e -> {
-            listOfProjectQs = getResultExecuteSQL(dbUrl, dbUser, dbPassword, listOfProjectQs);
-            grid.setItems(listOfProjectQs);
+        //    listOfProjectQs = getResultExecuteSQL(dbUrl, dbUser, dbPassword, listOfProjectQs);
+         //   grid.setItems(listOfProjectQs);
+            executeSQL(listOfProjectQs);
+            progressBar.setVisible(true);
+            grid.getDataProvider().refreshAll();
+            DataProvider<ProjectQSEntity, Void> existDataProvider = (DataProvider<ProjectQSEntity, Void>) grid.getDataProvider();
+            listOfProjectQs = existDataProvider.fetch(new Query<>()).collect(Collectors.toList());
             boolean allCorrect = listOfProjectQs.stream()
                     .allMatch(projectQs -> Constants.OK.equals(projectQs.getResult()));
+
             okButton.setEnabled(allCorrect);
+
         });
-        HorizontalLayout hlexecute = new HorizontalLayout(executeButton);
+
+        threadCountField = new TextField("Anzahl der Threads");
+        threadCountField.setReadOnly(true); // Textfeld schreibgeschützt machen, um es nur lesbar zu machen
+        updateThreadCountField();
+
+        HorizontalLayout hlexecute = new HorizontalLayout();
+        hlexecute.add(isBlockedButton, threadCountField, executeButton);
 
         if (listOfProjectQs.isEmpty()) {
             executeButton.setEnabled(false);
@@ -172,9 +221,62 @@ public class QS_Grid extends Composite<Div> {
 
         HorizontalLayout hl = new HorizontalLayout(closeButton,okButton);
 
-        dialogLayout.add(paragraph, hlexecute, grid,hl);
+        dialogLayout.add(paragraph, progressBar, hlexecute, grid,hl);
 
         return dialogLayout;
+    }
+
+    private Component createIcon() {
+        String imageUrl = "icons/spinner.gif";
+        Image image = new Image(imageUrl, "GIF Icon");
+        image.setWidth("20px");
+        image.setHeight("20px");
+
+        // Das Image-Objekt zurückgeben
+        return image;
+    }
+
+    private void executeSQL(List<ProjectQSEntity> projectSqls) {
+
+        UI ui = getUI().orElseThrow();
+
+        for (ProjectQSEntity projectQS:projectSqls) {
+            System.out.println("Ausführen SQL: " + projectQS.getSql() );
+            try {
+                increaseThreadCount();
+
+                //ListenableFuture<String> future = backendService.longRunningTask();
+
+                String sql = projectQS.getSql();
+                if (sql.contains("UPLOAD_ID")) {
+                    sql = sql.replace("UPLOAD_ID", uploadId + "");
+                    projectQS.setSql(sql);
+                    System.out.println(sql + "++++++++++++++++++++++++++++++++++++++");
+                }
+                DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+                jdbcTemplate = new JdbcTemplate(dataSource);
+
+                ListenableFuture<ProjectQSEntity> future = backendService.getQsResult(jdbcTemplate, projectQS);
+                future.addCallback(
+                        successResult -> {
+                            decreaseThreadCount();
+                            System.out.println(successResult.getResult() +"########################");
+                            updateUi(ui, "Task finished: SQL: " + successResult.getId() + " Ergebnis: " + successResult.getResult());
+
+                        },
+
+                        failureException -> {
+                            decreaseThreadCount();
+                            updateUi(ui, "Task failed: " + failureException.getMessage());
+                        }
+
+                );
+            } catch (Exception e){
+                String errormessage = handleDatabaseError(e);
+                projectQS.setResult(errormessage);
+            }
+        }
+
     }
 
     private void getListOfProjectQsWithResult() {
@@ -397,4 +499,40 @@ public class QS_Grid extends Composite<Div> {
         }
         return getRootCause(cause);
     }
+
+    private void updateThreadCountField() {
+        int count = threadCount.get();
+        // Setze die Thread-Anzahl im Textfeld
+        System.out.println(count + "--------------------------------");
+        threadCountField.setValue(String.valueOf(count));
+    }
+
+    private void updateUi(UI ui, String result) {
+        ui.access(() -> {
+            Notification.show(result);
+
+            updateThreadCountField();
+            int count = threadCount.get();
+            System.out.println("Anzahl Threads jetzt: " + count);
+
+            grid.getDataProvider().refreshAll();
+
+            if (count == 0)
+            {
+                progressBar.setVisible(false);
+            }
+
+        });
+
+    }
+
+    private void increaseThreadCount() {
+        int count = threadCount.incrementAndGet();
+        updateThreadCountField();
+    }
+
+    private void decreaseThreadCount() {
+        int count = threadCount.decrementAndGet();
+    }
+
 }
