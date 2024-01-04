@@ -34,6 +34,7 @@ import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.GenericComments;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.Subscriber;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.UnitsDeepDive;
 import de.dbuss.tefcontrol.data.modules.techkpi.view.Tech_KPIView;
+import de.dbuss.tefcontrol.data.service.BackendService;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
 import de.dbuss.tefcontrol.data.service.ProjectParameterService;
 import de.dbuss.tefcontrol.dataprovider.GenericDataProvider;
@@ -82,7 +83,7 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
     private Button qsBtn;
     private int id;
     public static Map<String, Integer> projectUploadIdMap = new HashMap<>();
-    public GenericCommentsView(AuthenticatedUser authenticatedUser, ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService) {
+    public GenericCommentsView(AuthenticatedUser authenticatedUser, ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, BackendService backendService) {
 
         this.projectConnectionService = projectConnectionService;
 
@@ -122,7 +123,7 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
         Text databaseDetail = new Text("Connected to: "+ dbServer+ ", Database: " + dbName + " Table: " + tableName + " AgentJob: " + agentName);
 
         //Componente QS-Grid:
-        qsGrid = new QS_Grid(projectConnectionService);
+        qsGrid = new QS_Grid(projectConnectionService, backendService);
 
         HorizontalLayout hl = new HorizontalLayout();
         hl.setAlignItems(Alignment.BASELINE);
@@ -138,7 +139,7 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
         qsBtn.addClickListener(e ->{
            // if (qsGrid.projectId != projectId) {
                 hl.remove(qsGrid);
-                qsGrid = new QS_Grid(projectConnectionService);
+                qsGrid = new QS_Grid(projectConnectionService, backendService);
                 hl.add(qsGrid);
                 CallbackHandler callbackHandler = new CallbackHandler();
                 Map.Entry<String, Integer> lastEntry = projectUploadIdMap.entrySet().stream()

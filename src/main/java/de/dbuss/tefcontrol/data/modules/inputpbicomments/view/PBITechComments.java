@@ -172,11 +172,11 @@ public class PBITechComments extends VerticalLayout implements BeforeEnterObserv
         });
 
         qsBtn.addClickListener(e ->{
-
-            if (qsGrid.projectId != projectId) {
-                CallbackHandler callbackHandler = new CallbackHandler();
-                qsGrid.createDialog(callbackHandler, projectId);
-            }
+            hl.remove(qsGrid);
+            qsGrid = new QS_Grid(projectConnectionService, backendService);
+            hl.add(qsGrid);
+            CallbackHandler callbackHandler = new CallbackHandler();
+            qsGrid.createDialog(callbackHandler, projectId);
             qsGrid.showDialog(true);
         });
 

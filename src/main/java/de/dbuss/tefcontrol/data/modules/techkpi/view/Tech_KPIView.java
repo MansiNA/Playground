@@ -255,7 +255,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
         qsBtn.addClickListener(e ->{
          //   if (qsGrid.projectId != projectId) {
             hl.remove(qsGrid);
-            qsGrid = new QS_Grid(projectConnectionService);
+            qsGrid = new QS_Grid(projectConnectionService, backendService);
             hl.add(qsGrid);
             CallbackHandler callbackHandler = new CallbackHandler();
             qsGrid.createDialog(callbackHandler, projectId, upload_id);

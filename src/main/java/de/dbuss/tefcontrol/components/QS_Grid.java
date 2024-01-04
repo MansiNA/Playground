@@ -59,21 +59,15 @@ public class QS_Grid extends Composite<Div> {
     private ProgressBar progressBar = new ProgressBar();
     private AtomicInteger threadCount = new AtomicInteger(0);
     private TextField threadCountField;
+    private Button okButton;
     private Map<Integer, List<Map<String, Object>>> rowsMap = new HashMap<>();
-
-    public QS_Grid(ProjectConnectionService projectConnectionService) {
-        this.projectConnectionService = projectConnectionService;
-     //   this.backendService = backendService;
-        this.jdbcTemplate = projectConnectionService.getJdbcDefaultConnection();
-
-    }
 
     public QS_Grid(ProjectConnectionService projectConnectionService, BackendService backendService) {
         this.projectConnectionService = projectConnectionService;
         this.backendService = backendService;
         this.jdbcTemplate = projectConnectionService.getJdbcDefaultConnection();
-
     }
+
     public void createDialog(QS_Callback callback, int projectId) {
         this.qs_callback=callback;
         this.projectId=projectId;
@@ -174,7 +168,7 @@ public class QS_Grid extends Composite<Div> {
         Paragraph paragraph = new Paragraph(
                 "Please check failed Checks. Only when all tests are ok further processing can startet");
 
-        Button okButton = new Button("Start Job");
+        okButton = new Button("Start Job");
         okButton.setEnabled(false);
         okButton.addClickListener(e -> {
             qsDialog.close();
@@ -192,20 +186,12 @@ public class QS_Grid extends Composite<Div> {
          //   grid.setItems(listOfProjectQs);
             executeSQL(listOfProjectQs);
             progressBar.setVisible(true);
-            grid.getDataProvider().refreshAll();
-            DataProvider<ProjectQSEntity, Void> existDataProvider = (DataProvider<ProjectQSEntity, Void>) grid.getDataProvider();
-            listOfProjectQs = existDataProvider.fetch(new Query<>()).collect(Collectors.toList());
-            boolean allCorrect = listOfProjectQs.stream()
-                    .allMatch(projectQs -> Constants.OK.equals(projectQs.getResult()));
-
-            okButton.setEnabled(allCorrect);
 
         });
 
         threadCountField = new TextField("Anzahl der Threads");
         threadCountField.setReadOnly(true); // Textfeld schreibgeschützt machen, um es nur lesbar zu machen
         updateThreadCountField();
-
         HorizontalLayout hlexecute = new HorizontalLayout();
         hlexecute.add(isBlockedButton, threadCountField, executeButton);
 
@@ -520,6 +506,9 @@ public class QS_Grid extends Composite<Div> {
             if (count == 0)
             {
                 progressBar.setVisible(false);
+                boolean allCorrect = listOfProjectQs.stream()
+                        .allMatch(projectQs -> Constants.OK.equals(projectQs.getResult()));
+                okButton.setEnabled(allCorrect);
             }
 
         });

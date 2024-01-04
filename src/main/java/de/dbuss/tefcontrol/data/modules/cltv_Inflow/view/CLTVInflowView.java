@@ -27,6 +27,7 @@ import de.dbuss.tefcontrol.components.QS_Grid;
 import de.dbuss.tefcontrol.data.entity.Constants;
 import de.dbuss.tefcontrol.data.entity.ProjectParameter;
 import de.dbuss.tefcontrol.data.modules.cltv_Inflow.entity.CLTVInflow;
+import de.dbuss.tefcontrol.data.service.BackendService;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
 import de.dbuss.tefcontrol.data.service.ProjectParameterService;
 import de.dbuss.tefcontrol.dataprovider.GenericDataProvider;
@@ -57,7 +58,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
     private QS_Grid qsGrid;
     private Button qsBtn;
 
-    public CLTVInflowView(ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService) {
+    public CLTVInflowView(ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, BackendService backendService) {
         this.projectConnectionService = projectConnectionService;
 
         qsBtn = new Button("Start Job");
@@ -91,7 +92,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         Text databaseDetail = new Text("Connected to: "+ dbServer+ ", Database: " + dbName+ ", Table: " + tableName);
 
         //Componente QS-Grid:
-        qsGrid = new QS_Grid(projectConnectionService);
+        qsGrid = new QS_Grid(projectConnectionService, backendService);
 
         TabSheet tabSheet = new TabSheet();
         tabSheet.add("Missing Entries", getMissingCLTV_InflowGrid());
@@ -108,10 +109,11 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         add(hl, tabSheet );
 
         qsBtn.addClickListener(e ->{
-            if (qsGrid.projectId != projectId) {
-                CallbackHandler callbackHandler = new CallbackHandler();
-                qsGrid.createDialog(callbackHandler, projectId);
-            }
+            hl.remove(qsGrid);
+            qsGrid = new QS_Grid(projectConnectionService, backendService);
+            hl.add(qsGrid);
+            CallbackHandler callbackHandler = new CallbackHandler();
+            qsGrid.createDialog(callbackHandler, projectId);
             qsGrid.showDialog(true);
         });
 
