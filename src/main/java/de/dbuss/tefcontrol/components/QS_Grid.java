@@ -141,11 +141,11 @@ public class QS_Grid extends Composite<Div> {
 
                 icon.getElement().getThemeList().add("badge spinner");
                 if(status == null) {
-                    status = "before execute...";
+                    status = "";
+                    layout.add(status);
+                } else {
+                    layout.add(createIcon());
                 }
-                //layout.add(status);
-                layout.add(createIcon());
-                //  System.out.println(status);
             }
             icon.getStyle().set("padding", "var(--lumo-space-xs");
 
@@ -227,6 +227,10 @@ public class QS_Grid extends Composite<Div> {
         UI ui = getUI().orElseThrow();
 
         for (ProjectQSEntity projectQS:projectSqls) {
+            projectQS.setResult("running");
+        }
+        grid.getDataProvider().refreshAll();
+        for (ProjectQSEntity projectQS:projectSqls) {
             System.out.println("Ausführen SQL: " + projectQS.getSql() );
             try {
                 increaseThreadCount();
@@ -237,7 +241,6 @@ public class QS_Grid extends Composite<Div> {
                 if (sql.contains("UPLOAD_ID")) {
                     sql = sql.replace("UPLOAD_ID", uploadId + "");
                     projectQS.setSql(sql);
-                    System.out.println(sql + "++++++++++++++++++++++++++++++++++++++");
                 }
                 DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
                 jdbcTemplate = new JdbcTemplate(dataSource);
