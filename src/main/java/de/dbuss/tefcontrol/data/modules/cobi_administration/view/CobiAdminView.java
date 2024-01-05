@@ -9,11 +9,9 @@ import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.*;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.router.BeforeEnterEvent;
-import com.vaadin.flow.router.BeforeEnterObserver;
-import com.vaadin.flow.router.PageTitle;
-import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.*;
 import de.dbuss.tefcontrol.data.entity.Constants;
 import de.dbuss.tefcontrol.data.entity.ProjectParameter;
 import de.dbuss.tefcontrol.data.entity.ProjectUpload;
@@ -33,7 +31,7 @@ import java.util.Map;
 @PageTitle("Administration")
 @Route(value = "COBI_Administration/:project_Id", layout = MainLayout.class)
 @RolesAllowed({"ADMIN", "MAPPING", "FLIP"})
-public class CobiAdminView extends VerticalLayout {
+public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver {
     private final ProjectConnectionService projectConnectionService;
     private String tableCurrentPeriods;
     private String tableCurrentSenarios;
@@ -43,9 +41,9 @@ public class CobiAdminView extends VerticalLayout {
     private String dbUrl;
     private String dbUser;
     private String dbPassword;
-
     private CurrentScenarios currentScenarios;
     private CurrentPeriods currentPeriods;
+    private int projectId;
 
     public CobiAdminView(ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService) {
         this.projectConnectionService = projectConnectionService;
@@ -86,9 +84,9 @@ public class CobiAdminView extends VerticalLayout {
         add();
         add(h1, p1, getDimPeriodGrid(), getDimScenarioGrid());
 
-        Button okBtn = new Button("Save");
+        Button saveBtn = new Button("Save");
 
-        okBtn.addClickListener(e -> {
+        saveBtn.addClickListener(e -> {
 
             ProjectUpload projectUpload = new ProjectUpload();
             projectUpload.setFileName("");
@@ -124,7 +122,28 @@ public class CobiAdminView extends VerticalLayout {
             }
         });
 
-        add(okBtn);
+        Button startJobBtn = new Button("Start Job");
+
+        startJobBtn.addClickListener(e -> {
+            String message = projectConnectionService.startAgent(projectId);
+            if (!message.contains("Error")) {
+                Notification.show(message, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+            } else {
+                Notification.show(message, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+            }
+        });
+
+        HorizontalLayout hl = new HorizontalLayout();
+        hl.setAlignItems(Alignment.BASELINE);
+        hl.add(saveBtn,  startJobBtn);
+
+        add(hl);
+    }
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+        RouteParameters parameters = event.getRouteParameters();
+        projectId = Integer.parseInt(parameters.get("project_Id").orElse(null));
     }
 
     private Component getDimPeriodGrid() {
