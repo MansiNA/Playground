@@ -138,13 +138,15 @@ public class QS_Grid extends Composite<Div> {
                 layout.add(icon);
             } else {
                 icon = VaadinIcon.SPINNER.create();
-
+                System.out.println("icon changed.......");
                 icon.getElement().getThemeList().add("badge spinner");
                 if(status == null) {
                     status = "";
                     layout.add(status);
-                } else {
+                } else if (status.equals("running")){
                     layout.add(createIcon());
+                } else {
+                    layout.add(status);
                 }
             }
             icon.getStyle().set("padding", "var(--lumo-space-xs");
@@ -230,6 +232,7 @@ public class QS_Grid extends Composite<Div> {
             projectQS.setResult("running");
         }
         grid.getDataProvider().refreshAll();
+        System.out.println("running changed.......");
         for (ProjectQSEntity projectQS:projectSqls) {
             System.out.println("Ausführen SQL: " + projectQS.getSql() );
             try {
@@ -245,23 +248,24 @@ public class QS_Grid extends Composite<Div> {
                 DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
                 jdbcTemplate = new JdbcTemplate(dataSource);
 
-                ListenableFuture<ProjectQSEntity> future = backendService.getQsResult(jdbcTemplate, projectQS);
+                ListenableFuture<ProjectQSEntity> future = backendService.getQsResult(jdbcTemplate, projectQS, rowsMap);
                 future.addCallback(
                         successResult -> {
                             decreaseThreadCount();
-                            System.out.println(successResult.getResult() +"########################");
                             updateUi(ui, "Task finished: SQL: " + successResult.getId() + " Ergebnis: " + successResult.getResult());
 
                         },
 
                         failureException -> {
                             decreaseThreadCount();
+                            projectQS.setResult("Error in SQL");
                             updateUi(ui, "Task failed: " + failureException.getMessage());
                         }
 
                 );
             } catch (Exception e){
                 String errormessage = handleDatabaseError(e);
+                System.out.println("error changed......."+projectQS.getName());
                 projectQS.setResult(errormessage);
             }
         }

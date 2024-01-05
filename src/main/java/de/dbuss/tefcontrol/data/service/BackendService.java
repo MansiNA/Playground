@@ -27,14 +27,14 @@ public class BackendService {
     }
 
 
-    public ListenableFuture<ProjectQSEntity> getQsResult(JdbcTemplate jdbcTemplate, ProjectQSEntity projectQS) {
+    public ListenableFuture<ProjectQSEntity> getQsResult(JdbcTemplate jdbcTemplate, ProjectQSEntity projectQS, Map<Integer, List<Map<String, Object>>> rowsMap ) {
 
         String sql = projectQS.getSql();
         List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql);
         if (rows.isEmpty()) {
             projectQS.setResult(Constants.OK);
         } else {
-            //  rowsMap.put(projectQSEntity.getId(), rows);
+            rowsMap.put(projectQS.getId(), rows);
             projectQS.setResult(Constants.FAILED);
         }
         return AsyncResult.forValue(projectQS);
