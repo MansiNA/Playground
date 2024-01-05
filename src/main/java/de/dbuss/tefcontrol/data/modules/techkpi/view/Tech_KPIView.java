@@ -26,6 +26,7 @@ import de.dbuss.tefcontrol.components.QS_Grid;
 import de.dbuss.tefcontrol.data.entity.Constants;
 import de.dbuss.tefcontrol.data.entity.ProjectParameter;
 import de.dbuss.tefcontrol.data.entity.ProjectUpload;
+import de.dbuss.tefcontrol.data.service.BackendService;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
 import de.dbuss.tefcontrol.data.service.ProjectParameterService;
 import de.dbuss.tefcontrol.views.MainLayout;
@@ -50,6 +51,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
     private JdbcTemplate jdbcTemplate;
     private final ProjectConnectionService projectConnectionService;
+    private final BackendService backendService;
     private Button uploadBtn;
     private String actualsTableName;
     private String factTableName;
@@ -116,9 +118,10 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
     //Div htmlDivToDO;
     //CheckboxGroup<String> TodoList;
 
-    public Tech_KPIView(JdbcTemplate jdbcTemplate, ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService) {
+    public Tech_KPIView(JdbcTemplate jdbcTemplate, ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, BackendService backendService) {
         this.jdbcTemplate = jdbcTemplate;
         this.projectConnectionService = projectConnectionService;
+        this.backendService = backendService;
 
         uploadBtn = new Button("Upload");
         uploadBtn.setEnabled(false);
@@ -223,7 +226,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
         Text databaseDetail = new Text("Connected to: "+ dbServer+ ", Database: " + dbName + " AgentJob: " + agentName);
 
         //Componente QS-Grid:
-        qsGrid = new QS_Grid(projectConnectionService);
+        qsGrid = new QS_Grid(projectConnectionService, backendService);
 
         hl.setAlignItems(Alignment.BASELINE);
         hl.add(singleFileUpload, uploadBtn, qsBtn, databaseDetail, qsGrid);
@@ -252,7 +255,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
         qsBtn.addClickListener(e ->{
          //   if (qsGrid.projectId != projectId) {
             hl.remove(qsGrid);
-            qsGrid = new QS_Grid(projectConnectionService);
+            qsGrid = new QS_Grid(projectConnectionService, backendService);
             hl.add(qsGrid);
             CallbackHandler callbackHandler = new CallbackHandler();
             qsGrid.createDialog(callbackHandler, projectId, upload_id);

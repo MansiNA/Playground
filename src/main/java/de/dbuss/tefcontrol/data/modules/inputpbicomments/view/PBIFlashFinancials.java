@@ -35,6 +35,7 @@ import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.FlashFinancials;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.ITOnlyComment;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.KPIsComment;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.XPexComment;
+import de.dbuss.tefcontrol.data.service.BackendService;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
 import de.dbuss.tefcontrol.data.service.ProjectParameterService;
 import de.dbuss.tefcontrol.dataprovider.GenericDataProvider;
@@ -87,7 +88,7 @@ public class PBIFlashFinancials extends VerticalLayout implements BeforeEnterObs
     private String dbUrl;
     private String idKey = Constants.ZEILE;
 
-    public PBIFlashFinancials(ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService) {
+    public PBIFlashFinancials(ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, BackendService backendService) {
 
         this.projectConnectionService = projectConnectionService;
 
@@ -146,7 +147,7 @@ public class PBIFlashFinancials extends VerticalLayout implements BeforeEnterObs
         Text databaseDetail = new Text("Connected to: "+ dbServer+ ", Database: " + dbName) ;
 
         //Componente QS-Grid:
-        qsGrid = new QS_Grid(projectConnectionService);
+        qsGrid = new QS_Grid(projectConnectionService, backendService);
 
         HorizontalLayout hl = new HorizontalLayout();
         hl.setAlignItems(FlexComponent.Alignment.BASELINE);
@@ -161,11 +162,11 @@ public class PBIFlashFinancials extends VerticalLayout implements BeforeEnterObs
         });
 
         qsBtn.addClickListener(e ->{
-
-            if (qsGrid.projectId != projectId) {
-                CallbackHandler callbackHandler = new CallbackHandler();
-                qsGrid.createDialog(callbackHandler, projectId);
-            }
+            hl.remove(qsGrid);
+            qsGrid = new QS_Grid(projectConnectionService, backendService);
+            hl.add(qsGrid);
+            CallbackHandler callbackHandler = new CallbackHandler();
+            qsGrid.createDialog(callbackHandler, projectId);
             qsGrid.showDialog(true);
         });
 

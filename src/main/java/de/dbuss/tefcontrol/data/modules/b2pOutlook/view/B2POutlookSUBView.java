@@ -79,7 +79,7 @@ public class B2POutlookSUBView extends VerticalLayout implements BeforeEnterObse
 
     public B2POutlookSUBView(ProjectParameterService projectParameterService, ProjectConnectionService projectConnectionService, BackendService backendService) {
 
-        this.backendService=backendService;
+        this.backendService = backendService;
         this.projectConnectionService = projectConnectionService;
 
         uploadBtn = new Button("Upload");
@@ -115,7 +115,7 @@ public class B2POutlookSUBView extends VerticalLayout implements BeforeEnterObse
         Text databaseDetail = new Text("Connected to: "+ dbServer+ " Database: " + dbName+ " Table: " + tableName + " AgentJob: " + agentName);
 
         //Componente QS-Grid:
-        qsGrid = new QS_Grid(projectConnectionService);
+        qsGrid = new QS_Grid(projectConnectionService, backendService);
 
         HorizontalLayout hl = new HorizontalLayout();
         hl.setAlignItems(Alignment.BASELINE);
@@ -131,7 +131,7 @@ public class B2POutlookSUBView extends VerticalLayout implements BeforeEnterObse
         qsBtn.addClickListener(e ->{
          //   if (qsGrid.projectId != projectId) {
             hl.remove(qsGrid);
-            qsGrid = new QS_Grid(projectConnectionService);
+            qsGrid = new QS_Grid(projectConnectionService, backendService);
             hl.add(qsGrid);
             CallbackHandler callbackHandler = new CallbackHandler();
             qsGrid.createDialog(callbackHandler, projectId, upload_id);
