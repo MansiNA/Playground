@@ -168,7 +168,7 @@ public class SecurityConfiguration extends VaadinWebSecurity {
             //System.out.println("Still act like it was successful");
             //return true;
 
-            //e.printStackTrace();
+            e.printStackTrace();
             return false;
         }
 
