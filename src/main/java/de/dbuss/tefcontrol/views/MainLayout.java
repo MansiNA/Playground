@@ -28,6 +28,7 @@ import de.dbuss.tefcontrol.data.modules.b2pOutlook.view.B2POutlookFINView;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.view.B2POutlookSUBView;
 import de.dbuss.tefcontrol.data.modules.cltv_Inflow.view.CLTVInflowView;
 import de.dbuss.tefcontrol.data.modules.cobi_administration.view.CobiAdminView;
+import de.dbuss.tefcontrol.data.modules.hwmapping.view.HWMapping;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.GenericCommentsView;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.PBICentralComments;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.PBIFlashFinancials;
@@ -102,6 +103,7 @@ public class MainLayout extends AppLayout {
         urlToViewMap.put(Constants.PBI_FLASH_FINANCIALS, PBIFlashFinancials.class);
         urlToViewMap.put(Constants.GENERIC_COMMENTS, GenericCommentsView.class);
         urlToViewMap.put(Constants.COBI_ADMINISTRATION, CobiAdminView.class);
+        urlToViewMap.put(Constants.HW_MAPPING, HWMapping.class);
 
 
         setPrimarySection(Section.DRAWER);

@@ -61,6 +61,8 @@ public class Constants {
 
     // This constant is used for HWMapping module
     public static final String HWMAPPING = "HWMapping";
+    public static final String HW_MAPPING = "HW_Mapping";
+    public static final String SQL_ADDMONTHS = "SQL_AddMonths";
 
     // This constant is used for CobiAdmin module
     public static final String TABLE_CURRENTPERIODS = "Table_CurrentPeriods";
