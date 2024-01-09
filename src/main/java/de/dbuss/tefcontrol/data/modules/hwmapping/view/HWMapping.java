@@ -40,6 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
 import org.springframework.beans.factory.annotation.Value;
+import org.vaadin.addons.componentfactory.PivotTable;
 
 import java.io.*;
 import java.time.LocalDateTime;
@@ -59,6 +60,8 @@ public class HWMapping extends VerticalLayout implements BeforeEnterObserver {
     private List<CLTV_HW_Measures> listOfCLTVMeasures;
     private Crud<CLTV_HW_Measures> crud;
     private Grid<CLTV_HW_Measures> grid;
+    private Checkbox checkbox;
+    private HorizontalLayout hl;
     private Button downloadButton;
     private String exportPath;
     private List<CLTV_HW_Measures> fetchListOfCLTVMeasures;
@@ -164,7 +167,10 @@ public class HWMapping extends VerticalLayout implements BeforeEnterObserver {
             }
         });
 
-        add(horl, databaseDetail, crud);
+        checkbox = new Checkbox();
+        checkbox.setLabel("Show Pivot");
+        checkbox.addClickListener(e->{showPivot();});
+        add(horl, databaseDetail, crud, checkbox);
     }
 
     @Override
@@ -348,6 +354,46 @@ public class HWMapping extends VerticalLayout implements BeforeEnterObserver {
                     crud.setDataProvider(dataProvider);
                 });
         log.info("Ending setupDataProviderEvent() for crude editor save, delete events");
+    }
+
+    private void showPivot()
+    {
+        if(!checkbox.getValue())
+        {
+            remove(hl);
+            return;
+        }
+
+        PivotTable.PivotData pivotData = new PivotTable.PivotData();
+        pivotData.addColumn("Monat", String.class);
+        pivotData.addColumn("Device", String.class);
+        pivotData.addColumn("Measure", String.class);
+        pivotData.addColumn("Channel", String.class);
+        pivotData.addColumn("Wert", Double.class);
+        // pivotData.addColumn("filled", Boolean.class);
+
+        PivotTable.PivotOptions pivotOptions = new PivotTable.PivotOptions();
+        pivotOptions.setCols("Monat");
+        pivotOptions.setRows("Device","Measure","Channel");
+        pivotOptions.setAggregator("Sum","Wert");
+
+        fetchListOfCLTVMeasures.forEach(e->{
+            System.out.println(e.getMonat_ID() + "|" + e.getDevice() + "|" + e.getMeasure_Name() + "|" +e.getChannel() + "|" + e.getValue());
+
+            pivotData.addRow(e.getMonat_ID().toString(),e.getDevice(), e.getMeasure_Name(),e.getChannel(), Double.parseDouble(e.getValue()) );
+
+        });
+
+        //PivotTable table = new PivotTable(pivotData, pivotOptions, PivotTable.PivotMode.INTERACTIVE);
+        PivotTable pivotTable = new PivotTable(pivotData, pivotOptions, PivotTable.PivotMode.NONINTERACTIVE);
+
+        hl =new HorizontalLayout();
+        hl.add(pivotTable);
+        add(hl);
+
+        // Damit Gesamtsummen (Totals) nicht angezeigt werden in styles.css einfügen:
+        //  .pvtTotal, .pvtTotalLabel, .pvtGrandTotal {display: none}
+
     }
 
     private List<CLTV_HW_Measures> getDataProviderAllItems() {
