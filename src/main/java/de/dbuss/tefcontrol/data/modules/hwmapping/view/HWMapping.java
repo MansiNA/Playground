@@ -30,6 +30,7 @@ import com.vaadin.flow.server.StreamResource;
 import de.dbuss.tefcontrol.data.entity.CLTV_HW_Measures;
 import de.dbuss.tefcontrol.data.entity.Constants;
 import de.dbuss.tefcontrol.data.entity.ProjectParameter;
+import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.Subscriber;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
 import de.dbuss.tefcontrol.data.service.ProjectParameterService;
 import de.dbuss.tefcontrol.dataprovider.GenericDataProvider;
@@ -314,13 +315,19 @@ public class HWMapping extends VerticalLayout implements BeforeEnterObserver {
         grid.getColumnByKey(VALUE).setHeader("Value").setWidth("150px").setFlexGrow(0).setResizable(true);
 
         grid.removeColumn(grid.getColumnByKey(ID));
+        grid.removeColumn(grid.getColumnByKey(EDIT_COLUMN));
         grid.getColumns().forEach(col -> col.setAutoWidth(true));
 
         // Reorder the columns (alphabetical by default)
         grid.setColumnOrder(grid.getColumnByKey(MONAT_ID), grid.getColumnByKey(DEVICE), grid.getColumnByKey(MEASURE_NAME), grid.getColumnByKey(CHANNEL)
                 , grid.getColumnByKey(VALUE)
-                , grid.getColumnByKey(EDIT_COLUMN));
+                );
 
+        grid.addItemDoubleClickListener(event -> {
+            CLTV_HW_Measures selectedEntity = event.getItem();
+            crud.edit(selectedEntity, Crud.EditMode.EXISTING_ITEM);
+            crud.getDeleteButton().getElement().getStyle().set("display", "none");
+        });
         crud.setToolbarVisible(false);
         log.info("Ending setupGrid() for crude editor");
     }
