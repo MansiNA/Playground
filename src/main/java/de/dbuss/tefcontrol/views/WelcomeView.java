@@ -7,6 +7,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
+import com.vaadin.flow.router.RouterLink;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import jakarta.annotation.security.RolesAllowed;
 
@@ -28,5 +29,8 @@ public class WelcomeView extends VerticalLayout {
         Html html = new Html("<text>" + yourContent + "</text>");
         add(html);
 
+        // Add RouterLink to ConfigurationView
+        RouterLink configLink = new RouterLink("Go to Configuration", ConfigurationGridView.class);
+        add(configLink);
     }
 }
