@@ -56,9 +56,9 @@ public class QS_Grid extends Composite<Div> {
     private String dbUrl;
     private String dbUser;
     private String dbPassword;
-    private ProgressBar progressBar = new ProgressBar();
+    //private ProgressBar progressBar = new ProgressBar();
     private AtomicInteger threadCount = new AtomicInteger(0);
-    private TextField threadCountField;
+    //private TextField threadCountField;
     private Button okButton;
     private Map<Integer, List<Map<String, Object>>> rowsMap = new HashMap<>();
 
@@ -72,16 +72,16 @@ public class QS_Grid extends Composite<Div> {
         this.qs_callback=callback;
         this.projectId=projectId;
 
-        progressBar.setWidth("15em");
-        progressBar.setIndeterminate(true);
-        progressBar.setVisible(false);
+    //    progressBar.setWidth("15em");
+    //    progressBar.setIndeterminate(true);
+    //    progressBar.setVisible(false);
 
         VerticalLayout dialogLayout = createDialogLayout();
         qsDialog.add(dialogLayout);
         qsDialog.setDraggable(true);
         qsDialog.setResizable(true);
         qsDialog.setVisible(false);
-        qsDialog.setHeaderTitle("QS for Project-ID " + projectId );
+        qsDialog.setHeaderTitle("Execute QS-Statements");
         getContent().add(qsDialog);
 
         createContextMenu();
@@ -96,7 +96,7 @@ public class QS_Grid extends Composite<Div> {
         qsDialog.setDraggable(true);
         qsDialog.setResizable(true);
         qsDialog.setVisible(false);
-        qsDialog.setHeaderTitle("QS for Project-ID " + projectId );
+        qsDialog.setHeaderTitle("Execute QS-Statements (upload-id " + uploadId + ")" );
         getContent().add(qsDialog);
 
         createContextMenu();
@@ -106,6 +106,7 @@ public class QS_Grid extends Composite<Div> {
         if (show){
             qsDialog.open();
             qsDialog.setVisible(true);
+            executeSQL(listOfProjectQs);
 
         }
         else
@@ -119,7 +120,7 @@ public class QS_Grid extends Composite<Div> {
         getListOfProjectQsWithResult();
 
         grid = new Grid<>(ProjectQSEntity.class, false);
-        grid.addColumn(ProjectQSEntity::getName).setHeader("QS-Name").setResizable(true);
+        grid.addColumn(ProjectQSEntity::getName).setHeader("QS-Name").setResizable(true).setAutoWidth(true);
         // grid.addColumn(ProjectQSEntity::getResult).setHeader("Result");
 
         grid.addComponentColumn(projectQs -> {
@@ -153,7 +154,7 @@ public class QS_Grid extends Composite<Div> {
 
             return layout;
 
-        }).setHeader("Result").setFlexGrow(0).setWidth("300px").setResizable(true);
+        }).setHeader("Result").setFlexGrow(0).setWidth("100px").setResizable(true);
 
 
         grid.setItems(listOfProjectQs);
@@ -177,28 +178,24 @@ public class QS_Grid extends Composite<Div> {
             qs_callback.onComplete("Start further prcessing...");
         });
 
-        // if all result Ok then okbutton enable
-        Button isBlockedButton = new Button("Is UI blocked?", clickEvent -> {
-            Notification.show("UI isn't blocked!");
-        });
 
-        Button executeButton = new Button("execute");
-        executeButton.addClickListener(e -> {
-        //    listOfProjectQs = getResultExecuteSQL(dbUrl, dbUser, dbPassword, listOfProjectQs);
-         //   grid.setItems(listOfProjectQs);
+        //Button isBlockedButton = new Button("Is UI blocked?", clickEvent -> {
+        //    Notification.show("UI isn't blocked!");
+        //});
+
+//        Button executeButton = new Button("execute");
+//        executeButton.addClickListener(e -> {
             executeSQL(listOfProjectQs);
-            progressBar.setVisible(true);
+//       });
 
-        });
-
-        threadCountField = new TextField("Anzahl der Threads");
-        threadCountField.setReadOnly(true); // Textfeld schreibgeschützt machen, um es nur lesbar zu machen
-        updateThreadCountField();
-        HorizontalLayout hlexecute = new HorizontalLayout();
-        hlexecute.add(isBlockedButton, threadCountField, executeButton);
+        //threadCountField = new TextField("Anzahl der Threads");
+        //threadCountField.setReadOnly(true); // Textfeld schreibgeschützt machen, um es nur lesbar zu machen
+        //updateThreadCountField();
+  //      HorizontalLayout hlexecute = new HorizontalLayout();
+  //      hlexecute.add(executeButton);
 
         if (listOfProjectQs.isEmpty()) {
-            executeButton.setEnabled(false);
+    //        executeButton.setEnabled(false);
             okButton.setEnabled(true);
         }
         Button closeButton = new Button("Close");
@@ -209,7 +206,8 @@ public class QS_Grid extends Composite<Div> {
 
         HorizontalLayout hl = new HorizontalLayout(closeButton,okButton);
 
-        dialogLayout.add(paragraph, progressBar, hlexecute, grid,hl);
+        //dialogLayout.add(paragraph, hlexecute, grid,hl);
+        dialogLayout.add(paragraph, grid,hl);
 
         return dialogLayout;
     }
@@ -493,18 +491,18 @@ public class QS_Grid extends Composite<Div> {
         return getRootCause(cause);
     }
 
-    private void updateThreadCountField() {
+/*    private void updateThreadCountField() {
         int count = threadCount.get();
         // Setze die Thread-Anzahl im Textfeld
         System.out.println(count + "--------------------------------");
         threadCountField.setValue(String.valueOf(count));
     }
-
+*/
     private void updateUi(UI ui, String result) {
         ui.access(() -> {
             Notification.show(result);
 
-            updateThreadCountField();
+          //  updateThreadCountField();
             int count = threadCount.get();
             System.out.println("Anzahl Threads jetzt: " + count);
 
@@ -512,7 +510,7 @@ public class QS_Grid extends Composite<Div> {
 
             if (count == 0)
             {
-                progressBar.setVisible(false);
+                //progressBar.setVisible(false);
                 boolean allCorrect = listOfProjectQs.stream()
                         .allMatch(projectQs -> Constants.OK.equals(projectQs.getResult()));
                 okButton.setEnabled(allCorrect);
@@ -524,7 +522,7 @@ public class QS_Grid extends Composite<Div> {
 
     private void increaseThreadCount() {
         int count = threadCount.incrementAndGet();
-        updateThreadCountField();
+     //   updateThreadCountField();
     }
 
     private void decreaseThreadCount() {
