@@ -136,7 +136,7 @@ public class ProjectConnectionService {
         return jdbcTemplate;
     }
 
-    public List<CLTV_HW_Measures> fetchDataFromDatabase(String selectedDatabase) {
+    public List<CLTV_HW_Measures> getCLTVHWMeasuresData(String selectedDatabase) {
         DataSource dataSource = getDataSource(selectedDatabase);
         jdbcTemplate = new JdbcTemplate(dataSource);
 
@@ -157,6 +157,65 @@ public class ProjectConnectionService {
         List<CLTV_HW_Measures> fetchedData = jdbcTemplate.query(sqlQuery, rowMapper);
 
         return fetchedData;
+    }
+
+    public List<CLTV_HW_Measures> getCLTVHWMeasuresData(String tableName, String dbUrl, String dbUser, String dbPassword) {
+
+        try {
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
+            String sqlQuery = "SELECT * FROM " + tableName;
+
+            // Create a RowMapper to map the query result to a CLTV_HW_Measures object
+            RowMapper<CLTV_HW_Measures> rowMapper = (rs, rowNum) -> {
+                CLTV_HW_Measures measure = new CLTV_HW_Measures();
+                measure.setId(rs.getInt("id"));
+                measure.setMonat_ID(rs.getInt("monat_id"));
+                measure.setDevice(rs.getString("device"));
+                measure.setMeasure_Name(rs.getString("measure_name"));
+                measure.setChannel(rs.getString("channel"));
+                measure.setValue(rs.getString("value"));
+                return measure;
+            };
+
+            List<CLTV_HW_Measures> fetchedData = jdbcTemplate.query(sqlQuery, rowMapper);
+
+            return fetchedData;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            errorMessage = handleDatabaseError(ex);
+            return Collections.emptyList();
+        }
+
+    }
+    public String write2DB(List<CLTV_HW_Measures> data, String dbUrl, String dbUser, String dbPassword, String tableName) {
+
+        try {
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
+            String sqlDelete = "DELETE FROM " + tableName;
+            jdbcTemplate.update(sqlDelete);
+
+            String sqlInsert = "INSERT INTO "+tableName+" ( [Monat_ID], [Device], [Measure_Name], [Channel], [Value]) VALUES (?, ?, ?, ?, ?)";
+
+            // Loop through the data and insert new records
+            for (CLTV_HW_Measures item : data) {
+                jdbcTemplate.update(
+                        sqlInsert,
+                        item.getMonat_ID(),
+                        item.getDevice(),
+                        item.getMeasure_Name(),
+                        item.getChannel(),
+                        item.getValue()
+                );
+            }
+            return Constants.OK;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return handleDatabaseError(e);
+        }
     }
 
     public String write2DB(List<CLTV_HW_Measures> data, String selectedDatabase) {
@@ -1215,5 +1274,18 @@ public class ProjectConnectionService {
         }
     }
 
+    public String addMonthsInCLTVHWMeasure(String dbUrl, String dbUser, String dbPassword, String sql) {
+        try {
+
+            jdbcTemplate = getJdbcConnection(dbUrl, dbUser, dbPassword);
+
+            jdbcTemplate.update(sql);
+
+            return Constants.OK;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return handleDatabaseError(e);
+        }
+    }
 
 }
