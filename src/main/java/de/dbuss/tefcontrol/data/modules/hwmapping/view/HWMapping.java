@@ -84,9 +84,9 @@ public class HWMapping extends VerticalLayout implements BeforeEnterObserver {
 
         downloadButton = new Button("Download");
         Button saveButton = new Button("Save");
-        Button addMonthButton = new Button("addMonth");
-        Button startJobBtn = new Button("Start Job");
-        startJobBtn.setEnabled(false);
+        Button addMonthButton = new Button("add Month");
+        Button startJobBtn = new Button("Start Essbase");
+        startJobBtn.setEnabled(true);
 
         List<ProjectParameter> listOfProjectParameters = projectParameterService.findAll();
         String dbServer = null;
@@ -188,8 +188,8 @@ public class HWMapping extends VerticalLayout implements BeforeEnterObserver {
             crud.setDataProvider(dataProvider);
             setupDataProviderEvent();
 
-            Notification notification = Notification.show(" Rows fetch successfully", 3000, Notification.Position.MIDDLE);
-            notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+         //   Notification notification = Notification.show(" Rows fetch successfully", 3000, Notification.Position.MIDDLE);
+         //   notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
 
         } catch (Exception e) {
             String errormessage = projectConnectionService.getErrorMessage();
