@@ -35,6 +35,7 @@ import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.PBIFlashFinancials
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.PBITechComments;
 import de.dbuss.tefcontrol.data.modules.techkpi.view.Tech_KPIView;
 import de.dbuss.tefcontrol.data.service.ProjectsService;
+import de.dbuss.tefcontrol.data.service.UserService;
 import de.dbuss.tefcontrol.security.AuthenticatedUser;
 import de.dbuss.tefcontrol.views.about.AboutView;
 import de.dbuss.tefcontrol.views.defaultPackage.DefaultView;
@@ -68,6 +69,7 @@ public class MainLayout extends AppLayout {
     private AccessAnnotationChecker accessChecker;
     private ProjectsService projectsService;
     private LogService logService;
+    private UserService userService;
 
     // Map to associate URLs with view classes
     private Map<String, Class<? extends Component>> urlToViewMap = new HashMap<>();
@@ -76,12 +78,14 @@ public class MainLayout extends AppLayout {
 
     private static final Logger logInfo = LoggerFactory.getLogger(MainLayout.class);
     public static String userName;
+    private LoginView loginView;
 
-    public MainLayout(AuthenticatedUser authenticatedUser, AccessAnnotationChecker accessChecker, ProjectsService projectsService, LogService logService) {
+    public MainLayout(AuthenticatedUser authenticatedUser, AccessAnnotationChecker accessChecker, ProjectsService projectsService, LogService logService, UserService userService) {
         this.authenticatedUser = authenticatedUser;
         this.accessChecker = accessChecker;
         this.projectsService = projectsService;
         this.logService = logService;
+        this.userService = userService;
 
         logInfo.info("start logs using file...###################");
         logService.addLogMessage(LogService.INFO, "Starting application in MainLayout");
@@ -159,13 +163,14 @@ public class MainLayout extends AppLayout {
 
         } else
         {
-            addToDrawer(new VerticalLayout(link));
+            loginView = new LoginView(authenticatedUser, logService, userService);
+           // addToDrawer(new VerticalLayout(link));
+            addToDrawer(new VerticalLayout(loginView));
         }
 
 
         //Scroller scroller = new Scroller(createTree());
         //scroller.addClassNames("AboutView");
-
 
         log.info("Ending addDrawerContent() in mainlayout");
 
@@ -338,6 +343,9 @@ public class MainLayout extends AppLayout {
       //  viewTitle.setText(getCurrentPageTitle());
         super.afterNavigation();
 
+        if (loginView != null) {
+            loginView.openLoginOverlay();
+        }
       //  viewTitle.setText(selectedProject.getName());
 
 

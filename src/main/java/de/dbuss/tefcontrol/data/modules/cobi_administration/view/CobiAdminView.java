@@ -12,12 +12,16 @@ import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.*;
+import de.dbuss.tefcontrol.components.QS_Callback;
+import de.dbuss.tefcontrol.components.QS_Grid;
 import de.dbuss.tefcontrol.data.entity.Constants;
 import de.dbuss.tefcontrol.data.entity.ProjectParameter;
 import de.dbuss.tefcontrol.data.entity.ProjectUpload;
 import de.dbuss.tefcontrol.data.modules.cobi_administration.entity.CurrentPeriods;
 import de.dbuss.tefcontrol.data.modules.cobi_administration.entity.CurrentScenarios;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.GenericCommentsView;
+import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.PBICentralComments;
+import de.dbuss.tefcontrol.data.service.BackendService;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
 import de.dbuss.tefcontrol.data.service.ProjectParameterService;
 import de.dbuss.tefcontrol.views.MainLayout;
@@ -45,8 +49,14 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
     private CurrentPeriods currentPeriods;
     private int projectId;
 
-    public CobiAdminView(ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService) {
+    private QS_Grid qsGrid;
+    private Button qsBtn;
+
+    public CobiAdminView(ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, BackendService backendService) {
         this.projectConnectionService = projectConnectionService;
+
+        qsBtn = new Button("QS and Start Job");
+        qsBtn.setEnabled(false);
 
         List<ProjectParameter> listOfProjectParameters = projectParameterService.findAll();
         String dbServer = null;
@@ -77,7 +87,6 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
         }
         dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
 
-
         H1 h1 = new H1("CoBI Administration");
         Article p1 = new Article();
         p1.setText("Auf diese Seite lassen sich verschiedene Einstellungen zur COBI-Beladung vornehmen.");
@@ -105,6 +114,7 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
             String resultOfPeriods = projectConnectionService.saveCobiAdminCurrentPeriods(currentPeriods, dbUrl, dbUser, dbPassword, tableCurrentPeriods);
             Notification notification;
             if (resultOfPeriods.equals(Constants.OK)) {
+                qsBtn.setEnabled(true);
                 notification = Notification.show(" Current Periods Rows Uploaded successfully", 6000, Notification.Position.MIDDLE);
                 notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
             } else {
@@ -122,20 +132,27 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
             }
         });
 
-        Button startJobBtn = new Button("Start Job");
-
-        startJobBtn.addClickListener(e -> {
-            String message = projectConnectionService.startAgent(projectId);
-            if (!message.contains("Error")) {
-                Notification.show(message, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-            } else {
-                Notification.show(message, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
-            }
-        });
+        //Componente QS-Grid:
+        qsGrid = new QS_Grid(projectConnectionService, backendService);
 
         HorizontalLayout hl = new HorizontalLayout();
         hl.setAlignItems(Alignment.BASELINE);
-        hl.add(saveBtn,  startJobBtn);
+        hl.add(saveBtn,  qsBtn, qsGrid);
+
+        qsBtn.addClickListener(e ->{
+            hl.remove(qsGrid);
+            qsGrid = new QS_Grid(projectConnectionService, backendService);
+            hl.add(qsGrid);
+            Map<String, Integer> uploadIdMap = projectConnectionService.getUploadIdMap();
+            int upload_id = uploadIdMap.values().stream()
+                    .mapToInt(Integer::intValue)
+                    .max()
+                    .orElse(1);
+            CallbackHandler callbackHandler = new CallbackHandler();
+            qsGrid.createDialog(callbackHandler, projectId, upload_id);
+            qsGrid.showDialog(true);
+        });
+
 
         add(hl);
     }
@@ -144,6 +161,20 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
     public void beforeEnter(BeforeEnterEvent event) {
         RouteParameters parameters = event.getRouteParameters();
         projectId = Integer.parseInt(parameters.get("project_Id").orElse(null));
+    }
+    public class CallbackHandler implements QS_Callback {
+        // Die Methode, die aufgerufen wird, wenn die externe Methode abgeschlossen ist
+        @Override
+        public void onComplete(String result) {
+            if(!result.equals("Cancel")) {
+                String message = projectConnectionService.startAgent(projectId);
+                if (!message.contains("Error")) {
+                    Notification.show(message, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                } else {
+                    Notification.show(message, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                }
+            }
+        }
     }
 
     private Component getDimPeriodGrid() {
