@@ -105,7 +105,6 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
     private List<KPI_Fact> listOfKPI_Fact = new ArrayList<KPI_Fact>();
     private List<KPI_Actuals> listOfKPI_Actuals = new ArrayList<KPI_Actuals>();
-
     private List<KPI_Plan> listOfKPI_Plan = new ArrayList<KPI_Plan>();
     //Accordion accordion;
   //  AccordionPanel factPanel;
@@ -137,7 +136,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
         setupKPIActualsGrid();
         setupKPIFactGrid();
-        setupKPIPlanGrid();
+      //  setupKPIPlanGrid();
         //setupQSGrid();
 
         setupUploader();
@@ -246,7 +245,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                     .max()
                     .orElse(1);
 
-            savePlanEntities();
+          //  savePlanEntities();
             saveActualsEntities();
             saveFactEntities();
 
@@ -308,7 +307,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
         TabSheet tabSheet = new TabSheet();
         tabSheet.add("Actuals", getActuals);
         tabSheet.add("Fact", getFact);
-        tabSheet.add("Plan", getPlan);
+       // tabSheet.add("Plan", getPlan);
 
         tabSheet.setSizeFull();
         tabSheet.setHeightFull();
@@ -772,13 +771,13 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
             listOfKPI_Fact = parseExcelFile_Fact(fileData_Fact, fileName,"KPI_Fact");
             listOfKPI_Actuals = parseExcelFile_Actuals(fileData_Actuals, fileName,"KPI_Actuals");
-            listOfKPI_Plan = parseExcelFile_Plan(fileData_Plan, fileName, "KPI_Plan");
+        //    listOfKPI_Plan = parseExcelFile_Plan(fileData_Plan, fileName, "KPI_Plan");
 
             gridFact.setItems(listOfKPI_Fact);
 
             gridActuals.setItems(listOfKPI_Actuals);
 
-            gridPlan.setItems(listOfKPI_Plan);
+        //    gridPlan.setItems(listOfKPI_Plan);
 
             singleFileUpload.clearFileList();
 
@@ -794,7 +793,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
             factInfo="Fact (" + listOfKPI_Fact.size() + " rows)";
             actualsInfo="Fact (" + listOfKPI_Actuals.size() + " rows)";
-            planInfo="Fact (" + listOfKPI_Plan.size() + " rows)";
+          //  planInfo="Fact (" + listOfKPI_Plan.size() + " rows)";
 
             //h3_Actuals.removeAll();
             //h3_Actuals.add("Actuals (" + listOfKPI_Actuals.size() + " rows)");
