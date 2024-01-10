@@ -1,6 +1,8 @@
 package de.dbuss.tefcontrol.data.service;
 
 import de.dbuss.tefcontrol.data.entity.User;
+
+import java.util.List;
 import java.util.Optional;
 
 import de.dbuss.tefcontrol.data.repository.UserRepository;
@@ -43,5 +45,8 @@ public class UserService {
     }
     public User getUserByUsername(String username) {
         return repository.findByUsername(username);
+    }
+    public List<User> getAllUsers() {
+        return repository.findAll();
     }
 }
