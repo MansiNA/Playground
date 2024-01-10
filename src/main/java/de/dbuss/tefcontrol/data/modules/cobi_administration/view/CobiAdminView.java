@@ -26,7 +26,9 @@ import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
 import de.dbuss.tefcontrol.data.service.ProjectParameterService;
 import de.dbuss.tefcontrol.views.MainLayout;
 import jakarta.annotation.security.RolesAllowed;
+import org.springframework.jdbc.core.JdbcTemplate;
 
+import javax.sql.DataSource;
 import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
@@ -167,6 +169,26 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
         @Override
         public void onComplete(String result) {
             if(!result.equals("Cancel")) {
+                Map<String, Integer> uploadIdMap = projectConnectionService.getUploadIdMap();
+                int upload_id = uploadIdMap.values().stream()
+                        .mapToInt(Integer::intValue)
+                        .max()
+                        .orElse(1);
+                try {
+                    DataSource dataSource = projectConnectionService.getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+                    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+
+                    String sql1 = "exec Core_Conf.sp_Load_Current_Periods @p_Upload_ID = "+upload_id;
+                    jdbcTemplate.execute(sql1);
+                    String sql2 = "exec Core_Conf.sp_Load_Current_Scenarios @p_Upload_ID = "+upload_id;
+                    jdbcTemplate.execute(sql2);
+                    System.out.println("SQL executed: " + sql1 +"..."+ sql2);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    String errormessage = projectConnectionService.handleDatabaseError(e);
+                    Notification.show(errormessage, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                    return;
+                }
                 String message = projectConnectionService.startAgent(projectId);
                 if (!message.contains("Error")) {
                     Notification.show(message, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
