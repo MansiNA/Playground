@@ -46,7 +46,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 @PageTitle("Tech KPI | TEF-Control")
 @Route(value = "Tech_KPI/:project_Id", layout = MainLayout.class)
-@RolesAllowed({"ADMIN", "KPI", "FLIP"})
+@RolesAllowed({"ADMIN", "FLIP"})
 public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver {
 
     private JdbcTemplate jdbcTemplate;
