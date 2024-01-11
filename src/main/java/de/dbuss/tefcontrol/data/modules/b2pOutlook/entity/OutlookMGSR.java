@@ -17,7 +17,7 @@ public class OutlookMGSR {
         private String segment;
         private String paymentType;
         private String typeOfData;
-        private double value;
+        private String value;
         private String blatt;
         private Date loadDate;
 
