@@ -49,7 +49,7 @@ import java.util.List;
 import java.util.Map;
 
 @Route(value = "B2P_Outlook_Sub/:project_Id", layout = MainLayout.class)
-@RolesAllowed({"OUTLOOK", "ADMIN", "FLIP"})
+@RolesAllowed({"ADMIN", "FLIP"})
 public class B2POutlookSUBView extends VerticalLayout implements BeforeEnterObserver {
 
     private final ProjectConnectionService projectConnectionService;

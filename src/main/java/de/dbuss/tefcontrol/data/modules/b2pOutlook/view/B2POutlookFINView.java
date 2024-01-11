@@ -43,7 +43,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Route(value = "B2P_Outlook_FIN/:project_Id", layout = MainLayout.class)
-@RolesAllowed({"OUTLOOK", "ADMIN", "FLIP"})
+@RolesAllowed({"FLIP", "ADMIN"})
 public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObserver {
 
     private final ProjectConnectionService projectConnectionService;

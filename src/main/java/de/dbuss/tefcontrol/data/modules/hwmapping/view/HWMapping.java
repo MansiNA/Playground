@@ -52,7 +52,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @PageTitle("HWMapping")
 @Route(value = "HW_Mapping/:project_Id", layout = MainLayout.class)
-@RolesAllowed({"ADMIN", "MAPPING"})
+@RolesAllowed({"CLTV", "ADMIN"})
 public class HWMapping extends VerticalLayout implements BeforeEnterObserver {
 
     private final ProjectParameterService projectParameterService;
@@ -148,6 +148,9 @@ public class HWMapping extends VerticalLayout implements BeforeEnterObserver {
         });
 
         addMonthButton.addClickListener(e -> {
+
+            //ToDO Abfrage, ob wirklich ein neuer Monat hinzugefügt werden soll...
+
             String message = projectConnectionService.addMonthsInCLTVHWMeasure(dbUrl, dbUser,dbPassword, sql_addMonths);
             if (message.equals(Constants.OK)) {
                 Notification.show("added successfully", 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
@@ -378,7 +381,7 @@ public class HWMapping extends VerticalLayout implements BeforeEnterObserver {
         pivotOptions.setAggregator("Sum","Wert");
 
         fetchListOfCLTVMeasures.forEach(e->{
-            System.out.println(e.getMonat_ID() + "|" + e.getDevice() + "|" + e.getMeasure_Name() + "|" +e.getChannel() + "|" + e.getValue());
+          //  System.out.println(e.getMonat_ID() + "|" + e.getDevice() + "|" + e.getMeasure_Name() + "|" +e.getChannel() + "|" + e.getValue());
 
             pivotData.addRow(e.getMonat_ID().toString(),e.getDevice(), e.getMeasure_Name(),e.getChannel(), Double.parseDouble(e.getValue()) );
 
