@@ -403,7 +403,12 @@ public class B2POutlookSUBView extends VerticalLayout implements BeforeEnterObse
                             } else if (field.getType() == double.class || field.getType() == Double.class) {
                                 field.set(entity, (double) cell.getNumericCellValue());
                             } else if (field.getType() == String.class) {
-                                field.set(entity, cell.getStringCellValue());
+                                if(cell.getCellType() == Cell.CELL_TYPE_FORMULA) {
+                                    String value = cell.getNumericCellValue() + "";
+                                    field.set(entity, value);
+                                } else {
+                                    field.set(entity, cell.getStringCellValue());
+                                }
                             }
                         }
                     }
