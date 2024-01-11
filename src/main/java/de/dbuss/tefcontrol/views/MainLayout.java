@@ -74,7 +74,7 @@ public class MainLayout extends AppLayout {
     // Map to associate URLs with view classes
     private Map<String, Class<? extends Component>> urlToViewMap = new HashMap<>();
 
-    Image image = new Image("images/telefonica.svg", "Telefonica Image");
+    Image image = new Image("images/telefonica.svg", "Telefonica");
 
     private static final Logger logInfo = LoggerFactory.getLogger(MainLayout.class);
     public static String userName;

@@ -301,7 +301,7 @@ public class HWMappingView extends VerticalLayout {
 
 
         fetchListOfCLTVMeasures.forEach(e->{
-            System.out.println(e.getMonat_ID() + "|" + e.getDevice() + "|" + e.getMeasure_Name() + "|" +e.getChannel() + "|" + e.getValue());
+           // System.out.println(e.getMonat_ID() + "|" + e.getDevice() + "|" + e.getMeasure_Name() + "|" +e.getChannel() + "|" + e.getValue());
 
             pivotData.addRow(e.getMonat_ID().toString(),e.getDevice(), e.getMeasure_Name(),e.getChannel(), Double.parseDouble(e.getValue()) );
 

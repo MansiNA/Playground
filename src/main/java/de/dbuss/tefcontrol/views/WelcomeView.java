@@ -30,7 +30,7 @@ public class WelcomeView extends VerticalLayout {
         add(html);
 
         // Add RouterLink to ConfigurationView
-        RouterLink configLink = new RouterLink("Go to Configuration", ConfigurationGridView.class);
-        add(configLink);
+      //  RouterLink configLink = new RouterLink("Go to Configuration", ConfigurationGridView.class);
+      //  add(configLink);
     }
 }
