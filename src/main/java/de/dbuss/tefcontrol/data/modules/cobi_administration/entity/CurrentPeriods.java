@@ -15,6 +15,6 @@ public class CurrentPeriods {
     private Integer Upload_ID;
     @NotNull
     private String current_month;
-    private String preliminary_month;
+  //  private String preliminary_month;
 
 }

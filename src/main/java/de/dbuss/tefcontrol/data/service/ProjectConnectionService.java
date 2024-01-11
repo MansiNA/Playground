@@ -1254,8 +1254,8 @@ public class ProjectConnectionService {
             String sqlDelete = "DELETE FROM " + targetTable;
             jdbcTemplate.update(sqlDelete);
 
-            String sql = "INSERT INTO " + targetTable + " (Upload_ID, Current_Month, Preliminary_Month) VALUES (?, ?, ?)";
-            jdbcTemplate.update(sql, data.getUpload_ID(), data.getCurrent_month(), data.getPreliminary_month());
+            String sql = "INSERT INTO " + targetTable + " (Upload_ID, Current_Month) VALUES (?, ?)";
+            jdbcTemplate.update(sql, data.getUpload_ID(), data.getCurrent_month());
 
             return Constants.OK;
         } catch (Exception e) {
