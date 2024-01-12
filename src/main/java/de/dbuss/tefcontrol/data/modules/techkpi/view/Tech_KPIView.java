@@ -183,7 +183,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
         Div htmlDiv = new Div();
         htmlDiv.getElement().setProperty("innerHTML", "<h2>Import KPI Excel-File</h2><p>Mit dieser Seite lässt sich die KPI_DB.xlsx " +
-                "Datei direkt in die Datenbank einlesen.</br>Die Daten der Blätter \"<b>KPI_Plan</b>\", \"<b>KPI_Actuals</b>\" und \"<b>KPI_Fact</b>\" werden automatisch in die Stage Tabellen <ul><li>Stage_Tech_KPI.KPI_Plan</li><li>Stage_Tech_KPI.KPI_Actuals</li><li>Stage_Tech_KPI.KPI_Fact</li></ul>geladen. " +
+                "Datei direkt in die Datenbank einlesen.</br>Die Daten der Blätter \"<b>KPI_Actuals</b>\" und \"<b>KPI_Fact</b>\" werden automatisch in die Stage Tabellen <ul><li>Stage_Tech_KPI.KPI_Actuals</li><li>Stage_Tech_KPI.KPI_Fact</li></ul>geladen. " +
                 "Dazu einfach die Datei auswählen oder per drag&drop hochladen. </br>Nach einer entsprechenden QS-Rückmeldung bzgl. Datenqualität, kann die weitere Verarbeitung per Button \"Freigabe\" erfolgen.");
 
         // Div zur Ansicht hinzufügen
