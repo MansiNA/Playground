@@ -176,12 +176,12 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
                    // String sql = "EXECUTE Core_Comment.sp_Load_Comments @p_Upload_ID="+upload_id;
                     String sql = "DECLARE @status AS INT;\n" +
                             "BEGIN TRAN\n" +
-                            "   SELECT @status=[UploadID] FROM [Log].[AgentJobUpload] WITH (UPDLOCK)\n" +
+                            "   SELECT @status=[Upload_ID] FROM [Log].[Agent_Job_Uploads] WITH (UPDLOCK)\n" +
                             "   WHERE AgentJobName = 'JOB_NAME';\n" +
                             "IF (@status IS NULL)\n" +
                             "BEGIN\n" +
-                            "  UPDATE Log.AgentJobUpload\n" +
-                            "  SET [UploadID] = "+upload_id +"\n" +
+                            "  UPDATE [Log].[Agent_Job_Uploads]\n" +
+                            "  SET [Upload_ID] = "+upload_id +"\n" +
                             "   WHERE AgentJobName = 'JOB_NAME';\n" +
                             "  COMMIT;\n" +
                             "  SELECT 'ok' AS Result\n" +
