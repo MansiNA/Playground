@@ -22,16 +22,20 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.binder.Result;
 import com.vaadin.flow.data.binder.ValueContext;
+import com.vaadin.flow.data.provider.DataProvider;
+import com.vaadin.flow.data.provider.Query;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import de.dbuss.tefcontrol.data.Role;
 import de.dbuss.tefcontrol.data.entity.User;
+import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.GenericComments;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
 import de.dbuss.tefcontrol.data.service.UserService;
 import de.dbuss.tefcontrol.dataprovider.GenericDataProvider;
 import com.vaadin.flow.data.converter.Converter;
 import org.springframework.security.crypto.bcrypt.BCrypt;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.awt.*;
 import java.util.*;
@@ -64,6 +68,7 @@ public class ConfigurationGridView extends VerticalLayout {
         });
 
         add(getUserConfigurationGrid(), newUserButton);
+        setupDataProviderEvent();
     }
 
     private Component createNewUserDialog() {
@@ -168,6 +173,30 @@ public class ConfigurationGridView extends VerticalLayout {
         content.setHeightFull();
         return content;
     }
+    private void setupDataProviderEvent() {
+        GenericDataProvider userdataProvider = new GenericDataProvider(getGenericCommentsDataProviderAllItems());
+
+        userCrud.addDeleteListener(
+                deleteEvent -> {
+                    //userdataProvider.delete(deleteEvent.getItem());
+                    userService.delete(deleteEvent.getItem().getId());
+                    updateUserGrid();
+                });
+        userCrud.addSaveListener(
+                saveEvent -> {
+                 //   userdataProvider.persist(saveEvent.getItem());
+                    System.out.println(saveEvent.getItem().getName() +"..........saveeeeee");
+                    User user = saveEvent.getItem();
+                    userService.update(user);
+                    updateUserGrid();
+                });
+    }
+
+    private List<User> getGenericCommentsDataProviderAllItems() {
+        DataProvider<User, Void> existDataProvider = (DataProvider<User, Void>) userGrid.getDataProvider();
+        List<User> listOfGenericComments = existDataProvider.fetch(new Query<>()).collect(Collectors.toList());
+        return listOfGenericComments;
+    }
 
     private void updateUserGrid() {
         List<User> listOfUser = userService.getAllUsers();
@@ -220,6 +249,9 @@ public class ConfigurationGridView extends VerticalLayout {
 
         TextField username = new TextField("Username");
         TextField name = new TextField("Name");
+        PasswordField hashedPassword = new PasswordField("Password");
+        hashedPassword.setValue("");
+
         MultiSelectComboBox<Role> rolesComboBox = new MultiSelectComboBox<>("Roles");
         rolesComboBox.setItems(Arrays.asList(Role.values()));
         rolesComboBox.setItemLabelGenerator(Enum::toString);
@@ -227,7 +259,7 @@ public class ConfigurationGridView extends VerticalLayout {
 
         // Create a FormLayout to arrange the form fields
         FormLayout editForm = new FormLayout(
-                username, name, rolesComboBox, is_ad
+                username, name, rolesComboBox, is_ad, hashedPassword
         );
 
         // Set the size of form fields as needed
@@ -239,7 +271,10 @@ public class ConfigurationGridView extends VerticalLayout {
         // Bind each form field with its corresponding attribute in the User entity
         binder.forField(username).bind(User::getUsername, User::setUsername);
         binder.forField(name).bind(User::getName, User::setName);
-//        binder.forField(hashedPassword).bind(User::getHashedPassword, User::setHashedPassword);
+     //   binder.forField(hashedPassword).bind(User::getHashedPassword, User::setHashedPassword);
+        binder.forField(hashedPassword)
+                .withConverter(new BCryptConverter())
+                .bind(User::getHashedPassword, User::setHashedPassword);
         binder.forField(rolesComboBox)
                // .withConverter(new SetToRoleConverter())
                 .bind(User::getRoles, User::setRoles);
@@ -252,6 +287,23 @@ public class ConfigurationGridView extends VerticalLayout {
 
         return new BinderCrudEditor<>(binder, editForm);
     }
+
+    public class BCryptConverter implements Converter<String, String> {
+
+        @Override
+        public Result<String> convertToModel(String presentation, ValueContext context) {
+            // You want to store the new BCrypt hashed password in the database
+            String hashedPassword = BCrypt.hashpw(presentation, BCrypt.gensalt());
+            return Result.ok(hashedPassword);
+        }
+
+        @Override
+        public String convertToPresentation(String model, ValueContext context) {
+            // Display the plain text password in the UI
+            return model;
+        }
+    }
+
     public class IntegerToBooleanConverter implements Converter<Boolean, Integer> {
 
         @Override
