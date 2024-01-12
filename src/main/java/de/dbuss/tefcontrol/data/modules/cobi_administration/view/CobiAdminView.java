@@ -231,28 +231,7 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
             });
             return comboBox;
         }).setHeader("Current-Month").setFlexGrow(0).setAutoWidth(true);
-        grid_period.addComponentColumn(cp -> {
-            ComboBox<String> comboBox = new ComboBox<>();
-            List<String> monthPeriod = new ArrayList<>();
-
-            // Get the current YearMonth
-            YearMonth currentYearMonth = YearMonth.now();
-
-            for (int i = -3; i <= 3; i++) {
-                monthPeriod.add(currentYearMonth.plusMonths(i).toString().replace("-", ""));
-            }
-
-            comboBox.setItems(monthPeriod);
-            comboBox.setValue(monthPeriod.get(0));
-            cp.setPreliminary_month(monthPeriod.get(0));
-            currentPeriods.setPreliminary_month(monthPeriod.get(0));
-            comboBox.addValueChangeListener(event -> {
-                cp.setPreliminary_month(event.getValue());
-                currentPeriods.setPreliminary_month(event.getValue());
-            });
-            return comboBox;
-        }).setHeader("Preliminary-Month").setFlexGrow(0).setAutoWidth(true);
-        grid_period.setWidth("480px");
+        grid_period.setWidth("240px");
         grid_period.setHeight("100px");
         //grid_period.addThemeVariants(GridVariant.LUMO_COLUMN_BORDERS);
         grid_period.addThemeVariants(GridVariant.LUMO_COMPACT);
