@@ -34,6 +34,7 @@ import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
 import de.dbuss.tefcontrol.data.service.UserService;
 import de.dbuss.tefcontrol.dataprovider.GenericDataProvider;
 import com.vaadin.flow.data.converter.Converter;
+import jakarta.annotation.security.RolesAllowed;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
@@ -44,7 +45,7 @@ import java.util.stream.Collectors;
 
 @PageTitle("Configuration")
 @Route(value = "config", layout = MainLayout.class)
-@AnonymousAllowed
+@RolesAllowed({"ADMIN"})
 public class ConfigurationGridView extends VerticalLayout {
 
     private final ProjectConnectionService projectConnectionService;
