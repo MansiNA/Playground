@@ -173,11 +173,45 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
                         .orElse(null);
                 int upload_id = lastEntry.getValue();
                 try {
-                    String sql = "EXECUTE Core_Comment.sp_Load_Comments @p_Upload_ID="+upload_id;
+                   // String sql = "EXECUTE Core_Comment.sp_Load_Comments @p_Upload_ID="+upload_id;
+                    String sql = "DECLARE @status AS INT;\n" +
+                            "BEGIN TRAN\n" +
+                            "   SELECT @status=[Upload_ID] FROM [Log].[Agent_Job_Uploads] WITH (UPDLOCK)\n" +
+                            "   WHERE AgentJobName = 'JOB_NAME';\n" +
+                            "IF (@status IS NULL)\n" +
+                            "BEGIN\n" +
+                            "  UPDATE [Log].[Agent_Job_Uploads]\n" +
+                            "  SET [Upload_ID] = "+upload_id +"\n" +
+                            "   WHERE AgentJobName = 'JOB_NAME';\n" +
+                            "  COMMIT;\n" +
+                            "  SELECT 'ok' AS Result\n" +
+                            "END\n" +
+                            "ELSE\n" +
+                            "BEGIN\n" +
+                            "  SELECT 'failed' AS Result;\n" +
+                            "  ROLLBACK;\n" +
+                            "END";
                     DataSource dataSource = projectConnectionService.getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
                     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
                     jdbcTemplate.execute(sql);
                     System.out.println("SQL executed: " + sql);
+                    String resultMessage = jdbcTemplate.queryForObject(sql, String.class);
+
+                    System.out.println("SQL executed: result " + resultMessage);
+
+                    if ("failed".equals(resultMessage)) {
+                        // Handle the error, show error message, etc.
+                        String errorMessage = "SQL execution failed.";
+                        Notification.show(errorMessage, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                    } else {
+                        // Continue with startAgent
+                        String message = projectConnectionService.startAgent(projectId);
+                        if (!message.contains("Error")) {
+                            Notification.show(message, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                        } else {
+                            Notification.show(message, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                        }
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
                     String errormessage = projectConnectionService.handleDatabaseError(e);
@@ -185,12 +219,8 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
                     return;
                 }
 
-                String message = projectConnectionService.startAgent(projectId);
-                if (!message.contains("Error")) {
-                    Notification.show(message, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-                } else {
-                    Notification.show(message, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
-                }
+
+
             }
         }
     }
