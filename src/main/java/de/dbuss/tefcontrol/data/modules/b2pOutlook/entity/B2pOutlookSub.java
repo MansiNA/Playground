@@ -16,7 +16,7 @@ public class B2pOutlookSub {
         private String segment;
         private String paymentType;
         private String contractType;
-        private double value;
+        private String value;
         private String blatt;
 
 }

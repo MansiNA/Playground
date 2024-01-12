@@ -32,10 +32,7 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Service;
 
 import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.*;
 
 @Slf4j
@@ -791,7 +788,13 @@ public class ProjectConnectionService {
                 ps.setString(8, entity.getSegment());
                 ps.setString(9, entity.getPaymentType());
                 ps.setString(10, entity.getTypeOfData());
-                ps.setDouble(11, entity.getValue());
+              //  ps.setDouble(11, Double.parseDouble((entity.getValue())));
+                if (entity.getValue() != null) {
+                    ps.setDouble(11, Double.parseDouble(entity.getValue()));
+                } else {
+                    ps.setNull(11, Types.DOUBLE);
+                }
+           //     ps.setString(11, (entity.getValue()));
                 ps.setInt(12, upload_id);
               //  java.sql.Date sqlDate = (entity.getLoadDate() != null) ? new java.sql.Date(entity.getLoadDate().getTime()) : null;
               //  ps.setDate(12, sqlDate);
@@ -828,7 +831,12 @@ public class ProjectConnectionService {
                 ps.setString(7, entity.getSegment());
                 ps.setString(8, entity.getPaymentType());
                 ps.setString(9, entity.getContractType());
-                ps.setDouble(10, entity.getValue());
+                if (entity.getValue() != null) {
+                    ps.setDouble(10, Double.parseDouble(entity.getValue()));
+                } else {
+                    ps.setNull(10, Types.DOUBLE);
+                }
+            //    ps.setDouble(10, entity.getValue());
                 ps.setInt(11, upload_id);
                 //  java.sql.Date sqlDate = (entity.getLoadDate() != null) ? new java.sql.Date(entity.getLoadDate().getTime()) : null;
                 //  ps.setDate(12, sqlDate);
@@ -1246,8 +1254,8 @@ public class ProjectConnectionService {
             String sqlDelete = "DELETE FROM " + targetTable;
             jdbcTemplate.update(sqlDelete);
 
-            String sql = "INSERT INTO " + targetTable + " (Upload_ID, Current_Month, Preliminary_Month) VALUES (?, ?, ?)";
-            jdbcTemplate.update(sql, data.getUpload_ID(), data.getCurrent_month(), data.getPreliminary_month());
+            String sql = "INSERT INTO " + targetTable + " (Upload_ID, Current_Month) VALUES (?, ?)";
+            jdbcTemplate.update(sql, data.getUpload_ID(), data.getCurrent_month());
 
             return Constants.OK;
         } catch (Exception e) {
