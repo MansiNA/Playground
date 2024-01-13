@@ -1209,7 +1209,7 @@ public class ProjectConnectionService {
         try {
 
             jdbcTemplate = getJdbcDefaultConnection();
-            String sql = "SELECT [Upload_ID], [File_Name] FROM Log.user_uploads]";
+            String sql = "SELECT [Upload_ID], [File_Name] FROM Log.user_uploads";
 
             // Execute the query and get a list of maps
             List<Map<String, Object>> resultList = jdbcTemplate.queryForList(sql);
