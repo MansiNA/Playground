@@ -4,6 +4,7 @@ import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.crud.BinderCrudEditor;
 import com.vaadin.flow.component.crud.Crud;
 import com.vaadin.flow.component.crud.CrudEditor;
@@ -11,6 +12,8 @@ import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Article;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -55,6 +58,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
+
+import static com.vaadin.flow.component.button.ButtonVariant.LUMO_TERTIARY_INLINE;
 
 
 @PageTitle("Generic Comments")
@@ -188,21 +193,76 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
                             "END\n" +
                             "ELSE\n" +
                             "BEGIN\n" +
-                            "  SELECT 'failed' AS Result;\n" +
+                            "  SELECT @status AS Result;\n" +
                             "  ROLLBACK;\n" +
                             "END";
                     DataSource dataSource = projectConnectionService.getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
                     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
                     //  jdbcTemplate.execute(sql);
                     System.out.println("SQL executed: " + sql);
-                    String resultMessage = jdbcTemplate.queryForObject(sql, String.class);
+                    String sqlResult = jdbcTemplate.queryForObject(sql, String.class);
 
-                    System.out.println("SQL executed: result " + resultMessage);
+                    System.out.println("SQL result: " + sqlResult);
 
-                    if ("failed".equals(resultMessage)) {
-                        // Handle the error, show error message, etc.
-                        String errorMessage = "ERROR: Job already executed by user XY please try again later..."; //ToDO: getUser from uploads-table for this Upload_ID
-                        Notification.show(errorMessage, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                    if (!"ok".equals(sqlResult)) {
+                        // resultMessage contains Upload_ID, so search user wo do this upload:
+                        int uploadID=Integer.parseInt(sqlResult);
+
+                        sql="select User_Name from [Log].[User_Uploads] where Upload_id=" + uploadID;
+
+                        sqlResult = jdbcTemplate.queryForObject(sql, String.class);
+                        System.out.println("SQL executed: " + sql);
+                        System.out.println("SQL result " + sqlResult);
+
+                        String errorMessage = "ERROR: Job already executed by user " + sqlResult + " (Upload ID: " + uploadID + ") please try again later...";
+                        //Notification.show(errorMessage, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+
+                        Notification notification = new Notification();
+                        notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+                        Div statusText = new Div(new Text(errorMessage));
+
+                        Button retryButton = new Button("Try anyway");
+                        retryButton.addThemeVariants(LUMO_TERTIARY_INLINE);
+                        //retryButton.getElement().getStyle().set("margin-left", "var(--lumo-space-xl)");
+                        retryButton.getStyle().set("margin", "0 0 0 var(--lumo-space-l)");
+                        retryButton.addClickListener(event -> {
+                            notification.close();
+
+                            //Update Agent_Job_Uploads
+                            String sql1 = "UPDATE [Log].[Agent_Job_Uploads] SET [Upload_ID] = "+upload_id + " WHERE AgentJobName = '" + agentName +"' ;";
+                            System.out.println("SQL executed: " + sql1);
+                            jdbcTemplate.execute(sql1);
+                            //End Update Agent_Job_Uploads
+
+
+                            String message = projectConnectionService.startAgent(projectId);
+                            if (!message.contains("Error")) {
+
+                                Notification.show(message, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                            } else {
+                                String AgenterrorMessage = "ERROR: Job " + agentName + " already running please try again later...";
+                                Notification.show(AgenterrorMessage, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                            }
+
+                        });
+
+                        //Button closeButton = new Button(new Icon("lumo", "cross"));
+
+                        Button closeButton = new Button("OK");
+                        closeButton.addThemeVariants(LUMO_TERTIARY_INLINE);
+                        closeButton.getElement().setAttribute("aria-label", "Close");
+                        closeButton.addClickListener(event -> {
+                            notification.close();
+                        });
+
+                        HorizontalLayout layout = new HorizontalLayout(statusText, retryButton, closeButton);
+                        layout.setAlignItems(Alignment.CENTER);
+
+                        notification.add(layout);
+                        notification.setPosition(Notification.Position.MIDDLE);
+                        notification.open();
+
+
                     } else {
                         // Continue with startAgent
                         String message = projectConnectionService.startAgent(projectId);
