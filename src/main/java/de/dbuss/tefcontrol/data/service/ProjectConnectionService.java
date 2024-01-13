@@ -1219,8 +1219,8 @@ public class ProjectConnectionService {
     public String saveUploadedGenericFileData(ProjectUpload entity) {
 
         try {
-            String tableName = "PIT2.Log.User_uploads"; //ToDo: Get DB of target table, this DB should used instead PIT2-DB
-            jdbcTemplate = getJdbcDefaultConnection();
+            String tableName = "Log.User_uploads";
+          //  jdbcTemplate = getJdbcDefaultConnection();
             String sql = "INSERT INTO " + tableName + " ([File_Name], [User_Name]) VALUES (?, ?)";
 
             KeyHolder keyHolder = new GeneratedKeyHolder();
@@ -1245,7 +1245,7 @@ public class ProjectConnectionService {
                 Tech_KPIView.projectUploadIdMap.put(entity.getFileName(), (int) generatedId);
                 return Constants.OK;
             } else {
-                return "Failed to insert data into the database";
+                return "Failed to insert data into " + tableName ;
             }
         } catch (Exception e) {
             e.printStackTrace();

@@ -298,6 +298,7 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
             ProjectUpload projectUpload = new ProjectUpload();
             projectUpload.setFileName(fileName);
             projectUpload.setUserName(MainLayout.userName);
+            projectConnectionService.getJdbcConnection(dbUrl, dbUser, dbPassword);
             projectConnectionService.saveUploadedGenericFileData(projectUpload);
         }
 

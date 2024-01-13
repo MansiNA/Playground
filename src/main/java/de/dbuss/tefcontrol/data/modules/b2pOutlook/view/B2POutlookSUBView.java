@@ -296,6 +296,8 @@ public class B2POutlookSUBView extends VerticalLayout implements BeforeEnterObse
         ProjectUpload projectUpload = new ProjectUpload();
         projectUpload.setFileName(fileName);
         projectUpload.setUserName(MainLayout.userName);
+
+        projectConnectionService.getJdbcConnection(dbUrl, dbUser, dbPassword); // Set Connection to target DB
         projectConnectionService.saveUploadedGenericFileData(projectUpload);
 
         Map<String, Integer> uploadIdMap = projectConnectionService.getUploadIdMap();
