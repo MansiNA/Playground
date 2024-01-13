@@ -1175,7 +1175,7 @@ public class ProjectConnectionService {
     public String saveUploadedGenericFileData(ProjectUpload entity) {
 
         try {
-            String tableName = "project_uploads";
+            String tableName = "PIT2.Log.User_uploads"; //ToDo: Get DB of target table, this DB should used instead PIT2-DB
             jdbcTemplate = getJdbcDefaultConnection();
             String sql = "INSERT INTO " + tableName + " ([File_Name], [User_Name]) VALUES (?, ?)";
 
@@ -1209,7 +1209,7 @@ public class ProjectConnectionService {
         try {
 
             jdbcTemplate = getJdbcDefaultConnection();
-            String sql = "SELECT [Upload_ID], [File_Name] FROM [PIT].[dbo].[project_uploads]";
+            String sql = "SELECT [Upload_ID], [File_Name] FROM Log.user_uploads]";
 
             // Execute the query and get a list of maps
             List<Map<String, Object>> resultList = jdbcTemplate.queryForList(sql);
