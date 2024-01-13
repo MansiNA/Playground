@@ -37,11 +37,14 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import javax.sql.DataSource;
 import java.io.InputStream;
 import java.util.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.atomic.AtomicReference;
+
+import static com.vaadin.flow.component.button.ButtonVariant.LUMO_TERTIARY_INLINE;
 
 
 @PageTitle("Tech KPI | TEF-Control")
@@ -114,6 +117,8 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
     private QS_Grid qsGrid;
     private Button qsBtn;
     private int upload_id;
+
+    public static Map<String, Integer> projectUploadIdMap = new HashMap<>();
     //Div htmlDivToDO;
     //CheckboxGroup<String> TodoList;
 
@@ -328,6 +333,123 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
         @Override
         public void onComplete(String result) {
             if(!result.equals("Cancel")) {
+                Map.Entry<String, Integer> lastEntry = projectUploadIdMap.entrySet().stream()
+                        .reduce((first, second) -> second)
+                        .orElse(null);
+                int upload_id = lastEntry.getValue();
+                try {
+                    // String sql = "EXECUTE Core_Comment.sp_Load_Comments @p_Upload_ID="+upload_id;
+                    String sql = "DECLARE @status AS INT;\n" +
+                            "BEGIN TRAN\n" +
+                            "   SELECT @status=[Upload_ID] FROM [Log].[Agent_Job_Uploads] WITH (UPDLOCK)\n" +
+                            "   WHERE AgentJobName = '" + agentName + "';\n" +
+                            "IF (@status IS NULL)\n" +
+                            "BEGIN\n" +
+                            "  UPDATE [Log].[Agent_Job_Uploads]\n" +
+                            "  SET [Upload_ID] = "+upload_id +"\n" +
+                            "   WHERE AgentJobName = '" + agentName +"' ;\n" +
+                            "  COMMIT;\n" +
+                            "  SELECT 'ok' AS Result\n" +
+                            "END\n" +
+                            "ELSE\n" +
+                            "BEGIN\n" +
+                            "  SELECT @status AS Result;\n" +
+                            "  ROLLBACK;\n" +
+                            "END";
+                    DataSource dataSource = projectConnectionService.getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+                    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+                    //  jdbcTemplate.execute(sql);
+                    System.out.println("SQL executed: " + sql);
+                    String sqlResult = jdbcTemplate.queryForObject(sql, String.class);
+
+                    System.out.println("SQL result: " + sqlResult);
+
+                    if (!"ok".equals(sqlResult)) {
+                        // resultMessage contains Upload_ID, so search user wo do this upload:
+                        int uploadID=Integer.parseInt(sqlResult);
+
+                        sql="select User_Name from [Log].[User_Uploads] where Upload_id=" + uploadID;
+
+                        sqlResult = jdbcTemplate.queryForObject(sql, String.class);
+                        System.out.println("SQL executed: " + sql);
+                        System.out.println("SQL result " + sqlResult);
+
+                        String errorMessage = "ERROR: Job already executed by user " + sqlResult + " (Upload ID: " + uploadID + ") please try again later...";
+                        //Notification.show(errorMessage, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+
+                        Notification notification = new Notification();
+                        notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+                        Div statusText = new Div(new Text(errorMessage));
+
+                        Button retryButton = new Button("Try anyway");
+                        retryButton.addThemeVariants(LUMO_TERTIARY_INLINE);
+                        //retryButton.getElement().getStyle().set("margin-left", "var(--lumo-space-xl)");
+                        retryButton.getStyle().set("margin", "0 0 0 var(--lumo-space-l)");
+                        retryButton.addClickListener(event -> {
+                            notification.close();
+
+                            //Update Agent_Job_Uploads
+                            String sql1 = "UPDATE [Log].[Agent_Job_Uploads] SET [Upload_ID] = "+upload_id + " WHERE AgentJobName = '" + agentName +"' ;";
+                            System.out.println("SQL executed: " + sql1);
+                            jdbcTemplate.execute(sql1);
+                            //End Update Agent_Job_Uploads
+
+
+                            String message = projectConnectionService.startAgent(projectId);
+                            if (!message.contains("Error")) {
+
+                                Notification.show(message, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                            } else {
+                                String AgenterrorMessage = "ERROR: Job " + agentName + " already running please try again later...";
+                                Notification.show(AgenterrorMessage, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                            }
+
+                        });
+
+                        //Button closeButton = new Button(new Icon("lumo", "cross"));
+
+                        Button closeButton = new Button("OK");
+                        closeButton.addThemeVariants(LUMO_TERTIARY_INLINE);
+                        closeButton.getElement().setAttribute("aria-label", "Close");
+                        closeButton.addClickListener(event -> {
+                            notification.close();
+                        });
+
+                        HorizontalLayout layout = new HorizontalLayout(statusText, retryButton, closeButton);
+                        layout.setAlignItems(Alignment.CENTER);
+
+                        notification.add(layout);
+                        notification.setPosition(Notification.Position.MIDDLE);
+                        notification.open();
+
+
+                    } else {
+                        // Continue with startAgent
+                        String message = projectConnectionService.startAgent(projectId);
+                        if (!message.contains("Error")) {
+
+                            Notification.show(message, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                        } else {
+                            String errorMessage = "ERROR: Job " + agentName + " already running please try again later...";
+                            Notification.show(errorMessage, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                        }
+                    }
+                } catch (Exception e) {
+                    //e.printStackTrace();
+                    String errormessage = projectConnectionService.handleDatabaseError(e);
+                    Notification.show(errormessage, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                    return;
+                }
+
+
+
+            }
+        }
+
+
+        /*
+        public void onComplete(String result) {
+            if(!result.equals("Cancel")) {
                 String message = projectConnectionService.startAgent(projectId);
                 if (!message.contains("Error")) {
                     Notification.show(message, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
@@ -336,6 +458,8 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                 }
             }
         }
+
+         */
     }
    /* private void setupQSGrid() {
         gridQS = new Grid<>(QS_Status.class, false);

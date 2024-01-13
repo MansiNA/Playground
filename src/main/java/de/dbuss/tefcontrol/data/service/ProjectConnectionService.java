@@ -1242,6 +1242,7 @@ public class ProjectConnectionService {
                 GenericCommentsView.projectUploadIdMap.put(entity.getFileName(), (int) generatedId);
                 B2POutlookFINView.projectUploadIdMap.put(entity.getFileName(), (int) generatedId);
                 B2POutlookSUBView.projectUploadIdMap.put(entity.getFileName(), (int) generatedId);
+                Tech_KPIView.projectUploadIdMap.put(entity.getFileName(), (int) generatedId);
                 return Constants.OK;
             } else {
                 return "Failed to insert data into the database";
