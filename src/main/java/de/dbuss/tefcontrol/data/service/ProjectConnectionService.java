@@ -1133,7 +1133,48 @@ public class ProjectConnectionService {
         return Collections.emptyList();
     }
 
+
     public String saveGenericComments(List<GenericComments> data, String tableName, String dbUrl, String dbUser, String dbPassword) {
+
+        try {
+
+            Map<String, Integer> uploadIdMap = GenericCommentsView.projectUploadIdMap;
+          //  DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+          //  jdbcTemplate = new JdbcTemplate(dataSource);
+
+            String sqlInsert = "INSERT INTO " + tableName + " ([Upload_ID], [File_Name], [Register_Name], [Line_Number], [Responsible], [Topic], [Month], " +
+                    "[Category_1], [Category_2], [Scenario], [XTD], [Segment], [Payment_Type], [Comment]) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+            jdbcTemplate.batchUpdate(sqlInsert, data, data.size(), (ps, entity) -> {
+                ps.setInt(1,uploadIdMap.get(entity.getFileName()));
+                ps.setString(2,entity.getFileName());
+                ps.setString(3,entity.getRegisterName());
+                ps.setInt(4,entity.getLineNumber());
+                ps.setString(5,entity.getResponsible());
+                ps.setString(6,entity.getTopic());
+                ps.setInt(7,entity.getMonth());
+                ps.setString(8,entity.getCategory1());
+                ps.setString(9,entity.getCategory2());
+                ps.setString(10,entity.getScenario());
+                ps.setString(11,entity.getXtd());
+                ps.setString(12,entity.getSegment());
+                ps.setString(13,entity.getPaymentType());
+                ps.setString(14,entity.getComment());
+              });
+
+            return Constants.OK;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return handleDatabaseError(e);
+        }
+    }
+
+
+
+
+
+ /*   public String saveGenericComments(List<GenericComments> data, String tableName, String dbUrl, String dbUser, String dbPassword) {
 
         try {
 
@@ -1170,7 +1211,8 @@ public class ProjectConnectionService {
             e.printStackTrace();
             return handleDatabaseError(e);
         }
-    }
+    }*/
+
 
     public String saveUploadedGenericFileData(ProjectUpload entity) {
 
@@ -1205,6 +1247,7 @@ public class ProjectConnectionService {
             return handleDatabaseError(e);
         }
     }
+
     public Map<String, Integer> getUploadIdMap() {
         try {
 
