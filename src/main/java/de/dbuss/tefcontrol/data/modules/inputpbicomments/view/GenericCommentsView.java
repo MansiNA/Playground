@@ -317,7 +317,7 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
             projectConnectionService.getJdbcConnection(dbUrl, dbUser, dbPassword);
             // Do some long running task
             try {
-                int batchSize = 10; // Die Anzahl der Zeilen, die auf einmal verarbeitet werden sollen
+                int batchSize = 100; // Die Anzahl der Zeilen, die auf einmal verarbeitet werden sollen
 
                 for (int i = 0; i < totalRows; i += batchSize) {
 
