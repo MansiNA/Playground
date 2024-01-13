@@ -137,18 +137,18 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
         });
 
         qsBtn.addClickListener(e ->{
-           // if (qsGrid.projectId != projectId) {
-                hl.remove(qsGrid);
-                qsGrid = new QS_Grid(projectConnectionService, backendService);
-                hl.add(qsGrid);
-                CallbackHandler callbackHandler = new CallbackHandler();
-                Map.Entry<String, Integer> lastEntry = projectUploadIdMap.entrySet().stream()
-                        .reduce((first, second) -> second)
-                        .orElse(null);
-                int upload_id = lastEntry.getValue();
-                qsGrid.createDialog(callbackHandler, projectId, upload_id);
-             //   projectUploadIdMap = new HashMap<>();
-        //    }
+            // if (qsGrid.projectId != projectId) {
+            hl.remove(qsGrid);
+            qsGrid = new QS_Grid(projectConnectionService, backendService);
+            hl.add(qsGrid);
+            CallbackHandler callbackHandler = new CallbackHandler();
+            Map.Entry<String, Integer> lastEntry = projectUploadIdMap.entrySet().stream()
+                    .reduce((first, second) -> second)
+                    .orElse(null);
+            int upload_id = lastEntry.getValue();
+            qsGrid.createDialog(callbackHandler, projectId, upload_id);
+            //   projectUploadIdMap = new HashMap<>();
+            //    }
             qsGrid.showDialog(true);
         });
 
@@ -173,24 +173,56 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
                         .orElse(null);
                 int upload_id = lastEntry.getValue();
                 try {
-                    String sql = "EXECUTE Core_Comment.sp_Load_Comments @p_Upload_ID="+upload_id;
+                    // String sql = "EXECUTE Core_Comment.sp_Load_Comments @p_Upload_ID="+upload_id;
+                    String sql = "DECLARE @status AS INT;\n" +
+                            "BEGIN TRAN\n" +
+                            "   SELECT @status=[Upload_ID] FROM [Log].[Agent_Job_Uploads] WITH (UPDLOCK)\n" +
+                            "   WHERE AgentJobName = '" + agentName + "';\n" +
+                            "IF (@status IS NULL)\n" +
+                            "BEGIN\n" +
+                            "  UPDATE [Log].[Agent_Job_Uploads]\n" +
+                            "  SET [Upload_ID] = "+upload_id +"\n" +
+                            "   WHERE AgentJobName = '" + agentName +"' ;\n" +
+                            "  COMMIT;\n" +
+                            "  SELECT 'ok' AS Result\n" +
+                            "END\n" +
+                            "ELSE\n" +
+                            "BEGIN\n" +
+                            "  SELECT 'failed' AS Result;\n" +
+                            "  ROLLBACK;\n" +
+                            "END";
                     DataSource dataSource = projectConnectionService.getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
                     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-                    jdbcTemplate.execute(sql);
+                    //  jdbcTemplate.execute(sql);
                     System.out.println("SQL executed: " + sql);
+                    String resultMessage = jdbcTemplate.queryForObject(sql, String.class);
+
+                    System.out.println("SQL executed: result " + resultMessage);
+
+                    if ("failed".equals(resultMessage)) {
+                        // Handle the error, show error message, etc.
+                        String errorMessage = "ERROR: Job already executed by user XY please try again later..."; //ToDO: getUser from uploads-table for this Upload_ID
+                        Notification.show(errorMessage, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                    } else {
+                        // Continue with startAgent
+                        String message = projectConnectionService.startAgent(projectId);
+                        if (!message.contains("Error")) {
+
+                            Notification.show(message, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                        } else {
+                            String errorMessage = "ERROR: Job " + agentName + " already running please try again later...";
+                            Notification.show(errorMessage, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                        }
+                    }
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    //e.printStackTrace();
                     String errormessage = projectConnectionService.handleDatabaseError(e);
                     Notification.show(errormessage, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
                     return;
                 }
 
-                String message = projectConnectionService.startAgent(projectId);
-                if (!message.contains("Error")) {
-                    Notification.show(message, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-                } else {
-                    Notification.show(message, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
-                }
+
+
             }
         }
     }
