@@ -5,6 +5,7 @@ import com.vaadin.flow.component.notification.NotificationVariant;
 import de.dbuss.tefcontrol.data.entity.*;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.B2pOutlookSub;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.OutlookMGSR;
+import de.dbuss.tefcontrol.data.modules.b2pOutlook.view.B2POutlookFINView;
 import de.dbuss.tefcontrol.data.modules.cltv_Inflow.entity.CLTVInflow;
 import de.dbuss.tefcontrol.data.modules.cobi_administration.entity.CurrentPeriods;
 import de.dbuss.tefcontrol.data.modules.cobi_administration.entity.CurrentScenarios;
@@ -1238,6 +1239,7 @@ public class ProjectConnectionService {
                 // Retrieve the generated ID from the KeyHolder
                 long generatedId = keyHolder.getKey().longValue();
                 GenericCommentsView.projectUploadIdMap.put(entity.getFileName(), (int) generatedId);
+                B2POutlookFINView.projectUploadIdMap.put(entity.getFileName(), (int) generatedId);
                 return Constants.OK;
             } else {
                 return "Failed to insert data into the database";
