@@ -1276,6 +1276,7 @@ public class ProjectConnectionService {
             jdbcTemplate = getJdbcDefaultConnection();
             String sql = "SELECT [Upload_ID], [File_Name] FROM PIT2.Log.user_uploads"; //ToDo: Get DB of target table, this DB should used instead PIT2-DB
 
+
             // Execute the query and get a list of maps
             List<Map<String, Object>> resultList = jdbcTemplate.queryForList(sql);
 
@@ -1293,6 +1294,33 @@ public class ProjectConnectionService {
             return Collections.emptyMap();
         }
     }
+
+    public Map<String, Integer> getUploadIdMap(String modulName, String userName, String dbUrl, String dbUser, String dbPassword) {
+        try {
+
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+            //String sql = "SELECT [Upload_ID], [File_Name] FROM Log.user_uploads"; //ToDo: Get DB of target table, this DB should used instead PIT2-DB
+            String sql = "SELECT [Upload_ID] FROM Log.user_uploads where Modul_Name= '" + modulName + "' and User_Name = '" + userName+ "'"; //ToDo: Get DB of target table, this DB should used instead PIT2-DB
+
+            // Execute the query and get a list of maps
+            List<Map<String, Object>> resultList = jdbcTemplate.queryForList(sql);
+
+            // Create a Map with file name as key and upload ID as value
+            Map<String, Integer> uploadIdMap = new HashMap<>();
+            for (Map<String, Object> row : resultList) {
+                int uploadId = (int) row.get("Upload_ID");
+                String fileName = (String) row.get("File_Name");
+                uploadIdMap.put(fileName, uploadId);
+            }
+
+            return uploadIdMap;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Collections.emptyMap();
+        }
+    }
+
 
     public List<String> getCobiAdminQFCPlanOutlook(String dbUrl, String dbUser, String dbPassword, String sql) {
         try {

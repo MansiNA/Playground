@@ -18,6 +18,7 @@ import de.dbuss.tefcontrol.components.QS_Grid;
 import de.dbuss.tefcontrol.data.entity.Constants;
 import de.dbuss.tefcontrol.data.entity.ProjectParameter;
 import de.dbuss.tefcontrol.data.entity.ProjectUpload;
+import de.dbuss.tefcontrol.data.entity.User;
 import de.dbuss.tefcontrol.data.modules.cobi_administration.entity.CurrentPeriods;
 import de.dbuss.tefcontrol.data.modules.cobi_administration.entity.CurrentScenarios;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.GenericCommentsView;
@@ -25,16 +26,14 @@ import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.PBICentralComments
 import de.dbuss.tefcontrol.data.service.BackendService;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
 import de.dbuss.tefcontrol.data.service.ProjectParameterService;
+import de.dbuss.tefcontrol.security.AuthenticatedUser;
 import de.dbuss.tefcontrol.views.MainLayout;
 import jakarta.annotation.security.RolesAllowed;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
 import java.time.YearMonth;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.vaadin.flow.component.button.ButtonVariant.LUMO_TERTIARY_INLINE;
 
@@ -60,9 +59,11 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
 
     public static Map<String, Integer> projectUploadIdMap = new HashMap<>();
     private String agentName;
+    private AuthenticatedUser authenticatedUser;
 
-    public CobiAdminView(ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, BackendService backendService) {
+    public CobiAdminView(ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, BackendService backendService, AuthenticatedUser authenticatedUser) {
         this.projectConnectionService = projectConnectionService;
+        this.authenticatedUser=authenticatedUser;
 
         qsBtn = new Button("QS and Start Job");
         qsBtn.setEnabled(false);
@@ -110,7 +111,12 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
 
             ProjectUpload projectUpload = new ProjectUpload();
             projectUpload.setFileName("");
-            projectUpload.setUserName(MainLayout.userName);
+          //  projectUpload.setUserName(MainLayout.userName);
+            Optional<User> maybeUser = authenticatedUser.get();
+            if (maybeUser.isPresent()) {
+                User user = maybeUser.get();
+                projectUpload.setUserName(user.getUsername());
+            }
             projectUpload.setModulName("CobiAdmin");
 
             projectConnectionService.getJdbcConnection(dbUrl, dbUser, dbPassword);
@@ -122,11 +128,15 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
                 return;
             }
 
-            Map<String, Integer> uploadIdMap = projectConnectionService.getUploadIdMap();
+
+
+            Map<String, Integer> uploadIdMap = projectConnectionService.getUploadIdMap(projectUpload.getModulName(), projectUpload.getUserName(), dbUrl, dbUser, dbPassword);
             int upload_id = uploadIdMap.values().stream()
                     .mapToInt(Integer::intValue)
                     .max()
                     .orElse(1);
+
+            System.out.println("Upload_ID: " + upload_id);
 
             currentPeriods.setUpload_ID(upload_id);
             currentScenarios.setUpload_ID(upload_id);
