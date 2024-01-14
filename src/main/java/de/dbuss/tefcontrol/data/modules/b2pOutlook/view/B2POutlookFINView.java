@@ -318,7 +318,9 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
                 .max()
                 .orElse(1);
 
-        Notification notification = Notification.show(" Rows Uploaded start",2000, Notification.Position.MIDDLE);
+        System.out.println("Upload_ID for insert into " + tableName + " is " + upload_id);
+
+        Notification notification = Notification.show("start upload to " + tableName + " with upload_id: "+ upload_id ,2000, Notification.Position.MIDDLE);
         notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
 
         List<OutlookMGSR> listOfAllData = new ArrayList<>();
