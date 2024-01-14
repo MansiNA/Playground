@@ -1310,8 +1310,8 @@ public class ProjectConnectionService {
         try {
             jdbcTemplate = getJdbcConnection(dbUrl, dbUser, dbPassword);
 
-            String sqlDelete = "DELETE FROM " + targetTable;
-            jdbcTemplate.update(sqlDelete);
+          //  String sqlDelete = "DELETE FROM " + targetTable;
+          //  jdbcTemplate.update(sqlDelete);
 
             String sql = "INSERT INTO " + targetTable + " (Upload_ID, Current_Month) VALUES (?, ?)";
             jdbcTemplate.update(sql, data.getUpload_ID(), data.getCurrent_month());
@@ -1328,8 +1328,8 @@ public class ProjectConnectionService {
 
             jdbcTemplate = getJdbcConnection(dbUrl, dbUser, dbPassword);
 
-            String sqlDelete = "DELETE FROM " + targetTable;
-            jdbcTemplate.update(sqlDelete);
+          //  String sqlDelete = "DELETE FROM " + targetTable;
+          //  jdbcTemplate.update(sqlDelete);
 
             String sql = "INSERT INTO " + targetTable + " (Upload_ID, Current_Plan, Current_Outlook, Current_QFC) VALUES (?, ?, ?, ?)";
             jdbcTemplate.update(sql, data.getUpload_ID(), data.getCurrent_Plan(), data.getCurrent_Outlook(), data.getCurrent_QFC());
