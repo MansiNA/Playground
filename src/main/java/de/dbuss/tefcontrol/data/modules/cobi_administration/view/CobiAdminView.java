@@ -60,6 +60,7 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
     public static Map<String, Integer> projectUploadIdMap = new HashMap<>();
     private String agentName;
     private AuthenticatedUser authenticatedUser;
+    private int upload_id;
 
     public CobiAdminView(ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, BackendService backendService, AuthenticatedUser authenticatedUser) {
         this.projectConnectionService = projectConnectionService;
@@ -120,21 +121,24 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
             projectUpload.setModulName("CobiAdmin");
 
             projectConnectionService.getJdbcConnection(dbUrl, dbUser, dbPassword);
-            String sql_rsult=projectConnectionService.saveUploadedGenericFileData(projectUpload);
 
-            if (!sql_rsult.equals(Constants.OK))
+            upload_id = projectConnectionService.saveUploadedGenericFileData(projectUpload,null);
+
+            //String sql_rsult=projectConnectionService.saveUploadedGenericFileData(projectUpload);
+
+            if (upload_id==-1)
             {
-                Notification.show("Error in CobiAdminView saveUploadedGenericFileData! " + sql_rsult, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                Notification.show("Error in CobiAdminView saveUploadedGenericFileData! ", 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
                 return;
             }
 
 
-
+/*
             Map<String, Integer> uploadIdMap = projectConnectionService.getUploadIdMap(projectUpload.getModulName(), projectUpload.getUserName(), dbUrl, dbUser, dbPassword);
             int upload_id = uploadIdMap.values().stream()
                     .mapToInt(Integer::intValue)
                     .max()
-                    .orElse(1);
+                    .orElse(1);*/
 
             System.out.println("Upload_ID: " + upload_id);
 
