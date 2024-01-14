@@ -15,7 +15,7 @@ public class ProjectUpload {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "Upload_ID")
-    private Long uploadId;
+    private Integer uploadId;
 
     @Column(name = "Upload_Date")
     private Date uploadDate;

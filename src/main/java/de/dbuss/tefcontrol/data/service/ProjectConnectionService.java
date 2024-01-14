@@ -1270,6 +1270,45 @@ public class ProjectConnectionService {
         }
     }
 
+    public Integer saveUploadedGenericFileData(ProjectUpload entity, String xx) {
+
+        try {
+            String tableName = "Log.User_uploads";
+            //  jdbcTemplate = getJdbcDefaultConnection();
+            String sql = "INSERT INTO " + tableName + " ([File_Name], [User_Name], [Modul_Name]) VALUES (?, ?, ?)";
+
+            System.out.println("Execute SQL:" + sql);
+            System.out.println("1. Parameter: " + entity.getFileName());
+            System.out.println("2. Parameter: " + entity.getUserName());
+            System.out.println("3. Parameter: " + entity.getModulName());
+
+            KeyHolder keyHolder = new GeneratedKeyHolder();
+
+            int affectedRows = jdbcTemplate.update(new PreparedStatementCreator() {
+                @Override
+                public PreparedStatement createPreparedStatement(Connection connection) throws SQLException {
+                    PreparedStatement ps = connection.prepareStatement(sql, new String[]{"Upload_ID"});
+                    ps.setString(1, entity.getFileName());
+                    ps.setString(2, entity.getUserName());
+                    ps.setString(3, entity.getModulName());
+                    return ps;
+                }
+            }, keyHolder);
+
+            // Check if the insertion was successful
+            if (affectedRows > 0) {
+                // Retrieve the generated ID from the KeyHolder
+                Integer generatedId = keyHolder.getKey().intValue();
+                return generatedId;
+            } else {
+                return -1 ;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return -1;
+        }
+    }
+
     public Map<String, Integer> getUploadIdMap() {
         try {
 
@@ -1300,8 +1339,9 @@ public class ProjectConnectionService {
 
             DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
             jdbcTemplate = new JdbcTemplate(dataSource);
-            String sql = "SELECT [Upload_ID] FROM Log.user_uploads where Modul_Name= '" + modulName + "' and User_Name = '" + userName+ "'";
+            String sql = "SELECT [Upload_ID] FROM Log.user_uploads where Modul_Name= '" + modulName + "' and User_Name = '" + userName+ "' order by Upload_ID desc";
 
+            System.out.println("Execute SQL: " + sql);
             // Execute the query and get a list of maps
             List<Map<String, Object>> resultList = jdbcTemplate.queryForList(sql);
 
