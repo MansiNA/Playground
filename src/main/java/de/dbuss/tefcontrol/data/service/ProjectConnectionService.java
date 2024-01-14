@@ -1249,15 +1249,7 @@ public class ProjectConnectionService {
                     Tech_KPIView.projectUploadIdMap.put(entity.getFileName(), (int) generatedId);
                 } else if (entity.getModulName().equals("GenericComments")) {
                     GenericCommentsView.projectUploadIdMap.put(entity.getFileName(), (int) generatedId);
-                } else if (entity.getModulName().equals("B2POutlookFIN")) {
-                B2POutlookFINView.projectUploadIdMap.put(entity.getFileName(), (int) generatedId);
-                } else if (entity.getModulName().equals("B2POutlookSUB")) {
-                    B2POutlookSUBView.projectUploadIdMap.put(entity.getFileName(), (int) generatedId);
-                }   else if (entity.getModulName().equals("CobiAdmin")) {
-                    CobiAdminView.projectUploadIdMap.put(entity.getFileName(), (int) generatedId);
                 }
-
-
 
 
                 return Constants.OK;

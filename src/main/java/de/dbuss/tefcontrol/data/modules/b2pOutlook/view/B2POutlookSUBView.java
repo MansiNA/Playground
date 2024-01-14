@@ -26,11 +26,13 @@ import de.dbuss.tefcontrol.components.QS_Grid;
 import de.dbuss.tefcontrol.data.entity.Constants;
 import de.dbuss.tefcontrol.data.entity.ProjectParameter;
 import de.dbuss.tefcontrol.data.entity.ProjectUpload;
+import de.dbuss.tefcontrol.data.entity.User;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.B2pOutlookSub;
 import de.dbuss.tefcontrol.data.service.BackendService;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
 import de.dbuss.tefcontrol.data.service.ProjectParameterService;
 import de.dbuss.tefcontrol.dataprovider.GenericDataProvider;
+import de.dbuss.tefcontrol.security.AuthenticatedUser;
 import de.dbuss.tefcontrol.views.MainLayout;
 import jakarta.annotation.security.RolesAllowed;
 import org.apache.poi.ss.usermodel.Cell;
@@ -77,12 +79,15 @@ public class B2POutlookSUBView extends VerticalLayout implements BeforeEnterObse
     ListenableFuture<String> future;
 
     BackendService backendService;
-    public static Map<String, Integer> projectUploadIdMap = new HashMap<>();
 
-    public B2POutlookSUBView(ProjectParameterService projectParameterService, ProjectConnectionService projectConnectionService, BackendService backendService) {
+    private AuthenticatedUser authenticatedUser;
+    //public static Map<String, Integer> projectUploadIdMap = new HashMap<>();
+
+    public B2POutlookSUBView(ProjectParameterService projectParameterService, ProjectConnectionService projectConnectionService, BackendService backendService, AuthenticatedUser authenticatedUser) {
 
         this.backendService = backendService;
         this.projectConnectionService = projectConnectionService;
+        this.authenticatedUser=authenticatedUser;
 
         uploadBtn = new Button("Upload");
         uploadBtn.setEnabled(false);
@@ -167,10 +172,12 @@ public class B2POutlookSUBView extends VerticalLayout implements BeforeEnterObse
         @Override
         public void onComplete(String result) {
             if(!result.equals("Cancel")) {
-                Map.Entry<String, Integer> lastEntry = projectUploadIdMap.entrySet().stream()
+              /*  Map.Entry<String, Integer> lastEntry = projectUploadIdMap.entrySet().stream()
                         .reduce((first, second) -> second)
                         .orElse(null);
                 int upload_id = lastEntry.getValue();
+              */
+
                 try {
                     // String sql = "EXECUTE Core_Comment.sp_Load_Comments @p_Upload_ID="+upload_id;
                     String sql = "DECLARE @status AS INT;\n" +
@@ -295,18 +302,22 @@ public class B2POutlookSUBView extends VerticalLayout implements BeforeEnterObse
 
         ProjectUpload projectUpload = new ProjectUpload();
         projectUpload.setFileName(fileName);
-        projectUpload.setUserName(MainLayout.userName);
+        //projectUpload.setUserName(MainLayout.userName);
+
+        Optional<User> maybeUser = authenticatedUser.get();
+        if (maybeUser.isPresent()) {
+            User user = maybeUser.get();
+            projectUpload.setUserName(user.getUsername());
+        }
+
         projectUpload.setModulName("B2POutlookSUB");
 
         projectConnectionService.getJdbcConnection(dbUrl, dbUser, dbPassword); // Set Connection to target DB
-        projectConnectionService.saveUploadedGenericFileData(projectUpload);
+        upload_id = projectConnectionService.saveUploadedGenericFileData(projectUpload,null);
 
-        Map<String, Integer> uploadIdMap = projectConnectionService.getUploadIdMap();
-        upload_id = uploadIdMap.values().stream()
-                .mapToInt(Integer::intValue)
-                .max()
-                .orElse(1);
+        projectUpload.setUploadId(upload_id);
 
+        System.out.println("Upload_ID: " + upload_id);
 
         Notification notification = Notification.show(" Rows Uploaded start",2000, Notification.Position.MIDDLE);
         notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);

@@ -75,7 +75,7 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
     private int upload_id;
     ListenableFuture<String> future;
 
-    public static Map<String, Integer> projectUploadIdMap = new HashMap<>();
+  //  public static Map<String, Integer> projectUploadIdMap = new HashMap<>();
 
     BackendService backendService;
 
