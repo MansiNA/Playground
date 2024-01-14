@@ -310,34 +310,6 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
     private void save2db() {
         List<GenericComments> allGenericCommentsItems = getGenericCommentsDataProviderAllItems();
 
-        /*
-        List<String> allFileNames = allGenericCommentsItems.stream()
-                .map(GenericComments::getFileName)
-                .distinct()
-                .collect(Collectors.toList());
-
-        for (String fileName : allFileNames) {
-            ProjectUpload projectUpload = new ProjectUpload();
-            projectUpload.setFileName(fileName);
-
-            Optional<User> maybeUser = authenticatedUser.get();
-            if (maybeUser.isPresent()) {
-                User user = maybeUser.get();
-                projectUpload.setUserName(user.getUsername());
-            }
-            else {
-                //No Username found break...
-                Notification.show("Username not found, data can not upload to DB", 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
-                return;
-            }
-
-
-            projectUpload.setModulName("GenericComments");
-            projectConnectionService.getJdbcConnection(dbUrl, dbUser, dbPassword);
-            projectConnectionService.saveUploadedGenericFileData(projectUpload);
-        }
-*/
-
         ProjectUpload projectUpload = new ProjectUpload();
         projectUpload.setFileName(fileName);
         //projectUpload.setUserName(MainLayout.userName);
@@ -347,8 +319,14 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
             User user = maybeUser.get();
             projectUpload.setUserName(user.getUsername());
         }
+        else {
+            //No Username found break...
+            Notification.show("Username not found, data can not upload to DB", 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+            return;
+        }
 
-        projectUpload.setModulName("B2POutlookFIN");
+
+        projectUpload.setModulName("GenericComments");
 
         projectConnectionService.getJdbcConnection(dbUrl, dbUser, dbPassword); // Set Connection to target DB
         upload_id = projectConnectionService.saveUploadedGenericFileData(projectUpload,null);
