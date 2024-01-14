@@ -206,7 +206,7 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
                     System.out.println("Execute SQL: " + sql);
                     String sqlResult = jdbcTemplate.queryForObject(sql, String.class);
 
-                    System.out.println("SQL result: " + sqlResult);
+                    System.out.println("SQL result for entry in Agent_Job_Uploads: (\"ok\" if no Upload_id exists)" + sqlResult);
 
                     if (!"ok".equals(sqlResult)) {
                         // resultMessage contains Upload_ID, so search user wo do this upload:
