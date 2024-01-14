@@ -2,6 +2,7 @@ package de.dbuss.tefcontrol.data.modules.cobi_administration.view;
 
 
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
@@ -31,8 +32,11 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import javax.sql.DataSource;
 import java.time.YearMonth;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static com.vaadin.flow.component.button.ButtonVariant.LUMO_TERTIARY_INLINE;
 
 @PageTitle("Administration")
 @Route(value = "COBI_Administration/:project_Id", layout = MainLayout.class)
@@ -53,6 +57,9 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
 
     private QS_Grid qsGrid;
     private Button qsBtn;
+
+    public static Map<String, Integer> projectUploadIdMap = new HashMap<>();
+    private String agentName;
 
     public CobiAdminView(ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, BackendService backendService) {
         this.projectConnectionService = projectConnectionService;
@@ -84,6 +91,8 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
                     sqlOutlookScenario = projectParameter.getValue();
                 } else if (Constants.SQL_QFC_SCENARIOS.equals(projectParameter.getName())) {
                     sqlQfcScenarios = projectParameter.getValue();
+                } else if (Constants.DB_JOBS.equals(projectParameter.getName())) {
+                    agentName = projectParameter.getValue();
                 }
             }
         }
@@ -102,7 +111,16 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
             ProjectUpload projectUpload = new ProjectUpload();
             projectUpload.setFileName("");
             projectUpload.setUserName(MainLayout.userName);
-            projectConnectionService.saveUploadedGenericFileData(projectUpload);
+            projectUpload.setModulName("CobiAdmin");
+
+            projectConnectionService.getJdbcConnection(dbUrl, dbUser, dbPassword);
+            String sql_rsult=projectConnectionService.saveUploadedGenericFileData(projectUpload);
+
+            if (!sql_rsult.equals(Constants.OK))
+            {
+                Notification.show("Error in CobiAdminView saveUploadedGenericFileData! " + sql_rsult, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                return;
+            }
 
             Map<String, Integer> uploadIdMap = projectConnectionService.getUploadIdMap();
             int upload_id = uploadIdMap.values().stream()
@@ -169,32 +187,126 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
         @Override
         public void onComplete(String result) {
             if(!result.equals("Cancel")) {
-                Map<String, Integer> uploadIdMap = projectConnectionService.getUploadIdMap();
-                int upload_id = uploadIdMap.values().stream()
-                        .mapToInt(Integer::intValue)
-                        .max()
-                        .orElse(1);
+                Map.Entry<String, Integer> lastEntry = projectUploadIdMap.entrySet().stream()
+                        .reduce((first, second) -> second)
+                        .orElse(null);
+                int upload_id = lastEntry.getValue();
+                System.out.println("Upload_ID:" + upload_id);
                 try {
+                    // String sql = "EXECUTE Core_Comment.sp_Load_Comments @p_Upload_ID="+upload_id;
+                    String sql = "DECLARE @status AS INT;\n" +
+                            "BEGIN TRAN\n" +
+                            "   SELECT @status=[Upload_ID] FROM [Log].[Agent_Job_Uploads] WITH (UPDLOCK)\n" +
+                            "   WHERE AgentJobName = '" + agentName + "';\n" +
+                            "IF (@status IS NULL)\n" +
+                            "BEGIN\n" +
+                            "  UPDATE [Log].[Agent_Job_Uploads]\n" +
+                            "  SET [Upload_ID] = "+upload_id +"\n" +
+                            "   WHERE AgentJobName = '" + agentName +"' ;\n" +
+                            "  COMMIT;\n" +
+                            "  SELECT 'ok' AS Result\n" +
+                            "END\n" +
+                            "ELSE\n" +
+                            "BEGIN\n" +
+                            "  SELECT @status AS Result;\n" +
+                            "  ROLLBACK;\n" +
+                            "END";
                     DataSource dataSource = projectConnectionService.getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
                     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+                    //  jdbcTemplate.execute(sql);
+                    System.out.println("Execute SQL: " + sql);
+                    String sqlResult = jdbcTemplate.queryForObject(sql, String.class);
 
-                    String sql1 = "exec Core_Conf.sp_Load_Current_Periods @p_Upload_ID = "+upload_id;
-                    jdbcTemplate.execute(sql1);
-                    String sql2 = "exec Core_Conf.sp_Load_Current_Scenarios @p_Upload_ID = "+upload_id;
-                    jdbcTemplate.execute(sql2);
-                    System.out.println("SQL executed: " + sql1 +"..."+ sql2);
+                    System.out.println("SQL result for entry in Agent_Job_Uploads: (\"ok\" if no Upload_id exists)" + sqlResult);
+
+                    if (!"ok".equals(sqlResult)) {
+                        // resultMessage contains Upload_ID, so search user wo do this upload:
+                        int uploadID=Integer.parseInt(sqlResult);
+
+
+                        sql="select User_Name from [Log].[User_Uploads] where Upload_id=" + uploadID;
+                        System.out.println("execute SQL: " + sql);
+                        try {
+                            sqlResult = jdbcTemplate.queryForObject(sql, String.class);
+                        }
+                        catch (Exception e){
+                            System.out.println("User for Upload-ID " + uploadID + " not found...");
+                            String AgenterrorMessage = "User for Upload-ID " + uploadID + " not found...please try again later...";
+                            Notification.show(AgenterrorMessage, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                            return;
+                        }
+
+                        System.out.println("SQL result " + sqlResult);
+
+                        String errorMessage = "ERROR: Job already executed by user " + sqlResult + " (Upload ID: " + uploadID + ") please try again later...";
+                        //Notification.show(errorMessage, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+
+                        Notification notification = new Notification();
+                        notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+                        Div statusText = new Div(new Text(errorMessage));
+
+                        Button retryButton = new Button("Try anyway");
+                        retryButton.addThemeVariants(LUMO_TERTIARY_INLINE);
+                        //retryButton.getElement().getStyle().set("margin-left", "var(--lumo-space-xl)");
+                        retryButton.getStyle().set("margin", "0 0 0 var(--lumo-space-l)");
+                        retryButton.addClickListener(event -> {
+                            notification.close();
+
+                            //Update Agent_Job_Uploads
+                            String sql1 = "UPDATE [Log].[Agent_Job_Uploads] SET [Upload_ID] = "+upload_id + " WHERE AgentJobName = '" + agentName +"' ;";
+                            System.out.println("SQL executed: " + sql1);
+                            jdbcTemplate.execute(sql1);
+                            //End Update Agent_Job_Uploads
+
+
+                            String message = projectConnectionService.startAgent(projectId);
+                            if (!message.contains("Error")) {
+
+                                Notification.show(message, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                            } else {
+                                String AgenterrorMessage = "ERROR: Job " + agentName + " already running please try again later...";
+                                Notification.show(AgenterrorMessage, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                            }
+
+                        });
+
+                        //Button closeButton = new Button(new Icon("lumo", "cross"));
+
+                        Button closeButton = new Button("OK");
+                        closeButton.addThemeVariants(LUMO_TERTIARY_INLINE);
+                        closeButton.getElement().setAttribute("aria-label", "Close");
+                        closeButton.addClickListener(event -> {
+                            notification.close();
+                        });
+
+                        HorizontalLayout layout = new HorizontalLayout(statusText, retryButton, closeButton);
+                        layout.setAlignItems(Alignment.CENTER);
+
+                        notification.add(layout);
+                        notification.setPosition(Notification.Position.MIDDLE);
+                        notification.open();
+
+
+                    } else {
+                        // Continue with startAgent
+                        String message = projectConnectionService.startAgent(projectId);
+                        if (!message.contains("Error")) {
+
+                            Notification.show(message, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                        } else {
+                            String errorMessage = "ERROR: Job " + agentName + " already running please try again later...";
+                            Notification.show(errorMessage, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                        }
+                    }
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    //e.printStackTrace();
                     String errormessage = projectConnectionService.handleDatabaseError(e);
                     Notification.show(errormessage, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
                     return;
                 }
-                String message = projectConnectionService.startAgent(projectId);
-                if (!message.contains("Error")) {
-                    Notification.show(message, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-                } else {
-                    Notification.show(message, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
-                }
+
+
+
             }
         }
     }

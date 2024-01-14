@@ -10,6 +10,7 @@ import de.dbuss.tefcontrol.data.modules.b2pOutlook.view.B2POutlookSUBView;
 import de.dbuss.tefcontrol.data.modules.cltv_Inflow.entity.CLTVInflow;
 import de.dbuss.tefcontrol.data.modules.cobi_administration.entity.CurrentPeriods;
 import de.dbuss.tefcontrol.data.modules.cobi_administration.entity.CurrentScenarios;
+import de.dbuss.tefcontrol.data.modules.cobi_administration.view.CobiAdminView;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.*;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.GenericCommentsView;
 import de.dbuss.tefcontrol.data.modules.pfgproductmapping.entity.CltvAllProduct;
@@ -1252,7 +1253,12 @@ public class ProjectConnectionService {
                 B2POutlookFINView.projectUploadIdMap.put(entity.getFileName(), (int) generatedId);
                 } else if (entity.getModulName().equals("B2POutlookSUB")) {
                     B2POutlookSUBView.projectUploadIdMap.put(entity.getFileName(), (int) generatedId);
+                }   else if (entity.getModulName().equals("CobiAdmin")) {
+                    CobiAdminView.projectUploadIdMap.put(entity.getFileName(), (int) generatedId);
                 }
+
+
+
 
                 return Constants.OK;
             } else {
