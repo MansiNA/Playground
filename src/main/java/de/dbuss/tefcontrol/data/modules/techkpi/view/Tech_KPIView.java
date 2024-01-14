@@ -26,9 +26,11 @@ import de.dbuss.tefcontrol.components.QS_Grid;
 import de.dbuss.tefcontrol.data.entity.Constants;
 import de.dbuss.tefcontrol.data.entity.ProjectParameter;
 import de.dbuss.tefcontrol.data.entity.ProjectUpload;
+import de.dbuss.tefcontrol.data.entity.User;
 import de.dbuss.tefcontrol.data.service.BackendService;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
 import de.dbuss.tefcontrol.data.service.ProjectParameterService;
+import de.dbuss.tefcontrol.security.AuthenticatedUser;
 import de.dbuss.tefcontrol.views.MainLayout;
 import jakarta.annotation.security.RolesAllowed;
 import org.apache.poi.ss.usermodel.Cell;
@@ -87,7 +89,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
     Integer errors_Fact=0;
     Integer errors_Actuals=0;
     Integer errors_Plan=0;
-
+    private AuthenticatedUser authenticatedUser;
 
 
   //  Grid<QS_Status> gridQS;
@@ -122,10 +124,11 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
     //Div htmlDivToDO;
     //CheckboxGroup<String> TodoList;
 
-    public Tech_KPIView(JdbcTemplate jdbcTemplate, ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, BackendService backendService) {
+    public Tech_KPIView(JdbcTemplate jdbcTemplate, ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, BackendService backendService, AuthenticatedUser authenticatedUser) {
         this.jdbcTemplate = jdbcTemplate;
         this.projectConnectionService = projectConnectionService;
         this.backendService = backendService;
+        this.authenticatedUser = authenticatedUser;
 
         uploadBtn = new Button("Upload");
         uploadBtn.setEnabled(false);
@@ -241,19 +244,20 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
             ProjectUpload projectUpload = new ProjectUpload();
             projectUpload.setFileName(fileName);
-            projectUpload.setUserName(MainLayout.userName);
+            //projectUpload.setUserName(MainLayout.userName);
+            Optional<User> maybeUser = authenticatedUser.get();
+            if (maybeUser.isPresent()) {
+                User user = maybeUser.get();
+                projectUpload.setUserName(user.getUsername());
+            }
             projectUpload.setModulName("Tech_KPI");
 
             projectConnectionService.getJdbcConnection(dbUrl, dbUser, dbPassword); // Set Connection to target DB
-            projectConnectionService.saveUploadedGenericFileData(projectUpload);
+            upload_id = projectConnectionService.saveUploadedGenericFileData(projectUpload,null);
 
-            Map<String, Integer> uploadIdMap = projectConnectionService.getUploadIdMap();
-            upload_id = uploadIdMap.values().stream()
-                    .mapToInt(Integer::intValue)
-                    .max()
-                    .orElse(1);
+            projectUpload.setUploadId(upload_id);
 
-            System.out.println("upload_id: " + upload_id);
+            System.out.println("Upload_ID: " + upload_id);
 
           //  savePlanEntities();
             saveActualsEntities();
@@ -338,10 +342,10 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
         @Override
         public void onComplete(String result) {
             if(!result.equals("Cancel")) {
-                Map.Entry<String, Integer> lastEntry = projectUploadIdMap.entrySet().stream()
+                /*Map.Entry<String, Integer> lastEntry = projectUploadIdMap.entrySet().stream()
                         .reduce((first, second) -> second)
                         .orElse(null);
-                int upload_id = lastEntry.getValue();
+                int upload_id = lastEntry.getValue();*/
                 System.out.println("Upload_ID:" + upload_id);
                 try {
                     // String sql = "EXECUTE Core_Comment.sp_Load_Comments @p_Upload_ID="+upload_id;
