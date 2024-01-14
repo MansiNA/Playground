@@ -79,6 +79,10 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
     private String dbUrl;
     private String dbUser;
     private String dbPassword;
+
+    String fileName;
+
+    private int upload_id;
     long contentLength = 0;
     String mimeType = "";
     Div textArea = new Div();
@@ -150,10 +154,12 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
             qsGrid = new QS_Grid(projectConnectionService, backendService);
             hl.add(qsGrid);
             CallbackHandler callbackHandler = new CallbackHandler();
-            Map.Entry<String, Integer> lastEntry = projectUploadIdMap.entrySet().stream()
+
+            /*Map.Entry<String, Integer> lastEntry = projectUploadIdMap.entrySet().stream()
                     .reduce((first, second) -> second)
                     .orElse(null);
-            int upload_id = lastEntry.getValue();
+            int upload_id = lastEntry.getValue();*/
+
             qsGrid.createDialog(callbackHandler, projectId, upload_id);
             //   projectUploadIdMap = new HashMap<>();
             //    }
@@ -176,10 +182,12 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
         @Override
         public void onComplete(String result) {
             if(!result.equals("Cancel")) {
-                Map.Entry<String, Integer> lastEntry = projectUploadIdMap.entrySet().stream()
+
+               /* Map.Entry<String, Integer> lastEntry = projectUploadIdMap.entrySet().stream()
                         .reduce((first, second) -> second)
                         .orElse(null);
                 int upload_id = lastEntry.getValue();
+               */
                 System.out.println("Upload_ID:" + upload_id);
                 try {
                     // String sql = "EXECUTE Core_Comment.sp_Load_Comments @p_Upload_ID="+upload_id;
@@ -302,6 +310,7 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
     private void save2db() {
         List<GenericComments> allGenericCommentsItems = getGenericCommentsDataProviderAllItems();
 
+        /*
         List<String> allFileNames = allGenericCommentsItems.stream()
                 .map(GenericComments::getFileName)
                 .distinct()
@@ -327,6 +336,27 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
             projectConnectionService.getJdbcConnection(dbUrl, dbUser, dbPassword);
             projectConnectionService.saveUploadedGenericFileData(projectUpload);
         }
+*/
+
+        ProjectUpload projectUpload = new ProjectUpload();
+        projectUpload.setFileName(fileName);
+        //projectUpload.setUserName(MainLayout.userName);
+
+        Optional<User> maybeUser = authenticatedUser.get();
+        if (maybeUser.isPresent()) {
+            User user = maybeUser.get();
+            projectUpload.setUserName(user.getUsername());
+        }
+
+        projectUpload.setModulName("B2POutlookFIN");
+
+        projectConnectionService.getJdbcConnection(dbUrl, dbUser, dbPassword); // Set Connection to target DB
+        upload_id = projectConnectionService.saveUploadedGenericFileData(projectUpload,null);
+
+        projectUpload.setUploadId(upload_id);
+
+        System.out.println("Upload_ID: " + upload_id);
+
 
         ui.setPollInterval(500);
         saveAllCommentsdata(allGenericCommentsItems);
@@ -363,7 +393,7 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
 
                     System.out.println("Verarbeitete Zeilen: " + endIndex + " von " + totalRows);
 
-                    String resultComments = projectConnectionService.saveGenericComments(batchData, tableName, dbUrl, dbUser, dbPassword);
+                    String resultComments = projectConnectionService.saveGenericComments(batchData, tableName, dbUrl, dbUser, dbPassword, upload_id);
                     returnStatus.set(resultComments);
 
                     System.out.println("ResultComment: " + returnStatus.toString());
@@ -464,7 +494,7 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
         singleFileUpload.addSucceededListener(event -> {
             // Get information about the uploaded file
             InputStream fileData = memoryBuffer.getInputStream();
-            String fileName = event.getFileName();
+            fileName = event.getFileName();
             contentLength = event.getContentLength();
             mimeType = event.getMIMEType();
 

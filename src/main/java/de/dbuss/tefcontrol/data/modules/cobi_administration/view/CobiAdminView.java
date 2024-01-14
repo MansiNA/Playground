@@ -201,10 +201,12 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
         @Override
         public void onComplete(String result) {
             if(!result.equals("Cancel")) {
-                Map.Entry<String, Integer> lastEntry = projectUploadIdMap.entrySet().stream()
+
+        /*        Map.Entry<String, Integer> lastEntry = projectUploadIdMap.entrySet().stream()
                         .reduce((first, second) -> second)
                         .orElse(null);
-                int upload_id = lastEntry.getValue();
+                int upload_id = lastEntry.getValue();*/
+
                 System.out.println("Upload_ID:" + upload_id);
                 try {
                     // String sql = "EXECUTE Core_Comment.sp_Load_Comments @p_Upload_ID="+upload_id;
