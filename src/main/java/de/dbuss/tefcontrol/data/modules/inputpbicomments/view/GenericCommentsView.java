@@ -87,10 +87,13 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
     private Button uploadBtn;
     private Button qsBtn;
     private int id;
+    private AuthenticatedUser authenticatedUser;
     public static Map<String, Integer> projectUploadIdMap = new HashMap<>();
     public GenericCommentsView(AuthenticatedUser authenticatedUser, ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, BackendService backendService) {
 
         this.projectConnectionService = projectConnectionService;
+        this.authenticatedUser=authenticatedUser;
+
 
         uploadBtn = new Button("Upload");
         uploadBtn.setEnabled(false);
@@ -307,7 +310,19 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
         for (String fileName : allFileNames) {
             ProjectUpload projectUpload = new ProjectUpload();
             projectUpload.setFileName(fileName);
-            projectUpload.setUserName(MainLayout.userName);  //ToDO: Get connected User
+
+            Optional<User> maybeUser = authenticatedUser.get();
+            if (maybeUser.isPresent()) {
+                User user = maybeUser.get();
+                projectUpload.setUserName(user.getUsername());
+            }
+            else {
+                //No Username found break...
+                Notification.show("Username not found, data can not upload to DB", 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                return;
+            }
+
+
             projectUpload.setModulName("GenericComments");
             projectConnectionService.getJdbcConnection(dbUrl, dbUser, dbPassword);
             projectConnectionService.saveUploadedGenericFileData(projectUpload);
