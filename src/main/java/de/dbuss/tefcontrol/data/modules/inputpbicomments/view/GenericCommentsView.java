@@ -307,7 +307,7 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
         for (String fileName : allFileNames) {
             ProjectUpload projectUpload = new ProjectUpload();
             projectUpload.setFileName(fileName);
-            projectUpload.setUserName(MainLayout.userName);
+            projectUpload.setUserName(MainLayout.userName);  //ToDO: Get connected User
             projectUpload.setModulName("GenericComments");
             projectConnectionService.getJdbcConnection(dbUrl, dbUser, dbPassword);
             projectConnectionService.saveUploadedGenericFileData(projectUpload);
