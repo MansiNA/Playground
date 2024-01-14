@@ -1300,8 +1300,7 @@ public class ProjectConnectionService {
 
             DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
             jdbcTemplate = new JdbcTemplate(dataSource);
-            //String sql = "SELECT [Upload_ID], [File_Name] FROM Log.user_uploads"; //ToDo: Get DB of target table, this DB should used instead PIT2-DB
-            String sql = "SELECT [Upload_ID] FROM Log.user_uploads where Modul_Name= '" + modulName + "' and User_Name = '" + userName+ "'"; //ToDo: Get DB of target table, this DB should used instead PIT2-DB
+            String sql = "SELECT [Upload_ID] FROM Log.user_uploads where Modul_Name= '" + modulName + "' and User_Name = '" + userName+ "'";
 
             // Execute the query and get a list of maps
             List<Map<String, Object>> resultList = jdbcTemplate.queryForList(sql);
