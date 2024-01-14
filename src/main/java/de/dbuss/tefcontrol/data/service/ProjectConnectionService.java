@@ -1221,6 +1221,11 @@ public class ProjectConnectionService {
           //  jdbcTemplate = getJdbcDefaultConnection();
             String sql = "INSERT INTO " + tableName + " ([File_Name], [User_Name], [Modul_Name]) VALUES (?, ?, ?)";
 
+            System.out.println("Execute SQL:" + sql);
+            System.out.println("1. Parameter: " + entity.getFileName());
+            System.out.println("2. Parameter: " + entity.getUserName());
+            System.out.println("3. Parameter: " + entity.getModulName());
+
             KeyHolder keyHolder = new GeneratedKeyHolder();
 
             int affectedRows = jdbcTemplate.update(new PreparedStatementCreator() {
