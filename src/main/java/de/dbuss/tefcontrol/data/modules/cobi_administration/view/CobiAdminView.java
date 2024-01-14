@@ -122,7 +122,7 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
 
             projectConnectionService.getJdbcConnection(dbUrl, dbUser, dbPassword);
 
-            upload_id = projectConnectionService.saveUploadedGenericFileData(projectUpload,null);
+            upload_id = projectConnectionService.saveUploadedGenericFileData(projectUpload);
 
             //String sql_rsult=projectConnectionService.saveUploadedGenericFileData(projectUpload);
 

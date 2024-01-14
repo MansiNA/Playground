@@ -329,7 +329,7 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
         projectUpload.setModulName("GenericComments");
 
         projectConnectionService.getJdbcConnection(dbUrl, dbUser, dbPassword); // Set Connection to target DB
-        upload_id = projectConnectionService.saveUploadedGenericFileData(projectUpload,null);
+        upload_id = projectConnectionService.saveUploadedGenericFileData(projectUpload);
 
         projectUpload.setUploadId(upload_id);
 

@@ -253,7 +253,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
             projectUpload.setModulName("Tech_KPI");
 
             projectConnectionService.getJdbcConnection(dbUrl, dbUser, dbPassword); // Set Connection to target DB
-            upload_id = projectConnectionService.saveUploadedGenericFileData(projectUpload,null);
+            upload_id = projectConnectionService.saveUploadedGenericFileData(projectUpload);
 
             projectUpload.setUploadId(upload_id);
 

@@ -1249,7 +1249,7 @@ public class ProjectConnectionService {
     }*/
 
 
-    public String saveUploadedGenericFileData(ProjectUpload entity) {
+ /*   public String saveUploadedGenericFileData(ProjectUpload entity) {
 
         try {
             String tableName = "Log.User_uploads";
@@ -1294,9 +1294,9 @@ public class ProjectConnectionService {
             e.printStackTrace();
             return handleDatabaseError(e);
         }
-    }
+    }*/
 
-    public Integer saveUploadedGenericFileData(ProjectUpload entity, String xx) {
+    public Integer saveUploadedGenericFileData(ProjectUpload entity) {
 
         try {
             String tableName = "Log.User_uploads";

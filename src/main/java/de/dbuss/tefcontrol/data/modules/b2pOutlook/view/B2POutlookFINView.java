@@ -325,7 +325,7 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
         projectUpload.setModulName("B2POutlookFIN");
 
         projectConnectionService.getJdbcConnection(dbUrl, dbUser, dbPassword); // Set Connection to target DB
-        upload_id = projectConnectionService.saveUploadedGenericFileData(projectUpload,null);
+        upload_id = projectConnectionService.saveUploadedGenericFileData(projectUpload);
 
         projectUpload.setUploadId(upload_id);
 
