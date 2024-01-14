@@ -177,6 +177,7 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
                         .reduce((first, second) -> second)
                         .orElse(null);
                 int upload_id = lastEntry.getValue();
+                System.out.println("Upload_ID:" + upload_id);
                 try {
                     // String sql = "EXECUTE Core_Comment.sp_Load_Comments @p_Upload_ID="+upload_id;
                     String sql = "DECLARE @status AS INT;\n" +
@@ -199,7 +200,7 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
                     DataSource dataSource = projectConnectionService.getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
                     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
                     //  jdbcTemplate.execute(sql);
-                    System.out.println("SQL executed: " + sql);
+                    System.out.println("Execute SQL: " + sql);
                     String sqlResult = jdbcTemplate.queryForObject(sql, String.class);
 
                     System.out.println("SQL result: " + sqlResult);
@@ -208,10 +209,19 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
                         // resultMessage contains Upload_ID, so search user wo do this upload:
                         int uploadID=Integer.parseInt(sqlResult);
 
-                        sql="select User_Name from [Log].[User_Uploads] where Upload_id=" + uploadID;
 
-                        sqlResult = jdbcTemplate.queryForObject(sql, String.class);
-                        System.out.println("SQL executed: " + sql);
+                        sql="select User_Name from [Log].[User_Uploads] where Upload_id=" + uploadID;
+                        System.out.println("execute SQL: " + sql);
+                        try {
+                            sqlResult = jdbcTemplate.queryForObject(sql, String.class);
+                        }
+                        catch (Exception e){
+                            System.out.println("User for Upload-ID " + uploadID + " not found...");
+                            String AgenterrorMessage = "User for Upload-ID " + uploadID + " not found...please try again later...";
+                            Notification.show(AgenterrorMessage, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                            return;
+                        }
+
                         System.out.println("SQL result " + sqlResult);
 
                         String errorMessage = "ERROR: Job already executed by user " + sqlResult + " (Upload ID: " + uploadID + ") please try again later...";
@@ -298,6 +308,7 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
             ProjectUpload projectUpload = new ProjectUpload();
             projectUpload.setFileName(fileName);
             projectUpload.setUserName(MainLayout.userName);
+            projectUpload.setModulName("GenericComments");
             projectConnectionService.getJdbcConnection(dbUrl, dbUser, dbPassword);
             projectConnectionService.saveUploadedGenericFileData(projectUpload);
         }

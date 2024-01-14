@@ -9,7 +9,7 @@ import java.util.Date;
 @Getter
 @Setter
 @Entity
-@Table(name = "project_uploads", schema = "dbo")
+@Table(name = "user_uploads", schema = "log")
 public class ProjectUpload {
 
     @Id
@@ -19,6 +19,9 @@ public class ProjectUpload {
 
     @Column(name = "Upload_Date")
     private Date uploadDate;
+
+    @Column(name = "Modul_Name")
+    private String modulName;
 
     @Column(name = "File_Name")
     private String fileName;

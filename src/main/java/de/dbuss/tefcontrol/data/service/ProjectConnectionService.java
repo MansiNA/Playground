@@ -772,9 +772,8 @@ public class ProjectConnectionService {
             DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
             jdbcTemplate = new JdbcTemplate(dataSource);
 
-            String sqlDelete = "DELETE FROM " + tableName;
-
-            jdbcTemplate.update(sqlDelete);
+       //     String sqlDelete = "DELETE FROM " + tableName;
+       //     jdbcTemplate.update(sqlDelete);
 
             String sqlInsert = "INSERT INTO "+ tableName +" (Zeile, Blatt, month, PL_Line, profit_center, scenario, block, segment, payment_type, type_of_data, value, Upload_ID) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
@@ -816,9 +815,8 @@ public class ProjectConnectionService {
             DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
             jdbcTemplate = new JdbcTemplate(dataSource);
 
-            String sqlDelete = "DELETE FROM " + tableName;
-
-            jdbcTemplate.update(sqlDelete);
+       //     String sqlDelete = "DELETE FROM " + tableName;
+       //     jdbcTemplate.update(sqlDelete);
 
             String sqlInsert = "INSERT INTO "+ tableName +" (Zeile, Blatt, Month, Scenario, Measure, PHY_Line, Segment, Payment_Type, Contract_Type, Value, Upload_ID) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
@@ -1221,7 +1219,7 @@ public class ProjectConnectionService {
         try {
             String tableName = "Log.User_uploads";
           //  jdbcTemplate = getJdbcDefaultConnection();
-            String sql = "INSERT INTO " + tableName + " ([File_Name], [User_Name]) VALUES (?, ?)";
+            String sql = "INSERT INTO " + tableName + " ([File_Name], [User_Name], [Modul_Name]) VALUES (?, ?, ?)";
 
             KeyHolder keyHolder = new GeneratedKeyHolder();
 
@@ -1231,6 +1229,7 @@ public class ProjectConnectionService {
                     PreparedStatement ps = connection.prepareStatement(sql, new String[]{"Upload_ID"});
                     ps.setString(1, entity.getFileName());
                     ps.setString(2, entity.getUserName());
+                    ps.setString(3, entity.getModulName());
                     return ps;
                 }
             }, keyHolder);
@@ -1239,10 +1238,17 @@ public class ProjectConnectionService {
             if (affectedRows > 0) {
                 // Retrieve the generated ID from the KeyHolder
                 long generatedId = keyHolder.getKey().longValue();
-                GenericCommentsView.projectUploadIdMap.put(entity.getFileName(), (int) generatedId);
+
+                if (entity.getModulName().equals("Tech_KPI")){
+                    Tech_KPIView.projectUploadIdMap.put(entity.getFileName(), (int) generatedId);
+                } else if (entity.getModulName().equals("GenericComments")) {
+                    GenericCommentsView.projectUploadIdMap.put(entity.getFileName(), (int) generatedId);
+                } else if (entity.getModulName().equals("B2POutlookFIN")) {
                 B2POutlookFINView.projectUploadIdMap.put(entity.getFileName(), (int) generatedId);
-                B2POutlookSUBView.projectUploadIdMap.put(entity.getFileName(), (int) generatedId);
-                Tech_KPIView.projectUploadIdMap.put(entity.getFileName(), (int) generatedId);
+                } else if (entity.getModulName().equals("B2POutlookSUB")) {
+                    B2POutlookSUBView.projectUploadIdMap.put(entity.getFileName(), (int) generatedId);
+                }
+
                 return Constants.OK;
             } else {
                 return "Failed to insert data into " + tableName ;
