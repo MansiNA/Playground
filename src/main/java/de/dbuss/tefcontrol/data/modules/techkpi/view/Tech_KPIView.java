@@ -26,9 +26,11 @@ import de.dbuss.tefcontrol.components.QS_Grid;
 import de.dbuss.tefcontrol.data.entity.Constants;
 import de.dbuss.tefcontrol.data.entity.ProjectParameter;
 import de.dbuss.tefcontrol.data.entity.ProjectUpload;
+import de.dbuss.tefcontrol.data.entity.User;
 import de.dbuss.tefcontrol.data.service.BackendService;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
 import de.dbuss.tefcontrol.data.service.ProjectParameterService;
+import de.dbuss.tefcontrol.security.AuthenticatedUser;
 import de.dbuss.tefcontrol.views.MainLayout;
 import jakarta.annotation.security.RolesAllowed;
 import org.apache.poi.ss.usermodel.Cell;
@@ -37,11 +39,14 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import javax.sql.DataSource;
 import java.io.InputStream;
 import java.util.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.atomic.AtomicReference;
+
+import static com.vaadin.flow.component.button.ButtonVariant.LUMO_TERTIARY_INLINE;
 
 
 @PageTitle("Tech KPI | TEF-Control")
@@ -84,7 +89,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
     Integer errors_Fact=0;
     Integer errors_Actuals=0;
     Integer errors_Plan=0;
-
+    private AuthenticatedUser authenticatedUser;
 
 
   //  Grid<QS_Status> gridQS;
@@ -114,13 +119,16 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
     private QS_Grid qsGrid;
     private Button qsBtn;
     private int upload_id;
+
+    public static Map<String, Integer> projectUploadIdMap = new HashMap<>();
     //Div htmlDivToDO;
     //CheckboxGroup<String> TodoList;
 
-    public Tech_KPIView(JdbcTemplate jdbcTemplate, ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, BackendService backendService) {
+    public Tech_KPIView(JdbcTemplate jdbcTemplate, ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, BackendService backendService, AuthenticatedUser authenticatedUser) {
         this.jdbcTemplate = jdbcTemplate;
         this.projectConnectionService = projectConnectionService;
         this.backendService = backendService;
+        this.authenticatedUser = authenticatedUser;
 
         uploadBtn = new Button("Upload");
         uploadBtn.setEnabled(false);
@@ -183,7 +191,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
         Div htmlDiv = new Div();
         htmlDiv.getElement().setProperty("innerHTML", "<h2>Import KPI Excel-File</h2><p>Mit dieser Seite lässt sich die KPI_DB.xlsx " +
-                "Datei direkt in die Datenbank einlesen.</br>Die Daten der Blätter \"<b>KPI_Plan</b>\", \"<b>KPI_Actuals</b>\" und \"<b>KPI_Fact</b>\" werden automatisch in die Stage Tabellen <ul><li>Stage_Tech_KPI.KPI_Plan</li><li>Stage_Tech_KPI.KPI_Actuals</li><li>Stage_Tech_KPI.KPI_Fact</li></ul>geladen. " +
+                "Datei direkt in die Datenbank einlesen.</br>Die Daten der Blätter \"<b>KPI_Actuals</b>\" und \"<b>KPI_Fact</b>\" werden automatisch in die Stage Tabellen <ul><li>Stage_Tech_KPI.KPI_Actuals</li><li>Stage_Tech_KPI.KPI_Fact</li></ul>geladen. " +
                 "Dazu einfach die Datei auswählen oder per drag&drop hochladen. </br>Nach einer entsprechenden QS-Rückmeldung bzgl. Datenqualität, kann die weitere Verarbeitung per Button \"Freigabe\" erfolgen.");
 
         // Div zur Ansicht hinzufügen
@@ -236,14 +244,20 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
             ProjectUpload projectUpload = new ProjectUpload();
             projectUpload.setFileName(fileName);
-            projectUpload.setUserName(MainLayout.userName);
-            projectConnectionService.saveUploadedGenericFileData(projectUpload);
+            //projectUpload.setUserName(MainLayout.userName);
+            Optional<User> maybeUser = authenticatedUser.get();
+            if (maybeUser.isPresent()) {
+                User user = maybeUser.get();
+                projectUpload.setUserName(user.getUsername());
+            }
+            projectUpload.setModulName("Tech_KPI");
 
-            Map<String, Integer> uploadIdMap = projectConnectionService.getUploadIdMap();
-            upload_id = uploadIdMap.values().stream()
-                    .mapToInt(Integer::intValue)
-                    .max()
-                    .orElse(1);
+            projectConnectionService.getJdbcConnection(dbUrl, dbUser, dbPassword); // Set Connection to target DB
+            upload_id = projectConnectionService.saveUploadedGenericFileData(projectUpload);
+
+            projectUpload.setUploadId(upload_id);
+
+            System.out.println("Upload_ID: " + upload_id);
 
           //  savePlanEntities();
             saveActualsEntities();
@@ -328,6 +342,133 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
         @Override
         public void onComplete(String result) {
             if(!result.equals("Cancel")) {
+                /*Map.Entry<String, Integer> lastEntry = projectUploadIdMap.entrySet().stream()
+                        .reduce((first, second) -> second)
+                        .orElse(null);
+                int upload_id = lastEntry.getValue();*/
+                System.out.println("Upload_ID:" + upload_id);
+                try {
+                    // String sql = "EXECUTE Core_Comment.sp_Load_Comments @p_Upload_ID="+upload_id;
+                    String sql = "DECLARE @status AS INT;\n" +
+                            "BEGIN TRAN\n" +
+                            "   SELECT @status=[Upload_ID] FROM [Log].[Agent_Job_Uploads] WITH (UPDLOCK)\n" +
+                            "   WHERE AgentJobName = '" + agentName + "';\n" +
+                            "IF (@status IS NULL)\n" +
+                            "BEGIN\n" +
+                            "  UPDATE [Log].[Agent_Job_Uploads]\n" +
+                            "  SET [Upload_ID] = "+upload_id +"\n" +
+                            "   WHERE AgentJobName = '" + agentName +"' ;\n" +
+                            "  COMMIT;\n" +
+                            "  SELECT 'ok' AS Result\n" +
+                            "END\n" +
+                            "ELSE\n" +
+                            "BEGIN\n" +
+                            "  SELECT @status AS Result;\n" +
+                            "  ROLLBACK;\n" +
+                            "END";
+                    DataSource dataSource = projectConnectionService.getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+                    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+                    //  jdbcTemplate.execute(sql);
+                    System.out.println("Execute SQL: " + sql);
+                    String sqlResult = jdbcTemplate.queryForObject(sql, String.class);
+
+                    System.out.println("SQL result: " + sqlResult);
+
+                    if (!"ok".equals(sqlResult)) {
+                        // resultMessage contains Upload_ID, so search user wo do this upload:
+                        int uploadID=Integer.parseInt(sqlResult);
+
+
+                        sql="select User_Name from [Log].[User_Uploads] where Upload_id=" + uploadID;
+                        System.out.println("execute SQL: " + sql);
+                        try {
+                            sqlResult = jdbcTemplate.queryForObject(sql, String.class);
+                        }
+                        catch (Exception e){
+                            System.out.println("User for Upload-ID " + uploadID + " not found...");
+                            String AgenterrorMessage = "User for Upload-ID " + uploadID + " not found...please try again later...";
+                            Notification.show(AgenterrorMessage, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                            return;
+                        }
+
+                        System.out.println("SQL result " + sqlResult);
+
+                        String errorMessage = "ERROR: Job already executed by user " + sqlResult + " (Upload ID: " + uploadID + ") please try again later...";
+                        //Notification.show(errorMessage, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+
+                        Notification notification = new Notification();
+                        notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+                        Div statusText = new Div(new Text(errorMessage));
+
+                        Button retryButton = new Button("Try anyway");
+                        retryButton.addThemeVariants(LUMO_TERTIARY_INLINE);
+                        //retryButton.getElement().getStyle().set("margin-left", "var(--lumo-space-xl)");
+                        retryButton.getStyle().set("margin", "0 0 0 var(--lumo-space-l)");
+                        retryButton.addClickListener(event -> {
+                            notification.close();
+
+                            //Update Agent_Job_Uploads
+                            String sql1 = "UPDATE [Log].[Agent_Job_Uploads] SET [Upload_ID] = "+upload_id + " WHERE AgentJobName = '" + agentName +"' ;";
+                            System.out.println("SQL executed: " + sql1);
+                            jdbcTemplate.execute(sql1);
+                            //End Update Agent_Job_Uploads
+
+
+                            String message = projectConnectionService.startAgent(projectId);
+                            if (!message.contains("Error")) {
+
+                                Notification.show(message, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                            } else {
+                                String AgenterrorMessage = "ERROR: Job " + agentName + " already running please try again later...";
+                                Notification.show(AgenterrorMessage, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                            }
+
+                        });
+
+                        //Button closeButton = new Button(new Icon("lumo", "cross"));
+
+                        Button closeButton = new Button("OK");
+                        closeButton.addThemeVariants(LUMO_TERTIARY_INLINE);
+                        closeButton.getElement().setAttribute("aria-label", "Close");
+                        closeButton.addClickListener(event -> {
+                            notification.close();
+                        });
+
+                        HorizontalLayout layout = new HorizontalLayout(statusText, retryButton, closeButton);
+                        layout.setAlignItems(Alignment.CENTER);
+
+                        notification.add(layout);
+                        notification.setPosition(Notification.Position.MIDDLE);
+                        notification.open();
+
+
+                    } else {
+                        // Continue with startAgent
+                        String message = projectConnectionService.startAgent(projectId);
+                        if (!message.contains("Error")) {
+
+                            Notification.show(message, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                        } else {
+                            String errorMessage = "ERROR: Job " + agentName + " already running please try again later...";
+                            Notification.show(errorMessage, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                        }
+                    }
+                } catch (Exception e) {
+                    //e.printStackTrace();
+                    String errormessage = projectConnectionService.handleDatabaseError(e);
+                    Notification.show(errormessage, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                    return;
+                }
+
+
+
+            }
+        }
+
+
+        /*
+        public void onComplete(String result) {
+            if(!result.equals("Cancel")) {
                 String message = projectConnectionService.startAgent(projectId);
                 if (!message.contains("Error")) {
                     Notification.show(message, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
@@ -336,6 +477,8 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                 }
             }
         }
+
+         */
     }
    /* private void setupQSGrid() {
         gridQS = new Grid<>(QS_Status.class, false);
@@ -467,7 +610,9 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
                 int batchSize = 1000; // Die Anzahl der Zeilen, die auf einmal verarbeitet werden sollen
 
-                projectConnectionService.deleteTableData(dbUrl, dbUser, dbPassword, actualsTableName);
+                //projectConnectionService.deleteTableData(dbUrl, dbUser, dbPassword, actualsTableName);
+
+                projectConnectionService.getJdbcConnection(dbUrl, dbUser, dbPassword);
 
                 for (int i = 0; i < totalRows; i += batchSize) {
 
@@ -537,7 +682,8 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
                 int batchSize = 1000; // Die Anzahl der Zeilen, die auf einmal verarbeitet werden sollen
 
-                projectConnectionService.deleteTableData(dbUrl, dbUser, dbPassword, factTableName);
+           //     projectConnectionService.deleteTableData(dbUrl, dbUser, dbPassword, factTableName);
+                projectConnectionService.getJdbcConnection(dbUrl, dbUser, dbPassword);
 
                 for (int i = 0; i < totalRows; i += batchSize) {
 

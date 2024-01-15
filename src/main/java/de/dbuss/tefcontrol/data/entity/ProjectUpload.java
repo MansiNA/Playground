@@ -9,16 +9,19 @@ import java.util.Date;
 @Getter
 @Setter
 @Entity
-@Table(name = "project_uploads", schema = "dbo")
+@Table(name = "user_uploads", schema = "log")
 public class ProjectUpload {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "Upload_ID")
-    private Long uploadId;
+    private Integer uploadId;
 
     @Column(name = "Upload_Date")
     private Date uploadDate;
+
+    @Column(name = "Modul_Name")
+    private String modulName;
 
     @Column(name = "File_Name")
     private String fileName;

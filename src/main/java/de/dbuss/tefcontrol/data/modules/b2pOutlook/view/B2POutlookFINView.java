@@ -23,24 +23,30 @@ import de.dbuss.tefcontrol.components.QS_Grid;
 import de.dbuss.tefcontrol.data.entity.Constants;
 import de.dbuss.tefcontrol.data.entity.ProjectParameter;
 import de.dbuss.tefcontrol.data.entity.ProjectUpload;
+import de.dbuss.tefcontrol.data.entity.User;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.OutlookMGSR;
 import de.dbuss.tefcontrol.data.service.BackendService;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
 import de.dbuss.tefcontrol.data.service.ProjectParameterService;
 import de.dbuss.tefcontrol.dataprovider.GenericDataProvider;
+import de.dbuss.tefcontrol.security.AuthenticatedUser;
 import de.dbuss.tefcontrol.views.MainLayout;
 import jakarta.annotation.security.RolesAllowed;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.util.concurrent.ListenableFuture;
 
+import javax.sql.DataSource;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+
+import static com.vaadin.flow.component.button.ButtonVariant.LUMO_TERTIARY_INLINE;
 
 @Route(value = "B2P_Outlook_FIN/:project_Id", layout = MainLayout.class)
 @RolesAllowed({"FLIP", "ADMIN"})
@@ -69,12 +75,17 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
     private int upload_id;
     ListenableFuture<String> future;
 
+  //  public static Map<String, Integer> projectUploadIdMap = new HashMap<>();
+
     BackendService backendService;
 
-    public B2POutlookFINView(ProjectParameterService projectParameterService, ProjectConnectionService projectConnectionService, BackendService backendService) {
+    private AuthenticatedUser authenticatedUser;
+
+    public B2POutlookFINView(ProjectParameterService projectParameterService, ProjectConnectionService projectConnectionService, BackendService backendService,  AuthenticatedUser authenticatedUser) {
 
         this.backendService = backendService;
         this.projectConnectionService = projectConnectionService;
+        this.authenticatedUser=authenticatedUser;
 
         uploadBtn = new Button("Upload");
         uploadBtn.setEnabled(false);
@@ -159,6 +170,135 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
         @Override
         public void onComplete(String result) {
             if(!result.equals("Cancel")) {
+
+                /*Map.Entry<String, Integer> lastEntry = projectUploadIdMap.entrySet().stream()
+                        .reduce((first, second) -> second)
+                        .orElse(null);
+                int upload_id = lastEntry.getValue();*/
+
+
+                System.out.println("Upload_ID:" + upload_id);
+                try {
+                    // String sql = "EXECUTE Core_Comment.sp_Load_Comments @p_Upload_ID="+upload_id;
+                    String sql = "DECLARE @status AS INT;\n" +
+                            "BEGIN TRAN\n" +
+                            "   SELECT @status=[Upload_ID] FROM [Log].[Agent_Job_Uploads] WITH (UPDLOCK)\n" +
+                            "   WHERE AgentJobName = '" + agentName + "';\n" +
+                            "IF (@status IS NULL)\n" +
+                            "BEGIN\n" +
+                            "  UPDATE [Log].[Agent_Job_Uploads]\n" +
+                            "  SET [Upload_ID] = "+upload_id +"\n" +
+                            "   WHERE AgentJobName = '" + agentName +"' ;\n" +
+                            "  COMMIT;\n" +
+                            "  SELECT 'ok' AS Result\n" +
+                            "END\n" +
+                            "ELSE\n" +
+                            "BEGIN\n" +
+                            "  SELECT @status AS Result;\n" +
+                            "  ROLLBACK;\n" +
+                            "END";
+                    DataSource dataSource = projectConnectionService.getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+                    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+                    //  jdbcTemplate.execute(sql);
+                    System.out.println("Execute SQL: " + sql);
+                    String sqlResult = jdbcTemplate.queryForObject(sql, String.class);
+
+                    System.out.println("SQL result: " + sqlResult);
+
+                    if (!"ok".equals(sqlResult)) {
+                        // resultMessage contains Upload_ID, so search user wo do this upload:
+                        int uploadID=Integer.parseInt(sqlResult);
+
+
+                        sql="select User_Name from [Log].[User_Uploads] where Upload_id=" + uploadID;
+                        System.out.println("execute SQL: " + sql);
+                        try {
+                            sqlResult = jdbcTemplate.queryForObject(sql, String.class);
+                        }
+                        catch (Exception e){
+                            System.out.println("User for Upload-ID " + uploadID + " not found...");
+                            String AgenterrorMessage = "User for Upload-ID " + uploadID + " not found...please try again later...";
+                            Notification.show(AgenterrorMessage, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                            return;
+                        }
+
+                        System.out.println("SQL result " + sqlResult);
+
+                        String errorMessage = "ERROR: Job already executed by user " + sqlResult + " (Upload ID: " + uploadID + ") please try again later...";
+                        //Notification.show(errorMessage, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+
+                        Notification notification = new Notification();
+                        notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+                        Div statusText = new Div(new Text(errorMessage));
+
+                        Button retryButton = new Button("Try anyway");
+                        retryButton.addThemeVariants(LUMO_TERTIARY_INLINE);
+                        //retryButton.getElement().getStyle().set("margin-left", "var(--lumo-space-xl)");
+                        retryButton.getStyle().set("margin", "0 0 0 var(--lumo-space-l)");
+                        retryButton.addClickListener(event -> {
+                            notification.close();
+
+                            //Update Agent_Job_Uploads
+                            String sql1 = "UPDATE [Log].[Agent_Job_Uploads] SET [Upload_ID] = "+upload_id + " WHERE AgentJobName = '" + agentName +"' ;";
+                            System.out.println("SQL executed: " + sql1);
+                            jdbcTemplate.execute(sql1);
+                            //End Update Agent_Job_Uploads
+
+
+                            String message = projectConnectionService.startAgent(projectId);
+                            if (!message.contains("Error")) {
+
+                                Notification.show(message, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                            } else {
+                                String AgenterrorMessage = "ERROR: Job " + agentName + " already running please try again later...";
+                                Notification.show(AgenterrorMessage, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                            }
+
+                        });
+
+                        //Button closeButton = new Button(new Icon("lumo", "cross"));
+
+                        Button closeButton = new Button("OK");
+                        closeButton.addThemeVariants(LUMO_TERTIARY_INLINE);
+                        closeButton.getElement().setAttribute("aria-label", "Close");
+                        closeButton.addClickListener(event -> {
+                            notification.close();
+                        });
+
+                        HorizontalLayout layout = new HorizontalLayout(statusText, retryButton, closeButton);
+                        layout.setAlignItems(Alignment.CENTER);
+
+                        notification.add(layout);
+                        notification.setPosition(Notification.Position.MIDDLE);
+                        notification.open();
+
+
+                    } else {
+                        // Continue with startAgent
+                        String message = projectConnectionService.startAgent(projectId);
+                        if (!message.contains("Error")) {
+
+                            Notification.show(message, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                        } else {
+                            String errorMessage = "ERROR: Job " + agentName + " already running please try again later...";
+                            Notification.show(errorMessage, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                        }
+                    }
+                } catch (Exception e) {
+                    //e.printStackTrace();
+                    String errormessage = projectConnectionService.handleDatabaseError(e);
+                    Notification.show(errormessage, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                    return;
+                }
+
+
+
+            }
+        }
+
+
+   /*     public void onComplete(String result) {
+            if(!result.equals("Cancel")) {
                 String message = projectConnectionService.startAgent(projectId);
                 if (!message.contains("Error")) {
                     Notification.show(message, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
@@ -166,22 +306,40 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
                     Notification.show(message, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
                 }
             }
-        }
+        }*/
+
+
     }
 
     private void save2db(){
         ProjectUpload projectUpload = new ProjectUpload();
         projectUpload.setFileName(fileName);
-        projectUpload.setUserName(MainLayout.userName);
-        projectConnectionService.saveUploadedGenericFileData(projectUpload);
+        //projectUpload.setUserName(MainLayout.userName);
 
-        Map<String, Integer> uploadIdMap = projectConnectionService.getUploadIdMap();
+        Optional<User> maybeUser = authenticatedUser.get();
+        if (maybeUser.isPresent()) {
+            User user = maybeUser.get();
+            projectUpload.setUserName(user.getUsername());
+        }
+
+        projectUpload.setModulName("B2POutlookFIN");
+
+        projectConnectionService.getJdbcConnection(dbUrl, dbUser, dbPassword); // Set Connection to target DB
+        upload_id = projectConnectionService.saveUploadedGenericFileData(projectUpload);
+
+        projectUpload.setUploadId(upload_id);
+
+        System.out.println("Upload_ID: " + upload_id);
+
+      /*  Map<String, Integer> uploadIdMap = projectConnectionService.getUploadIdMap();
         upload_id = uploadIdMap.values().stream()
                 .mapToInt(Integer::intValue)
                 .max()
-                .orElse(1);
+                .orElse(1);*/
 
-        Notification notification = Notification.show(" Rows Uploaded start",2000, Notification.Position.MIDDLE);
+        System.out.println("Upload_ID for insert into " + tableName + " is " + upload_id);
+
+        Notification notification = Notification.show("start upload to " + tableName + " with upload_id: "+ upload_id ,2000, Notification.Position.MIDDLE);
         notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
 
         List<OutlookMGSR> listOfAllData = new ArrayList<>();

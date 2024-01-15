@@ -4,6 +4,7 @@ import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.crud.BinderCrudEditor;
 import com.vaadin.flow.component.crud.Crud;
 import com.vaadin.flow.component.crud.CrudEditor;
@@ -11,6 +12,8 @@ import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Article;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -56,6 +59,8 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
+import static com.vaadin.flow.component.button.ButtonVariant.LUMO_TERTIARY_INLINE;
+
 
 @PageTitle("Generic Comments")
 @Route(value = "Generic_Comments/:project_Id", layout = MainLayout.class)
@@ -74,6 +79,10 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
     private String dbUrl;
     private String dbUser;
     private String dbPassword;
+
+    String fileName;
+
+    private int upload_id;
     long contentLength = 0;
     String mimeType = "";
     Div textArea = new Div();
@@ -82,10 +91,13 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
     private Button uploadBtn;
     private Button qsBtn;
     private int id;
+    private AuthenticatedUser authenticatedUser;
     public static Map<String, Integer> projectUploadIdMap = new HashMap<>();
     public GenericCommentsView(AuthenticatedUser authenticatedUser, ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, BackendService backendService) {
 
         this.projectConnectionService = projectConnectionService;
+        this.authenticatedUser=authenticatedUser;
+
 
         uploadBtn = new Button("Upload");
         uploadBtn.setEnabled(false);
@@ -137,18 +149,20 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
         });
 
         qsBtn.addClickListener(e ->{
-           // if (qsGrid.projectId != projectId) {
-                hl.remove(qsGrid);
-                qsGrid = new QS_Grid(projectConnectionService, backendService);
-                hl.add(qsGrid);
-                CallbackHandler callbackHandler = new CallbackHandler();
-                Map.Entry<String, Integer> lastEntry = projectUploadIdMap.entrySet().stream()
-                        .reduce((first, second) -> second)
-                        .orElse(null);
-                int upload_id = lastEntry.getValue();
-                qsGrid.createDialog(callbackHandler, projectId, upload_id);
-             //   projectUploadIdMap = new HashMap<>();
-        //    }
+            // if (qsGrid.projectId != projectId) {
+            hl.remove(qsGrid);
+            qsGrid = new QS_Grid(projectConnectionService, backendService);
+            hl.add(qsGrid);
+            CallbackHandler callbackHandler = new CallbackHandler();
+
+            /*Map.Entry<String, Integer> lastEntry = projectUploadIdMap.entrySet().stream()
+                    .reduce((first, second) -> second)
+                    .orElse(null);
+            int upload_id = lastEntry.getValue();*/
+
+            qsGrid.createDialog(callbackHandler, projectId, upload_id);
+            //   projectUploadIdMap = new HashMap<>();
+            //    }
             qsGrid.showDialog(true);
         });
 
@@ -168,52 +182,121 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
         @Override
         public void onComplete(String result) {
             if(!result.equals("Cancel")) {
-                Map.Entry<String, Integer> lastEntry = projectUploadIdMap.entrySet().stream()
+
+               /* Map.Entry<String, Integer> lastEntry = projectUploadIdMap.entrySet().stream()
                         .reduce((first, second) -> second)
                         .orElse(null);
                 int upload_id = lastEntry.getValue();
+               */
+                System.out.println("Upload_ID:" + upload_id);
                 try {
-                   // String sql = "EXECUTE Core_Comment.sp_Load_Comments @p_Upload_ID="+upload_id;
+                    // String sql = "EXECUTE Core_Comment.sp_Load_Comments @p_Upload_ID="+upload_id;
                     String sql = "DECLARE @status AS INT;\n" +
                             "BEGIN TRAN\n" +
                             "   SELECT @status=[Upload_ID] FROM [Log].[Agent_Job_Uploads] WITH (UPDLOCK)\n" +
-                            "   WHERE AgentJobName = 'JOB_NAME';\n" +
+                            "   WHERE AgentJobName = '" + agentName + "';\n" +
                             "IF (@status IS NULL)\n" +
                             "BEGIN\n" +
                             "  UPDATE [Log].[Agent_Job_Uploads]\n" +
                             "  SET [Upload_ID] = "+upload_id +"\n" +
-                            "   WHERE AgentJobName = 'JOB_NAME';\n" +
+                            "   WHERE AgentJobName = '" + agentName +"' ;\n" +
                             "  COMMIT;\n" +
                             "  SELECT 'ok' AS Result\n" +
                             "END\n" +
                             "ELSE\n" +
                             "BEGIN\n" +
-                            "  SELECT 'failed' AS Result;\n" +
+                            "  SELECT @status AS Result;\n" +
                             "  ROLLBACK;\n" +
                             "END";
                     DataSource dataSource = projectConnectionService.getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
                     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-                    jdbcTemplate.execute(sql);
-                    System.out.println("SQL executed: " + sql);
-                    String resultMessage = jdbcTemplate.queryForObject(sql, String.class);
+                    //  jdbcTemplate.execute(sql);
+                    System.out.println("Execute SQL: " + sql);
+                    String sqlResult = jdbcTemplate.queryForObject(sql, String.class);
 
-                    System.out.println("SQL executed: result " + resultMessage);
+                    System.out.println("SQL result for entry in Agent_Job_Uploads: (\"ok\" if no Upload_id exists)" + sqlResult);
 
-                    if ("failed".equals(resultMessage)) {
-                        // Handle the error, show error message, etc.
-                        String errorMessage = "SQL execution failed.";
-                        Notification.show(errorMessage, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                    if (!"ok".equals(sqlResult)) {
+                        // resultMessage contains Upload_ID, so search user wo do this upload:
+                        int uploadID=Integer.parseInt(sqlResult);
+
+
+                        sql="select User_Name from [Log].[User_Uploads] where Upload_id=" + uploadID;
+                        System.out.println("execute SQL: " + sql);
+                        try {
+                            sqlResult = jdbcTemplate.queryForObject(sql, String.class);
+                        }
+                        catch (Exception e){
+                            System.out.println("User for Upload-ID " + uploadID + " not found...");
+                            String AgenterrorMessage = "User for Upload-ID " + uploadID + " not found...please try again later...";
+                            Notification.show(AgenterrorMessage, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                            return;
+                        }
+
+                        System.out.println("SQL result " + sqlResult);
+
+                        String errorMessage = "ERROR: Job already executed by user " + sqlResult + " (Upload ID: " + uploadID + ") please try again later...";
+                        //Notification.show(errorMessage, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+
+                        Notification notification = new Notification();
+                        notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+                        Div statusText = new Div(new Text(errorMessage));
+
+                        Button retryButton = new Button("Try anyway");
+                        retryButton.addThemeVariants(LUMO_TERTIARY_INLINE);
+                        //retryButton.getElement().getStyle().set("margin-left", "var(--lumo-space-xl)");
+                        retryButton.getStyle().set("margin", "0 0 0 var(--lumo-space-l)");
+                        retryButton.addClickListener(event -> {
+                            notification.close();
+
+                            //Update Agent_Job_Uploads
+                            String sql1 = "UPDATE [Log].[Agent_Job_Uploads] SET [Upload_ID] = "+upload_id + " WHERE AgentJobName = '" + agentName +"' ;";
+                            System.out.println("SQL executed: " + sql1);
+                            jdbcTemplate.execute(sql1);
+                            //End Update Agent_Job_Uploads
+
+
+                            String message = projectConnectionService.startAgent(projectId);
+                            if (!message.contains("Error")) {
+
+                                Notification.show(message, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                            } else {
+                                String AgenterrorMessage = "ERROR: Job " + agentName + " already running please try again later...";
+                                Notification.show(AgenterrorMessage, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                            }
+
+                        });
+
+                        //Button closeButton = new Button(new Icon("lumo", "cross"));
+
+                        Button closeButton = new Button("OK");
+                        closeButton.addThemeVariants(LUMO_TERTIARY_INLINE);
+                        closeButton.getElement().setAttribute("aria-label", "Close");
+                        closeButton.addClickListener(event -> {
+                            notification.close();
+                        });
+
+                        HorizontalLayout layout = new HorizontalLayout(statusText, retryButton, closeButton);
+                        layout.setAlignItems(Alignment.CENTER);
+
+                        notification.add(layout);
+                        notification.setPosition(Notification.Position.MIDDLE);
+                        notification.open();
+
+
                     } else {
                         // Continue with startAgent
                         String message = projectConnectionService.startAgent(projectId);
                         if (!message.contains("Error")) {
+
                             Notification.show(message, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
                         } else {
-                            Notification.show(message, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                            String errorMessage = "ERROR: Job " + agentName + " already running please try again later...";
+                            Notification.show(errorMessage, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
                         }
                     }
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    //e.printStackTrace();
                     String errormessage = projectConnectionService.handleDatabaseError(e);
                     Notification.show(errormessage, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
                     return;
@@ -227,17 +310,31 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
     private void save2db() {
         List<GenericComments> allGenericCommentsItems = getGenericCommentsDataProviderAllItems();
 
-        List<String> allFileNames = allGenericCommentsItems.stream()
-                .map(GenericComments::getFileName)
-                .distinct()
-                .collect(Collectors.toList());
+        ProjectUpload projectUpload = new ProjectUpload();
+        projectUpload.setFileName(fileName);
+        //projectUpload.setUserName(MainLayout.userName);
 
-        for (String fileName : allFileNames) {
-            ProjectUpload projectUpload = new ProjectUpload();
-            projectUpload.setFileName(fileName);
-            projectUpload.setUserName(MainLayout.userName);
-            projectConnectionService.saveUploadedGenericFileData(projectUpload);
+        Optional<User> maybeUser = authenticatedUser.get();
+        if (maybeUser.isPresent()) {
+            User user = maybeUser.get();
+            projectUpload.setUserName(user.getUsername());
         }
+        else {
+            //No Username found break...
+            Notification.show("Username not found, data can not upload to DB", 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+            return;
+        }
+
+
+        projectUpload.setModulName("GenericComments");
+
+        projectConnectionService.getJdbcConnection(dbUrl, dbUser, dbPassword); // Set Connection to target DB
+        upload_id = projectConnectionService.saveUploadedGenericFileData(projectUpload);
+
+        projectUpload.setUploadId(upload_id);
+
+        System.out.println("Upload_ID: " + upload_id);
+
 
         ui.setPollInterval(500);
         saveAllCommentsdata(allGenericCommentsItems);
@@ -255,7 +352,7 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
             projectConnectionService.getJdbcConnection(dbUrl, dbUser, dbPassword);
             // Do some long running task
             try {
-                int batchSize = 10; // Die Anzahl der Zeilen, die auf einmal verarbeitet werden sollen
+                int batchSize = 100; // Die Anzahl der Zeilen, die auf einmal verarbeitet werden sollen
 
                 for (int i = 0; i < totalRows; i += batchSize) {
 
@@ -274,7 +371,7 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
 
                     System.out.println("Verarbeitete Zeilen: " + endIndex + " von " + totalRows);
 
-                    String resultComments = projectConnectionService.saveGenericComments(batchData, tableName, dbUrl, dbUser, dbPassword);
+                    String resultComments = projectConnectionService.saveGenericComments(batchData, tableName, dbUrl, dbUser, dbPassword, upload_id);
                     returnStatus.set(resultComments);
 
                     System.out.println("ResultComment: " + returnStatus.toString());
@@ -375,7 +472,7 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
         singleFileUpload.addSucceededListener(event -> {
             // Get information about the uploaded file
             InputStream fileData = memoryBuffer.getInputStream();
-            String fileName = event.getFileName();
+            fileName = event.getFileName();
             contentLength = event.getContentLength();
             mimeType = event.getMIMEType();
 

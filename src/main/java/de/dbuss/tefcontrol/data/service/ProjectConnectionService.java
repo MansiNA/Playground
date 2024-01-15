@@ -5,9 +5,12 @@ import com.vaadin.flow.component.notification.NotificationVariant;
 import de.dbuss.tefcontrol.data.entity.*;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.B2pOutlookSub;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.OutlookMGSR;
+import de.dbuss.tefcontrol.data.modules.b2pOutlook.view.B2POutlookFINView;
+import de.dbuss.tefcontrol.data.modules.b2pOutlook.view.B2POutlookSUBView;
 import de.dbuss.tefcontrol.data.modules.cltv_Inflow.entity.CLTVInflow;
 import de.dbuss.tefcontrol.data.modules.cobi_administration.entity.CurrentPeriods;
 import de.dbuss.tefcontrol.data.modules.cobi_administration.entity.CurrentScenarios;
+import de.dbuss.tefcontrol.data.modules.cobi_administration.view.CobiAdminView;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.*;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.GenericCommentsView;
 import de.dbuss.tefcontrol.data.modules.pfgproductmapping.entity.CltvAllProduct;
@@ -770,9 +773,8 @@ public class ProjectConnectionService {
             DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
             jdbcTemplate = new JdbcTemplate(dataSource);
 
-            String sqlDelete = "DELETE FROM " + tableName;
-
-            jdbcTemplate.update(sqlDelete);
+       //     String sqlDelete = "DELETE FROM " + tableName;
+       //     jdbcTemplate.update(sqlDelete);
 
             String sqlInsert = "INSERT INTO "+ tableName +" (Zeile, Blatt, month, PL_Line, profit_center, scenario, block, segment, payment_type, type_of_data, value, Upload_ID) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
@@ -814,9 +816,8 @@ public class ProjectConnectionService {
             DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
             jdbcTemplate = new JdbcTemplate(dataSource);
 
-            String sqlDelete = "DELETE FROM " + tableName;
-
-            jdbcTemplate.update(sqlDelete);
+       //     String sqlDelete = "DELETE FROM " + tableName;
+       //     jdbcTemplate.update(sqlDelete);
 
             String sqlInsert = "INSERT INTO "+ tableName +" (Zeile, Blatt, Month, Scenario, Measure, PHY_Line, Segment, Payment_Type, Contract_Type, Value, Upload_ID) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
@@ -1133,7 +1134,82 @@ public class ProjectConnectionService {
         return Collections.emptyList();
     }
 
+    public String saveGenericComments(List<GenericComments> data, String tableName, String dbUrl, String dbUser, String dbPassword, int upload_ID) {
+
+        try {
+
+            //  DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            //  jdbcTemplate = new JdbcTemplate(dataSource);
+
+            String sqlInsert = "INSERT INTO " + tableName + " ([Upload_ID], [File_Name], [Register_Name], [Line_Number], [Responsible], [Topic], [Month], " +
+                    "[Category_1], [Category_2], [Scenario], [XTD], [Segment], [Payment_Type], [Comment]) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+            jdbcTemplate.batchUpdate(sqlInsert, data, data.size(), (ps, entity) -> {
+                ps.setInt(1,upload_ID);
+                ps.setString(2,entity.getFileName());
+                ps.setString(3,entity.getRegisterName());
+                ps.setInt(4,entity.getLineNumber());
+                ps.setString(5,entity.getResponsible());
+                ps.setString(6,entity.getTopic());
+                ps.setInt(7,entity.getMonth());
+                ps.setString(8,entity.getCategory1());
+                ps.setString(9,entity.getCategory2());
+                ps.setString(10,entity.getScenario());
+                ps.setString(11,entity.getXtd());
+                ps.setString(12,entity.getSegment());
+                ps.setString(13,entity.getPaymentType());
+                ps.setString(14,entity.getComment());
+            });
+
+            return Constants.OK;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return handleDatabaseError(e);
+        }
+    }
+
     public String saveGenericComments(List<GenericComments> data, String tableName, String dbUrl, String dbUser, String dbPassword) {
+
+        try {
+
+            Map<String, Integer> uploadIdMap = GenericCommentsView.projectUploadIdMap;
+          //  DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+          //  jdbcTemplate = new JdbcTemplate(dataSource);
+
+            String sqlInsert = "INSERT INTO " + tableName + " ([Upload_ID], [File_Name], [Register_Name], [Line_Number], [Responsible], [Topic], [Month], " +
+                    "[Category_1], [Category_2], [Scenario], [XTD], [Segment], [Payment_Type], [Comment]) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+            jdbcTemplate.batchUpdate(sqlInsert, data, data.size(), (ps, entity) -> {
+                ps.setInt(1,uploadIdMap.get(entity.getFileName()));
+                ps.setString(2,entity.getFileName());
+                ps.setString(3,entity.getRegisterName());
+                ps.setInt(4,entity.getLineNumber());
+                ps.setString(5,entity.getResponsible());
+                ps.setString(6,entity.getTopic());
+                ps.setInt(7,entity.getMonth());
+                ps.setString(8,entity.getCategory1());
+                ps.setString(9,entity.getCategory2());
+                ps.setString(10,entity.getScenario());
+                ps.setString(11,entity.getXtd());
+                ps.setString(12,entity.getSegment());
+                ps.setString(13,entity.getPaymentType());
+                ps.setString(14,entity.getComment());
+              });
+
+            return Constants.OK;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return handleDatabaseError(e);
+        }
+    }
+
+
+
+
+
+ /*   public String saveGenericComments(List<GenericComments> data, String tableName, String dbUrl, String dbUser, String dbPassword) {
 
         try {
 
@@ -1170,14 +1246,20 @@ public class ProjectConnectionService {
             e.printStackTrace();
             return handleDatabaseError(e);
         }
-    }
+    }*/
 
-    public String saveUploadedGenericFileData(ProjectUpload entity) {
+
+ /*   public String saveUploadedGenericFileData(ProjectUpload entity) {
 
         try {
-            String tableName = "project_uploads";
-            jdbcTemplate = getJdbcDefaultConnection();
-            String sql = "INSERT INTO " + tableName + " ([File_Name], [User_Name]) VALUES (?, ?)";
+            String tableName = "Log.User_uploads";
+          //  jdbcTemplate = getJdbcDefaultConnection();
+            String sql = "INSERT INTO " + tableName + " ([File_Name], [User_Name], [Modul_Name]) VALUES (?, ?, ?)";
+
+            System.out.println("Execute SQL:" + sql);
+            System.out.println("1. Parameter: " + entity.getFileName());
+            System.out.println("2. Parameter: " + entity.getUserName());
+            System.out.println("3. Parameter: " + entity.getModulName());
 
             KeyHolder keyHolder = new GeneratedKeyHolder();
 
@@ -1187,6 +1269,7 @@ public class ProjectConnectionService {
                     PreparedStatement ps = connection.prepareStatement(sql, new String[]{"Upload_ID"});
                     ps.setString(1, entity.getFileName());
                     ps.setString(2, entity.getUserName());
+                    ps.setString(3, entity.getModulName());
                     return ps;
                 }
             }, keyHolder);
@@ -1195,21 +1278,69 @@ public class ProjectConnectionService {
             if (affectedRows > 0) {
                 // Retrieve the generated ID from the KeyHolder
                 long generatedId = keyHolder.getKey().longValue();
-                GenericCommentsView.projectUploadIdMap.put(entity.getFileName(), (int) generatedId);
+
+                if (entity.getModulName().equals("Tech_KPI")){
+                    Tech_KPIView.projectUploadIdMap.put(entity.getFileName(), (int) generatedId);
+                } else if (entity.getModulName().equals("GenericComments")) {
+                    GenericCommentsView.projectUploadIdMap.put(entity.getFileName(), (int) generatedId);
+                }
+
+
                 return Constants.OK;
             } else {
-                return "Failed to insert data into the database";
+                return "Failed to insert data into " + tableName ;
             }
         } catch (Exception e) {
             e.printStackTrace();
             return handleDatabaseError(e);
         }
+    }*/
+
+    public Integer saveUploadedGenericFileData(ProjectUpload entity) {
+
+        try {
+            String tableName = "Log.User_uploads";
+            //  jdbcTemplate = getJdbcDefaultConnection();
+            String sql = "INSERT INTO " + tableName + " ([File_Name], [User_Name], [Modul_Name]) VALUES (?, ?, ?)";
+
+            System.out.println("Execute SQL:" + sql);
+            System.out.println("1. Parameter: " + entity.getFileName());
+            System.out.println("2. Parameter: " + entity.getUserName());
+            System.out.println("3. Parameter: " + entity.getModulName());
+
+            KeyHolder keyHolder = new GeneratedKeyHolder();
+
+            int affectedRows = jdbcTemplate.update(new PreparedStatementCreator() {
+                @Override
+                public PreparedStatement createPreparedStatement(Connection connection) throws SQLException {
+                    PreparedStatement ps = connection.prepareStatement(sql, new String[]{"Upload_ID"});
+                    ps.setString(1, entity.getFileName());
+                    ps.setString(2, entity.getUserName());
+                    ps.setString(3, entity.getModulName());
+                    return ps;
+                }
+            }, keyHolder);
+
+            // Check if the insertion was successful
+            if (affectedRows > 0) {
+                // Retrieve the generated ID from the KeyHolder
+                Integer generatedId = keyHolder.getKey().intValue();
+                return generatedId;
+            } else {
+                return -1 ;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return -1;
+        }
     }
+
     public Map<String, Integer> getUploadIdMap() {
         try {
 
             jdbcTemplate = getJdbcDefaultConnection();
-            String sql = "SELECT [Upload_ID], [File_Name] FROM [PIT].[dbo].[project_uploads]";
+            String sql = "SELECT [Upload_ID], [File_Name] FROM PIT2.Log.user_uploads"; //ToDo: Get DB of target table, this DB should used instead PIT2-DB
+
 
             // Execute the query and get a list of maps
             List<Map<String, Object>> resultList = jdbcTemplate.queryForList(sql);
@@ -1228,6 +1359,33 @@ public class ProjectConnectionService {
             return Collections.emptyMap();
         }
     }
+
+    public Map<String, Integer> getUploadIdMap(String modulName, String userName, String dbUrl, String dbUser, String dbPassword) {
+        try {
+
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+            String sql = "SELECT [Upload_ID] FROM Log.user_uploads where Modul_Name= '" + modulName + "' and User_Name = '" + userName+ "' order by Upload_ID desc";
+
+            System.out.println("Execute SQL: " + sql);
+            // Execute the query and get a list of maps
+            List<Map<String, Object>> resultList = jdbcTemplate.queryForList(sql);
+
+            // Create a Map with file name as key and upload ID as value
+            Map<String, Integer> uploadIdMap = new HashMap<>();
+            for (Map<String, Object> row : resultList) {
+                int uploadId = (int) row.get("Upload_ID");
+                String fileName = (String) row.get("File_Name");
+                uploadIdMap.put(fileName, uploadId);
+            }
+
+            return uploadIdMap;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Collections.emptyMap();
+        }
+    }
+
 
     public List<String> getCobiAdminQFCPlanOutlook(String dbUrl, String dbUser, String dbPassword, String sql) {
         try {
@@ -1251,8 +1409,8 @@ public class ProjectConnectionService {
         try {
             jdbcTemplate = getJdbcConnection(dbUrl, dbUser, dbPassword);
 
-            String sqlDelete = "DELETE FROM " + targetTable;
-            jdbcTemplate.update(sqlDelete);
+          //  String sqlDelete = "DELETE FROM " + targetTable;
+          //  jdbcTemplate.update(sqlDelete);
 
             String sql = "INSERT INTO " + targetTable + " (Upload_ID, Current_Month) VALUES (?, ?)";
             jdbcTemplate.update(sql, data.getUpload_ID(), data.getCurrent_month());
@@ -1269,8 +1427,8 @@ public class ProjectConnectionService {
 
             jdbcTemplate = getJdbcConnection(dbUrl, dbUser, dbPassword);
 
-            String sqlDelete = "DELETE FROM " + targetTable;
-            jdbcTemplate.update(sqlDelete);
+          //  String sqlDelete = "DELETE FROM " + targetTable;
+          //  jdbcTemplate.update(sqlDelete);
 
             String sql = "INSERT INTO " + targetTable + " (Upload_ID, Current_Plan, Current_Outlook, Current_QFC) VALUES (?, ?, ?, ?)";
             jdbcTemplate.update(sql, data.getUpload_ID(), data.getCurrent_Plan(), data.getCurrent_Outlook(), data.getCurrent_QFC());
