@@ -119,26 +119,34 @@ public class ConfigurationGridView extends VerticalLayout {
             int is_adValue = is_ad.getValue() ? 1 : 0;
             Set<Role> roles = rolesComboBox.getSelectedItems();
 
-            if (validatePassword(passwordValue, confirmPasswordValue)) {
-                // Use the values as needed, for example, create a new user
-                User newUser = new User();
-                newUser.setName(nameValue);
-                newUser.setUsername(usernameValue);
-                newUser.setHashedPassword(bCryptPassword);
-                newUser.setIs_ad(is_adValue);
-                newUser.setRoles(roles);
-
-                try {
-                    projectConnectionService.getJdbcDefaultConnection();
-                    userService.update(newUser);
-                    updateUserGrid();
-                    Notification.show("Created new user", 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-                } catch (Exception ex) {
-                    Notification.show("Error during upload", 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
-                    ex.getMessage();
-                }
-                dialog.close();
+            if (!validateInputs(nameValue, usernameValue, passwordValue, confirmPasswordValue, roles)) {
+                Notification.show("Please enter all fields", 3000, Notification.Position.MIDDLE)
+                        .addThemeVariants(NotificationVariant.LUMO_ERROR);
+                return;
             }
+
+            if (!validatePassword(passwordValue, confirmPasswordValue)) {
+                return;
+            }
+            // Use the values as needed, for example, create a new user
+            User newUser = new User();
+            newUser.setName(nameValue);
+            newUser.setUsername(usernameValue);
+            newUser.setHashedPassword(bCryptPassword);
+            newUser.setIs_ad(is_adValue);
+            newUser.setRoles(roles);
+
+            try {
+                projectConnectionService.getJdbcDefaultConnection();
+                userService.update(newUser);
+                updateUserGrid();
+                Notification.show("Created new user", 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+            } catch (Exception ex) {
+                Notification.show("Error during upload", 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                ex.getMessage();
+            }
+            dialog.close();
+
 
         });
 
@@ -149,6 +157,9 @@ public class ConfigurationGridView extends VerticalLayout {
         return dialog;
     }
 
+    private boolean validateInputs(String name, String username, String password, String confirmPassword, Set<Role> roles) {
+        return !name.isEmpty() && !username.isEmpty() && !password.isEmpty() && !confirmPassword.isEmpty() && !roles.isEmpty();
+    }
     private boolean validatePassword(String password, String confirmPassword) {
 
         if (!password.equals(confirmPassword)) {
@@ -234,7 +245,6 @@ public class ConfigurationGridView extends VerticalLayout {
         userGrid.getColumnByKey(ROLES).setHeader("roles").setWidth("80px").setFlexGrow(0).setResizable(true);
         userGrid.getColumnByKey(PROFILEPICTURE).setHeader("profilePicture").setWidth("80px").setFlexGrow(0).setResizable(true);
         userGrid.getColumnByKey(IS_AD).setHeader("is_ad").setWidth("80px").setFlexGrow(0).setResizable(true);
-
 
         userGrid.addComponentColumn(user -> {
             Button resetBtn = new Button("Reset Password");
