@@ -16,28 +16,19 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.progressbar.ProgressBar;
-import com.vaadin.flow.component.textfield.TextField;
-import com.vaadin.flow.data.provider.DataProvider;
-import com.vaadin.flow.data.provider.Query;
 import de.dbuss.tefcontrol.data.entity.*;
 import de.dbuss.tefcontrol.data.service.BackendService;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
 import lombok.Getter;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.AsyncResult;
-import org.springframework.stereotype.Service;
 import org.springframework.util.concurrent.ListenableFuture;
 
 import javax.sql.DataSource;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 public class QS_Grid extends Composite<Div> {
 
@@ -84,7 +75,7 @@ public class QS_Grid extends Composite<Div> {
         qsDialog.setHeaderTitle("Execute QS-Statements");
         getContent().add(qsDialog);
 
-        createContextMenu();
+        // createContextMenu();
     }
     public void createDialog(QS_Callback callback, int projectId, int uploadId) {
         this.qs_callback = callback;
@@ -99,7 +90,7 @@ public class QS_Grid extends Composite<Div> {
         qsDialog.setHeaderTitle("Execute QS-Statements (upload-id " + uploadId + ")" );
         getContent().add(qsDialog);
 
-        createContextMenu();
+        // createContextMenu();
     }
     public void showDialog(boolean show)
     {
@@ -119,6 +110,8 @@ public class QS_Grid extends Composite<Div> {
     private VerticalLayout createDialogLayout() {
         getListOfProjectQsWithResult();
 
+        String SHOWROWS = "showRows";
+        String SHOWDESRIPTION = "showdescription";
         grid = new Grid<>(ProjectQSEntity.class, false);
         grid.addColumn(ProjectQSEntity::getName).setHeader("QS-Name").setResizable(true).setAutoWidth(true);
         // grid.addColumn(ProjectQSEntity::getResult).setHeader("Result");
@@ -156,9 +149,30 @@ public class QS_Grid extends Composite<Div> {
 
         }).setHeader("Result").setFlexGrow(0).setWidth("100px").setResizable(true);
 
+        contextDialog = new Dialog();
+        contextDialog.setDraggable(true);
+        contextDialog.setResizable(true);
+        cancelContextButton = new Button("Cancel");
+        cancelContextButton.addClickListener(e -> contextDialog.close());
+
+        grid.addComponentColumn(user -> {
+            Button rowsBtn = new Button("Show Rows");
+            rowsBtn.addClickListener(event -> {
+                showRows(user);
+            });
+            return rowsBtn;
+        }).setKey(SHOWROWS).setFlexGrow(0).setWidth("140px");
+
+        grid.addComponentColumn(user -> {
+            Button descriptionBtn = new Button("Show Description");
+            descriptionBtn.addClickListener(event -> {
+                showDescription(user);
+            });
+            return descriptionBtn;
+        }).setKey(SHOWDESRIPTION).setFlexGrow(0).setWidth("140px");
 
         grid.setItems(listOfProjectQs);
-
+        grid.getColumns().forEach(col -> col.setAutoWidth(true));
         // updateListOfProjectQs();
 
         VerticalLayout dialogLayout = new VerticalLayout();
@@ -376,10 +390,10 @@ public class QS_Grid extends Composite<Div> {
         GridContextMenu<ProjectQSEntity> contextMenu = new GridContextMenu<>(grid);
 
         // Add a menu item for "Show rows"
-        contextMenu.addItem("Show rows", this::showRows);
+       // contextMenu.addItem("Show rows", this::showRows);
 
         // Add a menu item for "Show Description"
-        contextMenu.addItem("Show Description", this::showDescription);
+      //  contextMenu.addItem("Show Description", this::showDescription);
 
         contextDialog = new Dialog();
         contextDialog.setDraggable(true);
@@ -388,9 +402,7 @@ public class QS_Grid extends Composite<Div> {
         cancelContextButton.addClickListener(e -> contextDialog.close());
     }
 
-    private void showRows(GridContextMenu.GridContextMenuItemClickEvent<ProjectQSEntity> event) {
-        // Get the selected ProjectQSEntity
-        ProjectQSEntity selectedProjectQS = event.getItem().orElse(null);
+    private void showRows(ProjectQSEntity selectedProjectQS) {
 
         // Check if a row is selected
         if (selectedProjectQS != null) {
@@ -432,9 +444,7 @@ public class QS_Grid extends Composite<Div> {
 
     }
 
-    private void showDescription(GridContextMenu.GridContextMenuItemClickEvent<ProjectQSEntity> event) {
-        // Get the selected ProjectQSEntity
-        ProjectQSEntity selectedProjectQS = event.getItem().orElse(null);
+    private void showDescription(ProjectQSEntity selectedProjectQS) {
 
         // Check if a row is selected
         if (selectedProjectQS != null && (selectedProjectQS.getProject().getId() == projectId)) {
