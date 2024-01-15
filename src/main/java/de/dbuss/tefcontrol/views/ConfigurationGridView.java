@@ -3,6 +3,7 @@ package de.dbuss.tefcontrol.views;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.combobox.MultiSelectComboBox;
 import com.vaadin.flow.component.crud.BinderCrudEditor;
 import com.vaadin.flow.component.crud.Crud;
@@ -10,7 +11,9 @@ import com.vaadin.flow.component.crud.CrudEditor;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.listbox.MultiSelectListBox;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
@@ -24,6 +27,7 @@ import com.vaadin.flow.data.binder.Result;
 import com.vaadin.flow.data.binder.ValueContext;
 import com.vaadin.flow.data.provider.DataProvider;
 import com.vaadin.flow.data.provider.Query;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
@@ -53,6 +57,7 @@ public class ConfigurationGridView extends VerticalLayout {
     private Crud<User> userCrud;
     private Grid<User> userGrid;
     private Dialog dialog;
+    private Dialog resetPasswordDialog;
 
     public ConfigurationGridView(ProjectConnectionService projectConnectionService, UserService userService) {
 
@@ -162,7 +167,6 @@ public class ConfigurationGridView extends VerticalLayout {
 
        // userCrud.setToolbarVisible(false);
 
-
         userGrid.addItemDoubleClickListener(event -> {
             User selectedEntity = event.getItem();
             userCrud.edit(selectedEntity, Crud.EditMode.EXISTING_ITEM);
@@ -215,10 +219,12 @@ public class ConfigurationGridView extends VerticalLayout {
         String ROLES = "roles";
         String PROFILEPICTURE = "profilePicture";
         String IS_AD = "is_ad";
+        String RESET_PASSWORD = "resetPassword";
 
         String EDIT_COLUMN = "vaadin-crud-edit-column";
 
         userGrid = userCrud.getGrid();
+     //   userGrid.setColumns(USERNAME, NAME, ROLES, IS_AD);
 
         userGrid.getColumnByKey(ID).setHeader("Id").setWidth("80px").setFlexGrow(0).setResizable(true);
         userGrid.getColumnByKey(VERSION).setHeader("Version").setWidth("200px").setFlexGrow(0).setResizable(true);
@@ -229,21 +235,71 @@ public class ConfigurationGridView extends VerticalLayout {
         userGrid.getColumnByKey(PROFILEPICTURE).setHeader("profilePicture").setWidth("80px").setFlexGrow(0).setResizable(true);
         userGrid.getColumnByKey(IS_AD).setHeader("is_ad").setWidth("80px").setFlexGrow(0).setResizable(true);
 
-        userGrid.removeColumn(userGrid.getColumnByKey(ID));
-        userGrid.removeColumn(userGrid.getColumnByKey(VERSION));
-        userGrid.removeColumn(userGrid.getColumnByKey(PASSWORD));
-        userGrid.removeColumn(userGrid.getColumnByKey(PROFILEPICTURE));
-        userGrid.getColumns().forEach(col -> col.setAutoWidth(true));
+
+        userGrid.addComponentColumn(user -> {
+            Button resetBtn = new Button("Reset Password");
+            resetBtn.addClickListener(event -> {
+                resetPasswordDialog(user);
+                resetPasswordDialog.open();
+            });
+            return resetBtn;
+        }).setKey(RESET_PASSWORD).setFlexGrow(0).setWidth("140px");
+
+            userGrid.removeColumn(userGrid.getColumnByKey(ID));
+            userGrid.removeColumn(userGrid.getColumnByKey(VERSION));
+            userGrid.removeColumn(userGrid.getColumnByKey(PASSWORD));
+            userGrid.removeColumn(userGrid.getColumnByKey(PROFILEPICTURE));
+            userGrid.getColumns().forEach(col -> col.setAutoWidth(true));
         // Reorder the columns (alphabetical by default)
         userGrid.setColumnOrder( userGrid.getColumnByKey(USERNAME)
                 , userGrid.getColumnByKey(NAME)
-             //   , userGrid.getColumnByKey(PASSWORD)
+                //   , userGrid.getColumnByKey(PASSWORD)
                 , userGrid.getColumnByKey(ROLES)
-            //    , userGrid.getColumnByKey(PROFILEPICTURE)
+                //    , userGrid.getColumnByKey(PROFILEPICTURE)
                 , userGrid.getColumnByKey(IS_AD)
-                , userGrid.getColumnByKey(EDIT_COLUMN));
+                , userGrid.getColumnByKey(EDIT_COLUMN)
+        ,userGrid.getColumnByKey(RESET_PASSWORD));
 
         userCrud.setToolbarVisible(false);
+    }
+
+    private Dialog resetPasswordDialog(User user) {
+        VerticalLayout content = new VerticalLayout();
+        resetPasswordDialog = new Dialog();
+        PasswordField password = new PasswordField("Password");
+        PasswordField confirmPassword = new PasswordField("Confirm password");
+
+        FormLayout formLayout = new FormLayout();
+        formLayout.add(password, confirmPassword);
+        Button closeButton = new Button("Close");
+        closeButton.addClickListener(e -> {
+            resetPasswordDialog.close();
+        });
+        Button addButton = new Button("add");
+        addButton.addClickListener(e -> {
+            String passwordValue = password.getValue();
+            String confirmPasswordValue = confirmPassword.getValue();
+            String bCryptPassword = BCrypt.hashpw(passwordValue, BCrypt.gensalt());
+            if (validatePassword(passwordValue, confirmPasswordValue)) {
+                user.setHashedPassword(bCryptPassword);
+                try {
+                    userService.update(user);
+                    Notification.show("Password reset successfuly", 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                    resetPasswordDialog.close();
+                } catch (Exception ex) {
+                    ex.getMessage();
+                    Notification.show("Error: Password is not reset", 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                }
+
+            }
+        });
+
+        HorizontalLayout hl = new HorizontalLayout(closeButton, addButton);
+        hl.setAlignItems(Alignment.BASELINE);
+        content.add(formLayout, hl);
+        resetPasswordDialog.add(content);
+
+        return resetPasswordDialog;
     }
 
     private CrudEditor<User> createUserEditor() {
@@ -260,7 +316,7 @@ public class ConfigurationGridView extends VerticalLayout {
 
         // Create a FormLayout to arrange the form fields
         FormLayout editForm = new FormLayout(
-                username, name, rolesComboBox, is_ad, hashedPassword
+                username, name, rolesComboBox, is_ad
         );
 
         // Set the size of form fields as needed
@@ -272,12 +328,7 @@ public class ConfigurationGridView extends VerticalLayout {
         // Bind each form field with its corresponding attribute in the User entity
         binder.forField(username).bind(User::getUsername, User::setUsername);
         binder.forField(name).bind(User::getName, User::setName);
-     //   binder.forField(hashedPassword).bind(User::getHashedPassword, User::setHashedPassword);
-        binder.forField(hashedPassword)
-                .withConverter(new BCryptConverter())
-                .bind(User::getHashedPassword, User::setHashedPassword);
         binder.forField(rolesComboBox)
-               // .withConverter(new SetToRoleConverter())
                 .bind(User::getRoles, User::setRoles);
         binder.forField(is_ad)
                 .withConverter(new IntegerToBooleanConverter())
@@ -295,12 +346,14 @@ public class ConfigurationGridView extends VerticalLayout {
         public Result<String> convertToModel(String presentation, ValueContext context) {
             // You want to store the new BCrypt hashed password in the database
             String hashedPassword = BCrypt.hashpw(presentation, BCrypt.gensalt());
+         //   hashedPassword = "abc";
             return Result.ok(hashedPassword);
         }
 
         @Override
         public String convertToPresentation(String model, ValueContext context) {
             // Display the plain text password in the UI
+         //   model = "xyz";
             return model;
         }
     }
