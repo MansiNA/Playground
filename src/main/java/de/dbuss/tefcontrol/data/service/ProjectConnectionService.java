@@ -1332,6 +1332,7 @@ public class ProjectConnectionService {
         }
     }
 
+    /*
     public Map<String, Integer> getUploadIdMap() {
         try {
 
@@ -1356,6 +1357,8 @@ public class ProjectConnectionService {
             return Collections.emptyMap();
         }
     }
+
+
 
     public Map<String, Integer> getUploadIdMap(String modulName, String userName, String dbUrl, String dbUser, String dbPassword) {
         try {
@@ -1382,7 +1385,7 @@ public class ProjectConnectionService {
             return Collections.emptyMap();
         }
     }
-
+ */
 
     public List<String> getCobiAdminQFCPlanOutlook(String dbUrl, String dbUser, String dbPassword, String sql) {
         try {
