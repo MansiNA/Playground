@@ -164,8 +164,8 @@ public class MainLayout extends AppLayout {
         } else
         {
             loginView = new LoginView(authenticatedUser, logService, userService);
-           // addToDrawer(new VerticalLayout(link));
-            addToDrawer(new VerticalLayout(loginView));
+            addToDrawer(new VerticalLayout(link));
+          //  addToDrawer(new VerticalLayout(loginView));
         }
 
 
