@@ -175,16 +175,19 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
             hl.remove(qsGrid);
             qsGrid = new QS_Grid(projectConnectionService, backendService);
             hl.add(qsGrid);
-//            Map<String, Integer> uploadIdMap = projectConnectionService.getUploadIdMap();
-//            int upload_id = uploadIdMap.values().stream()
-//                    .mapToInt(Integer::intValue)
-//                    .max()
-//                    .orElse(1);
+
+/*
+            Map<String, Integer> uploadIdMap = projectConnectionService.getUploadIdMap();
+            int upload_id = uploadIdMap.values().stream()
+                    .mapToInt(Integer::intValue)
+                    .max()
+                    .orElse(1);
+*/
+
             CallbackHandler callbackHandler = new CallbackHandler();
             qsGrid.createDialog(callbackHandler, projectId, upload_id);
             qsGrid.showDialog(true);
         });
-
 
         add(hl);
     }
