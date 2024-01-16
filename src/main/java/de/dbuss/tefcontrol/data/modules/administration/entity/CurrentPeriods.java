@@ -1,9 +1,7 @@
-package de.dbuss.tefcontrol.data.modules.cobi_administration.entity;
+package de.dbuss.tefcontrol.data.modules.administration.entity;
 
 
-import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;

@@ -71,4 +71,8 @@ public class Constants {
     public static final String SQL_OUTLOOK_SCENARIOS = "SQL_Outlook_Scenarios";
     public static final String SQL_QFC_SCENARIOS = "SQL_QFC_Scenarios";
 
+    // This constant is used for REPORT_Administration module
+    public static final String REPORT_ADMINISTRATION = "REPORT_Administration";
+
+
 }
