@@ -107,7 +107,7 @@ public class MainLayout extends AppLayout {
         urlToViewMap.put(Constants.GENERIC_COMMENTS, GenericCommentsView.class);
         urlToViewMap.put(Constants.COBI_ADMINISTRATION, CobiAdminView.class);
         urlToViewMap.put(Constants.HW_MAPPING, HWMapping.class);
-     //   urlToViewMap.put(Constants.REPORT_ADMINISTRATION, ReportAdminView.class);
+        urlToViewMap.put(Constants.REPORT_ADMINISTRATION, ReportAdminView.class);
 
         setPrimarySection(Section.DRAWER);
         addDrawerContent();

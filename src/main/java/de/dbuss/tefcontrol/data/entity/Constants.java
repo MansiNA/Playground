@@ -73,6 +73,7 @@ public class Constants {
 
     // This constant is used for REPORT_Administration module
     public static final String REPORT_ADMINISTRATION = "REPORT_Administration";
+    public static final String TABLE_REPORTINGCONFIG = "Table_ReportingConfig";
 
 
 }

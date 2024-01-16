@@ -1437,6 +1437,32 @@ public class ProjectConnectionService {
         }
     }
 
+    public String saveReportAdmintPeriods(CurrentPeriods data, String dbUrl, String dbUser, String dbPassword, String targetTable) {
+        try {
+            jdbcTemplate = getJdbcConnection(dbUrl, dbUser, dbPassword);
+
+            // Check if the record exists
+            String sqlSelect = "SELECT COUNT(*) FROM " + targetTable + " WHERE ReportName = ?";
+            int count = jdbcTemplate.queryForObject(sqlSelect, Integer.class, "Rohdatenreport");
+
+            if (count > 0) {
+                // Record exists, perform update
+                String sqlUpdate = "UPDATE " + targetTable + " SET Load_Monat = ? WHERE ReportName = ?";
+                jdbcTemplate.update(sqlUpdate, data.getCurrent_month(), "Rohdatenreport");
+            } else {
+                // Record does not exist, perform insert
+                String sqlInsert = "INSERT INTO " + targetTable + " (ReportName, Load_Monat) VALUES (?, ?)";
+                jdbcTemplate.update(sqlInsert, "Rohdatenreport", data.getCurrent_month());
+            }
+
+            return Constants.OK;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return handleDatabaseError(e);
+        }
+    }
+
+
     public String addMonthsInCLTVHWMeasure(String dbUrl, String dbUser, String dbPassword, String sql) {
         try {
 
