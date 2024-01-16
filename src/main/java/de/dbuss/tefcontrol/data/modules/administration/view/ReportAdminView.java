@@ -73,7 +73,7 @@ public class ReportAdminView extends VerticalLayout implements BeforeEnterObserv
 
         H1 h1 = new H1("Report Administration");
         Article p1 = new Article();
-        p1.setText("Auf diese Seite lassen sich verschiedene Einstellungen zur Report-Beladung vornehmen.");
+        p1.setText("Auf diese Seite lassen sich verschiedene Einstellungen zur Report-Beladung vornehmen und die Reports ausführen.");
 
         dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
 
