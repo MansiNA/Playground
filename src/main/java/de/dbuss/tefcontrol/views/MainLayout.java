@@ -27,12 +27,13 @@ import de.dbuss.tefcontrol.data.entity.User;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.view.B2POutlookFINView;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.view.B2POutlookSUBView;
 import de.dbuss.tefcontrol.data.modules.cltv_Inflow.view.CLTVInflowView;
-import de.dbuss.tefcontrol.data.modules.cobi_administration.view.CobiAdminView;
+import de.dbuss.tefcontrol.data.modules.administration.view.CobiAdminView;
 import de.dbuss.tefcontrol.data.modules.hwmapping.view.HWMapping;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.GenericCommentsView;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.PBICentralComments;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.PBIFlashFinancials;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.PBITechComments;
+import de.dbuss.tefcontrol.data.modules.administration.view.ReportAdminView;
 import de.dbuss.tefcontrol.data.modules.techkpi.view.Tech_KPIView;
 import de.dbuss.tefcontrol.data.service.ProjectsService;
 import de.dbuss.tefcontrol.data.service.UserService;
@@ -51,8 +52,6 @@ import de.dbuss.tefcontrol.views.login.LoginView;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.vaadin.lineawesome.LineAwesomeIcon;
 import org.vaadin.tatu.Tree;
 
@@ -108,7 +107,7 @@ public class MainLayout extends AppLayout {
         urlToViewMap.put(Constants.GENERIC_COMMENTS, GenericCommentsView.class);
         urlToViewMap.put(Constants.COBI_ADMINISTRATION, CobiAdminView.class);
         urlToViewMap.put(Constants.HW_MAPPING, HWMapping.class);
-
+        urlToViewMap.put(Constants.REPORT_ADMINISTRATION, ReportAdminView.class);
 
         setPrimarySection(Section.DRAWER);
         addDrawerContent();
@@ -163,11 +162,11 @@ public class MainLayout extends AppLayout {
 
         } else
         {
+            //loginView = new LoginView(authenticatedUser);
             loginView = new LoginView(authenticatedUser, logService, userService);
-            //addToDrawer(new VerticalLayout(link));
-            addToDrawer(new VerticalLayout(loginView));
+            addToDrawer(new VerticalLayout(link));
+           // addToDrawer(new VerticalLayout(loginView));
         }
-
 
         //Scroller scroller = new Scroller(createTree());
         //scroller.addClassNames("AboutView");
@@ -344,7 +343,7 @@ public class MainLayout extends AppLayout {
         super.afterNavigation();
 
         if (loginView != null) {
-            loginView.openLoginOverlay();
+         //   loginView.openLoginOverlay();
         }
       //  viewTitle.setText(selectedProject.getName());
 
