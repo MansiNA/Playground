@@ -33,6 +33,7 @@ import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.GenericCommentsVie
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.PBICentralComments;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.PBIFlashFinancials;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.PBITechComments;
+import de.dbuss.tefcontrol.data.modules.administration.view.ReportAdminView;
 import de.dbuss.tefcontrol.data.modules.techkpi.view.Tech_KPIView;
 import de.dbuss.tefcontrol.data.service.ProjectsService;
 import de.dbuss.tefcontrol.data.service.UserService;
@@ -106,7 +107,7 @@ public class MainLayout extends AppLayout {
         urlToViewMap.put(Constants.GENERIC_COMMENTS, GenericCommentsView.class);
         urlToViewMap.put(Constants.COBI_ADMINISTRATION, CobiAdminView.class);
         urlToViewMap.put(Constants.HW_MAPPING, HWMapping.class);
-
+        urlToViewMap.put(Constants.REPORT_ADMINISTRATION, ReportAdminView.class);
 
         setPrimarySection(Section.DRAWER);
         addDrawerContent();
@@ -161,11 +162,11 @@ public class MainLayout extends AppLayout {
 
         } else
         {
+            //loginView = new LoginView(authenticatedUser);
             loginView = new LoginView(authenticatedUser, logService, userService);
-           // addToDrawer(new VerticalLayout(link));
-            addToDrawer(new VerticalLayout(loginView));
+            addToDrawer(new VerticalLayout(link));
+           // addToDrawer(new VerticalLayout(loginView));
         }
-
 
         //Scroller scroller = new Scroller(createTree());
         //scroller.addClassNames("AboutView");
@@ -342,7 +343,7 @@ public class MainLayout extends AppLayout {
         super.afterNavigation();
 
         if (loginView != null) {
-            loginView.openLoginOverlay();
+         //   loginView.openLoginOverlay();
         }
       //  viewTitle.setText(selectedProject.getName());
 

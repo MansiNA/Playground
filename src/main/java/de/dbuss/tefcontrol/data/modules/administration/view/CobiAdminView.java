@@ -189,7 +189,6 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
             qsGrid.showDialog(true);
         });
 
-
         add(hl);
     }
 
