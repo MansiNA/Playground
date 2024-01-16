@@ -45,6 +45,7 @@ public class ReportAdminView extends VerticalLayout implements BeforeEnterObserv
     private String dbUrl;
     private String dbUser;
     private String dbPassword;
+    private String agentName;
     private CurrentPeriods currentPeriods;
     private int projectId;
 
@@ -67,15 +68,18 @@ public class ReportAdminView extends VerticalLayout implements BeforeEnterObserv
                     dbPassword = projectParameter.getValue();
                 } else if (Constants.TABLE_REPORTINGCONFIG.equals(projectParameter.getName())) {
                     tableReportingConfig = projectParameter.getValue();
+                }  else if (Constants.DB_JOBS.equals(projectParameter.getName())) {
+                    agentName = projectParameter.getValue();
                 }
             }
         }
         dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
+        Text databaseDetail = new Text("Connected to: "+ dbServer+ ", Database: " + dbName + ", Target Table: " +tableReportingConfig + ", SQL-Job: "+ agentName);
 
         H1 h1 = new H1("Report Administration");
         Article p1 = new Article();
         p1.setText("Auf diese Seite lassen sich verschiedene Einstellungen zur Report-Beladung vornehmen.");
-        add(h1, p1, getDimPeriodGrid());
+        add(h1, p1, databaseDetail, getDimPeriodGrid());
 
         Button saveBtn = new Button("Save");
 
@@ -84,11 +88,19 @@ public class ReportAdminView extends VerticalLayout implements BeforeEnterObserv
             String resultOfPeriods = projectConnectionService.saveReportAdmintPeriods(currentPeriods, dbUrl, dbUser, dbPassword, tableReportingConfig);
             Notification notification;
             if (resultOfPeriods.equals(Constants.OK)) {
-                notification = Notification.show(" Report updated successfully", 6000, Notification.Position.MIDDLE);
+                notification = Notification.show(" Report updated successfully", 2000, Notification.Position.MIDDLE);
                 notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
             } else {
                 notification = Notification.show("Error during upload: " + resultOfPeriods, 15000, Notification.Position.MIDDLE);
                 notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+            }
+
+            String message = projectConnectionService.startAgent(projectId);
+            if (!message.contains("Error")) {
+                Notification.show(message, 6000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+            } else {
+                String AgenterrorMessage = "ERROR: Job " + agentName + " already running please try again later...";
+                Notification.show(AgenterrorMessage, 6000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
             }
 
         });
