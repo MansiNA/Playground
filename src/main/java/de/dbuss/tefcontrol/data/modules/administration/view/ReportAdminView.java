@@ -1,7 +1,6 @@
 package de.dbuss.tefcontrol.data.modules.administration.view;
 
-import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.Text;
+import com.vaadin.flow.component.*;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
@@ -80,9 +79,12 @@ public class ReportAdminView extends VerticalLayout implements BeforeEnterObserv
 
 
         H2 h2 = new H2("Rohdatenreporting:");
-        Text databaseDetail = new Text("Connected to: "+ dbServer+ ", Database: " + dbName + ", Target Table: " +tableReportingConfig + ", SQL-Job: "+ agentName);
+        String databaseDetail = "Connected to: "+ dbServer+ ", Database: " + dbName + ", Target Table: " +tableReportingConfig + ", SQL-Job: "+ agentName;
 
-        HorizontalLayout header = new HorizontalLayout(h2,databaseDetail);
+        Div text = new Div();
+        text.setText(databaseDetail);
+
+        HorizontalLayout header = new HorizontalLayout(h2,text);
         header.setAlignItems(Alignment.BASELINE);
 
         add(h1, p1, header);
@@ -117,6 +119,17 @@ public class ReportAdminView extends VerticalLayout implements BeforeEnterObserv
         hl.setAlignItems(Alignment.CENTER);
 
         add(hl);
+
+        text.setVisible(false);
+
+        UI.getCurrent().addShortcutListener(
+                () -> {
+                    text.setVisible(true);
+                },
+                Key.KEY_I, KeyModifier.ALT);
+
+
+
     }
 
     @Override
