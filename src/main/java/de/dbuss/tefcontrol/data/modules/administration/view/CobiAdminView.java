@@ -1,4 +1,4 @@
-package de.dbuss.tefcontrol.data.modules.cobi_administration.view;
+package de.dbuss.tefcontrol.data.modules.administration.view;
 
 
 import com.vaadin.flow.component.Component;
@@ -19,10 +19,8 @@ import de.dbuss.tefcontrol.data.entity.Constants;
 import de.dbuss.tefcontrol.data.entity.ProjectParameter;
 import de.dbuss.tefcontrol.data.entity.ProjectUpload;
 import de.dbuss.tefcontrol.data.entity.User;
-import de.dbuss.tefcontrol.data.modules.cobi_administration.entity.CurrentPeriods;
-import de.dbuss.tefcontrol.data.modules.cobi_administration.entity.CurrentScenarios;
-import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.GenericCommentsView;
-import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.PBICentralComments;
+import de.dbuss.tefcontrol.data.modules.administration.entity.CurrentPeriods;
+import de.dbuss.tefcontrol.data.modules.administration.entity.CurrentScenarios;
 import de.dbuss.tefcontrol.data.service.BackendService;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
 import de.dbuss.tefcontrol.data.service.ProjectParameterService;
