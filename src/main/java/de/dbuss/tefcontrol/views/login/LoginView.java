@@ -20,6 +20,7 @@ import de.dbuss.tefcontrol.data.service.UserService;
 import de.dbuss.tefcontrol.security.AuthenticatedUser;
 import de.dbuss.tefcontrol.security.UserDetailsServiceImpl;
 import de.dbuss.tefcontrol.views.LogService;
+import de.dbuss.tefcontrol.views.MainLayout;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -35,13 +36,13 @@ import java.util.Optional;
 
 @AnonymousAllowed
 @PageTitle("Login")
-@Route(value = "login")
+@Route(value = "login", layout = MainLayout.class)
 public class LoginView extends VerticalLayout implements BeforeEnterObserver {
 
     UI ui = new UI();
     private static final String LOGIN_SUCCESS_URL = "/";
     private static final String LOGIN_ERROR_URL = "/login";
-   // private final AuthenticatedUser authenticatedUser;
+    // private final AuthenticatedUser authenticatedUser;
     private LogService logService;
     //private final UserService userService;
 
@@ -72,57 +73,57 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
         add(login);
     }
 
-  /*  private boolean connectToLdap(String username, String password) {
-        //String ldapUrl = "ldap://viaginterkom.de:389";
-        //String ldapUrl = "ldap://fhhnet.stadt.hamburg.de:389";
-        String ldapUrl = "ldap://91.107.232.133:10389";
+    /*  private boolean connectToLdap(String username, String password) {
+          //String ldapUrl = "ldap://viaginterkom.de:389";
+          //String ldapUrl = "ldap://fhhnet.stadt.hamburg.de:389";
+          String ldapUrl = "ldap://91.107.232.133:10389";
 
-        //String ldapUser= username + "@viaginterkom.de";
-        //String ldapUser= username + "@fhhnet.stadt.hamburg.de";
-//        String ldapUser= username + "@wimpi.net";
+          //String ldapUser= username + "@viaginterkom.de";
+          //String ldapUser= username + "@fhhnet.stadt.hamburg.de";
+  //        String ldapUser= username + "@wimpi.net";
 
-        String ldapUser = "uid=" + username + ",ou=users,dc=wimpi,dc=net"; // Adjust the DN pattern
-
-
-        String ldapPassword = password;
-
-        System.out.println("Anmelden User: " + ldapUser);
-        System.out.println("Password: " + ldapPassword);
-        System.out.println("URL: " + ldapUrl);
+          String ldapUser = "uid=" + username + ",ou=users,dc=wimpi,dc=net"; // Adjust the DN pattern
 
 
-        Hashtable<String, String> env = new Hashtable<>();
-        env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
-        env.put(Context.PROVIDER_URL, ldapUrl);
-        //env.put(Context.SECURITY_PRINCIPAL, ldapUser);
-        env.put(Context.SECURITY_PRINCIPAL, ldapUser);
+          String ldapPassword = password;
 
-        env.put(Context.SECURITY_CREDENTIALS, ldapPassword);
+          System.out.println("Anmelden User: " + ldapUser);
+          System.out.println("Password: " + ldapPassword);
+          System.out.println("URL: " + ldapUrl);
 
-        try {
-            // Attempt to create an initial context with the provided credentials
-            DirContext context = new InitialDirContext(env);
 
-            // Close the context after use
-            context.close();
+          Hashtable<String, String> env = new Hashtable<>();
+          env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
+          env.put(Context.PROVIDER_URL, ldapUrl);
+          //env.put(Context.SECURITY_PRINCIPAL, ldapUser);
+          env.put(Context.SECURITY_PRINCIPAL, ldapUser);
 
-            System.out.println("Check User against AD was successfully...");
+          env.put(Context.SECURITY_CREDENTIALS, ldapPassword);
 
-            return true;
-        } catch (Exception e) {
-            // Handle exceptions (e.g., authentication failure)
-            System.out.println("Check User against AD failed!!!");
-            //System.out.println("Still act like it was successful");
-            //return true;
+          try {
+              // Attempt to create an initial context with the provided credentials
+              DirContext context = new InitialDirContext(env);
 
-            e.printStackTrace();
-            return false;
-        }
+              // Close the context after use
+              context.close();
 
-    }*/
+              System.out.println("Check User against AD was successfully...");
+
+              return true;
+          } catch (Exception e) {
+              // Handle exceptions (e.g., authentication failure)
+              System.out.println("Check User against AD failed!!!");
+              //System.out.println("Still act like it was successful");
+              //return true;
+
+              e.printStackTrace();
+              return false;
+          }
+
+      }*/
     private void onLogin(AbstractLogin.LoginEvent event) {
-       // this.authenticatedUser = authenticatedUser;
-       // this.userService = userService;
+        // this.authenticatedUser = authenticatedUser;
+        // this.userService = userService;
         // setAction(RouteUtil.getRoutePath(VaadinService.getCurrent().getContext(), getClass()));
 
 
