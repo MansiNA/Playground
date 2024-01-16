@@ -6,10 +6,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
-import com.vaadin.flow.component.html.Article;
-import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.H1;
-import com.vaadin.flow.component.html.H3;
+import com.vaadin.flow.component.html.*;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -73,18 +70,27 @@ public class ReportAdminView extends VerticalLayout implements BeforeEnterObserv
                 }
             }
         }
-        dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
-        Text databaseDetail = new Text("Connected to: "+ dbServer+ ", Database: " + dbName + ", Target Table: " +tableReportingConfig + ", SQL-Job: "+ agentName);
 
         H1 h1 = new H1("Report Administration");
         Article p1 = new Article();
         p1.setText("Auf diese Seite lassen sich verschiedene Einstellungen zur Report-Beladung vornehmen.");
-        add(h1, p1, databaseDetail, getDimPeriodGrid());
 
-        Button saveBtn = new Button("Save");
+        dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
 
-        saveBtn.addClickListener(e -> {
 
+
+        H2 h2 = new H2("Rohdatenreporting:");
+        Text databaseDetail = new Text("Connected to: "+ dbServer+ ", Database: " + dbName + ", Target Table: " +tableReportingConfig + ", SQL-Job: "+ agentName);
+
+        HorizontalLayout header = new HorizontalLayout(h2,databaseDetail);
+        header.setAlignItems(Alignment.BASELINE);
+
+        add(h1, p1, header);
+
+        Button startRohdatenReportBtn = new Button("Start Report");
+
+        startRohdatenReportBtn.addClickListener(e -> {
+            startRohdatenReportBtn.setEnabled(false);
             String resultOfPeriods = projectConnectionService.saveReportAdmintPeriods(currentPeriods, dbUrl, dbUser, dbPassword, tableReportingConfig);
             Notification notification;
             if (resultOfPeriods.equals(Constants.OK)) {
@@ -107,7 +113,8 @@ public class ReportAdminView extends VerticalLayout implements BeforeEnterObserv
 
         HorizontalLayout hl = new HorizontalLayout();
         hl.setAlignItems(Alignment.BASELINE);
-        hl.add(saveBtn);
+        hl.add(getDimPeriodGrid(), startRohdatenReportBtn);
+        hl.setAlignItems(Alignment.CENTER);
 
         add(hl);
     }
@@ -151,11 +158,10 @@ public class ReportAdminView extends VerticalLayout implements BeforeEnterObserv
         }).setHeader("Current-Month").setFlexGrow(0).setAutoWidth(true);
         grid_period.setWidth("240px");
         grid_period.setHeight("100px");
-        //grid_period.addThemeVariants(GridVariant.LUMO_COLUMN_BORDERS);
+
         grid_period.addThemeVariants(GridVariant.LUMO_COMPACT);
         grid_period.addThemeVariants(GridVariant.LUMO_NO_BORDER);
         grid_period.getStyle().set( "border" , "0.5px solid black" ) ;
-        //grid_period.getStyle().set( "box-shadow" , "0 10px 6px -6px black" ) ;
         grid_period.getStyle().set( "box-shadow" , "5px 6px 4px gray" ) ;
         grid_period.getStyle().set( "border-radius" , "2px" ) ;
         grid_period.getStyle().set( "padding" , "25px" ) ;
@@ -166,7 +172,8 @@ public class ReportAdminView extends VerticalLayout implements BeforeEnterObserv
 
         grid_period.setItems(periods);
 
-        content.add(p2, grid_period);
+     //   content.add(p2, grid_period);
+        content.add(grid_period);
         content.setHeightFull();
         return content;
     }
