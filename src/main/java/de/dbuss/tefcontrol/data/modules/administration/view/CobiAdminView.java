@@ -45,6 +45,8 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
     private String sqlPlanScenarios;
     private String sqlOutlookScenario;
     private String sqlQfcScenarios;
+    private String sqlAktCurrentPeriods;
+    private String sqlAktCurrentScenarios;
     private String dbUrl;
     private String dbUser;
     private String dbPassword;
@@ -93,6 +95,10 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
                     sqlQfcScenarios = projectParameter.getValue();
                 } else if (Constants.DB_JOBS.equals(projectParameter.getName())) {
                     agentName = projectParameter.getValue();
+                } else if (Constants.SQL_AKT_CURRENTPERIODS.equals(projectParameter.getName())) {
+                    sqlAktCurrentPeriods = projectParameter.getValue();
+                } else if (Constants.SQL_AKT_CURRENTSCENARIOS.equals(projectParameter.getName())) {
+                    sqlAktCurrentScenarios = projectParameter.getValue();
                 }
             }
         }
@@ -338,6 +344,9 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
         currentPeriods = new CurrentPeriods();
         periods.add(currentPeriods);
 
+        List<String> aktCurrentPeriods = projectConnectionService.getCobiAdminQFCPlanOutlook(dbUrl, dbUser, dbPassword, sqlAktCurrentPeriods);
+        System.out.println(aktCurrentPeriods + " aktCurrentPeriods..........");
+
         Grid<CurrentPeriods> grid_period = new Grid<>(CurrentPeriods.class, false);
         grid_period.addComponentColumn(cp -> {
             ComboBox<String> comboBox = new ComboBox<>();
@@ -351,9 +360,9 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
             }
 
             comboBox.setItems(monthPeriod);
-            comboBox.setValue(monthPeriod.get(0));
-            cp.setCurrent_month(monthPeriod.get(0));
-            currentPeriods.setCurrent_month(monthPeriod.get(0));
+            comboBox.setValue(aktCurrentPeriods.get(0));
+            cp.setCurrent_month(aktCurrentPeriods.get(0));
+            currentPeriods.setCurrent_month(aktCurrentPeriods.get(0));
             comboBox.addValueChangeListener(event -> {
                 cp.setCurrent_month(event.getValue());
                 currentPeriods.setCurrent_month(event.getValue());
@@ -388,7 +397,9 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
         List<String> qfc = projectConnectionService.getCobiAdminQFCPlanOutlook(dbUrl, dbUser, dbPassword, sqlQfcScenarios);
         List<String> plan = projectConnectionService.getCobiAdminQFCPlanOutlook(dbUrl, dbUser, dbPassword, sqlPlanScenarios);
         List<String> outlook = projectConnectionService.getCobiAdminQFCPlanOutlook(dbUrl, dbUser, dbPassword, sqlOutlookScenario);
+        List<String> aktCurrentScenarios = projectConnectionService.getCobiAdminQFCPlanOutlook(dbUrl, dbUser, dbPassword, sqlAktCurrentScenarios);
 
+        System.out.println(aktCurrentScenarios + " aktCurrentScenarios..........");
         List<CurrentScenarios> scenarios = new ArrayList<>();
         currentScenarios = new CurrentScenarios();
 
@@ -398,13 +409,12 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
         Grid<CurrentScenarios> grid_scenario = new Grid<>(CurrentScenarios.class, false);
         grid_scenario.addClassName("grid_scenario");
 
-
         grid_scenario.addComponentColumn(cs -> {
             ComboBox<String> comboBox = new ComboBox<>();
             comboBox.setItems(qfc);
-            comboBox.setValue(qfc.get(0));
-            currentScenarios.setCurrent_QFC(qfc.get(0));
-            cs.setCurrent_QFC(qfc.get(0));
+            comboBox.setValue(aktCurrentScenarios.get(2));
+            currentScenarios.setCurrent_QFC(aktCurrentScenarios.get(2));
+            cs.setCurrent_QFC(aktCurrentScenarios.get(2));
             comboBox.addValueChangeListener(event -> {
                 cs.setCurrent_QFC(event.getValue());
                 currentScenarios.setCurrent_QFC(event.getValue());
@@ -414,9 +424,9 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
         grid_scenario.addComponentColumn(cs -> {
             ComboBox<String> comboBox = new ComboBox<>();
             comboBox.setItems(plan);
-            comboBox.setValue(plan.get(0));
-            currentScenarios.setCurrent_Plan(plan.get(0));
-            cs.setCurrent_Plan(plan.get(0));
+            comboBox.setValue(aktCurrentScenarios.get(0));
+            currentScenarios.setCurrent_Plan(aktCurrentScenarios.get(0));
+            cs.setCurrent_Plan(aktCurrentScenarios.get(0));
             comboBox.addValueChangeListener(event -> {
                 cs.setCurrent_Plan(event.getValue());
                 currentScenarios.setCurrent_Plan(event.getValue());
@@ -426,9 +436,9 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
         grid_scenario.addComponentColumn(cs -> {
             ComboBox<String> comboBox = new ComboBox<>();
             comboBox.setItems(outlook);
-            comboBox.setValue(outlook.get(0));
-            currentScenarios.setCurrent_Outlook(outlook.get(0));
-            cs.setCurrent_Outlook(outlook.get(0));
+            comboBox.setValue(aktCurrentScenarios.get(1));
+            currentScenarios.setCurrent_Outlook(aktCurrentScenarios.get(1));
+            cs.setCurrent_Outlook(aktCurrentScenarios.get(1));
             comboBox.addValueChangeListener(event -> {
                 cs.setCurrent_Outlook(event.getValue());
                 currentScenarios.setCurrent_Outlook(event.getValue());
@@ -446,9 +456,6 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
         //grid_scenario.getStyle().set( "box-shadow" , "0 10px 6px -6px black" ) ;
         grid_scenario.getStyle().set( "box-shadow" , "5px 6px 4px gray" ) ;
         grid_scenario.getStyle().set( "border-radius" , "1px" ) ;
-
-
-
 
         scenarios.add(currentScenarios);
         grid_scenario.setItems(scenarios);
