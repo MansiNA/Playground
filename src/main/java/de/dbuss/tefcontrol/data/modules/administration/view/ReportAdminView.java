@@ -98,6 +98,7 @@ public class ReportAdminView extends VerticalLayout implements BeforeEnterObserv
 
         startRohdatenReportBtn.addClickListener(e -> {
             startRohdatenReportBtn.setEnabled(false);
+            startRohdatenReportBtn.setText("running");
             String resultOfPeriods = projectConnectionService.saveReportAdmintPeriods(currentPeriods, dbUrl, dbUser, dbPassword, tableReportingConfig);
             Notification notification;
             if (resultOfPeriods.equals(Constants.OK)) {
