@@ -104,7 +104,7 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
         }
         dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
 
-        H1 h1 = new H1("CoBI Administration");
+        H1 h1 = new H1("FLIP Administration");
         Article p1 = new Article();
         p1.setText("Auf diese Seite lassen sich verschiedene Einstellungen zur COBI-Beladung vornehmen.");
         add();
