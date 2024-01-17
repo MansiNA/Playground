@@ -67,7 +67,7 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
         this.authenticatedUser=authenticatedUser;
 
         qsBtn = new Button("QS and Start Job");
-        qsBtn.setEnabled(false);
+       // qsBtn.setEnabled(false);
 
         List<ProjectParameter> listOfProjectParameters = projectParameterService.findAll();
         String dbServer = null;
@@ -110,13 +110,18 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
         add();
         add(h1, p1, getDimPeriodGrid(), getDimScenarioGrid());
 
-        Button saveBtn = new Button("Save");
+        //Componente QS-Grid:
+        qsGrid = new QS_Grid(projectConnectionService, backendService);
 
-        saveBtn.addClickListener(e -> {
+        HorizontalLayout hl = new HorizontalLayout();
+        hl.setAlignItems(Alignment.BASELINE);
+        hl.add( qsBtn, qsGrid);
+
+        qsBtn.addClickListener(e ->{
 
             ProjectUpload projectUpload = new ProjectUpload();
             projectUpload.setFileName("");
-          //  projectUpload.setUserName(MainLayout.userName);
+            //  projectUpload.setUserName(MainLayout.userName);
             Optional<User> maybeUser = authenticatedUser.get();
             if (maybeUser.isPresent()) {
                 User user = maybeUser.get();
@@ -152,7 +157,7 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
             String resultOfPeriods = projectConnectionService.saveCobiAdminCurrentPeriods(currentPeriods, dbUrl, dbUser, dbPassword, tableCurrentPeriods);
             Notification notification;
             if (resultOfPeriods.equals(Constants.OK)) {
-                qsBtn.setEnabled(true);
+                // qsBtn.setEnabled(true);
                 notification = Notification.show(" Current Periods Rows Uploaded successfully", 6000, Notification.Position.MIDDLE);
                 notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
             } else {
@@ -168,16 +173,7 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
                 notification = Notification.show("Error during upload: " + resultOfScenarios, 15000, Notification.Position.MIDDLE);
                 notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
             }
-        });
 
-        //Componente QS-Grid:
-        qsGrid = new QS_Grid(projectConnectionService, backendService);
-
-        HorizontalLayout hl = new HorizontalLayout();
-        hl.setAlignItems(Alignment.BASELINE);
-        hl.add(saveBtn,  qsBtn, qsGrid);
-
-        qsBtn.addClickListener(e ->{
             hl.remove(qsGrid);
             qsGrid = new QS_Grid(projectConnectionService, backendService);
             hl.add(qsGrid);
