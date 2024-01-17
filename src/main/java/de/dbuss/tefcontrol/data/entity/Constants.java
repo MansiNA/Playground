@@ -70,10 +70,11 @@ public class Constants {
     public static final String SQL_Plan_Scenarios = "SQL_Plan_Scenarios";
     public static final String SQL_OUTLOOK_SCENARIOS = "SQL_Outlook_Scenarios";
     public static final String SQL_QFC_SCENARIOS = "SQL_QFC_Scenarios";
+    public static final String SQL_AKT_CURRENTPERIODS = "SQL_Akt_CurrentPeriods";
+    public static final String SQL_AKT_CURRENTSCENARIOS = "SQL_Akt_CurrentScenarios";
 
     // This constant is used for REPORT_Administration module
     public static final String REPORT_ADMINISTRATION = "REPORT_Administration";
     public static final String TABLE_REPORTINGCONFIG = "Table_ReportingConfig";
-
 
 }

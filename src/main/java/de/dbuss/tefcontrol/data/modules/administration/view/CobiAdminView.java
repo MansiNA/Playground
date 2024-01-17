@@ -45,6 +45,8 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
     private String sqlPlanScenarios;
     private String sqlOutlookScenario;
     private String sqlQfcScenarios;
+    private String sqlAktCurrentPeriods;
+    private String sqlAktCurrentScenarios;
     private String dbUrl;
     private String dbUser;
     private String dbPassword;
@@ -65,7 +67,7 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
         this.authenticatedUser=authenticatedUser;
 
         qsBtn = new Button("QS and Start Job");
-        qsBtn.setEnabled(false);
+       // qsBtn.setEnabled(false);
 
         List<ProjectParameter> listOfProjectParameters = projectParameterService.findAll();
         String dbServer = null;
@@ -93,6 +95,10 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
                     sqlQfcScenarios = projectParameter.getValue();
                 } else if (Constants.DB_JOBS.equals(projectParameter.getName())) {
                     agentName = projectParameter.getValue();
+                } else if (Constants.SQL_AKT_CURRENTPERIODS.equals(projectParameter.getName())) {
+                    sqlAktCurrentPeriods = projectParameter.getValue();
+                } else if (Constants.SQL_AKT_CURRENTSCENARIOS.equals(projectParameter.getName())) {
+                    sqlAktCurrentScenarios = projectParameter.getValue();
                 }
             }
         }
@@ -104,13 +110,18 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
         add();
         add(h1, p1, getDimPeriodGrid(), getDimScenarioGrid());
 
-        Button saveBtn = new Button("Save");
+        //Componente QS-Grid:
+        qsGrid = new QS_Grid(projectConnectionService, backendService);
 
-        saveBtn.addClickListener(e -> {
+        HorizontalLayout hl = new HorizontalLayout();
+        hl.setAlignItems(Alignment.BASELINE);
+        hl.add( qsBtn, qsGrid);
+
+        qsBtn.addClickListener(e ->{
 
             ProjectUpload projectUpload = new ProjectUpload();
             projectUpload.setFileName("");
-          //  projectUpload.setUserName(MainLayout.userName);
+            //  projectUpload.setUserName(MainLayout.userName);
             Optional<User> maybeUser = authenticatedUser.get();
             if (maybeUser.isPresent()) {
                 User user = maybeUser.get();
@@ -146,7 +157,7 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
             String resultOfPeriods = projectConnectionService.saveCobiAdminCurrentPeriods(currentPeriods, dbUrl, dbUser, dbPassword, tableCurrentPeriods);
             Notification notification;
             if (resultOfPeriods.equals(Constants.OK)) {
-                qsBtn.setEnabled(true);
+                // qsBtn.setEnabled(true);
                 notification = Notification.show(" Current Periods Rows Uploaded successfully", 6000, Notification.Position.MIDDLE);
                 notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
             } else {
@@ -162,16 +173,7 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
                 notification = Notification.show("Error during upload: " + resultOfScenarios, 15000, Notification.Position.MIDDLE);
                 notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
             }
-        });
 
-        //Componente QS-Grid:
-        qsGrid = new QS_Grid(projectConnectionService, backendService);
-
-        HorizontalLayout hl = new HorizontalLayout();
-        hl.setAlignItems(Alignment.BASELINE);
-        hl.add(saveBtn,  qsBtn, qsGrid);
-
-        qsBtn.addClickListener(e ->{
             hl.remove(qsGrid);
             qsGrid = new QS_Grid(projectConnectionService, backendService);
             hl.add(qsGrid);
@@ -338,6 +340,9 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
         currentPeriods = new CurrentPeriods();
         periods.add(currentPeriods);
 
+        List<String> aktCurrentPeriods = projectConnectionService.getCobiAdminQFCPlanOutlook(dbUrl, dbUser, dbPassword, sqlAktCurrentPeriods);
+        System.out.println(aktCurrentPeriods + " aktCurrentPeriods..........");
+
         Grid<CurrentPeriods> grid_period = new Grid<>(CurrentPeriods.class, false);
         grid_period.addComponentColumn(cp -> {
             ComboBox<String> comboBox = new ComboBox<>();
@@ -351,9 +356,9 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
             }
 
             comboBox.setItems(monthPeriod);
-            comboBox.setValue(monthPeriod.get(0));
-            cp.setCurrent_month(monthPeriod.get(0));
-            currentPeriods.setCurrent_month(monthPeriod.get(0));
+            comboBox.setValue(aktCurrentPeriods.get(0));
+            cp.setCurrent_month(aktCurrentPeriods.get(0));
+            currentPeriods.setCurrent_month(aktCurrentPeriods.get(0));
             comboBox.addValueChangeListener(event -> {
                 cp.setCurrent_month(event.getValue());
                 currentPeriods.setCurrent_month(event.getValue());
@@ -388,7 +393,9 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
         List<String> qfc = projectConnectionService.getCobiAdminQFCPlanOutlook(dbUrl, dbUser, dbPassword, sqlQfcScenarios);
         List<String> plan = projectConnectionService.getCobiAdminQFCPlanOutlook(dbUrl, dbUser, dbPassword, sqlPlanScenarios);
         List<String> outlook = projectConnectionService.getCobiAdminQFCPlanOutlook(dbUrl, dbUser, dbPassword, sqlOutlookScenario);
+        List<String> aktCurrentScenarios = projectConnectionService.getCobiAdminQFCPlanOutlook(dbUrl, dbUser, dbPassword, sqlAktCurrentScenarios);
 
+        System.out.println(aktCurrentScenarios + " aktCurrentScenarios..........");
         List<CurrentScenarios> scenarios = new ArrayList<>();
         currentScenarios = new CurrentScenarios();
 
@@ -398,13 +405,12 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
         Grid<CurrentScenarios> grid_scenario = new Grid<>(CurrentScenarios.class, false);
         grid_scenario.addClassName("grid_scenario");
 
-
         grid_scenario.addComponentColumn(cs -> {
             ComboBox<String> comboBox = new ComboBox<>();
             comboBox.setItems(qfc);
-            comboBox.setValue(qfc.get(0));
-            currentScenarios.setCurrent_QFC(qfc.get(0));
-            cs.setCurrent_QFC(qfc.get(0));
+            comboBox.setValue(aktCurrentScenarios.get(2));
+            currentScenarios.setCurrent_QFC(aktCurrentScenarios.get(2));
+            cs.setCurrent_QFC(aktCurrentScenarios.get(2));
             comboBox.addValueChangeListener(event -> {
                 cs.setCurrent_QFC(event.getValue());
                 currentScenarios.setCurrent_QFC(event.getValue());
@@ -414,9 +420,9 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
         grid_scenario.addComponentColumn(cs -> {
             ComboBox<String> comboBox = new ComboBox<>();
             comboBox.setItems(plan);
-            comboBox.setValue(plan.get(0));
-            currentScenarios.setCurrent_Plan(plan.get(0));
-            cs.setCurrent_Plan(plan.get(0));
+            comboBox.setValue(aktCurrentScenarios.get(0));
+            currentScenarios.setCurrent_Plan(aktCurrentScenarios.get(0));
+            cs.setCurrent_Plan(aktCurrentScenarios.get(0));
             comboBox.addValueChangeListener(event -> {
                 cs.setCurrent_Plan(event.getValue());
                 currentScenarios.setCurrent_Plan(event.getValue());
@@ -426,9 +432,9 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
         grid_scenario.addComponentColumn(cs -> {
             ComboBox<String> comboBox = new ComboBox<>();
             comboBox.setItems(outlook);
-            comboBox.setValue(outlook.get(0));
-            currentScenarios.setCurrent_Outlook(outlook.get(0));
-            cs.setCurrent_Outlook(outlook.get(0));
+            comboBox.setValue(aktCurrentScenarios.get(1));
+            currentScenarios.setCurrent_Outlook(aktCurrentScenarios.get(1));
+            cs.setCurrent_Outlook(aktCurrentScenarios.get(1));
             comboBox.addValueChangeListener(event -> {
                 cs.setCurrent_Outlook(event.getValue());
                 currentScenarios.setCurrent_Outlook(event.getValue());
@@ -446,9 +452,6 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
         //grid_scenario.getStyle().set( "box-shadow" , "0 10px 6px -6px black" ) ;
         grid_scenario.getStyle().set( "box-shadow" , "5px 6px 4px gray" ) ;
         grid_scenario.getStyle().set( "border-radius" , "1px" ) ;
-
-
-
 
         scenarios.add(currentScenarios);
         grid_scenario.setItems(scenarios);
