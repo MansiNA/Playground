@@ -2,6 +2,7 @@ package de.dbuss.tefcontrol.data.modules.administration.view;
 
 import com.vaadin.flow.component.*;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
@@ -45,6 +46,8 @@ public class ReportAdminView extends VerticalLayout implements BeforeEnterObserv
     private CurrentPeriods currentPeriods;
     private int projectId;
 
+    Boolean isVisible=false;
+
     public ReportAdminView(ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, BackendService backendService, AuthenticatedUser authenticatedUser) {
         this.projectConnectionService = projectConnectionService;
 
@@ -71,32 +74,34 @@ public class ReportAdminView extends VerticalLayout implements BeforeEnterObserv
         }
 
         H1 h1 = new H1("Report Administration");
-        Article p1 = new Article();
-        p1.setText("Auf diese Seite lassen sich verschiedene Einstellungen zur Report-Beladung vornehmen und die Reports ausführen.");
 
         dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
 
 
 
         H2 h2 = new H2("Rohdatenreporting:");
-        String databaseDetail = "Connected to: "+ dbServer+ ", Database: " + dbName + ", Target Table: " +tableReportingConfig + ", SQL-Job: "+ agentName;
 
         Div text = new Div();
-        text.setText(databaseDetail);
+        text.setText("Connected to: "+ dbServer+ ", Database: " + dbName + ", Target Table: " +tableReportingConfig + ", SQL-Job: "+ agentName);
 
         HorizontalLayout header = new HorizontalLayout(h2,text);
         header.setAlignItems(Alignment.BASELINE);
 
-        add(h1, p1, header);
+        Article p1 = new Article();
+        p1.setText("Erstellung des \"Rohdatenreports\" und Ablage unter \\\\dewsttwak11\\Ablagen\\Rohdatenauswertung\\Report_Out.");
+
+
+        add(h1, header, p1);
 
         Button startRohdatenReportBtn = new Button("Start Report");
+        startRohdatenReportBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_SUCCESS);
 
         startRohdatenReportBtn.addClickListener(e -> {
             startRohdatenReportBtn.setEnabled(false);
             String resultOfPeriods = projectConnectionService.saveReportAdmintPeriods(currentPeriods, dbUrl, dbUser, dbPassword, tableReportingConfig);
             Notification notification;
             if (resultOfPeriods.equals(Constants.OK)) {
-                notification = Notification.show(" Report updated successfully", 2000, Notification.Position.MIDDLE);
+                notification = Notification.show("Reporting Monat " + currentPeriods.getCurrent_month() + " updated successfully", 5000, Notification.Position.MIDDLE);
                 notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
             } else {
                 notification = Notification.show("Error during upload: " + resultOfPeriods, 15000, Notification.Position.MIDDLE);
@@ -114,7 +119,7 @@ public class ReportAdminView extends VerticalLayout implements BeforeEnterObserv
         });
 
         HorizontalLayout hl = new HorizontalLayout();
-        hl.setAlignItems(Alignment.BASELINE);
+
         hl.add(getDimPeriodGrid(), startRohdatenReportBtn);
         hl.setAlignItems(Alignment.CENTER);
 
@@ -122,13 +127,13 @@ public class ReportAdminView extends VerticalLayout implements BeforeEnterObserv
 
         text.setVisible(false);
 
+
         UI.getCurrent().addShortcutListener(
                 () -> {
-                    text.setVisible(true);
+                    isVisible=!isVisible;
+                    text.setVisible(isVisible);
                 },
                 Key.KEY_I, KeyModifier.ALT);
-
-
 
     }
 
@@ -139,9 +144,6 @@ public class ReportAdminView extends VerticalLayout implements BeforeEnterObserv
     }
     private Component getDimPeriodGrid() {
         VerticalLayout content = new VerticalLayout();
-
-        H3 p2 = new H3();
-        p2.setText("Period:");
 
         List<CurrentPeriods> periods = new ArrayList<>();
         currentPeriods = new CurrentPeriods();
@@ -168,18 +170,19 @@ public class ReportAdminView extends VerticalLayout implements BeforeEnterObserv
                 currentPeriods.setCurrent_month(event.getValue());
             });
             return comboBox;
-        }).setHeader("Current-Month").setFlexGrow(0).setAutoWidth(true);
-        grid_period.setWidth("240px");
-        grid_period.setHeight("100px");
+        }).setHeader("Reporting Monat").setFlexGrow(0).setAutoWidth(true);
+        grid_period.setWidth("220px");
+        grid_period.setHeight("80px");
 
         grid_period.addThemeVariants(GridVariant.LUMO_COMPACT);
         grid_period.addThemeVariants(GridVariant.LUMO_NO_BORDER);
-        grid_period.getStyle().set( "border" , "0.5px solid black" ) ;
-        grid_period.getStyle().set( "box-shadow" , "5px 6px 4px gray" ) ;
-        grid_period.getStyle().set( "border-radius" , "2px" ) ;
-        grid_period.getStyle().set( "padding" , "25px" ) ;
+      //  grid_period.getStyle().set( "border" , "0.5px solid black" ) ;
+        grid_period.getStyle().set( "border" , "none" ) ;
+        //grid_period.getStyle().set( "box-shadow" , "5px 6px 4px gray" ) ;
+        //grid_period.getStyle().set( "border-radius" , "2px" ) ;
+        //grid_period.getStyle().set( "padding" , "25px" ) ;
 
-        grid_period.getElement().getStyle().set("padding", "20px");
+        //grid_period.getElement().getStyle().set("padding", "20px");
 
         grid_period.getColumns().forEach(e -> e.setResizable(Boolean.TRUE));
 
