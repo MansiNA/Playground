@@ -80,6 +80,7 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
     BackendService backendService;
 
     private AuthenticatedUser authenticatedUser;
+    private Boolean isVisible = false;
 
     public B2POutlookFINView(ProjectParameterService projectParameterService, ProjectConnectionService projectConnectionService, BackendService backendService,  AuthenticatedUser authenticatedUser) {
 
@@ -117,7 +118,8 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
 
         dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
 
-        Text databaseDetail = new Text("Connected to: "+ dbServer+ " Database: " + dbName+ " Table: " + tableName + " AgentJob: " + agentName);
+        Div text = new Div();
+        text.setText("Connected to: "+ dbServer+ " Database: " + dbName+ " Table: " + tableName + " AgentJob: " + agentName);
 
         //Componente QS-Grid:
         qsGrid = new QS_Grid(projectConnectionService, backendService);
@@ -125,7 +127,7 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
         HorizontalLayout hl = new HorizontalLayout();
         hl.setAlignItems(Alignment.BASELINE);
         // hl.add(singleFileUpload,saveButton, databaseDetail);
-        hl.add(singleFileUpload,uploadBtn, qsBtn, databaseDetail, qsGrid);
+        hl.add(singleFileUpload,uploadBtn, qsBtn, text, qsGrid);
         add(hl);
 
         uploadBtn.addClickListener(e ->{
@@ -157,6 +159,14 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
                 () ->  future.cancel(true),
                 Key.KEY_S, KeyModifier.ALT);
 
+        text.setVisible(false);
+
+        UI.getCurrent().addShortcutListener(
+                () -> {
+                    isVisible=!isVisible;
+                    text.setVisible(isVisible);
+                },
+                Key.KEY_I, KeyModifier.ALT);
 
     }
     @Override
@@ -509,9 +519,10 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
 
             XSSFWorkbook my_xls_workbook = new XSSFWorkbook(fileData);
 
+            String firstSheet = "Mapping  - OL";
             my_xls_workbook.forEach(sheet -> {
                 String sheetName = sheet.getSheetName();
-                if (sheetName != null) {
+                if (sheetName != null && !firstSheet.equals(sheetName)) {
                     List<OutlookMGSR> sheetData = parseSheet(sheet, OutlookMGSR.class);
                     listOfAllSheets.add(sheetData);
                 }
@@ -530,7 +541,7 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
 
             int rowNumber=0;
             Integer Error_count=0;
-            System.out.println(sheet.getPhysicalNumberOfRows()+"$$$$$$$$$");
+            System.out.println(sheet.getPhysicalNumberOfRows()+"$$$$$$$$$" + sheet.getSheetName());
 
             while (rowIterator.hasNext() ) {
                 Row row = rowIterator.next();
@@ -567,10 +578,22 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
 
                             } else if (field.getType() == String.class) {
 
-                                if(cell.getCellType() == Cell.CELL_TYPE_FORMULA) {
-                                    String value = cell.getNumericCellValue() + "";
-                                    field.set(entity, value);
+                                if (cell.getCellType() == Cell.CELL_TYPE_FORMULA) {
+                                    // System.out.println(cell.getCachedFormulaResultType() + "............" + sheet.getSheetName());
+                                    if (cell.getCachedFormulaResultType() == Cell.CELL_TYPE_NUMERIC) {
+                                        // Formula result is numeric, get the numeric value
+                                        double numericValue = cell.getNumericCellValue();
+                                        String value = String.valueOf(numericValue);
+                                        field.set(entity, value);
+                                    } else if (cell.getCachedFormulaResultType() == Cell.CELL_TYPE_STRING) {
+                                        // Formula result is string, get the string value
+                                        String value = cell.getRichStringCellValue().getString();
+                                        field.set(entity, value);
+                                    } else {
+                                        // Handle other formula result types if needed
+                                    }
                                 } else {
+                                    // Handle regular string cell
                                     field.set(entity, cell.getStringCellValue());
                                 }
                             }
