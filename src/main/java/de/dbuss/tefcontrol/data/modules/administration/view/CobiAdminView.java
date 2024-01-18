@@ -340,6 +340,8 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
         currentPeriods = new CurrentPeriods();
         periods.add(currentPeriods);
 
+        System.out.println("Execute SQL for sqlAktCurrentPeriods: " + sqlAktCurrentPeriods);
+
         List<String> aktCurrentPeriods = projectConnectionService.getCobiAdminQFCPlanOutlook(dbUrl, dbUser, dbPassword, sqlAktCurrentPeriods);
         System.out.println(aktCurrentPeriods + " aktCurrentPeriods..........");
 
@@ -393,6 +395,9 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
         List<String> qfc = projectConnectionService.getCobiAdminQFCPlanOutlook(dbUrl, dbUser, dbPassword, sqlQfcScenarios);
         List<String> plan = projectConnectionService.getCobiAdminQFCPlanOutlook(dbUrl, dbUser, dbPassword, sqlPlanScenarios);
         List<String> outlook = projectConnectionService.getCobiAdminQFCPlanOutlook(dbUrl, dbUser, dbPassword, sqlOutlookScenario);
+
+        System.out.println("execute SQL for sqlAktCurrentScenario:s " + sqlAktCurrentScenarios);
+
         List<String> aktCurrentScenarios = projectConnectionService.getCobiAdminQFCPlanOutlook(dbUrl, dbUser, dbPassword, sqlAktCurrentScenarios);
 
         System.out.println(aktCurrentScenarios + " aktCurrentScenarios..........");
