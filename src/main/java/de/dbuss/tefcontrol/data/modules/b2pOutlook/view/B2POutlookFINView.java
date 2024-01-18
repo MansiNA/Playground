@@ -59,6 +59,7 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
     private Crud<OutlookMGSR> crudMGSR;
     private Grid<OutlookMGSR> gridMGSR = new Grid<>(OutlookMGSR.class, false);
     private String tableName;
+    int sheetNr = 0;
 
     private String agentName;
     private String dbUrl;
@@ -519,10 +520,14 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
 
             XSSFWorkbook my_xls_workbook = new XSSFWorkbook(fileData);
 
+
             String firstSheet = "Mapping  - OL";
             my_xls_workbook.forEach(sheet -> {
+                sheetNr++;
+
                 String sheetName = sheet.getSheetName();
-                if (sheetName != null && !firstSheet.equals(sheetName)) {
+                System.out.println("SheetNr: " + sheetNr + " Name: " + sheetName);
+                if (sheetName != null && !firstSheet.equals(sheetName) && sheetNr>1) {
                     List<OutlookMGSR> sheetData = parseSheet(sheet, OutlookMGSR.class);
                     listOfAllSheets.add(sheetData);
                 }
