@@ -70,6 +70,7 @@ public class B2POutlookSUBView extends VerticalLayout implements BeforeEnterObse
     private String mimeType = "";
     private Div textArea = new Div();
     private int projectId;
+    int sheetNr = 0;
     private QS_Grid qsGrid;
     private Button qsBtn;
     private Button uploadBtn;
@@ -488,8 +489,10 @@ public class B2POutlookSUBView extends VerticalLayout implements BeforeEnterObse
 
             String firstSheet = "Mapping  - OL";
             my_xls_workbook.forEach(sheet -> {
+                sheetNr++;
                 String sheetName = sheet.getSheetName();
-                if (sheetName != null && !firstSheet.equals(sheetName)) {
+                System.out.println("SheetNr: " + sheetNr + " Name: " + sheetName );
+                if (sheetName != null && !firstSheet.equals(sheetName) && sheetNr>1) {
                     List<B2pOutlookSub> sheetData = parseSheet(sheet, B2pOutlookSub.class);
                     listOfAllSheets.add(sheetData);
                 }
