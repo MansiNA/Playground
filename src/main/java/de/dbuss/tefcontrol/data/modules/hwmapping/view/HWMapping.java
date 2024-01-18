@@ -68,6 +68,10 @@ public class HWMapping extends VerticalLayout implements BeforeEnterObserver {
     private String dbUrl;
     private String dbUser;
     private String dbPassword;
+
+    String dbServer = null;
+    String dbName = null;
+
     private String agentName;
     private String sql_addMonths;
     private String tableName;
@@ -89,8 +93,6 @@ public class HWMapping extends VerticalLayout implements BeforeEnterObserver {
         startJobBtn.setEnabled(true);
 
         List<ProjectParameter> listOfProjectParameters = projectParameterService.findAll();
-        String dbServer = null;
-        String dbName = null;
 
         for (ProjectParameter projectParameter : listOfProjectParameters) {
             if(projectParameter.getNamespace().equals(Constants.HW_MAPPING)) {
