@@ -356,9 +356,17 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
             }
 
             comboBox.setItems(monthPeriod);
-            comboBox.setValue(aktCurrentPeriods.get(0));
-            cp.setCurrent_month(aktCurrentPeriods.get(0));
-            currentPeriods.setCurrent_month(aktCurrentPeriods.get(0));
+
+            if(aktCurrentPeriods != null && !aktCurrentPeriods.isEmpty()) {
+                comboBox.setValue(aktCurrentPeriods.get(0));
+                cp.setCurrent_month(aktCurrentPeriods.get(0));
+                currentPeriods.setCurrent_month(aktCurrentPeriods.get(0));
+            } else {
+                comboBox.setValue(monthPeriod.get(3));
+                cp.setCurrent_month(monthPeriod.get(3));
+                currentPeriods.setCurrent_month(monthPeriod.get(3));
+                Notification.show("No valid sql for Current Periods in project_properties", 5000, Notification.Position.MIDDLE);
+            }
             comboBox.addValueChangeListener(event -> {
                 cp.setCurrent_month(event.getValue());
                 currentPeriods.setCurrent_month(event.getValue());
@@ -408,9 +416,16 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
         grid_scenario.addComponentColumn(cs -> {
             ComboBox<String> comboBox = new ComboBox<>();
             comboBox.setItems(qfc);
-            comboBox.setValue(aktCurrentScenarios.get(2));
-            currentScenarios.setCurrent_QFC(aktCurrentScenarios.get(2));
-            cs.setCurrent_QFC(aktCurrentScenarios.get(2));
+            if(aktCurrentScenarios != null && !aktCurrentScenarios.isEmpty()) {
+                comboBox.setValue(aktCurrentScenarios.get(2));
+                currentScenarios.setCurrent_QFC(aktCurrentScenarios.get(2));
+                cs.setCurrent_QFC(aktCurrentScenarios.get(2));
+            } else {
+                comboBox.setValue(qfc.get(0));
+                currentScenarios.setCurrent_QFC(qfc.get(0));
+                cs.setCurrent_QFC(qfc.get(0));
+                Notification.show("No valid sql for Current Scenarios in project_properties", 5000, Notification.Position.MIDDLE);
+            }
             comboBox.addValueChangeListener(event -> {
                 cs.setCurrent_QFC(event.getValue());
                 currentScenarios.setCurrent_QFC(event.getValue());
@@ -420,9 +435,17 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
         grid_scenario.addComponentColumn(cs -> {
             ComboBox<String> comboBox = new ComboBox<>();
             comboBox.setItems(plan);
-            comboBox.setValue(aktCurrentScenarios.get(0));
-            currentScenarios.setCurrent_Plan(aktCurrentScenarios.get(0));
-            cs.setCurrent_Plan(aktCurrentScenarios.get(0));
+            if(aktCurrentScenarios != null && !aktCurrentScenarios.isEmpty()) {
+                comboBox.setValue(aktCurrentScenarios.get(0));
+                currentScenarios.setCurrent_Plan(aktCurrentScenarios.get(0));
+                cs.setCurrent_Plan(aktCurrentScenarios.get(0));
+            } else {
+                comboBox.setValue(plan.get(0));
+                currentScenarios.setCurrent_Plan(plan.get(0));
+                cs.setCurrent_Plan(plan.get(0));
+              //  Notification.show("No valid sql in project_properties", 5000, Notification.Position.MIDDLE);
+            }
+
             comboBox.addValueChangeListener(event -> {
                 cs.setCurrent_Plan(event.getValue());
                 currentScenarios.setCurrent_Plan(event.getValue());
@@ -432,9 +455,17 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
         grid_scenario.addComponentColumn(cs -> {
             ComboBox<String> comboBox = new ComboBox<>();
             comboBox.setItems(outlook);
-            comboBox.setValue(aktCurrentScenarios.get(1));
-            currentScenarios.setCurrent_Outlook(aktCurrentScenarios.get(1));
-            cs.setCurrent_Outlook(aktCurrentScenarios.get(1));
+            if(aktCurrentScenarios != null && !aktCurrentScenarios.isEmpty()) {
+                comboBox.setValue(aktCurrentScenarios.get(1));
+                currentScenarios.setCurrent_Outlook(aktCurrentScenarios.get(1));
+                cs.setCurrent_Outlook(aktCurrentScenarios.get(1));
+            } else {
+                comboBox.setValue(outlook.get(0));
+                currentScenarios.setCurrent_Outlook(outlook.get(0));
+                cs.setCurrent_Outlook(outlook.get(0));
+                //  Notification.show("No valid sql in project_properties", 5000, Notification.Position.MIDDLE);
+            }
+
             comboBox.addValueChangeListener(event -> {
                 cs.setCurrent_Outlook(event.getValue());
                 currentScenarios.setCurrent_Outlook(event.getValue());
