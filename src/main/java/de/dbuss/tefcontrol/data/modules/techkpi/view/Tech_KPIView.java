@@ -1,13 +1,12 @@
 package de.dbuss.tefcontrol.data.modules.techkpi.view;
 
-import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.Text;
-import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.*;
 import com.vaadin.flow.component.accordion.Accordion;
 import com.vaadin.flow.component.accordion.AccordionPanel;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.details.Details;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.*;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -45,6 +44,7 @@ import java.util.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 import static com.vaadin.flow.component.button.ButtonVariant.LUMO_TERTIARY_INLINE;
 
@@ -119,6 +119,8 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
     private QS_Grid qsGrid;
     private Button qsBtn;
     private int upload_id;
+    private Boolean isVisible = false;
+    Grid<ProjectParameter> parameterGrid = new Grid<>(ProjectParameter.class, false);
 
     public static Map<String, Integer> projectUploadIdMap = new HashMap<>();
     //Div htmlDivToDO;
@@ -204,11 +206,15 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
    //     add(TodoList);
 
         List<ProjectParameter> listOfProjectParameters = projectParameterService.findAll();
+        List<ProjectParameter> filteredProjectParameters = listOfProjectParameters.stream()
+                .filter(projectParameter -> Constants.TECH_KPI.equals(projectParameter.getNamespace()))
+                .collect(Collectors.toList());
+
         String dbServer = null;
         String dbName = null;
 
-        for (ProjectParameter projectParameter : listOfProjectParameters) {
-            if(projectParameter.getNamespace().equals(Constants.TECH_KPI)) {
+        for (ProjectParameter projectParameter : filteredProjectParameters) {
+          //  if(projectParameter.getNamespace().equals(Constants.TECH_KPI)) {
                 if (Constants.DB_SERVER.equals(projectParameter.getName())) {
                     dbServer = projectParameter.getValue();
                 } else if (Constants.DB_NAME.equals(projectParameter.getName())) {
@@ -226,17 +232,19 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                 } else if (Constants.DB_JOBS.equals(projectParameter.getName())) {
                     agentName = projectParameter.getValue();
                 }
-            }
+           // }
         }
         dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
         //Text databaseDetail = new Text("Connected to: "+ dbServer+ ", Database: " + dbName+ ", Table Financials: " + financialsTableName + ", Table Subscriber: " + subscriberTableName+ ", Table Unitdeepdive: "+ unitTableName);
-        Text databaseDetail = new Text("Connected to: "+ dbServer+ ", Database: " + dbName + " AgentJob: " + agentName);
+        // Text databaseDetail = new Text("Connected to: "+ dbServer+ ", Database: " + dbName + " AgentJob: " + agentName);
+
+        setProjectParameterGrid(filteredProjectParameters);
 
         //Componente QS-Grid:
         qsGrid = new QS_Grid(projectConnectionService, backendService);
 
         hl.setAlignItems(Alignment.BASELINE);
-        hl.add(singleFileUpload, uploadBtn, qsBtn, databaseDetail, qsGrid);
+        hl.add(singleFileUpload, uploadBtn, qsBtn, qsGrid);
 
         uploadBtn.addClickListener(e->{
 
@@ -281,7 +289,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
         //  h3_Plan.add("Plan 0 rows");
 
         //add(hl, progressBarFact, progressBarPlan,progressBarActuals, details, h3_Fact, gridFact, h3_Actuals, gridActuals, h3_Plan, gridPlan );
-        add(hl, progressBarFact, progressBarPlan, progressBarActuals);
+        add(hl, parameterGrid, progressBarFact, progressBarPlan, progressBarActuals);
 
         add(details);
 
@@ -310,6 +318,15 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
         setHeightFull();
 
+        parameterGrid.setVisible(false);
+
+        UI.getCurrent().addShortcutListener(
+                () -> {
+                    isVisible=!isVisible;
+                    parameterGrid.setVisible(isVisible);
+                },
+                Key.KEY_I, KeyModifier.ALT);
+
     }
 
     private TabSheet getTabsheet() {
@@ -335,6 +352,18 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
     public void beforeEnter(BeforeEnterEvent event) {
         RouteParameters parameters = event.getRouteParameters();
         projectId = Integer.parseInt(parameters.get("project_Id").orElse(null));
+    }
+
+    private void setProjectParameterGrid(List<ProjectParameter> listOfProjectParameters) {
+        parameterGrid = new Grid<>(ProjectParameter.class, false);
+        parameterGrid.addColumn(ProjectParameter::getName).setHeader("Name").setAutoWidth(true).setResizable(true);
+        parameterGrid.addColumn(ProjectParameter::getValue).setHeader("Value").setAutoWidth(true).setResizable(true);
+        parameterGrid.addColumn(ProjectParameter::getDescription).setHeader("Description").setAutoWidth(true).setResizable(true);
+
+        parameterGrid.setItems(listOfProjectParameters);
+        parameterGrid.addThemeVariants(GridVariant.LUMO_COMPACT);
+        parameterGrid.setHeight("200px");
+        parameterGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
     }
 
     public class CallbackHandler implements QS_Callback {
