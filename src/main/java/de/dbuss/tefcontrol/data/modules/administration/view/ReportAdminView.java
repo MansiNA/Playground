@@ -78,16 +78,11 @@ public class ReportAdminView extends VerticalLayout implements BeforeEnterObserv
 
         H2 h2 = new H2("Rohdatenreporting:");
 
-        Div text = new Div();
-        text.setText("Connected to: "+ dbServer+ ", Database: " + dbName + ", Target Table: " +tableReportingConfig + ", SQL-Job: "+ agentName);
-
-        HorizontalLayout header = new HorizontalLayout(h2,text);
+        HorizontalLayout header = new HorizontalLayout(h2);
         header.setAlignItems(Alignment.BASELINE);
 
         Article p1 = new Article();
         p1.setText("Erstellung des \"Rohdatenreports\" und Ablage unter \\\\dewsttwak11\\Ablagen\\Rohdatenauswertung\\Report_Out.");
-
-
 
         add(h1, header, p1, parameterGrid);
 
@@ -124,13 +119,11 @@ public class ReportAdminView extends VerticalLayout implements BeforeEnterObserv
 
         add(hl);
 
-        text.setVisible(false);
         parameterGrid.setVisible(false);
 
         UI.getCurrent().addShortcutListener(
                 () -> {
                     isVisible=!isVisible;
-                    text.setVisible(isVisible);
                     parameterGrid.setVisible(isVisible);
                 },
                 Key.KEY_I, KeyModifier.ALT);
@@ -139,9 +132,14 @@ public class ReportAdminView extends VerticalLayout implements BeforeEnterObserv
 
     private void setProjectParameterGrid(List<ProjectParameter> listOfProjectParameters) {
         parameterGrid = new Grid<>(ProjectParameter.class, false);
-        parameterGrid = new Grid<>(ProjectParameter.class);
-        parameterGrid.setColumns("id", "namespace", "name", "value", "description");
+        parameterGrid.addColumn(ProjectParameter::getName).setHeader("Name").setAutoWidth(true).setResizable(true);
+        parameterGrid.addColumn(ProjectParameter::getValue).setHeader("Value").setAutoWidth(true).setResizable(true);
+        parameterGrid.addColumn(ProjectParameter::getDescription).setHeader("Description").setAutoWidth(true).setResizable(true);
+
         parameterGrid.setItems(listOfProjectParameters);
+        parameterGrid.addThemeVariants(GridVariant.LUMO_COMPACT);
+        parameterGrid.setHeight("200px");
+        parameterGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
     }
 
     @Override
