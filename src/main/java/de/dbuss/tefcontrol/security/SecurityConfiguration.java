@@ -137,7 +137,7 @@ public class SecurityConfiguration extends VaadinWebSecurity {
         String ldapPassword = password;
 
         System.out.println("Anmelden User: " + ldapUser);
-        System.out.println("Password: " + ldapPassword);
+      //  System.out.println("Password: " + ldapPassword);
         System.out.println("URL: " + ldapUrl);
 
 
