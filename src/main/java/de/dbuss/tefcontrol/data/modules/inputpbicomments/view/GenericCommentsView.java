@@ -494,6 +494,7 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
 
             singleFileUpload.clearFileList();
             uploadBtn.setEnabled(true);
+            qsBtn.setEnabled(false);
 
 
         });

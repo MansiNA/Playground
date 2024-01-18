@@ -950,6 +950,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
             if (errors_Count==0)
             {
                 uploadBtn.setEnabled(true);
+                qsBtn.setEnabled(false);
             }
 
 

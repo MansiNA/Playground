@@ -461,6 +461,7 @@ public class B2POutlookSUBView extends VerticalLayout implements BeforeEnterObse
             gridOutlookSub.setDataProvider(dataFinancialsProvider);
             singleFileUpload.clearFileList();
             uploadBtn.setEnabled(true);
+            qsBtn.setEnabled(false);
         });
     }
 
