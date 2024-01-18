@@ -1,8 +1,7 @@
 package de.dbuss.tefcontrol.data.modules.administration.view;
 
 
-import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.Text;
+import com.vaadin.flow.component.*;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
@@ -32,6 +31,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import javax.sql.DataSource;
 import java.time.YearMonth;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.vaadin.flow.component.button.ButtonVariant.LUMO_TERTIARY_INLINE;
 
@@ -61,6 +61,8 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
     private String agentName;
     private AuthenticatedUser authenticatedUser;
     private int upload_id;
+    Boolean isVisible = false;
+    Grid<ProjectParameter> parameterGrid = new Grid<>(ProjectParameter.class, false);
 
     public CobiAdminView(ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, BackendService backendService, AuthenticatedUser authenticatedUser) {
         this.projectConnectionService = projectConnectionService;
@@ -70,11 +72,14 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
        // qsBtn.setEnabled(false);
 
         List<ProjectParameter> listOfProjectParameters = projectParameterService.findAll();
+        List<ProjectParameter> filteredProjectParameters = listOfProjectParameters.stream()
+                .filter(projectParameter -> Constants.COBI_ADMINISTRATION.equals(projectParameter.getNamespace()))
+                .collect(Collectors.toList());
         String dbServer = null;
         String dbName = null;
 
-        for (ProjectParameter projectParameter : listOfProjectParameters) {
-            if (projectParameter.getNamespace().equals(Constants.COBI_ADMINISTRATION)) {
+        for (ProjectParameter projectParameter : filteredProjectParameters) {
+         //   if (projectParameter.getNamespace().equals(Constants.COBI_ADMINISTRATION)) {
                 if (Constants.DB_SERVER.equals(projectParameter.getName())) {
                     dbServer = projectParameter.getValue();
                 } else if (Constants.DB_NAME.equals(projectParameter.getName())) {
@@ -100,15 +105,16 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
                 } else if (Constants.SQL_AKT_CURRENTSCENARIOS.equals(projectParameter.getName())) {
                     sqlAktCurrentScenarios = projectParameter.getValue();
                 }
-            }
+           // }
         }
         dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
+        setProjectParameterGrid(filteredProjectParameters);
 
         H1 h1 = new H1("FLIP Administration");
         Article p1 = new Article();
         p1.setText("Auf diese Seite lassen sich verschiedene Einstellungen zur COBI-Beladung vornehmen.");
         add();
-        add(h1, p1, getDimPeriodGrid(), getDimScenarioGrid());
+        add(h1, p1, parameterGrid, getDimPeriodGrid(), getDimScenarioGrid());
 
         //Componente QS-Grid:
         qsGrid = new QS_Grid(projectConnectionService, backendService);
@@ -192,6 +198,16 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
         });
 
         add(hl);
+
+        parameterGrid.setVisible(false);
+
+        UI.getCurrent().addShortcutListener(
+                () -> {
+                    isVisible=!isVisible;
+                    parameterGrid.setVisible(isVisible);
+                },
+                Key.KEY_I, KeyModifier.ALT);
+
     }
 
     @Override
@@ -199,6 +215,20 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
         RouteParameters parameters = event.getRouteParameters();
         projectId = Integer.parseInt(parameters.get("project_Id").orElse(null));
     }
+
+
+    private void setProjectParameterGrid(List<ProjectParameter> listOfProjectParameters) {
+        parameterGrid = new Grid<>(ProjectParameter.class, false);
+        parameterGrid.addColumn(ProjectParameter::getName).setHeader("Name").setAutoWidth(true).setResizable(true);
+        parameterGrid.addColumn(ProjectParameter::getValue).setHeader("Value").setAutoWidth(true).setResizable(true);
+        parameterGrid.addColumn(ProjectParameter::getDescription).setHeader("Description").setAutoWidth(true).setResizable(true);
+
+        parameterGrid.setItems(listOfProjectParameters);
+        parameterGrid.addThemeVariants(GridVariant.LUMO_COMPACT);
+        parameterGrid.setHeight("200px");
+        parameterGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+    }
+
     public class CallbackHandler implements QS_Callback {
         // Die Methode, die aufgerufen wird, wenn die externe Methode abgeschlossen ist
         @Override

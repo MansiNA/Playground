@@ -1,6 +1,8 @@
 package de.dbuss.tefcontrol.data.modules.pfgproductmapping.view;
 
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.Key;
+import com.vaadin.flow.component.KeyModifier;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -64,6 +66,8 @@ public class PFGProductMappingView extends VerticalLayout {
     private String targetTable;
     private String targetView;
     private List<ProductHierarchie> modifiedProducts = new ArrayList<>();
+    private Boolean isVisible = false;
+    Grid<ProjectParameter> parameterGrid = new Grid<>(ProjectParameter.class, false);
 
     public PFGProductMappingView( ProductHierarchieService service, ProjectParameterService projectParameterService, ProjectConnectionService projectConnectionService) {
         this.service = service;
@@ -71,11 +75,15 @@ public class PFGProductMappingView extends VerticalLayout {
         ui= UI.getCurrent();
 
         List<ProjectParameter> listOfProjectParameters = projectParameterService.findAll();
+        List<ProjectParameter> filteredProjectParameters = listOfProjectParameters.stream()
+                .filter(projectParameter -> Constants.PFG_PRODUCT_MAPPING.equals(projectParameter.getNamespace()))
+                .collect(Collectors.toList());
+
         String missingQuery = null;
         String pfg_mapping_target = null;
 
-        for (ProjectParameter projectParameter : listOfProjectParameters) {
-            if(projectParameter.getNamespace().equals(Constants.PFG_PRODUCT_MAPPING)) {
+        for (ProjectParameter projectParameter : filteredProjectParameters) {
+          //  if(projectParameter.getNamespace().equals(Constants.PFG_PRODUCT_MAPPING)) {
                 if (Constants.MAPPINGALLPRODUCTS.equals(projectParameter.getName())) {
                     productsDb = projectParameter.getValue();
                 } else if (Constants.AGENT_NAME.equals(projectParameter.getName())) {
@@ -85,10 +93,10 @@ public class PFGProductMappingView extends VerticalLayout {
                 } else if (Constants.PFG_TABLE.equals(projectParameter.getName())) {
                     pfg_mapping_target = projectParameter.getValue();
                 }
-            }
+          //  }
         }
 
-
+        setProjectParameterGrid(filteredProjectParameters);
         String [] targets = pfg_mapping_target.split(":");
         selectedDbName = targets[0];
         targetTable = targets[1];
@@ -142,11 +150,33 @@ public class PFGProductMappingView extends VerticalLayout {
         tabSheet.addThemeVariants(TabSheetVariant.MATERIAL_BORDERED);
 
         add(tabSheet);
-        add(hl,tabSheet );
+        add(hl, parameterGrid, tabSheet );
 
         updateList();
         updateMissingGrid();
         closeEditor();
+
+        parameterGrid.setVisible(false);
+
+        UI.getCurrent().addShortcutListener(
+                () -> {
+                    isVisible=!isVisible;
+                    parameterGrid.setVisible(isVisible);
+                },
+                Key.KEY_I, KeyModifier.ALT);
+
+    }
+
+    private void setProjectParameterGrid(List<ProjectParameter> listOfProjectParameters) {
+        parameterGrid = new Grid<>(ProjectParameter.class, false);
+        parameterGrid.addColumn(ProjectParameter::getName).setHeader("Name").setAutoWidth(true).setResizable(true);
+        parameterGrid.addColumn(ProjectParameter::getValue).setHeader("Value").setAutoWidth(true).setResizable(true);
+        parameterGrid.addColumn(ProjectParameter::getDescription).setHeader("Description").setAutoWidth(true).setResizable(true);
+
+        parameterGrid.setItems(listOfProjectParameters);
+        parameterGrid.addThemeVariants(GridVariant.LUMO_COMPACT);
+        parameterGrid.setHeight("200px");
+        parameterGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
     }
 
     private void configureSaveBtn() {

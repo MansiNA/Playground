@@ -22,7 +22,6 @@ public class ProjectParameterService {
     }
 
     public List<ProjectParameter> findAll() {
-        projectConnectionService.getJdbcDefaultConnection();
         return projectParameterRepository.findAll();
     }
 

@@ -1,5 +1,7 @@
 package de.dbuss.tefcontrol.data.modules.hwmapping.view;
 
+import com.vaadin.flow.component.Key;
+import com.vaadin.flow.component.KeyModifier;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
@@ -11,6 +13,7 @@ import com.vaadin.flow.component.crud.CrudEditor;
 import com.vaadin.flow.component.details.Details;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Article;
 import com.vaadin.flow.component.html.Div;
@@ -76,6 +79,8 @@ public class HWMapping extends VerticalLayout implements BeforeEnterObserver {
     private String sql_addMonths;
     private String tableName;
     private int projectId;
+    private Boolean isVisible = false;
+    Grid<ProjectParameter> parameterGrid = new Grid<>(ProjectParameter.class, false);
 
     public HWMapping(@Value("${csv_exportPath}") String p_exportPath, ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService) {
 
@@ -93,9 +98,13 @@ public class HWMapping extends VerticalLayout implements BeforeEnterObserver {
         startJobBtn.setEnabled(true);
 
         List<ProjectParameter> listOfProjectParameters = projectParameterService.findAll();
+        List<ProjectParameter> filteredProjectParameters = listOfProjectParameters.stream()
+                .filter(projectParameter -> Constants.HW_MAPPING.equals(projectParameter.getNamespace()))
+                .collect(Collectors.toList());
 
-        for (ProjectParameter projectParameter : listOfProjectParameters) {
-            if(projectParameter.getNamespace().equals(Constants.HW_MAPPING)) {
+
+        for (ProjectParameter projectParameter : filteredProjectParameters) {
+         //   if(projectParameter.getNamespace().equals(Constants.HW_MAPPING)) {
                 if (Constants.DB_SERVER.equals(projectParameter.getName())) {
                     dbServer = projectParameter.getValue();
                 } else if (Constants.DB_NAME.equals(projectParameter.getName())) {
@@ -111,11 +120,13 @@ public class HWMapping extends VerticalLayout implements BeforeEnterObserver {
                 }  else if (Constants.SQL_ADDMONTHS.equals(projectParameter.getName())) {
                     sql_addMonths = projectParameter.getValue();
                 }
-            }
+          //  }
         }
         dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
         //Text databaseDetail = new Text("Connected to: "+ dbServer+ ", Database: " + dbName+ ", Table Financials: " + financialsTableName + ", Table Subscriber: " + subscriberTableName+ ", Table Unitdeepdive: "+ unitTableName);
-        Text databaseDetail = new Text("Connected to: "+ dbServer+ ", Database: " + dbName + " AgentJob: " + agentName);
+     //   Text databaseDetail = new Text("Connected to: "+ dbServer+ ", Database: " + dbName + " AgentJob: " + agentName);
+
+        setProjectParameterGrid(filteredProjectParameters);
 
         setupGrid();
         setUpDownloadButton();
@@ -175,7 +186,28 @@ public class HWMapping extends VerticalLayout implements BeforeEnterObserver {
         checkbox = new Checkbox();
         checkbox.setLabel("Show Pivot");
         checkbox.addClickListener(e->{showPivot();});
-        add(horl, databaseDetail, crud, checkbox);
+        add(horl, parameterGrid, crud, checkbox);
+
+        parameterGrid.setVisible(false);
+
+        UI.getCurrent().addShortcutListener(
+                () -> {
+                    isVisible=!isVisible;
+                    parameterGrid.setVisible(isVisible);
+                },
+                Key.KEY_I, KeyModifier.ALT);
+    }
+
+    private void setProjectParameterGrid(List<ProjectParameter> listOfProjectParameters) {
+        parameterGrid = new Grid<>(ProjectParameter.class, false);
+        parameterGrid.addColumn(ProjectParameter::getName).setHeader("Name").setAutoWidth(true).setResizable(true);
+        parameterGrid.addColumn(ProjectParameter::getValue).setHeader("Value").setAutoWidth(true).setResizable(true);
+        parameterGrid.addColumn(ProjectParameter::getDescription).setHeader("Description").setAutoWidth(true).setResizable(true);
+
+        parameterGrid.setItems(listOfProjectParameters);
+        parameterGrid.addThemeVariants(GridVariant.LUMO_COMPACT);
+        parameterGrid.setHeight("200px");
+        parameterGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
     }
 
     @Override
