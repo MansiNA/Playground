@@ -14,12 +14,15 @@ import java.util.Optional;
 public class ProjectParameterService {
 
     private final ProjectParameterRepository projectParameterRepository;
+    private final ProjectConnectionService projectConnectionService;
 
-    public ProjectParameterService(ProjectParameterRepository projectParameterRepository) {
+    public ProjectParameterService(ProjectParameterRepository projectParameterRepository, ProjectConnectionService projectConnectionService) {
         this.projectParameterRepository = projectParameterRepository;
+        this.projectConnectionService = projectConnectionService;
     }
 
     public List<ProjectParameter> findAll() {
+        projectConnectionService.getJdbcDefaultConnection();
         return projectParameterRepository.findAll();
     }
 
