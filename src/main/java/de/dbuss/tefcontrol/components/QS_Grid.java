@@ -97,7 +97,7 @@ public class QS_Grid extends Composite<Div> {
         if (show){
             qsDialog.open();
             qsDialog.setVisible(true);
-            executeSQL(listOfProjectQs);
+           // executeSQL(listOfProjectQs);
 
         }
         else
