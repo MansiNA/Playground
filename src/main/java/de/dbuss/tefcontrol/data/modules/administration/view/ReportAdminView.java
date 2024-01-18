@@ -12,12 +12,8 @@ import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.*;
-import de.dbuss.tefcontrol.components.QS_Callback;
-import de.dbuss.tefcontrol.components.QS_Grid;
 import de.dbuss.tefcontrol.data.entity.Constants;
 import de.dbuss.tefcontrol.data.entity.ProjectParameter;
-import de.dbuss.tefcontrol.data.entity.ProjectUpload;
-import de.dbuss.tefcontrol.data.entity.User;
 import de.dbuss.tefcontrol.data.modules.administration.entity.CurrentPeriods;
 import de.dbuss.tefcontrol.data.service.BackendService;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
@@ -25,13 +21,10 @@ import de.dbuss.tefcontrol.data.service.ProjectParameterService;
 import de.dbuss.tefcontrol.security.AuthenticatedUser;
 import de.dbuss.tefcontrol.views.MainLayout;
 import jakarta.annotation.security.RolesAllowed;
-import org.springframework.jdbc.core.JdbcTemplate;
 
-import javax.sql.DataSource;
 import java.time.YearMonth;
 import java.util.*;
-
-import static com.vaadin.flow.component.button.ButtonVariant.LUMO_TERTIARY_INLINE;
+import java.util.stream.Collectors;
 
 @PageTitle("Administration")
 @Route(value = "REPORT_Administration/:project_Id", layout = MainLayout.class)
@@ -45,18 +38,22 @@ public class ReportAdminView extends VerticalLayout implements BeforeEnterObserv
     private String agentName;
     private CurrentPeriods currentPeriods;
     private int projectId;
+    Boolean isVisible = false;
+    Grid<ProjectParameter> parameterGrid = new Grid<>(ProjectParameter.class, false);
 
-    Boolean isVisible=false;
 
     public ReportAdminView(ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, BackendService backendService, AuthenticatedUser authenticatedUser) {
         this.projectConnectionService = projectConnectionService;
 
         List<ProjectParameter> listOfProjectParameters = projectParameterService.findAll();
+        List<ProjectParameter> filteredProjectParameters = listOfProjectParameters.stream()
+                .filter(projectParameter -> Constants.REPORT_ADMINISTRATION.equals(projectParameter.getNamespace()))
+                .collect(Collectors.toList());
         String dbServer = null;
         String dbName = null;
 
-        for (ProjectParameter projectParameter : listOfProjectParameters) {
-            if (projectParameter.getNamespace().equals(Constants.REPORT_ADMINISTRATION)) {
+        for (ProjectParameter projectParameter : filteredProjectParameters) {
+          //  if (projectParameter.getNamespace().equals(Constants.REPORT_ADMINISTRATION)) {
                 if (Constants.DB_SERVER.equals(projectParameter.getName())) {
                     dbServer = projectParameter.getValue();
                 } else if (Constants.DB_NAME.equals(projectParameter.getName())) {
@@ -70,14 +67,14 @@ public class ReportAdminView extends VerticalLayout implements BeforeEnterObserv
                 }  else if (Constants.DB_JOBS.equals(projectParameter.getName())) {
                     agentName = projectParameter.getValue();
                 }
-            }
+        //    }
         }
 
         H1 h1 = new H1("Report Administration");
 
         dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
 
-
+        setProjectParameterGrid(filteredProjectParameters);
 
         H2 h2 = new H2("Rohdatenreporting:");
 
@@ -92,8 +89,7 @@ public class ReportAdminView extends VerticalLayout implements BeforeEnterObserv
 
 
 
-
-        add(h1, header, p1);
+        add(h1, header, p1, parameterGrid);
 
         Button startRohdatenReportBtn = new Button("Start Report");
         startRohdatenReportBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_SUCCESS);
@@ -129,15 +125,23 @@ public class ReportAdminView extends VerticalLayout implements BeforeEnterObserv
         add(hl);
 
         text.setVisible(false);
-
+        parameterGrid.setVisible(false);
 
         UI.getCurrent().addShortcutListener(
                 () -> {
                     isVisible=!isVisible;
                     text.setVisible(isVisible);
+                    parameterGrid.setVisible(isVisible);
                 },
                 Key.KEY_I, KeyModifier.ALT);
 
+    }
+
+    private void setProjectParameterGrid(List<ProjectParameter> listOfProjectParameters) {
+        parameterGrid = new Grid<>(ProjectParameter.class, false);
+        parameterGrid = new Grid<>(ProjectParameter.class);
+        parameterGrid.setColumns("id", "namespace", "name", "value", "description");
+        parameterGrid.setItems(listOfProjectParameters);
     }
 
     @Override
