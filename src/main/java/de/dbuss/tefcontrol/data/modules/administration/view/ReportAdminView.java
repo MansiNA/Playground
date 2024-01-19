@@ -92,7 +92,8 @@ public class ReportAdminView extends VerticalLayout implements BeforeEnterObserv
         startRohdatenReportBtn.addClickListener(e -> {
             startRohdatenReportBtn.setEnabled(false);
             startRohdatenReportBtn.setText("running");
-            String resultOfPeriods = projectConnectionService.saveReportAdmintPeriods(currentPeriods, dbUrl, dbUser, dbPassword, tableReportingConfig);
+            String resultOfPeriods = projectConnectionService.executeReportAdminPeriods(currentPeriods, dbUrl, dbUser, dbPassword);
+            System.out.println(resultOfPeriods+"......................................");
             Notification notification;
             if (resultOfPeriods.equals(Constants.OK)) {
                 notification = Notification.show("Reporting Monat " + currentPeriods.getCurrent_month() + " updated successfully", 5000, Notification.Position.MIDDLE);
@@ -162,14 +163,15 @@ public class ReportAdminView extends VerticalLayout implements BeforeEnterObserv
             // Get the current YearMonth
             YearMonth currentYearMonth = YearMonth.now();
 
-            for (int i = -3; i <= 3; i++) {
+            for (int i = -12; i <= 0; i++) {
                 monthPeriod.add(currentYearMonth.plusMonths(i).toString().replace("-", ""));
             }
 
             comboBox.setItems(monthPeriod);
-            comboBox.setValue(monthPeriod.get(0));
-            cp.setCurrent_month(monthPeriod.get(0));
-            currentPeriods.setCurrent_month(monthPeriod.get(0));
+            String selectedValue = currentYearMonth.plusMonths(-1).toString().replace("-", "");
+            comboBox.setValue(selectedValue);
+            cp.setCurrent_month(selectedValue);
+            currentPeriods.setCurrent_month(selectedValue);
             comboBox.addValueChangeListener(event -> {
                 cp.setCurrent_month(event.getValue());
                 currentPeriods.setCurrent_month(event.getValue());
