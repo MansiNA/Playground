@@ -1465,6 +1465,20 @@ public class ProjectConnectionService {
         }
     }
 
+    public String executeReportAdminPeriods(CurrentPeriods data, String dbUrl, String dbUser, String dbPassword) {
+        try {
+            jdbcTemplate = getJdbcConnection(dbUrl, dbUser, dbPassword);
+
+            // Check if the record exists
+            String sql = "exec Admin_DB.dbo.setParameter @JobName='ESS_IF_Report_01', @Parameter1="+data.getCurrent_month();
+            int result = jdbcTemplate.queryForObject(sql, Integer.class);
+            return Constants.OK;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return handleDatabaseError(e);
+        }
+    }
+
 
     public String addMonthsInCLTVHWMeasure(String dbUrl, String dbUser, String dbPassword, String sql) {
         try {
