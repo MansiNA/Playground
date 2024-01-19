@@ -511,6 +511,7 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
             gridMGSR.setDataProvider(dataFinancialsProvider);
             singleFileUpload.clearFileList();
             uploadBtn.setEnabled(true);
+            qsBtn.setEnabled(false);
         });
     }
 
