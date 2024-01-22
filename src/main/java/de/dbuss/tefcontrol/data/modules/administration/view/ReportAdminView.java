@@ -177,12 +177,13 @@ public class ReportAdminView extends VerticalLayout implements BeforeEnterObserv
                 currentPeriods.setCurrent_month(event.getValue());
             });
             return comboBox;
-        }).setHeader("Reporting Monat").setFlexGrow(0).setAutoWidth(true);
-        grid_period.setWidth("220px");
-        grid_period.setHeight("80px");
+       // }).setHeader("Reporting Monat").setFlexGrow(0).setAutoWidth(true);
+        }).setFlexGrow(0).setAutoWidth(true);
 
         grid_period.addThemeVariants(GridVariant.LUMO_COMPACT);
         grid_period.addThemeVariants(GridVariant.LUMO_NO_BORDER);
+        grid_period.setWidth("240px");
+        grid_period.setHeight("140px");
       //  grid_period.getStyle().set( "border" , "0.5px solid black" ) ;
         grid_period.getStyle().set( "border" , "none" ) ;
         //grid_period.getStyle().set( "box-shadow" , "5px 6px 4px gray" ) ;
@@ -198,6 +199,9 @@ public class ReportAdminView extends VerticalLayout implements BeforeEnterObserv
      //   content.add(p2, grid_period);
         content.add(grid_period);
         content.setHeightFull();
+        content.setWidth("250px");
+        content.setHeight("150px");
+
         return content;
     }
 
