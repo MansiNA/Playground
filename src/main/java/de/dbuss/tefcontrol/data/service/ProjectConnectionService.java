@@ -548,27 +548,14 @@ public class ProjectConnectionService {
         return getRootCause(cause);
     }
 
-    public List<CltvAllProduct> getCltvAllProducts(String productDb) {
-
-        String dbConnection="";
-        String dataBase="";
+    public List<CltvAllProduct> getCltvAllProducts(String dbUrl, String dbUser, String dbPassword, String tableName) {
 
         try {
-            //String[] dbName = productDb.split("\\.");
-            String[] parts = productDb.split(":");
-
-            if (parts.length == 2) {
-                dbConnection = parts[0];
-                dataBase = parts[1];
-            } else
-            {
-                System.out.println("ERROR: No Connection/Table for CltvAllProducts!");
-            }
-
-            getJdbcConnection(dbConnection);
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
 
             //String sql = "SELECT [all_products], [all_products_gen_number], [all_products_gen2], [verarb_datum] FROM " + dataBase;
-            String sql = "SELECT distinct [All Products] FROM " + dataBase;
+            String sql = "SELECT distinct [All Products] FROM " + tableName;
 
             List<CltvAllProduct> clatvAllProductList = jdbcTemplate.query(sql, (rs, rowNum) -> {
                 CltvAllProduct cltvAllProduct = new CltvAllProduct();

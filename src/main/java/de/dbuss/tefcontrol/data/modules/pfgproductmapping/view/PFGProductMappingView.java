@@ -94,9 +94,9 @@ public class PFGProductMappingView extends VerticalLayout {
             } else if (Constants.AGENT_NAME.equals(projectParameter.getName())) {
                 dBAgentName = projectParameter.getValue();
             } else if (Constants.MAPPINGMISSINGPRODUCTS.equals(projectParameter.getName())) {
-                missingQuery = projectParameter.getValue();
+                targetView = projectParameter.getValue();
             } else if (Constants.PFG_TABLE.equals(projectParameter.getName())) {
-                pfg_mapping_target = projectParameter.getValue();
+                targetTable = projectParameter.getValue();
             } else if (Constants.DB_SERVER.equals(projectParameter.getName())) {
                 dbServer = projectParameter.getValue();
             } else if (Constants.DB_NAME.equals(projectParameter.getName())) {
@@ -112,11 +112,6 @@ public class PFGProductMappingView extends VerticalLayout {
         dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
 
         setProjectParameterGrid(filteredProjectParameters);
-        String [] targets = pfg_mapping_target.split(":");
-        targetTable = targets[1];
-
-        String [] targetViews = missingQuery.split(":");
-        targetView = targetViews[1];
 
         addClassName("list-view");
         setSizeFull();
@@ -348,7 +343,7 @@ public class PFGProductMappingView extends VerticalLayout {
 
     private void configureForm() {
 
-        var xx = projectConnectionService.getCltvAllProducts(productsDb);
+        var xx = projectConnectionService.getCltvAllProducts(dbUrl, dbUser, dbPassword, productsDb);
 
         if (xx.isEmpty() && !projectConnectionService.getErrorMessage().isEmpty()){
             Notification.show(projectConnectionService.getErrorMessage(),4000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
