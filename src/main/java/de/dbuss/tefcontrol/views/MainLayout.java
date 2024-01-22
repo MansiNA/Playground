@@ -21,6 +21,7 @@ import com.vaadin.flow.router.RouterLink;
 import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.server.auth.AccessAnnotationChecker;
 import com.vaadin.flow.theme.lumo.LumoUtility;
+import de.dbuss.tefcontrol.data.Role;
 import de.dbuss.tefcontrol.data.entity.Constants;
 import de.dbuss.tefcontrol.data.entity.Projects;
 import de.dbuss.tefcontrol.data.entity.User;
@@ -47,6 +48,7 @@ import java.io.ByteArrayInputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import de.dbuss.tefcontrol.views.login.LoginView;
 import lombok.extern.slf4j.Slf4j;
@@ -77,6 +79,7 @@ public class MainLayout extends AppLayout {
 
     private static final Logger logInfo = LoggerFactory.getLogger(MainLayout.class);
     public static String userName;
+    public static Set<Role> userRole;
     private LoginView loginView;
 
     public MainLayout(AuthenticatedUser authenticatedUser, AccessAnnotationChecker accessChecker, ProjectsService projectsService, LogService logService, UserService userService) {
@@ -184,6 +187,7 @@ public class MainLayout extends AppLayout {
         if (maybeUser.isPresent()) {
             User user = maybeUser.get();
             userName = user.getUsername();
+            userRole = user.getRoles();
             projectsService.setUser(user);
         }
 

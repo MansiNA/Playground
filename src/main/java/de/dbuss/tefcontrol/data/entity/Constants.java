@@ -17,6 +17,9 @@ public class Constants {
     public static final String TABLE = "Table";
     public static  final String ZEILE = "zeile";
     public static final String Default_Mapping = "Default-Mapping";
+    public static  final String INFO = "INFO";
+    public static  final String ERROR = "ERROR";
+    public static  final String WARN = "WARN";
 
 
     // This constant is used for B2P_Outlook module
