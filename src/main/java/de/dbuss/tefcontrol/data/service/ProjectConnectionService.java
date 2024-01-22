@@ -548,27 +548,14 @@ public class ProjectConnectionService {
         return getRootCause(cause);
     }
 
-    public List<CltvAllProduct> getCltvAllProducts(String productDb) {
-
-        String dbConnection="";
-        String dataBase="";
+    public List<CltvAllProduct> getCltvAllProducts(String dbUrl, String dbUser, String dbPassword, String tableName) {
 
         try {
-            //String[] dbName = productDb.split("\\.");
-            String[] parts = productDb.split(":");
-
-            if (parts.length == 2) {
-                dbConnection = parts[0];
-                dataBase = parts[1];
-            } else
-            {
-                System.out.println("ERROR: No Connection/Table for CltvAllProducts!");
-            }
-
-            getJdbcConnection(dbConnection);
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
 
             //String sql = "SELECT [all_products], [all_products_gen_number], [all_products_gen2], [verarb_datum] FROM " + dataBase;
-            String sql = "SELECT distinct [All Products] FROM " + dataBase;
+            String sql = "SELECT distinct [All Products] FROM " + tableName;
 
             List<CltvAllProduct> clatvAllProductList = jdbcTemplate.query(sql, (rs, rowNum) -> {
                 CltvAllProduct cltvAllProduct = new CltvAllProduct();
@@ -587,10 +574,12 @@ public class ProjectConnectionService {
         }
     }
 
-    public List<ProductHierarchie> fetchProductHierarchie(String selectedDatabase, String targetTable, String filterValue) {
+    public List<ProductHierarchie> fetchProductHierarchie(String dbUrl, String dbUser, String dbPassword, String targetTable, String filterValue) {
 
         try {
-            getJdbcConnection(selectedDatabase);
+
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
 
             // Construct the dynamic SQL query with multiple OR conditions for filtering
             String sqlQuery = "SELECT * FROM " + targetTable + " WHERE Product LIKE ?" +
@@ -622,9 +611,10 @@ public class ProjectConnectionService {
 
     }
 
-    public String saveProductHierarchie(ProductHierarchie data, String selectedDatabase, String targetTable) {
+    public String saveProductHierarchie(ProductHierarchie data, String dbUrl, String dbUser, String dbPassword, String targetTable) {
         try {
-            getJdbcConnection(selectedDatabase);
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
 
             // Check if the data already exists based on a case-insensitive condition
             String sqlSelect = "SELECT COUNT(*) FROM "+ targetTable +" WHERE Id = ?";
@@ -659,9 +649,11 @@ public class ProjectConnectionService {
 
     }
 
-    public List<String> getAllMissingProducts(String selectedDatabase, String targetView) {
+    public List<String> getAllMissingProducts(String dbUrl, String dbUser, String dbPassword, String targetView) {
         try {
-            getJdbcConnection(selectedDatabase);
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
             String sqlQuery = "SELECT * FROM " + targetView;
 
             RowMapper<String> rowMapper = (rs, rowNum) -> {
@@ -679,9 +671,11 @@ public class ProjectConnectionService {
 
     }
 
-    public String saveListOfProductHierarchie(List<ProductHierarchie> data, String selectedDatabase, String targetTable) {
+    public String saveListOfProductHierarchie(List<ProductHierarchie> data, String dbUrl, String dbUser, String dbPassword, String targetTable) {
         try {
-            getJdbcConnection(selectedDatabase);
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
             String sql = "INSERT INTO " + targetTable + " (Product, [PFG_PO/PP], Knoten) VALUES (?, ?, ?)";
 
             jdbcTemplate.batchUpdate(sql, data, data.size(), (ps, productHierarchie) -> {
