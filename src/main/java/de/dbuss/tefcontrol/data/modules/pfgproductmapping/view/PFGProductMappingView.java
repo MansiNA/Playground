@@ -67,7 +67,10 @@ public class PFGProductMappingView extends VerticalLayout {
     private String targetView;
     private List<ProductHierarchie> modifiedProducts = new ArrayList<>();
     private Boolean isVisible = false;
-    Grid<ProjectParameter> parameterGrid = new Grid<>(ProjectParameter.class, false);
+    private Grid<ProjectParameter> parameterGrid = new Grid<>(ProjectParameter.class, false);
+    private String dbUrl;
+    private String dbUser;
+    private String dbPassword;
 
     public PFGProductMappingView( ProductHierarchieService service, ProjectParameterService projectParameterService, ProjectConnectionService projectConnectionService) {
         this.service = service;
@@ -81,24 +84,35 @@ public class PFGProductMappingView extends VerticalLayout {
 
         String missingQuery = null;
         String pfg_mapping_target = null;
+        String dbServer = null;
+        String dbName = null;
 
         for (ProjectParameter projectParameter : filteredProjectParameters) {
-          //  if(projectParameter.getNamespace().equals(Constants.PFG_PRODUCT_MAPPING)) {
-                if (Constants.MAPPINGALLPRODUCTS.equals(projectParameter.getName())) {
-                    productsDb = projectParameter.getValue();
-                } else if (Constants.AGENT_NAME.equals(projectParameter.getName())) {
-                    dBAgentName = projectParameter.getValue();
-                } else if (Constants.MAPPINGMISSINGPRODUCTS.equals(projectParameter.getName())) {
-                    missingQuery = projectParameter.getValue();
-                } else if (Constants.PFG_TABLE.equals(projectParameter.getName())) {
-                    pfg_mapping_target = projectParameter.getValue();
-                }
-          //  }
+            //  if(projectParameter.getNamespace().equals(Constants.PFG_PRODUCT_MAPPING)) {
+            if (Constants.MAPPINGALLPRODUCTS.equals(projectParameter.getName())) {
+                productsDb = projectParameter.getValue();
+            } else if (Constants.AGENT_NAME.equals(projectParameter.getName())) {
+                dBAgentName = projectParameter.getValue();
+            } else if (Constants.MAPPINGMISSINGPRODUCTS.equals(projectParameter.getName())) {
+                missingQuery = projectParameter.getValue();
+            } else if (Constants.PFG_TABLE.equals(projectParameter.getName())) {
+                pfg_mapping_target = projectParameter.getValue();
+            } else if (Constants.DB_SERVER.equals(projectParameter.getName())) {
+                dbServer = projectParameter.getValue();
+            } else if (Constants.DB_NAME.equals(projectParameter.getName())) {
+                dbName = projectParameter.getValue();
+            } else if (Constants.DB_USER.equals(projectParameter.getName())) {
+                dbUser = projectParameter.getValue();
+            } else if (Constants.DB_PASSWORD.equals(projectParameter.getName())) {
+                dbPassword = projectParameter.getValue();
+            }
+            //  }
         }
+
+        dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
 
         setProjectParameterGrid(filteredProjectParameters);
         String [] targets = pfg_mapping_target.split(":");
-        selectedDbName = targets[0];
         targetTable = targets[1];
 
         String [] targetViews = missingQuery.split(":");
@@ -114,32 +128,8 @@ public class PFGProductMappingView extends VerticalLayout {
         configureSaveBtn();
 
         HorizontalLayout hl = new HorizontalLayout();
-        ComboBox<String> databaseConnectionCB = new ComboBox<>();
-        databaseConnectionCB.setAllowCustomValue(true);
 
-        List<ProjectConnection> listOfProjectConnections = projectConnectionService.findAll();
-        List<String> connectionNames = listOfProjectConnections.stream()
-                .flatMap(connection -> {
-                    String category = connection.getCategory();
-                    //if (category == null) {
-                    if("PFG-Mapping".equals(category)){
-                        return Stream.of(connection.getName());
-                    }
-                    return Stream.empty();
-                })
-                .collect(Collectors.toList());
-        databaseConnectionCB.setItems(connectionNames);
-       // databaseConnectionCB.setValue(connectionNames.get(0));
-       // selectedDbName = connectionNames.get(0);
-        databaseConnectionCB.setValue(selectedDbName);
-
-        databaseConnectionCB.addValueChangeListener(event -> {
-            selectedDbName = event.getValue();
-            updateList();
-            updateMissingGrid();
-        });
-
-        hl.add(databaseConnectionCB, startAgentBtn, saveButton);
+        hl.add(startAgentBtn, saveButton);
 
         TabSheet tabSheet = new TabSheet();
         tabSheet.add("Missing Entries", getMissingMapping());
@@ -183,7 +173,7 @@ public class PFGProductMappingView extends VerticalLayout {
 
         saveButton.addClickListener(e -> {
             if (modifiedProducts != null && !modifiedProducts.isEmpty()) {
-                    String result = projectConnectionService.saveListOfProductHierarchie(modifiedProducts, selectedDbName, targetTable);
+                    String result = projectConnectionService.saveListOfProductHierarchie(modifiedProducts, dbUrl, dbUser, dbPassword, targetTable);
                     if (result.equals(Constants.OK)){
                         Notification.show(modifiedProducts.size()+" Uploaded successfully",2000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
                         modifiedProducts.clear();
@@ -240,11 +230,10 @@ public class PFGProductMappingView extends VerticalLayout {
 
 
         String finalAgentJobName = agentJobName;
-        String finalDbConnection = dbConnection;
-      //  selectedDbName = dbConnection;
+
         startAgentBtn.addClickListener(e->{
 
-           String erg= startJob(selectedDbName,finalAgentJobName);
+           String erg= startJob(finalAgentJobName);
 
            if(!erg.equals(Constants.OK))
            {
@@ -265,14 +254,13 @@ public class PFGProductMappingView extends VerticalLayout {
 
     }
 
-    private String startJob(String finalDbConnection, String finalAgentJobName) {
+    private String startJob( String finalAgentJobName) {
 
         String erg="";
         Notification notification = Notification.show("Starting Job " + finalAgentJobName + "...",5000, Notification.Position.MIDDLE);
         notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-        System.out.println("Start SQLServer-Job: " + finalAgentJobName + " on Connection: " + finalDbConnection);
 
-        DataSource dataSource = projectConnectionService.getDataSource(finalDbConnection);
+        DataSource dataSource = projectConnectionService.getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
         template = new JdbcTemplate(dataSource);
 
         try {
@@ -315,7 +303,7 @@ public class PFGProductMappingView extends VerticalLayout {
     private void updateList() {
 
         //grid.setItems(service.findAllProducts(filterText.getValue()));
-        List<ProductHierarchie> listOfProductHierarchie = projectConnectionService.fetchProductHierarchie(selectedDbName, targetTable, filterText.getValue());
+        List<ProductHierarchie> listOfProductHierarchie = projectConnectionService.fetchProductHierarchie(dbUrl, dbUser, dbPassword, targetTable, filterText.getValue());
         grid.setItems(listOfProductHierarchie);
         if (listOfProductHierarchie.isEmpty() && !projectConnectionService.getErrorMessage().isEmpty()){
             Notification.show(projectConnectionService.getErrorMessage(),4000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
@@ -396,7 +384,7 @@ public class PFGProductMappingView extends VerticalLayout {
             return;
         }
 
-        String result = projectConnectionService.saveProductHierarchie(event.getProduct(), selectedDbName, targetTable);
+        String result = projectConnectionService.saveProductHierarchie(event.getProduct(), dbUrl, dbUser, dbPassword, targetTable);
         if (result.equals(Constants.OK)){
             Notification.show(" Uploaded successfully",2000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
         } else {
@@ -433,7 +421,7 @@ public class PFGProductMappingView extends VerticalLayout {
     }
 
     private void configureMissingGrid() {
-        List<ProductHierarchie> listOfProductHierarchie = projectConnectionService.fetchProductHierarchie(selectedDbName, targetTable, filterText.getValue());
+        List<ProductHierarchie> listOfProductHierarchie = projectConnectionService.fetchProductHierarchie(dbUrl, dbUser, dbPassword, targetTable, filterText.getValue());
         List<String> listOfNodes = listOfProductHierarchie.stream()
                 .map(ProductHierarchie::getNode)
                 .distinct()
@@ -526,7 +514,7 @@ public class PFGProductMappingView extends VerticalLayout {
 
     private void updateMissingGrid(){
         try {
-            List<String> missingProducts = projectConnectionService.getAllMissingProducts(selectedDbName, targetView);
+            List<String> missingProducts = projectConnectionService.getAllMissingProducts(dbUrl, dbUser, dbPassword, targetView);
             List<ProductHierarchie> missingData = new ArrayList<>();
             for (String product : missingProducts) {
                 ProductHierarchie productHierarchie = new ProductHierarchie();
