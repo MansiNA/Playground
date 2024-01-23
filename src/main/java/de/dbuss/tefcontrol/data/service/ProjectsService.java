@@ -93,9 +93,11 @@ public class ProjectsService {
     }
 
     private boolean hasAccess(Set<Role> userRoles, String projectRoles) {
-        // Implement the logic for role-based access control here.
-        // For example, check if the user has at least one role that matches the project's role_access.
-        return userRoles.stream().anyMatch(role -> projectRoles.contains(role.name()));
+        // check if the user has at least one role that matches the project's role_access.
+        if(projectRoles != null) {
+            return userRoles.stream().anyMatch(role -> projectRoles.contains(role.name()));
+        }
+        return false;
     }
 
     public List<ProjectAttachmentsDTO> getProjectAttachmentsWithoutFileContent(Projects projects) {
