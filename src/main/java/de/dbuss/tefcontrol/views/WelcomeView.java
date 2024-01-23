@@ -48,10 +48,6 @@ public class WelcomeView extends VerticalLayout {
         Html html = new Html("<text>" + yourContent + "</text>");
         add(html);
 
-        // Add RouterLink to ConfigurationView
-        RouterLink configLink = new RouterLink("Go to Configuration", ConfigurationGridView.class);
-        add(configLink);
-
         Optional<User> maybeUser = authenticatedUser.get();
         if (maybeUser.isPresent()) {
             User user = maybeUser.get();
@@ -59,10 +55,9 @@ public class WelcomeView extends VerticalLayout {
             Set<Role> roles = user.getRoles();
             isAdmin = roles.stream()
                     .anyMatch(role -> role == Role.ADMIN);
-            add( getProjectsDescription());
         }
 
-
+        add( getProjectsDescription());
     }
 
     private VerticalLayout getProjectsDescription() {
