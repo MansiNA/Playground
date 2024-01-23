@@ -10,10 +10,12 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Article;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.data.binder.Binder;
@@ -81,7 +83,7 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
     private int upload_id;
     ListenableFuture<String> future;
 
-  //  public static Map<String, Integer> projectUploadIdMap = new HashMap<>();
+    //  public static Map<String, Integer> projectUploadIdMap = new HashMap<>();
 
     BackendService backendService;
 
@@ -110,21 +112,21 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
         String dbName = null;
 
         for (ProjectParameter projectParameter : filteredProjectParameters) {
-          //  if(projectParameter.getNamespace().equals(Constants.B2P_OUTLOOK_FIN)) {
-                if (Constants.DB_SERVER.equals(projectParameter.getName())) {
-                    dbServer = projectParameter.getValue();
-                } else if (Constants.DB_NAME.equals(projectParameter.getName())) {
-                    dbName = projectParameter.getValue();
-                } else if (Constants.DB_USER.equals(projectParameter.getName())) {
-                    dbUser = projectParameter.getValue();
-                } else if (Constants.DB_PASSWORD.equals(projectParameter.getName())) {
-                    dbPassword = projectParameter.getValue();
-                }else if (Constants.TABLE.equals(projectParameter.getName())) {
-                    tableName = projectParameter.getValue();
-                } else if (Constants.DB_JOBS.equals(projectParameter.getName())){
-                    agentName = projectParameter.getValue();
-                }
-           // }
+            //  if(projectParameter.getNamespace().equals(Constants.B2P_OUTLOOK_FIN)) {
+            if (Constants.DB_SERVER.equals(projectParameter.getName())) {
+                dbServer = projectParameter.getValue();
+            } else if (Constants.DB_NAME.equals(projectParameter.getName())) {
+                dbName = projectParameter.getValue();
+            } else if (Constants.DB_USER.equals(projectParameter.getName())) {
+                dbUser = projectParameter.getValue();
+            } else if (Constants.DB_PASSWORD.equals(projectParameter.getName())) {
+                dbPassword = projectParameter.getValue();
+            }else if (Constants.TABLE.equals(projectParameter.getName())) {
+                tableName = projectParameter.getValue();
+            } else if (Constants.DB_JOBS.equals(projectParameter.getName())){
+                agentName = projectParameter.getValue();
+            }
+            // }
         }
 
         dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
@@ -138,7 +140,7 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
         hl.setAlignItems(Alignment.BASELINE);
         // hl.add(singleFileUpload,saveButton, databaseDetail);
         hl.add(singleFileUpload,uploadBtn, qsBtn, qsGrid);
-        add(hl, parameterGrid);
+        //add(hl, parameterGrid);
 
         uploadBtn.addClickListener(e ->{
             save2db();
@@ -146,20 +148,27 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
         });
 
         qsBtn.addClickListener(e ->{
-         //   if (qsGrid.projectId != projectId) {
+            //   if (qsGrid.projectId != projectId) {
             hl.remove(qsGrid);
             qsGrid = new QS_Grid(projectConnectionService, backendService);
             hl.add(qsGrid);
             CallbackHandler callbackHandler = new CallbackHandler();
             qsGrid.createDialog(callbackHandler, projectId, upload_id);
-          //  }
+            //  }
             qsGrid.showDialog(true);
         });
 
-        setupUploader();
-        add(getMGSRGrid());
-        setSizeFull();
+
+        HorizontalLayout vl = new HorizontalLayout();
+        vl.add(getTabsheet());
+
+        vl.setHeightFull();
+        vl.setSizeFull();
+
         setHeightFull();
+        setSizeFull();
+
+        add(vl,parameterGrid);
 
         parameterGrid.setVisible(false);
         System.out.println("Is admin: " + checkAdminRole());
@@ -183,6 +192,56 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
         }
     }
 
+    private TabSheet getTabsheet() {
+
+        //log.info("Starting getTabsheet() for Tabsheet");
+        TabSheet tabSheet = new TabSheet();
+
+        tabSheet.add("Upload", getUpladTab());
+        tabSheet.add("Description", getDescriptionTab());
+        tabSheet.add("Attachments", getAttachmentTab());
+
+        tabSheet.setSizeFull();
+        tabSheet.setHeightFull();
+        //log.info("Ending getTabsheet() for Tabsheet");
+
+        return tabSheet;
+    }
+
+    private Component getAttachmentTab() {
+        VerticalLayout content = new VerticalLayout();
+        H1 h1=new H1();
+        h1.add("Attachments...");
+
+        content.add(h1);
+        return content;
+    }
+
+    private Component getDescriptionTab() {
+        VerticalLayout content = new VerticalLayout();
+        H1 h1=new H1();
+        h1.add("Description...");
+
+        content.add(h1);
+        return content;
+    }
+
+    private Component getUpladTab() {
+        VerticalLayout content = new VerticalLayout();
+
+        setupUploader();
+
+        content.setSizeFull();
+        content.setHeightFull();
+
+        HorizontalLayout hl=new HorizontalLayout(singleFileUpload,uploadBtn, qsBtn, qsGrid);
+        content.add(hl);
+        content.add(getMGSRGrid());
+
+        return content;
+    }
+
+
     private boolean
     checkAdminRole() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -190,7 +249,7 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
             Object principal = authentication.getPrincipal();
             if (principal instanceof UserDetails) {
                 UserDetails userDetails = (UserDetails) principal;
-            return userDetails.getAuthorities().stream().anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
+                return userDetails.getAuthorities().stream().anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
             }
         }
         return false;
@@ -368,7 +427,7 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
                 , gridMGSR.getColumnByKey(PAYMENTTYPE)
                 , gridMGSR.getColumnByKey(TYPEOFDATA)
                 , gridMGSR.getColumnByKey(VALUE)
-                );
+        );
         //    , gridFinancials.getColumnByKey(EDIT_COLUMN));
 
 
@@ -482,7 +541,7 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
                             } else if (field.getType() == long.class || field.getType() == Long.class) {
                                 field.set(entity, (long) cell.getNumericCellValue());
                             } else if (field.getType() == double.class || field.getType() == Double.class) {
-                                 field.set(entity, (double) cell.getNumericCellValue());
+                                field.set(entity, (double) cell.getNumericCellValue());
 
                             } else if (field.getType() == String.class) {
 
