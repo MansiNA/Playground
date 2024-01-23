@@ -1461,10 +1461,17 @@ public class ProjectConnectionService {
 
     public String executeReportAdminPeriods(CurrentPeriods data, String dbUrl, String dbUser, String dbPassword) {
         try {
+            System.out.println("Method: executeReportAdminPeriods =>");
+            System.out.println("CurrentPeriods: " + data.getCurrent_month());
+            System.out.println("dbUrl: " + dbUrl);
+            System.out.println("dbUser: " + dbUser);
+            System.out.println("dbPassword: " + dbPassword);
+
             jdbcTemplate = getJdbcConnection(dbUrl, dbUser, dbPassword);
 
             // Check if the record exists
             String sql = "exec Admin_DB.dbo.setParameter @JobName='ESS_IF_Report_01', @Parameter1="+data.getCurrent_month();
+            System.out.println("sql: " + sql);
             int result = jdbcTemplate.queryForObject(sql, Integer.class);
             return Constants.OK;
         } catch (Exception e) {

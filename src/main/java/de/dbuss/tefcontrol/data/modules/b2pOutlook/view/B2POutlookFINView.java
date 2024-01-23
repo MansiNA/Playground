@@ -37,6 +37,10 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.util.concurrent.ListenableFuture;
 
 import javax.sql.DataSource;
@@ -157,24 +161,41 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
         setSizeFull();
         setHeightFull();
 
-        UI.getCurrent().addShortcutListener(
-                () ->  start_thread(),
-                Key.KEY_V, KeyModifier.ALT);
-
-        UI.getCurrent().addShortcutListener(
-                () ->  future.cancel(true),
-                Key.KEY_S, KeyModifier.ALT);
-
         parameterGrid.setVisible(false);
+        System.out.println("Is admin: " + checkAdminRole());
 
-        UI.getCurrent().addShortcutListener(
-                () -> {
-                    isVisible=!isVisible;
-                    parameterGrid.setVisible(isVisible);
-                },
-                Key.KEY_I, KeyModifier.ALT);
+        if(checkAdminRole()) {
+            UI.getCurrent().addShortcutListener(
+                    () -> start_thread(),
+                    Key.KEY_V, KeyModifier.ALT);
 
+            UI.getCurrent().addShortcutListener(
+                    () -> future.cancel(true),
+                    Key.KEY_S, KeyModifier.ALT);
+
+            UI.getCurrent().addShortcutListener(
+                    () -> {
+                        isVisible = !isVisible;
+                        parameterGrid.setVisible(isVisible);
+                    },
+                    Key.KEY_I, KeyModifier.ALT);
+
+        }
     }
+
+    private boolean
+    checkAdminRole() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication !=  null  && !(authentication instanceof AnonymousAuthenticationToken)) {
+            Object principal = authentication.getPrincipal();
+            if (principal instanceof UserDetails) {
+                UserDetails userDetails = (UserDetails) principal;
+            return userDetails.getAuthorities().stream().anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
+            }
+        }
+        return false;
+    }
+
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
         RouteParameters parameters = event.getRouteParameters();
