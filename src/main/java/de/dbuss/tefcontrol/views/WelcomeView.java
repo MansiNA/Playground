@@ -16,6 +16,7 @@ import com.wontlost.ckeditor.VaadinCKEditorBuilder;
 import de.dbuss.tefcontrol.data.Role;
 import de.dbuss.tefcontrol.data.entity.Projects;
 import de.dbuss.tefcontrol.data.entity.User;
+import de.dbuss.tefcontrol.data.service.ProjectsService;
 import de.dbuss.tefcontrol.security.AuthenticatedUser;
 import jakarta.annotation.security.RolesAllowed;
 
@@ -29,9 +30,13 @@ import java.util.Set;
 public class WelcomeView extends VerticalLayout {
     private VaadinCKEditor editor;
     private AuthenticatedUser authenticatedUser;
+    private ProjectsService projectsService;
+    private boolean isAdmin;
 
-    public WelcomeView(AuthenticatedUser authenticatedUser) {
+    public WelcomeView(AuthenticatedUser authenticatedUser, ProjectsService projectsService) {
         this.authenticatedUser = authenticatedUser;
+        this.projectsService = projectsService;
+
         add(new H2("Hallo und willkommen"));
 
         String yourContent ="Auf dieser Seite werden Tools und Hilfsmittel bereitgestellt, um Administrative-Tätigkeiten zu vereinfachen.<br />" +
@@ -47,22 +52,27 @@ public class WelcomeView extends VerticalLayout {
         RouterLink configLink = new RouterLink("Go to Configuration", ConfigurationGridView.class);
         add(configLink);
 
-        add( getProjectsDescription());
-    }
-
-    private VerticalLayout getProjectsDescription() {
-
-        Button saveBtn = new Button("save");
-        Button editBtn = new Button("edit");
-        saveBtn.setVisible(false);
-        editBtn.setVisible(true);
         Optional<User> maybeUser = authenticatedUser.get();
         if (maybeUser.isPresent()) {
             User user = maybeUser.get();
             System.out.println("User: " + user.getName());
             Set<Role> roles = user.getRoles();
-            boolean isAdmin = roles.stream()
+            isAdmin = roles.stream()
                     .anyMatch(role -> role == Role.ADMIN);
+            add( getProjectsDescription());
+        }
+
+
+    }
+
+    private VerticalLayout getProjectsDescription() {
+
+        Projects projects = projectsService.findByName("WelcomeView");
+        Button saveBtn = new Button("save");
+        Button editBtn = new Button("edit");
+        saveBtn.setVisible(false);
+        editBtn.setVisible(false);
+        if (isAdmin) {
             editBtn.setVisible(isAdmin);
         }
         VerticalLayout content = new VerticalLayout();
@@ -90,6 +100,9 @@ public class WelcomeView extends VerticalLayout {
 
         saveBtn.addClickListener((event -> {
 
+            projects.setDescription(editor.getValue());
+            projectsService.update(projects);
+
             editBtn.setVisible(true);
             saveBtn.setVisible(false);
             //editor.setReadOnly(true);
@@ -105,6 +118,7 @@ public class WelcomeView extends VerticalLayout {
         });
         content.add(editor,editBtn,saveBtn);
 
+        editor.setValue(projects != null ? projects.getDescription() : "");
         return content;
 
     }
