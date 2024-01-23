@@ -12,6 +12,7 @@ import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.*;
+import de.dbuss.tefcontrol.components.LogView;
 import de.dbuss.tefcontrol.data.entity.Constants;
 import de.dbuss.tefcontrol.data.entity.ProjectParameter;
 import de.dbuss.tefcontrol.data.modules.administration.entity.CurrentPeriods;
@@ -21,6 +22,8 @@ import de.dbuss.tefcontrol.data.service.ProjectParameterService;
 import de.dbuss.tefcontrol.security.AuthenticatedUser;
 import de.dbuss.tefcontrol.views.MainLayout;
 import jakarta.annotation.security.RolesAllowed;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.YearMonth;
 import java.util.*;
@@ -40,11 +43,13 @@ public class ReportAdminView extends VerticalLayout implements BeforeEnterObserv
     private int projectId;
     Boolean isVisible = false;
     Grid<ProjectParameter> parameterGrid = new Grid<>(ProjectParameter.class, false);
-
+    private static final Logger logger = LoggerFactory.getLogger(ReportAdminView.class);
+    private LogView logView;
 
     public ReportAdminView(ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, BackendService backendService, AuthenticatedUser authenticatedUser) {
         this.projectConnectionService = projectConnectionService;
-
+        logView = new LogView();
+        logView.logMessage(Constants.INFO, "Starting ReportAdminView....");
         List<ProjectParameter> listOfProjectParameters = projectParameterService.findAll();
         List<ProjectParameter> filteredProjectParameters = listOfProjectParameters.stream()
                 .filter(projectParameter -> Constants.REPORT_ADMINISTRATION.equals(projectParameter.getNamespace()))
@@ -94,6 +99,7 @@ public class ReportAdminView extends VerticalLayout implements BeforeEnterObserv
             startRohdatenReportBtn.setText("running");
             String resultOfPeriods = projectConnectionService.executeReportAdminPeriods(currentPeriods, dbUrl, dbUser, dbPassword);
             System.out.println(resultOfPeriods+"......................................");
+            System.err.println(resultOfPeriods);
             Notification notification;
             if (resultOfPeriods.equals(Constants.OK)) {
                 notification = Notification.show("Reporting Monat " + currentPeriods.getCurrent_month() + " updated successfully", 5000, Notification.Position.MIDDLE);
@@ -121,17 +127,25 @@ public class ReportAdminView extends VerticalLayout implements BeforeEnterObserv
         add(hl);
 
         parameterGrid.setVisible(false);
+        logView.setVisible(false);
 
+      //  if(MainLayout.userRole.contains("ADMIN")) {
         UI.getCurrent().addShortcutListener(
                 () -> {
-                    isVisible=!isVisible;
-                    parameterGrid.setVisible(isVisible);
+
+                        isVisible = !isVisible;
+                        parameterGrid.setVisible(isVisible);
+                        logView.setVisible(true);
                 },
                 Key.KEY_I, KeyModifier.ALT);
 
+      //  }
+        add(logView);
+        logView.logMessage(Constants.INFO, "Ending ReportAdminView....");
     }
 
     private void setProjectParameterGrid(List<ProjectParameter> listOfProjectParameters) {
+        logView.logMessage(Constants.INFO, "Starting setProjectParameterGrid....");
         parameterGrid = new Grid<>(ProjectParameter.class, false);
         parameterGrid.addColumn(ProjectParameter::getName).setHeader("Name").setAutoWidth(true).setResizable(true);
         parameterGrid.addColumn(ProjectParameter::getValue).setHeader("Value").setAutoWidth(true).setResizable(true);

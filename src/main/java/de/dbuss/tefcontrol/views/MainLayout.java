@@ -21,6 +21,7 @@ import com.vaadin.flow.router.RouterLink;
 import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.server.auth.AccessAnnotationChecker;
 import com.vaadin.flow.theme.lumo.LumoUtility;
+import de.dbuss.tefcontrol.data.Role;
 import de.dbuss.tefcontrol.data.entity.Constants;
 import de.dbuss.tefcontrol.data.entity.Projects;
 import de.dbuss.tefcontrol.data.entity.User;
@@ -47,11 +48,13 @@ import java.io.ByteArrayInputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import de.dbuss.tefcontrol.views.login.LoginView;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.vaadin.lineawesome.LineAwesomeIcon;
 import org.vaadin.tatu.Tree;
 
@@ -77,14 +80,19 @@ public class MainLayout extends AppLayout {
 
     private static final Logger logInfo = LoggerFactory.getLogger(MainLayout.class);
     public static String userName;
+    public static Set<Role> userRole;
     private LoginView loginView;
 
-    public MainLayout(AuthenticatedUser authenticatedUser, AccessAnnotationChecker accessChecker, ProjectsService projectsService, LogService logService, UserService userService) {
+    @Value("${pit.value}")
+    private String headerName;
+
+    public MainLayout(@Value("${pit.value}") String headerName, AuthenticatedUser authenticatedUser, AccessAnnotationChecker accessChecker, ProjectsService projectsService, LogService logService, UserService userService) {
         this.authenticatedUser = authenticatedUser;
         this.accessChecker = accessChecker;
         this.projectsService = projectsService;
         this.logService = logService;
         this.userService = userService;
+        this.headerName = headerName;
 
         logInfo.info("start logs using file...###################");
         logService.addLogMessage(LogService.INFO, "Starting application in MainLayout");
@@ -149,7 +157,8 @@ public class MainLayout extends AppLayout {
         log.info("Starting addDrawerContent() in mainlayout");
         System.out.println("Starting addDrawerContent() in mainlayout");
         RouterLink link = new RouterLink("login", LoginView.class);
-        H2 appName = new H2("PIT");
+       // H2 appName = new H2("PIT");
+        H2 appName = new H2(headerName);
         appName.addClassNames("text-l","m-m");
         appName.addClassNames(LumoUtility.FontSize.LARGE, LumoUtility.Margin.NONE);
         Header header = new Header(appName);
@@ -184,6 +193,7 @@ public class MainLayout extends AppLayout {
         if (maybeUser.isPresent()) {
             User user = maybeUser.get();
             userName = user.getUsername();
+            userRole = user.getRoles();
             projectsService.setUser(user);
         }
 
