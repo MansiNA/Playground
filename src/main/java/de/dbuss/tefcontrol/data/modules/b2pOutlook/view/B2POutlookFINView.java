@@ -147,18 +147,6 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
             qsBtn.setEnabled(true);
         });
 
-        qsBtn.addClickListener(e ->{
-            //   if (qsGrid.projectId != projectId) {
-            hl.remove(qsGrid);
-            qsGrid = new QS_Grid(projectConnectionService, backendService);
-            hl.add(qsGrid);
-            CallbackHandler callbackHandler = new CallbackHandler();
-            qsGrid.createDialog(callbackHandler, projectId, upload_id);
-            //  }
-            qsGrid.showDialog(true);
-        });
-
-
         HorizontalLayout vl = new HorizontalLayout();
         vl.add(getTabsheet());
 
@@ -237,6 +225,17 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
         HorizontalLayout hl=new HorizontalLayout(singleFileUpload,uploadBtn, qsBtn, qsGrid);
         content.add(hl);
         content.add(getMGSRGrid());
+
+        qsBtn.addClickListener(e ->{
+            //   if (qsGrid.projectId != projectId) {
+            hl.remove(qsGrid);
+            qsGrid = new QS_Grid(projectConnectionService, backendService);
+            hl.add(qsGrid);
+            CallbackHandler callbackHandler = new CallbackHandler();
+            qsGrid.createDialog(callbackHandler, projectId, upload_id);
+            //  }
+            qsGrid.showDialog(true);
+        });
 
         return content;
     }
