@@ -985,7 +985,7 @@ public class ProjectConnectionService {
         String result = "";
         jdbcTemplate = getJdbcDefaultConnection();
 
-        String sql = "select pp.value from pit.dbo.project_parameter pp, [PIT].[dbo].[projects] p\n" +
+        String sql = "select pp.value from project_parameter pp, projects p\n" +
                 "  where pp.namespace=p.page_url\n" +
                 "  and pp.name in ('DBJobs')\n" +
                 "  and p.id=?";
@@ -1004,7 +1004,7 @@ public class ProjectConnectionService {
         }
 
 
-        sql = "select pp.name, pp.value from pit.dbo.project_parameter pp, [PIT].[dbo].[projects] p\n" +
+        sql = "select pp.name, pp.value from project_parameter pp, projects p\n" +
                 "  where pp.namespace=p.page_url\n" +
                 "  and pp.name in ('DB_Server','DB_Name', 'DB_User','DB_Password')\n" +
                 "  and p.id="+projectId ;
