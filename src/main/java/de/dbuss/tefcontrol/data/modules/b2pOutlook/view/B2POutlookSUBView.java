@@ -10,10 +10,12 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Article;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.data.binder.Binder;
@@ -130,32 +132,18 @@ public class B2POutlookSUBView extends VerticalLayout implements BeforeEnterObse
         //Componente QS-Grid:
         qsGrid = new QS_Grid(projectConnectionService, backendService);
 
-        HorizontalLayout hl = new HorizontalLayout();
-        hl.setAlignItems(Alignment.BASELINE);
-        // hl.add(singleFileUpload,saveButton, databaseDetail);
-        hl.add(singleFileUpload,uploadBtn, qsBtn, qsGrid);
-        add(hl, parameterGrid);
+        HorizontalLayout vl = new HorizontalLayout();
+        vl.add(getTabsheet());
 
-        uploadBtn.addClickListener(e ->{
-            save2db();
-            qsBtn.setEnabled(true);
-        });
+        vl.setHeightFull();
+        vl.setSizeFull();
 
-        qsBtn.addClickListener(e ->{
-         //   if (qsGrid.projectId != projectId) {
-            hl.remove(qsGrid);
-            qsGrid = new QS_Grid(projectConnectionService, backendService);
-            hl.add(qsGrid);
-            CallbackHandler callbackHandler = new CallbackHandler();
-            qsGrid.createDialog(callbackHandler, projectId, upload_id);
-         //   }
-            qsGrid.showDialog(true);
-        });
-
-        setupUploader();
-        add(getOutlookSubGrid());
-        setSizeFull();
         setHeightFull();
+        setSizeFull();
+
+        add(vl,parameterGrid);
+
+        parameterGrid.setVisible(false);
 
         if(MainLayout.isAdmin) {
             UI.getCurrent().addShortcutListener(
@@ -165,8 +153,6 @@ public class B2POutlookSUBView extends VerticalLayout implements BeforeEnterObse
             UI.getCurrent().addShortcutListener(
                     () -> future.cancel(true),
                     Key.KEY_S, KeyModifier.ALT);
-
-            parameterGrid.setVisible(false);
 
             UI.getCurrent().addShortcutListener(
                     () -> {
@@ -181,6 +167,70 @@ public class B2POutlookSUBView extends VerticalLayout implements BeforeEnterObse
     public void beforeEnter(BeforeEnterEvent event) {
         RouteParameters parameters = event.getRouteParameters();
         projectId = Integer.parseInt(parameters.get("project_Id").orElse(null));
+    }
+    private TabSheet getTabsheet() {
+
+        //log.info("Starting getTabsheet() for Tabsheet");
+        TabSheet tabSheet = new TabSheet();
+
+        tabSheet.add("Upload", getUpladTab());
+        tabSheet.add("Description", getDescriptionTab());
+        tabSheet.add("Attachments", getAttachmentTab());
+
+        tabSheet.setSizeFull();
+        tabSheet.setHeightFull();
+        //log.info("Ending getTabsheet() for Tabsheet");
+
+        return tabSheet;
+    }
+
+    private Component getAttachmentTab() {
+        VerticalLayout content = new VerticalLayout();
+        H1 h1=new H1();
+        h1.add("Attachments...");
+
+        content.add(h1);
+        return content;
+    }
+
+    private Component getDescriptionTab() {
+        VerticalLayout content = new VerticalLayout();
+        H1 h1=new H1();
+        h1.add("Description...");
+
+        content.add(h1);
+        return content;
+    }
+
+    private Component getUpladTab() {
+        VerticalLayout content = new VerticalLayout();
+
+        setupUploader();
+
+        content.setSizeFull();
+        content.setHeightFull();
+
+        HorizontalLayout hl=new HorizontalLayout(singleFileUpload,uploadBtn, qsBtn, qsGrid);
+        content.add(hl);
+        content.add(getOutlookSubGrid());
+
+        uploadBtn.addClickListener(e ->{
+            save2db();
+            qsBtn.setEnabled(true);
+        });
+
+        qsBtn.addClickListener(e ->{
+            //   if (qsGrid.projectId != projectId) {
+            hl.remove(qsGrid);
+            qsGrid = new QS_Grid(projectConnectionService, backendService);
+            hl.add(qsGrid);
+            CallbackHandler callbackHandler = new CallbackHandler();
+            qsGrid.createDialog(callbackHandler, projectId, upload_id);
+            //   }
+            qsGrid.showDialog(true);
+        });
+
+        return content;
     }
 
     private void setProjectParameterGrid(List<ProjectParameter> listOfProjectParameters) {

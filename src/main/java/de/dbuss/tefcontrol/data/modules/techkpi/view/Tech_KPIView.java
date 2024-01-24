@@ -26,6 +26,7 @@ import de.dbuss.tefcontrol.data.entity.Constants;
 import de.dbuss.tefcontrol.data.entity.ProjectParameter;
 import de.dbuss.tefcontrol.data.entity.ProjectUpload;
 import de.dbuss.tefcontrol.data.entity.User;
+import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.GenericCommentsView;
 import de.dbuss.tefcontrol.data.service.BackendService;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
 import de.dbuss.tefcontrol.data.service.ProjectParameterService;
@@ -142,69 +143,6 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
         progressBarActuals.setVisible(false);
         progressBarFact.setVisible(false);
 
-   //     description.add("Tool für upload der KPI-Excel Tabelle.\n Bitte als 1. Datei hochladen.");
-
-        setupKPIActualsGrid();
-        setupKPIFactGrid();
-      //  setupKPIPlanGrid();
-        //setupQSGrid();
-
-        setupUploader();
-
-        // message.setText("1. Datei hochladen.");
-
-
-    //    TodoList = new CheckboxGroup<>();
-    //    TodoList.setLabel("ToDo");
-    //    TodoList.setItems("KPI_DB.xlsx hochladen");
-
-     /*   TodoList.addValueChangeListener(event -> {
-            String selectedItems = event.getValue().stream()
-                    .collect(Collectors.joining(", "));
-            //   System.out.println("Ausgewählte: " + selectedItems);
-
-            if (selectedItems.contains("KPI_DB.xlsx hochladen"))
-            {
-                //    Notification notification = Notification.show("Bitte zuerst KPI_DB.xlsx hochladen!",5000, Notification.Position.MIDDLE);
-                //    notification.addThemeVariants(NotificationVariant.LUMO_WARNING);
-                TodoList.deselect("KPI_DB.xlsx hochladen");
-            }
-
-
-            if (selectedItems.contains("QS bestätigen"))
-            {
-                saveButton.setEnabled(true);
-
-            }
-
-        });*/
-
-
-   //     TodoList.addThemeVariants(CheckboxGroupVariant.LUMO_VERTICAL);
-
-
-
-        Details details = new Details("Import Details", textArea);
-        details.setOpened(false);
-
-
-        HorizontalLayout hl = new HorizontalLayout();
-        hl.setAlignItems(Alignment.CENTER);
-
-        Div htmlDiv = new Div();
-        htmlDiv.getElement().setProperty("innerHTML", "<h2>Import KPI Excel-File</h2><p>Mit dieser Seite lässt sich die KPI_DB.xlsx " +
-                "Datei direkt in die Datenbank einlesen.</br>Die Daten der Blätter \"<b>KPI_Actuals</b>\" und \"<b>KPI_Fact</b>\" werden automatisch in die Stage Tabellen <ul><li>Stage_Tech_KPI.KPI_Actuals</li><li>Stage_Tech_KPI.KPI_Fact</li></ul>geladen. " +
-                "Dazu einfach die Datei auswählen oder per drag&drop hochladen. </br>Nach einer entsprechenden QS-Rückmeldung bzgl. Datenqualität, kann die weitere Verarbeitung per Button \"Freigabe\" erfolgen.");
-
-        // Div zur Ansicht hinzufügen
-        add(htmlDiv);
-
-   //     htmlDivToDO = new Div();
-        // htmlDivQS.getElement().setProperty("innerHTML", "<b style=\"color:blue;\">QS-Übersicht:</b>");
-   //     htmlDivToDO.getElement().setProperty("innerHTML", "<h4><u>Aktuelles ToDo:</u> <b>Bitte die Datei KPI-DB.xlsx hochladen!</b></h4>");
-
-   //     add(TodoList);
-
         List<ProjectParameter> listOfProjectParameters = projectParameterService.findAll();
         List<ProjectParameter> filteredProjectParameters = listOfProjectParameters.stream()
                 .filter(projectParameter -> Constants.TECH_KPI.equals(projectParameter.getNamespace()))
@@ -243,8 +181,110 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
         //Componente QS-Grid:
         qsGrid = new QS_Grid(projectConnectionService, backendService);
 
-        hl.setAlignItems(Alignment.BASELINE);
-        hl.add(singleFileUpload, uploadBtn, qsBtn, qsGrid);
+/*
+        accordion = new Accordion();
+
+        factPanel = new AccordionPanel("KPI_Fact (not loaded)", gridFact);
+        accordion.add(factPanel);
+        planPanel = new AccordionPanel("KPI_Plan (not loaded)", gridPlan);
+        accordion.add(planPanel);
+        actualsPanel = new AccordionPanel("KPI_Actuals (not loaded)", gridActuals);
+        accordion.add(actualsPanel);
+
+
+        accordion.add(actualsPanel);
+        accordion.add(factPanel);
+        accordion.add(planPanel);
+        accordion.setWidthFull();
+        accordion.setHeightFull();
+        accordion.close();
+
+        add(accordion);
+*/
+
+        HorizontalLayout hl = new HorizontalLayout();
+        hl.add(getTabsheet());
+        hl.setHeightFull();
+        hl.setSizeFull();
+
+        setHeightFull();
+        setSizeFull();
+        getStyle().set("overflow", "auto");
+        add(hl,parameterGrid);
+
+        parameterGrid.setVisible(false);
+
+        if(MainLayout.isAdmin) {
+            UI.getCurrent().addShortcutListener(
+                    () -> {
+                        isVisible = !isVisible;
+                        parameterGrid.setVisible(isVisible);
+                    },
+                    Key.KEY_I, KeyModifier.ALT);
+        }
+    }
+    private TabSheet getTabsheet() {
+
+        //log.info("Starting getTabsheet() for Tabsheet");
+        TabSheet tabSheet = new TabSheet();
+
+        tabSheet.add("Upload", getUpladTab());
+        tabSheet.add("Description", getDescriptionTab());
+        tabSheet.add("Attachments", getAttachmentTab());
+
+        tabSheet.setSizeFull();
+        tabSheet.setHeightFull();
+        //log.info("Ending getTabsheet() for Tabsheet");
+
+        return tabSheet;
+    }
+
+    private Component getAttachmentTab() {
+        VerticalLayout content = new VerticalLayout();
+        H1 h1=new H1();
+        h1.add("Attachments...");
+
+        content.add(h1);
+        return content;
+    }
+
+    private Component getDescriptionTab() {
+        VerticalLayout content = new VerticalLayout();
+        H1 h1=new H1();
+        h1.add("Description...");
+
+        content.add(h1);
+        return content;
+    }
+
+    private Component getUpladTab() {
+        VerticalLayout content = new VerticalLayout();
+
+        content.setSizeFull();
+        content.setHeightFull();
+        content.getStyle().set("overflow", "auto");
+        setupKPIActualsGrid();
+        setupKPIFactGrid();
+        //  setupKPIPlanGrid();
+        //setupQSGrid();
+
+        setupUploader();
+
+        Details details = new Details("Import Details", textArea);
+        details.setOpened(false);
+
+        Div htmlDiv = new Div();
+        htmlDiv.getElement().setProperty("innerHTML", "<h2>Import KPI Excel-File</h2><p>Mit dieser Seite lässt sich die KPI_DB.xlsx " +
+                "Datei direkt in die Datenbank einlesen.</br>Die Daten der Blätter \"<b>KPI_Actuals</b>\" und \"<b>KPI_Fact</b>\" werden automatisch in die Stage Tabellen <ul><li>Stage_Tech_KPI.KPI_Actuals</li><li>Stage_Tech_KPI.KPI_Fact</li></ul>geladen. " +
+                "Dazu einfach die Datei auswählen oder per drag&drop hochladen. </br>Nach einer entsprechenden QS-Rückmeldung bzgl. Datenqualität, kann die weitere Verarbeitung per Button \"Freigabe\" erfolgen.");
+
+        // Div zur Ansicht hinzufügen
+        content.add(htmlDiv);
+
+        HorizontalLayout hl=new HorizontalLayout(singleFileUpload, uploadBtn, qsBtn, qsGrid);
+        content.add(hl, parameterGrid, progressBarFact, progressBarPlan, progressBarActuals);
+        content.add(details);
+        content.add(getFileTabsheet());
 
         uploadBtn.addClickListener(e->{
 
@@ -267,70 +307,27 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
             System.out.println("Upload_ID: " + upload_id);
 
-          //  savePlanEntities();
+            //  savePlanEntities();
             saveActualsEntities();
             saveFactEntities();
 
         });
 
         qsBtn.addClickListener(e ->{
-         //   if (qsGrid.projectId != projectId) {
+            //   if (qsGrid.projectId != projectId) {
             hl.remove(qsGrid);
             qsGrid = new QS_Grid(projectConnectionService, backendService);
             hl.add(qsGrid);
             CallbackHandler callbackHandler = new CallbackHandler();
             qsGrid.createDialog(callbackHandler, projectId, upload_id);
-         //   }
+            //   }
             qsGrid.showDialog(true);
         });
 
-        //  h3_Fact.add("Fact 0 rows");
-        //  h3_Actuals.add("Actuals 0 rows");
-        //  h3_Plan.add("Plan 0 rows");
-
-        //add(hl, progressBarFact, progressBarPlan,progressBarActuals, details, h3_Fact, gridFact, h3_Actuals, gridActuals, h3_Plan, gridPlan );
-        add(hl, parameterGrid, progressBarFact, progressBarPlan, progressBarActuals);
-
-        add(details);
-
-/*
-        accordion = new Accordion();
-
-        factPanel = new AccordionPanel("KPI_Fact (not loaded)", gridFact);
-        accordion.add(factPanel);
-        planPanel = new AccordionPanel("KPI_Plan (not loaded)", gridPlan);
-        accordion.add(planPanel);
-        actualsPanel = new AccordionPanel("KPI_Actuals (not loaded)", gridActuals);
-        accordion.add(actualsPanel);
-
-
-        accordion.add(actualsPanel);
-        accordion.add(factPanel);
-        accordion.add(planPanel);
-        accordion.setWidthFull();
-        accordion.setHeightFull();
-        accordion.close();
-
-        add(accordion);
-*/
-
-        add(getTabsheet());
-
-        setHeightFull();
-
-        parameterGrid.setVisible(false);
-
-        if(MainLayout.isAdmin) {
-            UI.getCurrent().addShortcutListener(
-                    () -> {
-                        isVisible = !isVisible;
-                        parameterGrid.setVisible(isVisible);
-                    },
-                    Key.KEY_I, KeyModifier.ALT);
-        }
+        return content;
     }
 
-    private TabSheet getTabsheet() {
+    private TabSheet getFileTabsheet() {
 
         Component getActuals=gridActuals;
         Component getFact=gridFact;

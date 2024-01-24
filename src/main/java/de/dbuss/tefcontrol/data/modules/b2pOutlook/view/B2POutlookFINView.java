@@ -136,17 +136,6 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
         //Componente QS-Grid:
         qsGrid = new QS_Grid(projectConnectionService, backendService);
 
-        HorizontalLayout hl = new HorizontalLayout();
-        hl.setAlignItems(Alignment.BASELINE);
-        // hl.add(singleFileUpload,saveButton, databaseDetail);
-        hl.add(singleFileUpload,uploadBtn, qsBtn, qsGrid);
-        //add(hl, parameterGrid);
-
-        uploadBtn.addClickListener(e ->{
-            save2db();
-            qsBtn.setEnabled(true);
-        });
-
         HorizontalLayout vl = new HorizontalLayout();
         vl.add(getTabsheet());
 
@@ -225,6 +214,11 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
         HorizontalLayout hl=new HorizontalLayout(singleFileUpload,uploadBtn, qsBtn, qsGrid);
         content.add(hl);
         content.add(getMGSRGrid());
+
+        uploadBtn.addClickListener(e ->{
+            save2db();
+            qsBtn.setEnabled(true);
+        });
 
         qsBtn.addClickListener(e ->{
             //   if (qsGrid.projectId != projectId) {
