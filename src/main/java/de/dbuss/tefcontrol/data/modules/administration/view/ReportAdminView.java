@@ -129,17 +129,17 @@ public class ReportAdminView extends VerticalLayout implements BeforeEnterObserv
         parameterGrid.setVisible(false);
         logView.setVisible(false);
 
-      //  if(MainLayout.userRole.contains("ADMIN")) {
-        UI.getCurrent().addShortcutListener(
-                () -> {
+        if (MainLayout.isAdmin) {
+            UI.getCurrent().addShortcutListener(
+                    () -> {
 
                         isVisible = !isVisible;
                         parameterGrid.setVisible(isVisible);
                         logView.setVisible(true);
-                },
-                Key.KEY_I, KeyModifier.ALT);
+                    },
+                    Key.KEY_I, KeyModifier.ALT);
 
-      //  }
+        }
         add(logView);
         logView.logMessage(Constants.INFO, "Ending ReportAdminView....");
     }

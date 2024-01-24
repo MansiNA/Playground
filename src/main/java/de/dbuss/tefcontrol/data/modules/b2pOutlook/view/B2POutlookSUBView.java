@@ -157,22 +157,24 @@ public class B2POutlookSUBView extends VerticalLayout implements BeforeEnterObse
         setSizeFull();
         setHeightFull();
 
-        UI.getCurrent().addShortcutListener(
-                () ->  start_thread(),
-                Key.KEY_V, KeyModifier.ALT);
+        if(MainLayout.isAdmin) {
+            UI.getCurrent().addShortcutListener(
+                    () -> start_thread(),
+                    Key.KEY_V, KeyModifier.ALT);
 
-        UI.getCurrent().addShortcutListener(
-                () ->  future.cancel(true),
-                Key.KEY_S, KeyModifier.ALT);
+            UI.getCurrent().addShortcutListener(
+                    () -> future.cancel(true),
+                    Key.KEY_S, KeyModifier.ALT);
 
-        parameterGrid.setVisible(false);
+            parameterGrid.setVisible(false);
 
-        UI.getCurrent().addShortcutListener(
-                () -> {
-                    isVisible=!isVisible;
-                    parameterGrid.setVisible(isVisible);
-                },
-                Key.KEY_I, KeyModifier.ALT);
+            UI.getCurrent().addShortcutListener(
+                    () -> {
+                        isVisible = !isVisible;
+                        parameterGrid.setVisible(isVisible);
+                    },
+                    Key.KEY_I, KeyModifier.ALT);
+        }
 
     }
     @Override

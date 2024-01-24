@@ -161,7 +161,7 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
         parameterGrid.setVisible(false);
         System.out.println("Is admin: " + checkAdminRole());
 
-        if(checkAdminRole()) {
+        if(MainLayout.isAdmin) {
             UI.getCurrent().addShortcutListener(
                     () -> start_thread(),
                     Key.KEY_V, KeyModifier.ALT);
@@ -241,8 +241,7 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
     }
 
 
-    private boolean
-    checkAdminRole() {
+    private boolean checkAdminRole() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication !=  null  && !(authentication instanceof AnonymousAuthenticationToken)) {
             Object principal = authentication.getPrincipal();

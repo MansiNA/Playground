@@ -320,13 +320,14 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
         parameterGrid.setVisible(false);
 
-        UI.getCurrent().addShortcutListener(
-                () -> {
-                    isVisible=!isVisible;
-                    parameterGrid.setVisible(isVisible);
-                },
-                Key.KEY_I, KeyModifier.ALT);
-
+        if(MainLayout.isAdmin) {
+            UI.getCurrent().addShortcutListener(
+                    () -> {
+                        isVisible = !isVisible;
+                        parameterGrid.setVisible(isVisible);
+                    },
+                    Key.KEY_I, KeyModifier.ALT);
+        }
     }
 
     private TabSheet getTabsheet() {
