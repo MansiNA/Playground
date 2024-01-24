@@ -23,16 +23,13 @@ import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteParameters;
+import de.dbuss.tefcontrol.components.AttachmentGrid;
 import de.dbuss.tefcontrol.components.QS_Callback;
 import de.dbuss.tefcontrol.components.QS_Grid;
-import de.dbuss.tefcontrol.data.entity.Constants;
-import de.dbuss.tefcontrol.data.entity.ProjectParameter;
-import de.dbuss.tefcontrol.data.entity.ProjectUpload;
-import de.dbuss.tefcontrol.data.entity.User;
+import de.dbuss.tefcontrol.data.dto.ProjectAttachmentsDTO;
+import de.dbuss.tefcontrol.data.entity.*;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.B2pOutlookSub;
-import de.dbuss.tefcontrol.data.service.BackendService;
-import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
-import de.dbuss.tefcontrol.data.service.ProjectParameterService;
+import de.dbuss.tefcontrol.data.service.*;
 import de.dbuss.tefcontrol.dataprovider.GenericDataProvider;
 import de.dbuss.tefcontrol.security.AuthenticatedUser;
 import de.dbuss.tefcontrol.views.MainLayout;
@@ -59,6 +56,11 @@ import static com.vaadin.flow.component.button.ButtonVariant.LUMO_TERTIARY_INLIN
 public class B2POutlookSUBView extends VerticalLayout implements BeforeEnterObserver {
 
     private final ProjectConnectionService projectConnectionService;
+    private final ProjectsService projectsService;
+    private final ProjectAttachmentsService projectAttachmentsService;
+    private Optional<Projects> projects;
+    private AttachmentGrid attachmentGrid;
+    private List<ProjectAttachmentsDTO> listOfProjectAttachments;
     private MemoryBuffer memoryBuffer = new MemoryBuffer();
     private Upload singleFileUpload = new Upload(memoryBuffer);
     private List<List<B2pOutlookSub>> listOfAllSheets = new ArrayList<>();
@@ -88,11 +90,13 @@ public class B2POutlookSUBView extends VerticalLayout implements BeforeEnterObse
     //public static Map<String, Integer> projectUploadIdMap = new HashMap<>();
     private Grid<ProjectParameter> parameterGrid = new Grid<>(ProjectParameter.class, false);
 
-    public B2POutlookSUBView(ProjectParameterService projectParameterService, ProjectConnectionService projectConnectionService, BackendService backendService, AuthenticatedUser authenticatedUser) {
+    public B2POutlookSUBView(ProjectParameterService projectParameterService, ProjectConnectionService projectConnectionService, BackendService backendService, AuthenticatedUser authenticatedUser,  ProjectsService projectsService, ProjectAttachmentsService projectAttachmentsService) {
 
         this.backendService = backendService;
         this.projectConnectionService = projectConnectionService;
         this.authenticatedUser=authenticatedUser;
+        this.projectsService = projectsService;
+        this.projectAttachmentsService = projectAttachmentsService;
 
         uploadBtn = new Button("Upload");
         uploadBtn.setEnabled(false);
@@ -167,6 +171,15 @@ public class B2POutlookSUBView extends VerticalLayout implements BeforeEnterObse
     public void beforeEnter(BeforeEnterEvent event) {
         RouteParameters parameters = event.getRouteParameters();
         projectId = Integer.parseInt(parameters.get("project_Id").orElse(null));
+        projects = projectsService.findById(projectId);
+        projects.ifPresent(value -> listOfProjectAttachments = projectsService.getProjectAttachmentsWithoutFileContent(value));
+
+        updateAttachmentGrid(listOfProjectAttachments);
+    }
+
+    private void updateAttachmentGrid(List<ProjectAttachmentsDTO> projectAttachmentsDTOS) {
+        attachmentGrid.setItems(projectAttachmentsDTOS);
+        attachmentGrid.setProjectId(projectId);
     }
     private TabSheet getTabsheet() {
 
@@ -185,12 +198,8 @@ public class B2POutlookSUBView extends VerticalLayout implements BeforeEnterObse
     }
 
     private Component getAttachmentTab() {
-        VerticalLayout content = new VerticalLayout();
-        H1 h1=new H1();
-        h1.add("Attachments...");
-
-        content.add(h1);
-        return content;
+        attachmentGrid = new AttachmentGrid(projectsService, projectAttachmentsService);
+        return attachmentGrid.getProjectAttachements();
     }
 
     private Component getDescriptionTab() {

@@ -5,9 +5,13 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.crud.BinderCrudEditor;
 import com.vaadin.flow.component.crud.Crud;
 import com.vaadin.flow.component.crud.CrudEditor;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.grid.contextmenu.GridContextMenu;
+import com.vaadin.flow.component.grid.contextmenu.GridMenuItem;
+import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Article;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H1;
@@ -18,18 +22,21 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
+import com.vaadin.flow.component.upload.receivers.MultiFileMemoryBuffer;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.*;
+import com.vaadin.flow.server.StreamResource;
+import com.wontlost.ckeditor.Config;
+import com.wontlost.ckeditor.VaadinCKEditor;
+import com.wontlost.ckeditor.VaadinCKEditorBuilder;
+import de.dbuss.tefcontrol.components.AttachmentGrid;
 import de.dbuss.tefcontrol.components.QS_Callback;
 import de.dbuss.tefcontrol.components.QS_Grid;
-import de.dbuss.tefcontrol.data.entity.Constants;
-import de.dbuss.tefcontrol.data.entity.ProjectParameter;
-import de.dbuss.tefcontrol.data.entity.ProjectUpload;
-import de.dbuss.tefcontrol.data.entity.User;
+import de.dbuss.tefcontrol.data.Role;
+import de.dbuss.tefcontrol.data.dto.ProjectAttachmentsDTO;
+import de.dbuss.tefcontrol.data.entity.*;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.OutlookMGSR;
-import de.dbuss.tefcontrol.data.service.BackendService;
-import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
-import de.dbuss.tefcontrol.data.service.ProjectParameterService;
+import de.dbuss.tefcontrol.data.service.*;
 import de.dbuss.tefcontrol.dataprovider.GenericDataProvider;
 import de.dbuss.tefcontrol.security.AuthenticatedUser;
 import de.dbuss.tefcontrol.views.MainLayout;
@@ -46,6 +53,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.util.concurrent.ListenableFuture;
 
 import javax.sql.DataSource;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
@@ -60,6 +69,8 @@ import static com.vaadin.flow.component.button.ButtonVariant.LUMO_TERTIARY_INLIN
 public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObserver {
 
     private final ProjectConnectionService projectConnectionService;
+    private final ProjectsService projectsService;
+    private final ProjectAttachmentsService projectAttachmentsService;
     private MemoryBuffer memoryBuffer = new MemoryBuffer();
     private Upload singleFileUpload = new Upload(memoryBuffer);
     private List<List<OutlookMGSR>> listOfAllSheets = new ArrayList<>();
@@ -67,7 +78,6 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
     private Grid<OutlookMGSR> gridMGSR = new Grid<>(OutlookMGSR.class, false);
     private String tableName;
     int sheetNr = 0;
-
     private String agentName;
     private String dbUrl;
     private String dbUser;
@@ -76,6 +86,10 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
     private String mimeType = "";
     private Div textArea = new Div();
     private int projectId;
+    private Optional<Projects> projects;
+    private AttachmentGrid attachmentGrid;
+    private List<ProjectAttachmentsDTO> listOfProjectAttachments;
+    private VaadinCKEditor editor;
     private QS_Grid qsGrid;
     private Button qsBtn;
     private Button uploadBtn;
@@ -91,11 +105,13 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
     private Boolean isVisible = false;
     Grid<ProjectParameter> parameterGrid = new Grid<>(ProjectParameter.class, false);
 
-    public B2POutlookFINView(ProjectParameterService projectParameterService, ProjectConnectionService projectConnectionService, BackendService backendService,  AuthenticatedUser authenticatedUser) {
+    public B2POutlookFINView(ProjectParameterService projectParameterService, ProjectConnectionService projectConnectionService, BackendService backendService,  AuthenticatedUser authenticatedUser, ProjectsService projectsService, ProjectAttachmentsService projectAttachmentsService) {
 
         this.backendService = backendService;
         this.projectConnectionService = projectConnectionService;
         this.authenticatedUser=authenticatedUser;
+        this.projectsService = projectsService;
+        this.projectAttachmentsService = projectAttachmentsService;
 
         uploadBtn = new Button("Upload");
         uploadBtn.setEnabled(false);
@@ -169,6 +185,19 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
         }
     }
 
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+        RouteParameters parameters = event.getRouteParameters();
+        projectId = Integer.parseInt(parameters.get("project_Id").orElse(null));
+
+        projects = projectsService.findById(projectId);
+
+        projects.ifPresent(value -> listOfProjectAttachments = projectsService.getProjectAttachmentsWithoutFileContent(value));
+
+        updateDescription();
+        updateAttachmentGrid(listOfProjectAttachments);
+    }
+
     private TabSheet getTabsheet() {
 
         //log.info("Starting getTabsheet() for Tabsheet");
@@ -186,23 +215,80 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
     }
 
     private Component getAttachmentTab() {
-        VerticalLayout content = new VerticalLayout();
-        H1 h1=new H1();
-        h1.add("Attachments...");
-
-        content.add(h1);
-        return content;
+        attachmentGrid = new AttachmentGrid(projectsService, projectAttachmentsService);
+        return attachmentGrid.getProjectAttachements();
     }
 
     private Component getDescriptionTab() {
+        Button saveBtn = new Button("save");
+        Button editBtn = new Button("edit");
+        saveBtn.setVisible(false);
+        editBtn.setVisible(true);
+        Optional<User> maybeUser = authenticatedUser.get();
+        if (maybeUser.isPresent()) {
+            User user = maybeUser.get();
+            System.out.println("User: " + user.getName());
+            Set<Role> roles = user.getRoles();
+            boolean isAdmin = roles.stream()
+                    .anyMatch(role -> role == Role.ADMIN);
+            editBtn.setVisible(isAdmin);
+        }
         VerticalLayout content = new VerticalLayout();
-        H1 h1=new H1();
-        h1.add("Description...");
 
-        content.add(h1);
+        Config config = new Config();
+        config.setBalloonToolBar(com.wontlost.ckeditor.Constants.Toolbar.values());
+        config.setImage(new String[][]{},
+                "", new String[]{"full", "alignLeft", "alignCenter", "alignRight"},
+                new String[]{"imageTextAlternative", "|",
+                        "imageStyle:alignLeft",
+                        "imageStyle:full",
+                        "imageStyle:alignCenter",
+                        "imageStyle:alignRight"}, new String[]{});
+
+        editor = new VaadinCKEditorBuilder().with(builder -> {
+
+            builder.editorType = com.wontlost.ckeditor.Constants.EditorType.CLASSIC;
+            builder.width = "95%";
+            builder.readOnly = true;
+            builder.hideToolbar=true;
+            builder.config = config;
+        }).createVaadinCKEditor();
+
+        editor.setReadOnly(true);
+
+        saveBtn.addClickListener((event -> {
+            projects.get().setDescription(editor.getValue());
+            projectsService.update(projects.get());
+
+            editBtn.setVisible(true);
+            saveBtn.setVisible(false);
+            //editor.setReadOnly(true);
+            editor.setReadOnlyWithToolbarAction(!editor.isReadOnly());
+
+        }));
+
+        editBtn.addClickListener(e->{
+            editor.setReadOnlyWithToolbarAction(!editor.isReadOnly());
+            editBtn.setVisible(false);
+            saveBtn.setVisible(true);
+            //editor.setReadOnly(false);
+        });
+
+        content.add(editor,editBtn,saveBtn);
+
+        if(projects != null && projects.isPresent()) {
+            editor.setValue(projects.map(Projects::getDescription).orElse(""));
+        }
         return content;
-    }
 
+    }
+    private void updateDescription() {
+        editor.setValue(projects.map(Projects::getDescription).orElse(""));
+    }
+    private void updateAttachmentGrid(List<ProjectAttachmentsDTO> projectAttachmentsDTOS) {
+        attachmentGrid.setItems(projectAttachmentsDTOS);
+        attachmentGrid.setProjectId(projectId);
+    }
     private Component getUpladTab() {
         VerticalLayout content = new VerticalLayout();
 
@@ -245,12 +331,6 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
             }
         }
         return false;
-    }
-
-    @Override
-    public void beforeEnter(BeforeEnterEvent event) {
-        RouteParameters parameters = event.getRouteParameters();
-        projectId = Integer.parseInt(parameters.get("project_Id").orElse(null));
     }
 
     private void setProjectParameterGrid(List<ProjectParameter> listOfProjectParameters) {

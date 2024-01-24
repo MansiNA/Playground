@@ -27,9 +27,11 @@ import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.provider.*;
 import com.vaadin.flow.router.*;
+import de.dbuss.tefcontrol.components.AttachmentGrid;
 import de.dbuss.tefcontrol.components.QS_Callback;
 import de.dbuss.tefcontrol.components.QS_Grid;
 import de.dbuss.tefcontrol.data.Role;
+import de.dbuss.tefcontrol.data.dto.ProjectAttachmentsDTO;
 import de.dbuss.tefcontrol.data.entity.*;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.OutlookMGSR;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.view.B2POutlookSUBView;
@@ -38,9 +40,7 @@ import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.GenericComments;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.Subscriber;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.UnitsDeepDive;
 import de.dbuss.tefcontrol.data.modules.techkpi.view.Tech_KPIView;
-import de.dbuss.tefcontrol.data.service.BackendService;
-import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
-import de.dbuss.tefcontrol.data.service.ProjectParameterService;
+import de.dbuss.tefcontrol.data.service.*;
 import de.dbuss.tefcontrol.dataprovider.GenericDataProvider;
 import de.dbuss.tefcontrol.security.AuthenticatedUser;
 import de.dbuss.tefcontrol.views.MainLayout;
@@ -69,6 +69,12 @@ import static com.vaadin.flow.component.button.ButtonVariant.LUMO_TERTIARY_INLIN
 public class GenericCommentsView extends VerticalLayout implements BeforeEnterObserver {
     private final ProjectConnectionService projectConnectionService;
     private final BackendService backendService;
+    private final ProjectsService projectsService;
+    private final ProjectAttachmentsService projectAttachmentsService;
+    private Optional<Projects> projects;
+    private AttachmentGrid attachmentGrid;
+    private List<ProjectAttachmentsDTO> listOfProjectAttachments;
+
     MemoryBuffer memoryBuffer = new MemoryBuffer();
     Upload singleFileUpload = new Upload(memoryBuffer);
     private List<List<GenericComments>> listOfAllSheets = new ArrayList<>();
@@ -98,11 +104,13 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
     private Boolean isVisible = false;
     Grid<ProjectParameter> parameterGrid = new Grid<>(ProjectParameter.class, false);
 
-    public GenericCommentsView(AuthenticatedUser authenticatedUser, ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, BackendService backendService) {
+    public GenericCommentsView(AuthenticatedUser authenticatedUser, ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, BackendService backendService, ProjectsService projectsService, ProjectAttachmentsService projectAttachmentsService) {
 
         this.projectConnectionService = projectConnectionService;
         this.authenticatedUser = authenticatedUser;
         this.backendService = backendService;
+        this.projectsService = projectsService;
+        this.projectAttachmentsService = projectAttachmentsService;
 
         uploadBtn = new Button("Upload");
         uploadBtn.setEnabled(false);
@@ -172,6 +180,15 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
     public void beforeEnter(BeforeEnterEvent event) {
         RouteParameters parameters = event.getRouteParameters();
         projectId = Integer.parseInt(parameters.get("project_Id").orElse(null));
+        projects = projectsService.findById(projectId);
+        projects.ifPresent(value -> listOfProjectAttachments = projectsService.getProjectAttachmentsWithoutFileContent(value));
+
+        updateAttachmentGrid(listOfProjectAttachments);
+    }
+
+    private void updateAttachmentGrid(List<ProjectAttachmentsDTO> projectAttachmentsDTOS) {
+        attachmentGrid.setItems(projectAttachmentsDTOS);
+        attachmentGrid.setProjectId(projectId);
     }
 
     private TabSheet getTabsheet() {
@@ -191,12 +208,8 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
     }
 
     private Component getAttachmentTab() {
-        VerticalLayout content = new VerticalLayout();
-        H1 h1=new H1();
-        h1.add("Attachments...");
-
-        content.add(h1);
-        return content;
+        attachmentGrid = new AttachmentGrid(projectsService, projectAttachmentsService);
+        return attachmentGrid.getProjectAttachements();
     }
 
     private Component getDescriptionTab() {

@@ -20,16 +20,13 @@ import com.vaadin.flow.component.tabs.TabSheetVariant;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.router.*;
+import de.dbuss.tefcontrol.components.AttachmentGrid;
 import de.dbuss.tefcontrol.components.QS_Callback;
 import de.dbuss.tefcontrol.components.QS_Grid;
-import de.dbuss.tefcontrol.data.entity.Constants;
-import de.dbuss.tefcontrol.data.entity.ProjectParameter;
-import de.dbuss.tefcontrol.data.entity.ProjectUpload;
-import de.dbuss.tefcontrol.data.entity.User;
+import de.dbuss.tefcontrol.data.dto.ProjectAttachmentsDTO;
+import de.dbuss.tefcontrol.data.entity.*;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.GenericCommentsView;
-import de.dbuss.tefcontrol.data.service.BackendService;
-import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
-import de.dbuss.tefcontrol.data.service.ProjectParameterService;
+import de.dbuss.tefcontrol.data.service.*;
 import de.dbuss.tefcontrol.security.AuthenticatedUser;
 import de.dbuss.tefcontrol.views.MainLayout;
 import jakarta.annotation.security.RolesAllowed;
@@ -57,6 +54,11 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
     private JdbcTemplate jdbcTemplate;
     private final ProjectConnectionService projectConnectionService;
+    private final ProjectsService projectsService;
+    private final ProjectAttachmentsService projectAttachmentsService;
+    private Optional<Projects> projects;
+    private AttachmentGrid attachmentGrid;
+    private List<ProjectAttachmentsDTO> listOfProjectAttachments;
     private final BackendService backendService;
     private Button uploadBtn;
     private String actualsTableName;
@@ -67,14 +69,12 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
     private String dbPassword;
     private String agentName;
     Article article = new Article();
-
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
     Div textArea = new Div();
     // Div message = new Div();
     UI ui=UI.getCurrent();
     MemoryBuffer memoryBuffer = new MemoryBuffer();
     Upload singleFileUpload = new Upload(memoryBuffer);
-
     InputStream fileData_Fact;
     InputStream fileData_Actuals;
     InputStream fileData_Plan;
@@ -127,11 +127,13 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
     //Div htmlDivToDO;
     //CheckboxGroup<String> TodoList;
 
-    public Tech_KPIView(JdbcTemplate jdbcTemplate, ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, BackendService backendService, AuthenticatedUser authenticatedUser) {
+    public Tech_KPIView(JdbcTemplate jdbcTemplate, ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, BackendService backendService, AuthenticatedUser authenticatedUser,  ProjectsService projectsService, ProjectAttachmentsService projectAttachmentsService) {
         this.jdbcTemplate = jdbcTemplate;
         this.projectConnectionService = projectConnectionService;
         this.backendService = backendService;
         this.authenticatedUser = authenticatedUser;
+        this.projectsService = projectsService;
+        this.projectAttachmentsService = projectAttachmentsService;
 
         uploadBtn = new Button("Upload");
         uploadBtn.setEnabled(false);
@@ -240,12 +242,8 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
     }
 
     private Component getAttachmentTab() {
-        VerticalLayout content = new VerticalLayout();
-        H1 h1=new H1();
-        h1.add("Attachments...");
-
-        content.add(h1);
-        return content;
+        attachmentGrid = new AttachmentGrid(projectsService, projectAttachmentsService);
+        return attachmentGrid.getProjectAttachements();
     }
 
     private Component getDescriptionTab() {
@@ -350,6 +348,15 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
     public void beforeEnter(BeforeEnterEvent event) {
         RouteParameters parameters = event.getRouteParameters();
         projectId = Integer.parseInt(parameters.get("project_Id").orElse(null));
+        projects = projectsService.findById(projectId);
+        projects.ifPresent(value -> listOfProjectAttachments = projectsService.getProjectAttachmentsWithoutFileContent(value));
+
+        updateAttachmentGrid(listOfProjectAttachments);
+    }
+
+    private void updateAttachmentGrid(List<ProjectAttachmentsDTO> projectAttachmentsDTOS) {
+        attachmentGrid.setItems(projectAttachmentsDTOS);
+        attachmentGrid.setProjectId(projectId);
     }
 
     private void setProjectParameterGrid(List<ProjectParameter> listOfProjectParameters) {
