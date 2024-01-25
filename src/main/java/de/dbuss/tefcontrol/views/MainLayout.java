@@ -55,6 +55,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.vaadin.lineawesome.LineAwesomeIcon;
 import org.vaadin.tatu.Tree;
 
@@ -80,7 +84,7 @@ public class MainLayout extends AppLayout {
 
     private static final Logger logInfo = LoggerFactory.getLogger(MainLayout.class);
     public static String userName;
-    public static Set<Role> userRole;
+    public static boolean isAdmin;
     private LoginView loginView;
 
     @Value("${pit.value}")
@@ -121,7 +125,7 @@ public class MainLayout extends AppLayout {
         addDrawerContent();
         addHeaderContent();
      //   createHeader();
-
+        isAdmin = checkAdminRole();
         logService.addLogMessage(LogService.INFO, "Ending application in MainLayout");
     }
 
@@ -193,7 +197,6 @@ public class MainLayout extends AppLayout {
         if (maybeUser.isPresent()) {
             User user = maybeUser.get();
             userName = user.getUsername();
-            userRole = user.getRoles();
             projectsService.setUser(user);
         }
 
@@ -371,4 +374,17 @@ public class MainLayout extends AppLayout {
         //return title == null ? "" : title.value();
         return title == null ? "" : title;
     }
+
+    public static boolean checkAdminRole() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication !=  null  && !(authentication instanceof AnonymousAuthenticationToken)) {
+            Object principal = authentication.getPrincipal();
+            if (principal instanceof UserDetails) {
+                UserDetails userDetails = (UserDetails) principal;
+                return userDetails.getAuthorities().stream().anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
+            }
+        }
+        return false;
+    }
+
 }

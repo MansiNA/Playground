@@ -2,7 +2,6 @@ package de.dbuss.tefcontrol.data.modules.inputpbicomments.view;
 
 import com.vaadin.flow.component.*;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.crud.BinderCrudEditor;
 import com.vaadin.flow.component.crud.Crud;
 import com.vaadin.flow.component.crud.CrudEditor;
@@ -11,34 +10,26 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Article;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.icon.Icon;
-import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.progressbar.ProgressBar;
 import com.vaadin.flow.component.tabs.TabSheet;
-import com.vaadin.flow.component.tabs.TabSheetVariant;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.provider.*;
 import com.vaadin.flow.router.*;
+import de.dbuss.tefcontrol.components.DefaultUtils;
 import de.dbuss.tefcontrol.components.QS_Callback;
 import de.dbuss.tefcontrol.components.QS_Grid;
-import de.dbuss.tefcontrol.data.Role;
+import de.dbuss.tefcontrol.data.dto.ProjectAttachmentsDTO;
 import de.dbuss.tefcontrol.data.entity.*;
-import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.OutlookMGSR;
-import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.Financials;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.GenericComments;
-import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.Subscriber;
-import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.UnitsDeepDive;
-import de.dbuss.tefcontrol.data.modules.techkpi.view.Tech_KPIView;
-import de.dbuss.tefcontrol.data.service.BackendService;
-import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
-import de.dbuss.tefcontrol.data.service.ProjectParameterService;
+import de.dbuss.tefcontrol.data.service.*;
 import de.dbuss.tefcontrol.dataprovider.GenericDataProvider;
 import de.dbuss.tefcontrol.security.AuthenticatedUser;
 import de.dbuss.tefcontrol.views.MainLayout;
@@ -47,9 +38,7 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.springframework.jdbc.core.JdbcTemplate;
 
-import javax.sql.DataSource;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
@@ -58,14 +47,19 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
-import static com.vaadin.flow.component.button.ButtonVariant.LUMO_TERTIARY_INLINE;
-
 
 @PageTitle("Generic Comments")
 @Route(value = "Generic_Comments/:project_Id", layout = MainLayout.class)
 @RolesAllowed({"ADMIN", "MAPPING", "FLIP"})
 public class GenericCommentsView extends VerticalLayout implements BeforeEnterObserver {
     private final ProjectConnectionService projectConnectionService;
+    private final BackendService backendService;
+    private final ProjectsService projectsService;
+    private final ProjectAttachmentsService projectAttachmentsService;
+    private Optional<Projects> projects;
+    private DefaultUtils defaultUtils;
+    private List<ProjectAttachmentsDTO> listOfProjectAttachments;
+
     MemoryBuffer memoryBuffer = new MemoryBuffer();
     Upload singleFileUpload = new Upload(memoryBuffer);
     private List<List<GenericComments>> listOfAllSheets = new ArrayList<>();
@@ -95,11 +89,13 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
     private Boolean isVisible = false;
     Grid<ProjectParameter> parameterGrid = new Grid<>(ProjectParameter.class, false);
 
-    public GenericCommentsView(AuthenticatedUser authenticatedUser, ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, BackendService backendService) {
+    public GenericCommentsView(AuthenticatedUser authenticatedUser, ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, BackendService backendService, ProjectsService projectsService, ProjectAttachmentsService projectAttachmentsService) {
 
         this.projectConnectionService = projectConnectionService;
-        this.authenticatedUser=authenticatedUser;
-
+        this.authenticatedUser = authenticatedUser;
+        this.backendService = backendService;
+        this.projectsService = projectsService;
+        this.projectAttachmentsService = projectAttachmentsService;
 
         uploadBtn = new Button("Upload");
         uploadBtn.setEnabled(false);
@@ -140,16 +136,87 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
         dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
 
         setProjectParameterGrid(filteredProjectParameters);
+        defaultUtils = new DefaultUtils(projectsService, projectAttachmentsService);
 
         //Componente QS-Grid:
         qsGrid = new QS_Grid(projectConnectionService, backendService);
 
-        HorizontalLayout hl = new HorizontalLayout();
-        hl.setAlignItems(Alignment.BASELINE);
-        // hl.add(singleFileUpload, saveButton, databaseDetail, progressBar);
-        hl.add(singleFileUpload, uploadBtn, qsBtn, qsGrid);
-        add(hl, parameterGrid);
-        add(progressBar);
+        HorizontalLayout vl = new HorizontalLayout();
+        vl.add(getTabsheet());
+        vl.setHeightFull();
+        vl.setSizeFull();
+
+        setHeightFull();
+        setSizeFull();
+
+        add(vl,parameterGrid);
+
+        parameterGrid.setVisible(false);
+
+        if(MainLayout.isAdmin) {
+            UI.getCurrent().addShortcutListener(
+                    () -> {
+                        isVisible = !isVisible;
+                        parameterGrid.setVisible(isVisible);
+                    },
+                    Key.KEY_I, KeyModifier.ALT);
+        }
+    }
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+        RouteParameters parameters = event.getRouteParameters();
+        projectId = Integer.parseInt(parameters.get("project_Id").orElse(null));
+        projects = projectsService.findById(projectId);
+        projects.ifPresent(value -> listOfProjectAttachments = projectsService.getProjectAttachmentsWithoutFileContent(value));
+
+        updateDescription();
+        updateAttachmentGrid(listOfProjectAttachments);
+    }
+
+    private TabSheet getTabsheet() {
+
+        //log.info("Starting getTabsheet() for Tabsheet");
+        TabSheet tabSheet = new TabSheet();
+
+        tabSheet.add("Upload", getUpladTab());
+        tabSheet.add("Description", getDescriptionTab());
+        tabSheet.add("Attachments", getAttachmentTab());
+
+        tabSheet.setSizeFull();
+        tabSheet.setHeightFull();
+        //log.info("Ending getTabsheet() for Tabsheet");
+
+        return tabSheet;
+    }
+
+    private Component getAttachmentTab() {
+        return defaultUtils.getProjectAttachements();
+    }
+
+    private Component getDescriptionTab() {
+        return defaultUtils.getProjectDescription();
+    }
+    private void updateDescription() {
+        defaultUtils.setProjectId(projectId);
+        defaultUtils.setDescription();
+    }
+    private void updateAttachmentGrid(List<ProjectAttachmentsDTO> projectAttachmentsDTOS) {
+        defaultUtils.setProjectId(projectId);
+        defaultUtils.setAttachmentGridItems(projectAttachmentsDTOS);
+    }
+    private Component getUpladTab() {
+        VerticalLayout content = new VerticalLayout();
+
+        content.add(textArea);
+        setupUploader();
+
+        content.setSizeFull();
+        content.setHeightFull();
+
+        HorizontalLayout hl=new HorizontalLayout(singleFileUpload, uploadBtn, qsBtn, qsGrid);
+        content.add(hl, progressBar);
+        content.add(getGenericCommentsGrid());
+
         uploadBtn.addClickListener(e ->{
             save2db();
             //qsBtn.setEnabled(true);
@@ -161,37 +228,12 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
             qsGrid = new QS_Grid(projectConnectionService, backendService);
             hl.add(qsGrid);
             CallbackHandler callbackHandler = new CallbackHandler();
-
-            /*Map.Entry<String, Integer> lastEntry = projectUploadIdMap.entrySet().stream()
-                    .reduce((first, second) -> second)
-                    .orElse(null);
-            int upload_id = lastEntry.getValue();*/
-
             qsGrid.createDialog(callbackHandler, projectId, upload_id);
-            //   projectUploadIdMap = new HashMap<>();
-            //    }
+
             qsGrid.showDialog(true);
         });
 
-        add(textArea);
-        setupUploader();
-        add(getGenericCommentsGrid());
-        setHeightFull();
-
-        parameterGrid.setVisible(false);
-
-        UI.getCurrent().addShortcutListener(
-                () -> {
-                    isVisible=!isVisible;
-                    parameterGrid.setVisible(isVisible);
-                },
-                Key.KEY_I, KeyModifier.ALT);
-
-    }
-    @Override
-    public void beforeEnter(BeforeEnterEvent event) {
-        RouteParameters parameters = event.getRouteParameters();
-        projectId = Integer.parseInt(parameters.get("project_Id").orElse(null));
+        return content;
     }
 
     private void setProjectParameterGrid(List<ProjectParameter> listOfProjectParameters) {
@@ -359,7 +401,7 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
             crudGenericComments.getDeleteButton().getElement().getStyle().set("display", "none");
         });
         crudGenericComments.setHeightFull();
-        content.setHeightFull();
+        content.setHeight("340px");
         return content;
     }
 

@@ -10,7 +10,6 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Article;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -20,16 +19,17 @@ import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.*;
+import com.wontlost.ckeditor.Config;
+import com.wontlost.ckeditor.VaadinCKEditor;
+import com.wontlost.ckeditor.VaadinCKEditorBuilder;
+import de.dbuss.tefcontrol.components.DefaultUtils;
 import de.dbuss.tefcontrol.components.QS_Callback;
 import de.dbuss.tefcontrol.components.QS_Grid;
-import de.dbuss.tefcontrol.data.entity.Constants;
-import de.dbuss.tefcontrol.data.entity.ProjectParameter;
-import de.dbuss.tefcontrol.data.entity.ProjectUpload;
-import de.dbuss.tefcontrol.data.entity.User;
+import de.dbuss.tefcontrol.data.Role;
+import de.dbuss.tefcontrol.data.dto.ProjectAttachmentsDTO;
+import de.dbuss.tefcontrol.data.entity.*;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.OutlookMGSR;
-import de.dbuss.tefcontrol.data.service.BackendService;
-import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
-import de.dbuss.tefcontrol.data.service.ProjectParameterService;
+import de.dbuss.tefcontrol.data.service.*;
 import de.dbuss.tefcontrol.dataprovider.GenericDataProvider;
 import de.dbuss.tefcontrol.security.AuthenticatedUser;
 import de.dbuss.tefcontrol.views.MainLayout;
@@ -38,14 +38,12 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.util.concurrent.ListenableFuture;
 
-import javax.sql.DataSource;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
@@ -53,13 +51,13 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.vaadin.flow.component.button.ButtonVariant.LUMO_TERTIARY_INLINE;
-
 @Route(value = "B2P_Outlook_FIN/:project_Id", layout = MainLayout.class)
 @RolesAllowed({"FLIP", "ADMIN"})
 public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObserver {
 
     private final ProjectConnectionService projectConnectionService;
+    private final ProjectsService projectsService;
+    private final ProjectAttachmentsService projectAttachmentsService;
     private MemoryBuffer memoryBuffer = new MemoryBuffer();
     private Upload singleFileUpload = new Upload(memoryBuffer);
     private List<List<OutlookMGSR>> listOfAllSheets = new ArrayList<>();
@@ -67,7 +65,6 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
     private Grid<OutlookMGSR> gridMGSR = new Grid<>(OutlookMGSR.class, false);
     private String tableName;
     int sheetNr = 0;
-
     private String agentName;
     private String dbUrl;
     private String dbUser;
@@ -76,6 +73,9 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
     private String mimeType = "";
     private Div textArea = new Div();
     private int projectId;
+    private Optional<Projects> projects;
+    private DefaultUtils defaultUtils;
+    private List<ProjectAttachmentsDTO> listOfProjectAttachments;
     private QS_Grid qsGrid;
     private Button qsBtn;
     private Button uploadBtn;
@@ -91,11 +91,13 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
     private Boolean isVisible = false;
     Grid<ProjectParameter> parameterGrid = new Grid<>(ProjectParameter.class, false);
 
-    public B2POutlookFINView(ProjectParameterService projectParameterService, ProjectConnectionService projectConnectionService, BackendService backendService,  AuthenticatedUser authenticatedUser) {
+    public B2POutlookFINView(ProjectParameterService projectParameterService, ProjectConnectionService projectConnectionService, BackendService backendService,  AuthenticatedUser authenticatedUser, ProjectsService projectsService, ProjectAttachmentsService projectAttachmentsService) {
 
         this.backendService = backendService;
         this.projectConnectionService = projectConnectionService;
         this.authenticatedUser=authenticatedUser;
+        this.projectsService = projectsService;
+        this.projectAttachmentsService = projectAttachmentsService;
 
         uploadBtn = new Button("Upload");
         uploadBtn.setEnabled(false);
@@ -132,20 +134,10 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
         dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
 
         setProjectParameterGrid(filteredProjectParameters);
+        defaultUtils = new DefaultUtils(projectsService, projectAttachmentsService);
 
         //Componente QS-Grid:
         qsGrid = new QS_Grid(projectConnectionService, backendService);
-
-        HorizontalLayout hl = new HorizontalLayout();
-        hl.setAlignItems(Alignment.BASELINE);
-        // hl.add(singleFileUpload,saveButton, databaseDetail);
-        hl.add(singleFileUpload,uploadBtn, qsBtn, qsGrid);
-        //add(hl, parameterGrid);
-
-        uploadBtn.addClickListener(e ->{
-            save2db();
-            qsBtn.setEnabled(true);
-        });
 
         HorizontalLayout vl = new HorizontalLayout();
         vl.add(getTabsheet());
@@ -161,7 +153,7 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
         parameterGrid.setVisible(false);
         System.out.println("Is admin: " + checkAdminRole());
 
-        if(checkAdminRole()) {
+        if(MainLayout.isAdmin) {
             UI.getCurrent().addShortcutListener(
                     () -> start_thread(),
                     Key.KEY_V, KeyModifier.ALT);
@@ -178,6 +170,19 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
                     Key.KEY_I, KeyModifier.ALT);
 
         }
+    }
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+        RouteParameters parameters = event.getRouteParameters();
+        projectId = Integer.parseInt(parameters.get("project_Id").orElse(null));
+
+        projects = projectsService.findById(projectId);
+
+        projects.ifPresent(value -> listOfProjectAttachments = projectsService.getProjectAttachmentsWithoutFileContent(value));
+
+        updateDescription();
+        updateAttachmentGrid(listOfProjectAttachments);
     }
 
     private TabSheet getTabsheet() {
@@ -197,23 +202,20 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
     }
 
     private Component getAttachmentTab() {
-        VerticalLayout content = new VerticalLayout();
-        H1 h1=new H1();
-        h1.add("Attachments...");
-
-        content.add(h1);
-        return content;
+        return defaultUtils.getProjectAttachements();
     }
 
     private Component getDescriptionTab() {
-        VerticalLayout content = new VerticalLayout();
-        H1 h1=new H1();
-        h1.add("Description...");
-
-        content.add(h1);
-        return content;
+        return defaultUtils.getProjectDescription();
     }
-
+    private void updateDescription() {
+        defaultUtils.setProjectId(projectId);
+        defaultUtils.setDescription();
+    }
+    private void updateAttachmentGrid(List<ProjectAttachmentsDTO> projectAttachmentsDTOS) {
+        defaultUtils.setProjectId(projectId);
+        defaultUtils.setAttachmentGridItems(projectAttachmentsDTOS);
+    }
     private Component getUpladTab() {
         VerticalLayout content = new VerticalLayout();
 
@@ -225,6 +227,11 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
         HorizontalLayout hl=new HorizontalLayout(singleFileUpload,uploadBtn, qsBtn, qsGrid);
         content.add(hl);
         content.add(getMGSRGrid());
+
+        uploadBtn.addClickListener(e ->{
+            save2db();
+            qsBtn.setEnabled(true);
+        });
 
         qsBtn.addClickListener(e ->{
             //   if (qsGrid.projectId != projectId) {
@@ -241,8 +248,7 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
     }
 
 
-    private boolean
-    checkAdminRole() {
+    private boolean checkAdminRole() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication !=  null  && !(authentication instanceof AnonymousAuthenticationToken)) {
             Object principal = authentication.getPrincipal();
@@ -252,12 +258,6 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
             }
         }
         return false;
-    }
-
-    @Override
-    public void beforeEnter(BeforeEnterEvent event) {
-        RouteParameters parameters = event.getRouteParameters();
-        projectId = Integer.parseInt(parameters.get("project_Id").orElse(null));
     }
 
     private void setProjectParameterGrid(List<ProjectParameter> listOfProjectParameters) {

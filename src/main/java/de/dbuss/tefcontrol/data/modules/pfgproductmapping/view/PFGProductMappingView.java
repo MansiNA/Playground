@@ -143,13 +143,15 @@ public class PFGProductMappingView extends VerticalLayout {
 
         parameterGrid.setVisible(false);
 
-        UI.getCurrent().addShortcutListener(
-                () -> {
-                    isVisible=!isVisible;
-                    parameterGrid.setVisible(isVisible);
-                },
-                Key.KEY_I, KeyModifier.ALT);
+        if(MainLayout.isAdmin) {
 
+            UI.getCurrent().addShortcutListener(
+                    () -> {
+                        isVisible = !isVisible;
+                        parameterGrid.setVisible(isVisible);
+                    },
+                    Key.KEY_I, KeyModifier.ALT);
+        }
     }
 
     private void setProjectParameterGrid(List<ProjectParameter> listOfProjectParameters) {

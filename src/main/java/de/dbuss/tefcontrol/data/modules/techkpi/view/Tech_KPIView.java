@@ -1,8 +1,6 @@
 package de.dbuss.tefcontrol.data.modules.techkpi.view;
 
 import com.vaadin.flow.component.*;
-import com.vaadin.flow.component.accordion.Accordion;
-import com.vaadin.flow.component.accordion.AccordionPanel;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.details.Details;
 import com.vaadin.flow.component.grid.Grid;
@@ -20,15 +18,12 @@ import com.vaadin.flow.component.tabs.TabSheetVariant;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.router.*;
+import de.dbuss.tefcontrol.components.DefaultUtils;
 import de.dbuss.tefcontrol.components.QS_Callback;
 import de.dbuss.tefcontrol.components.QS_Grid;
-import de.dbuss.tefcontrol.data.entity.Constants;
-import de.dbuss.tefcontrol.data.entity.ProjectParameter;
-import de.dbuss.tefcontrol.data.entity.ProjectUpload;
-import de.dbuss.tefcontrol.data.entity.User;
-import de.dbuss.tefcontrol.data.service.BackendService;
-import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
-import de.dbuss.tefcontrol.data.service.ProjectParameterService;
+import de.dbuss.tefcontrol.data.dto.ProjectAttachmentsDTO;
+import de.dbuss.tefcontrol.data.entity.*;
+import de.dbuss.tefcontrol.data.service.*;
 import de.dbuss.tefcontrol.security.AuthenticatedUser;
 import de.dbuss.tefcontrol.views.MainLayout;
 import jakarta.annotation.security.RolesAllowed;
@@ -38,15 +33,12 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-import javax.sql.DataSource;
 import java.io.InputStream;
 import java.util.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
-
-import static com.vaadin.flow.component.button.ButtonVariant.LUMO_TERTIARY_INLINE;
 
 
 @PageTitle("Tech KPI | TEF-Control")
@@ -56,6 +48,11 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
     private JdbcTemplate jdbcTemplate;
     private final ProjectConnectionService projectConnectionService;
+    private final ProjectsService projectsService;
+    private final ProjectAttachmentsService projectAttachmentsService;
+    private Optional<Projects> projects;
+    private DefaultUtils defaultUtils;
+    private List<ProjectAttachmentsDTO> listOfProjectAttachments;
     private final BackendService backendService;
     private Button uploadBtn;
     private String actualsTableName;
@@ -66,14 +63,12 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
     private String dbPassword;
     private String agentName;
     Article article = new Article();
-
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
     Div textArea = new Div();
     // Div message = new Div();
     UI ui=UI.getCurrent();
     MemoryBuffer memoryBuffer = new MemoryBuffer();
     Upload singleFileUpload = new Upload(memoryBuffer);
-
     InputStream fileData_Fact;
     InputStream fileData_Actuals;
     InputStream fileData_Plan;
@@ -126,11 +121,13 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
     //Div htmlDivToDO;
     //CheckboxGroup<String> TodoList;
 
-    public Tech_KPIView(JdbcTemplate jdbcTemplate, ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, BackendService backendService, AuthenticatedUser authenticatedUser) {
+    public Tech_KPIView(JdbcTemplate jdbcTemplate, ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, BackendService backendService, AuthenticatedUser authenticatedUser,  ProjectsService projectsService, ProjectAttachmentsService projectAttachmentsService) {
         this.jdbcTemplate = jdbcTemplate;
         this.projectConnectionService = projectConnectionService;
         this.backendService = backendService;
         this.authenticatedUser = authenticatedUser;
+        this.projectsService = projectsService;
+        this.projectAttachmentsService = projectAttachmentsService;
 
         uploadBtn = new Button("Upload");
         uploadBtn.setEnabled(false);
@@ -141,69 +138,6 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
         progressBarPlan.setVisible(false);
         progressBarActuals.setVisible(false);
         progressBarFact.setVisible(false);
-
-   //     description.add("Tool für upload der KPI-Excel Tabelle.\n Bitte als 1. Datei hochladen.");
-
-        setupKPIActualsGrid();
-        setupKPIFactGrid();
-      //  setupKPIPlanGrid();
-        //setupQSGrid();
-
-        setupUploader();
-
-        // message.setText("1. Datei hochladen.");
-
-
-    //    TodoList = new CheckboxGroup<>();
-    //    TodoList.setLabel("ToDo");
-    //    TodoList.setItems("KPI_DB.xlsx hochladen");
-
-     /*   TodoList.addValueChangeListener(event -> {
-            String selectedItems = event.getValue().stream()
-                    .collect(Collectors.joining(", "));
-            //   System.out.println("Ausgewählte: " + selectedItems);
-
-            if (selectedItems.contains("KPI_DB.xlsx hochladen"))
-            {
-                //    Notification notification = Notification.show("Bitte zuerst KPI_DB.xlsx hochladen!",5000, Notification.Position.MIDDLE);
-                //    notification.addThemeVariants(NotificationVariant.LUMO_WARNING);
-                TodoList.deselect("KPI_DB.xlsx hochladen");
-            }
-
-
-            if (selectedItems.contains("QS bestätigen"))
-            {
-                saveButton.setEnabled(true);
-
-            }
-
-        });*/
-
-
-   //     TodoList.addThemeVariants(CheckboxGroupVariant.LUMO_VERTICAL);
-
-
-
-        Details details = new Details("Import Details", textArea);
-        details.setOpened(false);
-
-
-        HorizontalLayout hl = new HorizontalLayout();
-        hl.setAlignItems(Alignment.CENTER);
-
-        Div htmlDiv = new Div();
-        htmlDiv.getElement().setProperty("innerHTML", "<h2>Import KPI Excel-File</h2><p>Mit dieser Seite lässt sich die KPI_DB.xlsx " +
-                "Datei direkt in die Datenbank einlesen.</br>Die Daten der Blätter \"<b>KPI_Actuals</b>\" und \"<b>KPI_Fact</b>\" werden automatisch in die Stage Tabellen <ul><li>Stage_Tech_KPI.KPI_Actuals</li><li>Stage_Tech_KPI.KPI_Fact</li></ul>geladen. " +
-                "Dazu einfach die Datei auswählen oder per drag&drop hochladen. </br>Nach einer entsprechenden QS-Rückmeldung bzgl. Datenqualität, kann die weitere Verarbeitung per Button \"Freigabe\" erfolgen.");
-
-        // Div zur Ansicht hinzufügen
-        add(htmlDiv);
-
-   //     htmlDivToDO = new Div();
-        // htmlDivQS.getElement().setProperty("innerHTML", "<b style=\"color:blue;\">QS-Übersicht:</b>");
-   //     htmlDivToDO.getElement().setProperty("innerHTML", "<h4><u>Aktuelles ToDo:</u> <b>Bitte die Datei KPI-DB.xlsx hochladen!</b></h4>");
-
-   //     add(TodoList);
 
         List<ProjectParameter> listOfProjectParameters = projectParameterService.findAll();
         List<ProjectParameter> filteredProjectParameters = listOfProjectParameters.stream()
@@ -239,59 +173,10 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
         // Text databaseDetail = new Text("Connected to: "+ dbServer+ ", Database: " + dbName + " AgentJob: " + agentName);
 
         setProjectParameterGrid(filteredProjectParameters);
+        defaultUtils = new DefaultUtils(projectsService, projectAttachmentsService);
 
         //Componente QS-Grid:
         qsGrid = new QS_Grid(projectConnectionService, backendService);
-
-        hl.setAlignItems(Alignment.BASELINE);
-        hl.add(singleFileUpload, uploadBtn, qsBtn, qsGrid);
-
-        uploadBtn.addClickListener(e->{
-
-            ui.setPollInterval(500);
-
-            ProjectUpload projectUpload = new ProjectUpload();
-            projectUpload.setFileName(fileName);
-            //projectUpload.setUserName(MainLayout.userName);
-            Optional<User> maybeUser = authenticatedUser.get();
-            if (maybeUser.isPresent()) {
-                User user = maybeUser.get();
-                projectUpload.setUserName(user.getUsername());
-            }
-            projectUpload.setModulName("Tech_KPI");
-
-            projectConnectionService.getJdbcConnection(dbUrl, dbUser, dbPassword); // Set Connection to target DB
-            upload_id = projectConnectionService.saveUploadedGenericFileData(projectUpload);
-
-            projectUpload.setUploadId(upload_id);
-
-            System.out.println("Upload_ID: " + upload_id);
-
-          //  savePlanEntities();
-            saveActualsEntities();
-            saveFactEntities();
-
-        });
-
-        qsBtn.addClickListener(e ->{
-         //   if (qsGrid.projectId != projectId) {
-            hl.remove(qsGrid);
-            qsGrid = new QS_Grid(projectConnectionService, backendService);
-            hl.add(qsGrid);
-            CallbackHandler callbackHandler = new CallbackHandler();
-            qsGrid.createDialog(callbackHandler, projectId, upload_id);
-         //   }
-            qsGrid.showDialog(true);
-        });
-
-        //  h3_Fact.add("Fact 0 rows");
-        //  h3_Actuals.add("Actuals 0 rows");
-        //  h3_Plan.add("Plan 0 rows");
-
-        //add(hl, progressBarFact, progressBarPlan,progressBarActuals, details, h3_Fact, gridFact, h3_Actuals, gridActuals, h3_Plan, gridPlan );
-        add(hl, parameterGrid, progressBarFact, progressBarPlan, progressBarActuals);
-
-        add(details);
 
 /*
         accordion = new Accordion();
@@ -314,22 +199,130 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
         add(accordion);
 */
 
-        add(getTabsheet());
+        HorizontalLayout hl = new HorizontalLayout();
+        hl.add(getTabsheet());
+        hl.setHeightFull();
+        hl.setSizeFull();
 
         setHeightFull();
+        setSizeFull();
+        getStyle().set("overflow", "auto");
+        add(hl,parameterGrid);
 
         parameterGrid.setVisible(false);
 
-        UI.getCurrent().addShortcutListener(
-                () -> {
-                    isVisible=!isVisible;
-                    parameterGrid.setVisible(isVisible);
-                },
-                Key.KEY_I, KeyModifier.ALT);
+        if(MainLayout.isAdmin) {
+            UI.getCurrent().addShortcutListener(
+                    () -> {
+                        isVisible = !isVisible;
+                        parameterGrid.setVisible(isVisible);
+                    },
+                    Key.KEY_I, KeyModifier.ALT);
+        }
+    }
+    private TabSheet getTabsheet() {
 
+        //log.info("Starting getTabsheet() for Tabsheet");
+        TabSheet tabSheet = new TabSheet();
+
+        tabSheet.add("Upload", getUpladTab());
+        tabSheet.add("Description", getDescriptionTab());
+        tabSheet.add("Attachments", getAttachmentTab());
+
+        tabSheet.setSizeFull();
+        tabSheet.setHeightFull();
+        //log.info("Ending getTabsheet() for Tabsheet");
+
+        return tabSheet;
     }
 
-    private TabSheet getTabsheet() {
+    private Component getAttachmentTab() {
+        return defaultUtils.getProjectAttachements();
+    }
+
+    private Component getDescriptionTab() {
+        return defaultUtils.getProjectDescription();
+    }
+    private void updateDescription() {
+        defaultUtils.setProjectId(projectId);
+        defaultUtils.setDescription();
+    }
+    private void updateAttachmentGrid(List<ProjectAttachmentsDTO> projectAttachmentsDTOS) {
+        defaultUtils.setProjectId(projectId);
+        defaultUtils.setAttachmentGridItems(projectAttachmentsDTOS);
+    }
+
+    private Component getUpladTab() {
+        VerticalLayout content = new VerticalLayout();
+
+        content.setSizeFull();
+        content.setHeightFull();
+        content.getStyle().set("overflow", "auto");
+        setupKPIActualsGrid();
+        setupKPIFactGrid();
+        //  setupKPIPlanGrid();
+        //setupQSGrid();
+
+        setupUploader();
+
+        Details details = new Details("Import Details", textArea);
+        details.setOpened(false);
+
+        Div htmlDiv = new Div();
+        htmlDiv.getElement().setProperty("innerHTML", "<h2>Import KPI Excel-File</h2><p>Mit dieser Seite lässt sich die KPI_DB.xlsx " +
+                "Datei direkt in die Datenbank einlesen.</br>Die Daten der Blätter \"<b>KPI_Actuals</b>\" und \"<b>KPI_Fact</b>\" werden automatisch in die Stage Tabellen <ul><li>Stage_Tech_KPI.KPI_Actuals</li><li>Stage_Tech_KPI.KPI_Fact</li></ul>geladen. " +
+                "Dazu einfach die Datei auswählen oder per drag&drop hochladen. </br>Nach einer entsprechenden QS-Rückmeldung bzgl. Datenqualität, kann die weitere Verarbeitung per Button \"Freigabe\" erfolgen.");
+
+        // Div zur Ansicht hinzufügen
+        content.add(htmlDiv);
+
+        HorizontalLayout hl=new HorizontalLayout(singleFileUpload, uploadBtn, qsBtn, qsGrid);
+        content.add(hl, parameterGrid, progressBarFact, progressBarPlan, progressBarActuals);
+        content.add(details);
+        content.add(getFileTabsheet());
+
+        uploadBtn.addClickListener(e->{
+
+            ui.setPollInterval(500);
+
+            ProjectUpload projectUpload = new ProjectUpload();
+            projectUpload.setFileName(fileName);
+            //projectUpload.setUserName(MainLayout.userName);
+            Optional<User> maybeUser = authenticatedUser.get();
+            if (maybeUser.isPresent()) {
+                User user = maybeUser.get();
+                projectUpload.setUserName(user.getUsername());
+            }
+            projectUpload.setModulName("Tech_KPI");
+
+            projectConnectionService.getJdbcConnection(dbUrl, dbUser, dbPassword); // Set Connection to target DB
+            upload_id = projectConnectionService.saveUploadedGenericFileData(projectUpload);
+
+            projectUpload.setUploadId(upload_id);
+
+            System.out.println("Upload_ID: " + upload_id);
+
+            //  savePlanEntities();
+            saveActualsEntities();
+            saveFactEntities();
+
+        });
+
+        qsBtn.addClickListener(e ->{
+            //   if (qsGrid.projectId != projectId) {
+            hl.remove(qsGrid);
+            qsGrid = new QS_Grid(projectConnectionService, backendService);
+            hl.add(qsGrid);
+            CallbackHandler callbackHandler = new CallbackHandler();
+            qsGrid.createDialog(callbackHandler, projectId, upload_id);
+            //   }
+            qsGrid.showDialog(true);
+        });
+
+        return content;
+    }
+
+    private TabSheet getFileTabsheet() {
 
         Component getActuals=gridActuals;
         Component getFact=gridFact;
@@ -352,6 +345,11 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
     public void beforeEnter(BeforeEnterEvent event) {
         RouteParameters parameters = event.getRouteParameters();
         projectId = Integer.parseInt(parameters.get("project_Id").orElse(null));
+        projects = projectsService.findById(projectId);
+        projects.ifPresent(value -> listOfProjectAttachments = projectsService.getProjectAttachmentsWithoutFileContent(value));
+
+        updateDescription();
+        updateAttachmentGrid(listOfProjectAttachments);
     }
 
     private void setProjectParameterGrid(List<ProjectParameter> listOfProjectParameters) {
