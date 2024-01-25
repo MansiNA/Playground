@@ -2,7 +2,6 @@ package de.dbuss.tefcontrol.data.modules.inputpbicomments.view;
 
 import com.vaadin.flow.component.*;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.crud.BinderCrudEditor;
 import com.vaadin.flow.component.crud.Crud;
 import com.vaadin.flow.component.crud.CrudEditor;
@@ -12,34 +11,24 @@ import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Article;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H1;
-import com.vaadin.flow.component.icon.Icon;
-import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.progressbar.ProgressBar;
 import com.vaadin.flow.component.tabs.TabSheet;
-import com.vaadin.flow.component.tabs.TabSheetVariant;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.provider.*;
 import com.vaadin.flow.router.*;
-import de.dbuss.tefcontrol.components.AttachmentGrid;
+import de.dbuss.tefcontrol.components.DefaultUtils;
 import de.dbuss.tefcontrol.components.QS_Callback;
 import de.dbuss.tefcontrol.components.QS_Grid;
-import de.dbuss.tefcontrol.data.Role;
 import de.dbuss.tefcontrol.data.dto.ProjectAttachmentsDTO;
 import de.dbuss.tefcontrol.data.entity.*;
-import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.OutlookMGSR;
-import de.dbuss.tefcontrol.data.modules.b2pOutlook.view.B2POutlookSUBView;
-import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.Financials;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.GenericComments;
-import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.Subscriber;
-import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.UnitsDeepDive;
-import de.dbuss.tefcontrol.data.modules.techkpi.view.Tech_KPIView;
 import de.dbuss.tefcontrol.data.service.*;
 import de.dbuss.tefcontrol.dataprovider.GenericDataProvider;
 import de.dbuss.tefcontrol.security.AuthenticatedUser;
@@ -49,9 +38,7 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.springframework.jdbc.core.JdbcTemplate;
 
-import javax.sql.DataSource;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
@@ -59,8 +46,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
-
-import static com.vaadin.flow.component.button.ButtonVariant.LUMO_TERTIARY_INLINE;
 
 
 @PageTitle("Generic Comments")
@@ -72,7 +57,7 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
     private final ProjectsService projectsService;
     private final ProjectAttachmentsService projectAttachmentsService;
     private Optional<Projects> projects;
-    private AttachmentGrid attachmentGrid;
+    private DefaultUtils defaultUtils;
     private List<ProjectAttachmentsDTO> listOfProjectAttachments;
 
     MemoryBuffer memoryBuffer = new MemoryBuffer();
@@ -151,6 +136,7 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
         dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
 
         setProjectParameterGrid(filteredProjectParameters);
+        defaultUtils = new DefaultUtils(projectsService, projectAttachmentsService);
 
         //Componente QS-Grid:
         qsGrid = new QS_Grid(projectConnectionService, backendService);
@@ -183,12 +169,8 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
         projects = projectsService.findById(projectId);
         projects.ifPresent(value -> listOfProjectAttachments = projectsService.getProjectAttachmentsWithoutFileContent(value));
 
+        updateDescription();
         updateAttachmentGrid(listOfProjectAttachments);
-    }
-
-    private void updateAttachmentGrid(List<ProjectAttachmentsDTO> projectAttachmentsDTOS) {
-        attachmentGrid.setItems(projectAttachmentsDTOS);
-        attachmentGrid.setProjectId(projectId);
     }
 
     private TabSheet getTabsheet() {
@@ -208,19 +190,20 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
     }
 
     private Component getAttachmentTab() {
-        attachmentGrid = new AttachmentGrid(projectsService, projectAttachmentsService);
-        return attachmentGrid.getProjectAttachements();
+        return defaultUtils.getProjectAttachements();
     }
 
     private Component getDescriptionTab() {
-        VerticalLayout content = new VerticalLayout();
-        H1 h1=new H1();
-        h1.add("Description...");
-
-        content.add(h1);
-        return content;
+        return defaultUtils.getProjectDescription();
     }
-
+    private void updateDescription() {
+        defaultUtils.setProjectId(projectId);
+        defaultUtils.setDescription();
+    }
+    private void updateAttachmentGrid(List<ProjectAttachmentsDTO> projectAttachmentsDTOS) {
+        defaultUtils.setProjectId(projectId);
+        defaultUtils.setAttachmentGridItems(projectAttachmentsDTOS);
+    }
     private Component getUpladTab() {
         VerticalLayout content = new VerticalLayout();
 

@@ -1,7 +1,6 @@
 package de.dbuss.tefcontrol.components;
 
 import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.ComponentUtil;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
@@ -21,33 +20,97 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MultiFileMemoryBuffer;
 import com.vaadin.flow.data.binder.Binder;
-import com.vaadin.flow.dom.ShadowRoot;
 import com.vaadin.flow.server.StreamResource;
+import com.wontlost.ckeditor.Config;
+import com.wontlost.ckeditor.VaadinCKEditor;
+import com.wontlost.ckeditor.VaadinCKEditorBuilder;
+import de.dbuss.tefcontrol.data.Role;
 import de.dbuss.tefcontrol.data.dto.ProjectAttachmentsDTO;
 import de.dbuss.tefcontrol.data.entity.ProjectAttachments;
 import de.dbuss.tefcontrol.data.entity.Projects;
+import de.dbuss.tefcontrol.data.entity.User;
 import de.dbuss.tefcontrol.data.service.*;
+import de.dbuss.tefcontrol.views.MainLayout;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
-public class AttachmentGrid extends VerticalLayout {
+public class DefaultUtils extends VerticalLayout {
 
     private final ProjectAttachmentsService projectAttachmentsService;
     private final ProjectsService projectsService;
-
+    private VaadinCKEditor editor;
     private Grid<ProjectAttachmentsDTO> attachmentGrid;
     private Optional<Projects> projects;
     private int projectId;
     private Anchor downloadLink;
     private UI ui;
 
-    public AttachmentGrid(ProjectsService projectsService, ProjectAttachmentsService projectAttachmentsService) {
+    public DefaultUtils(ProjectsService projectsService, ProjectAttachmentsService projectAttachmentsService) {
         this.projectsService = projectsService;
         this.projectAttachmentsService = projectAttachmentsService;
+    }
+
+    public Component getProjectDescription() {
+        Button saveBtn = new Button("save");
+        Button editBtn = new Button("edit");
+        saveBtn.setVisible(false);
+        editBtn.setVisible(true);
+
+        editBtn.setVisible(MainLayout.isAdmin);
+
+        VerticalLayout content = new VerticalLayout();
+
+        Config config = new Config();
+        config.setBalloonToolBar(com.wontlost.ckeditor.Constants.Toolbar.values());
+        config.setImage(new String[][]{},
+                "", new String[]{"full", "alignLeft", "alignCenter", "alignRight"},
+                new String[]{"imageTextAlternative", "|",
+                        "imageStyle:alignLeft",
+                        "imageStyle:full",
+                        "imageStyle:alignCenter",
+                        "imageStyle:alignRight"}, new String[]{});
+
+        editor = new VaadinCKEditorBuilder().with(builder -> {
+
+            builder.editorType = com.wontlost.ckeditor.Constants.EditorType.CLASSIC;
+            builder.width = "95%";
+            builder.readOnly = true;
+            builder.hideToolbar=true;
+            builder.config = config;
+        }).createVaadinCKEditor();
+
+        editor.setReadOnly(true);
+
+        saveBtn.addClickListener((event -> {
+            projects.get().setDescription(editor.getValue());
+            projectsService.update(projects.get());
+
+            editBtn.setVisible(true);
+            saveBtn.setVisible(false);
+            //editor.setReadOnly(true);
+            editor.setReadOnlyWithToolbarAction(!editor.isReadOnly());
+
+        }));
+
+        editBtn.addClickListener(e->{
+            editor.setReadOnlyWithToolbarAction(!editor.isReadOnly());
+            editBtn.setVisible(false);
+            saveBtn.setVisible(true);
+            //editor.setReadOnly(false);
+        });
+
+        content.add(editor,editBtn,saveBtn);
+
+        if(projects != null && projects.isPresent()) {
+            editor.setValue(projects.map(Projects::getDescription).orElse(""));
+        }
+        return content;
+
     }
 
     public VerticalLayout getProjectAttachements() {
@@ -225,7 +288,7 @@ public class AttachmentGrid extends VerticalLayout {
         return new BinderCrudEditor<>(editBinder, editFormLayout);
     }
 
-    public void setItems(List<ProjectAttachmentsDTO> projectAttachmentsDTOS) {
+    public void setAttachmentGridItems(List<ProjectAttachmentsDTO> projectAttachmentsDTOS) {
         attachmentGrid.setItems(projectAttachmentsDTOS);
     }
 
@@ -234,4 +297,7 @@ public class AttachmentGrid extends VerticalLayout {
         projects = projectsService.findById(projectId);
     }
 
+    public void setDescription() {
+        editor.setValue(projects.get().getDescription());
+    }
 }

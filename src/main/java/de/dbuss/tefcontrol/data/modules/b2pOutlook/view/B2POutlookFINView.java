@@ -5,16 +5,11 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.crud.BinderCrudEditor;
 import com.vaadin.flow.component.crud.Crud;
 import com.vaadin.flow.component.crud.CrudEditor;
-import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
-import com.vaadin.flow.component.grid.contextmenu.GridContextMenu;
-import com.vaadin.flow.component.grid.contextmenu.GridMenuItem;
-import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Article;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -22,14 +17,12 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
-import com.vaadin.flow.component.upload.receivers.MultiFileMemoryBuffer;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.*;
-import com.vaadin.flow.server.StreamResource;
 import com.wontlost.ckeditor.Config;
 import com.wontlost.ckeditor.VaadinCKEditor;
 import com.wontlost.ckeditor.VaadinCKEditorBuilder;
-import de.dbuss.tefcontrol.components.AttachmentGrid;
+import de.dbuss.tefcontrol.components.DefaultUtils;
 import de.dbuss.tefcontrol.components.QS_Callback;
 import de.dbuss.tefcontrol.components.QS_Grid;
 import de.dbuss.tefcontrol.data.Role;
@@ -45,24 +38,18 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.util.concurrent.ListenableFuture;
 
-import javax.sql.DataSource;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static com.vaadin.flow.component.button.ButtonVariant.LUMO_TERTIARY_INLINE;
 
 @Route(value = "B2P_Outlook_FIN/:project_Id", layout = MainLayout.class)
 @RolesAllowed({"FLIP", "ADMIN"})
@@ -87,9 +74,8 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
     private Div textArea = new Div();
     private int projectId;
     private Optional<Projects> projects;
-    private AttachmentGrid attachmentGrid;
+    private DefaultUtils defaultUtils;
     private List<ProjectAttachmentsDTO> listOfProjectAttachments;
-    private VaadinCKEditor editor;
     private QS_Grid qsGrid;
     private Button qsBtn;
     private Button uploadBtn;
@@ -148,6 +134,7 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
         dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
 
         setProjectParameterGrid(filteredProjectParameters);
+        defaultUtils = new DefaultUtils(projectsService, projectAttachmentsService);
 
         //Componente QS-Grid:
         qsGrid = new QS_Grid(projectConnectionService, backendService);
@@ -215,79 +202,19 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
     }
 
     private Component getAttachmentTab() {
-        attachmentGrid = new AttachmentGrid(projectsService, projectAttachmentsService);
-        return attachmentGrid.getProjectAttachements();
+        return defaultUtils.getProjectAttachements();
     }
 
     private Component getDescriptionTab() {
-        Button saveBtn = new Button("save");
-        Button editBtn = new Button("edit");
-        saveBtn.setVisible(false);
-        editBtn.setVisible(true);
-        Optional<User> maybeUser = authenticatedUser.get();
-        if (maybeUser.isPresent()) {
-            User user = maybeUser.get();
-            System.out.println("User: " + user.getName());
-            Set<Role> roles = user.getRoles();
-            boolean isAdmin = roles.stream()
-                    .anyMatch(role -> role == Role.ADMIN);
-            editBtn.setVisible(isAdmin);
-        }
-        VerticalLayout content = new VerticalLayout();
-
-        Config config = new Config();
-        config.setBalloonToolBar(com.wontlost.ckeditor.Constants.Toolbar.values());
-        config.setImage(new String[][]{},
-                "", new String[]{"full", "alignLeft", "alignCenter", "alignRight"},
-                new String[]{"imageTextAlternative", "|",
-                        "imageStyle:alignLeft",
-                        "imageStyle:full",
-                        "imageStyle:alignCenter",
-                        "imageStyle:alignRight"}, new String[]{});
-
-        editor = new VaadinCKEditorBuilder().with(builder -> {
-
-            builder.editorType = com.wontlost.ckeditor.Constants.EditorType.CLASSIC;
-            builder.width = "95%";
-            builder.readOnly = true;
-            builder.hideToolbar=true;
-            builder.config = config;
-        }).createVaadinCKEditor();
-
-        editor.setReadOnly(true);
-
-        saveBtn.addClickListener((event -> {
-            projects.get().setDescription(editor.getValue());
-            projectsService.update(projects.get());
-
-            editBtn.setVisible(true);
-            saveBtn.setVisible(false);
-            //editor.setReadOnly(true);
-            editor.setReadOnlyWithToolbarAction(!editor.isReadOnly());
-
-        }));
-
-        editBtn.addClickListener(e->{
-            editor.setReadOnlyWithToolbarAction(!editor.isReadOnly());
-            editBtn.setVisible(false);
-            saveBtn.setVisible(true);
-            //editor.setReadOnly(false);
-        });
-
-        content.add(editor,editBtn,saveBtn);
-
-        if(projects != null && projects.isPresent()) {
-            editor.setValue(projects.map(Projects::getDescription).orElse(""));
-        }
-        return content;
-
+        return defaultUtils.getProjectDescription();
     }
     private void updateDescription() {
-        editor.setValue(projects.map(Projects::getDescription).orElse(""));
+        defaultUtils.setProjectId(projectId);
+        defaultUtils.setDescription();
     }
     private void updateAttachmentGrid(List<ProjectAttachmentsDTO> projectAttachmentsDTOS) {
-        attachmentGrid.setItems(projectAttachmentsDTOS);
-        attachmentGrid.setProjectId(projectId);
+        defaultUtils.setProjectId(projectId);
+        defaultUtils.setAttachmentGridItems(projectAttachmentsDTOS);
     }
     private Component getUpladTab() {
         VerticalLayout content = new VerticalLayout();

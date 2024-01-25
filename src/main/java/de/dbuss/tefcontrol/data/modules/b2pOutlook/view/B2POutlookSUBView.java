@@ -23,7 +23,7 @@ import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteParameters;
-import de.dbuss.tefcontrol.components.AttachmentGrid;
+import de.dbuss.tefcontrol.components.DefaultUtils;
 import de.dbuss.tefcontrol.components.QS_Callback;
 import de.dbuss.tefcontrol.components.QS_Grid;
 import de.dbuss.tefcontrol.data.dto.ProjectAttachmentsDTO;
@@ -38,18 +38,14 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.util.concurrent.ListenableFuture;
 
-import javax.sql.DataSource;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static com.vaadin.flow.component.button.ButtonVariant.LUMO_TERTIARY_INLINE;
 
 @Route(value = "B2P_Outlook_Sub/:project_Id", layout = MainLayout.class)
 @RolesAllowed({"ADMIN", "FLIP"})
@@ -59,7 +55,7 @@ public class B2POutlookSUBView extends VerticalLayout implements BeforeEnterObse
     private final ProjectsService projectsService;
     private final ProjectAttachmentsService projectAttachmentsService;
     private Optional<Projects> projects;
-    private AttachmentGrid attachmentGrid;
+    private DefaultUtils defaultUtils;
     private List<ProjectAttachmentsDTO> listOfProjectAttachments;
     private MemoryBuffer memoryBuffer = new MemoryBuffer();
     private Upload singleFileUpload = new Upload(memoryBuffer);
@@ -132,6 +128,7 @@ public class B2POutlookSUBView extends VerticalLayout implements BeforeEnterObse
 
         dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
         setProjectParameterGrid(filteredProjectParameters);
+        defaultUtils = new DefaultUtils(projectsService, projectAttachmentsService);
 
         //Componente QS-Grid:
         qsGrid = new QS_Grid(projectConnectionService, backendService);
@@ -174,13 +171,10 @@ public class B2POutlookSUBView extends VerticalLayout implements BeforeEnterObse
         projects = projectsService.findById(projectId);
         projects.ifPresent(value -> listOfProjectAttachments = projectsService.getProjectAttachmentsWithoutFileContent(value));
 
+        updateDescription();
         updateAttachmentGrid(listOfProjectAttachments);
     }
 
-    private void updateAttachmentGrid(List<ProjectAttachmentsDTO> projectAttachmentsDTOS) {
-        attachmentGrid.setItems(projectAttachmentsDTOS);
-        attachmentGrid.setProjectId(projectId);
-    }
     private TabSheet getTabsheet() {
 
         //log.info("Starting getTabsheet() for Tabsheet");
@@ -198,19 +192,20 @@ public class B2POutlookSUBView extends VerticalLayout implements BeforeEnterObse
     }
 
     private Component getAttachmentTab() {
-        attachmentGrid = new AttachmentGrid(projectsService, projectAttachmentsService);
-        return attachmentGrid.getProjectAttachements();
+        return defaultUtils.getProjectAttachements();
     }
 
     private Component getDescriptionTab() {
-        VerticalLayout content = new VerticalLayout();
-        H1 h1=new H1();
-        h1.add("Description...");
-
-        content.add(h1);
-        return content;
+        return defaultUtils.getProjectDescription();
     }
-
+    private void updateDescription() {
+        defaultUtils.setProjectId(projectId);
+        defaultUtils.setDescription();
+    }
+    private void updateAttachmentGrid(List<ProjectAttachmentsDTO> projectAttachmentsDTOS) {
+        defaultUtils.setProjectId(projectId);
+        defaultUtils.setAttachmentGridItems(projectAttachmentsDTOS);
+    }
     private Component getUpladTab() {
         VerticalLayout content = new VerticalLayout();
 

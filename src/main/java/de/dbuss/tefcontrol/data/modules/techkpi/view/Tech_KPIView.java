@@ -1,8 +1,6 @@
 package de.dbuss.tefcontrol.data.modules.techkpi.view;
 
 import com.vaadin.flow.component.*;
-import com.vaadin.flow.component.accordion.Accordion;
-import com.vaadin.flow.component.accordion.AccordionPanel;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.details.Details;
 import com.vaadin.flow.component.grid.Grid;
@@ -20,12 +18,11 @@ import com.vaadin.flow.component.tabs.TabSheetVariant;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.router.*;
-import de.dbuss.tefcontrol.components.AttachmentGrid;
+import de.dbuss.tefcontrol.components.DefaultUtils;
 import de.dbuss.tefcontrol.components.QS_Callback;
 import de.dbuss.tefcontrol.components.QS_Grid;
 import de.dbuss.tefcontrol.data.dto.ProjectAttachmentsDTO;
 import de.dbuss.tefcontrol.data.entity.*;
-import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.GenericCommentsView;
 import de.dbuss.tefcontrol.data.service.*;
 import de.dbuss.tefcontrol.security.AuthenticatedUser;
 import de.dbuss.tefcontrol.views.MainLayout;
@@ -36,15 +33,12 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-import javax.sql.DataSource;
 import java.io.InputStream;
 import java.util.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
-
-import static com.vaadin.flow.component.button.ButtonVariant.LUMO_TERTIARY_INLINE;
 
 
 @PageTitle("Tech KPI | TEF-Control")
@@ -57,7 +51,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
     private final ProjectsService projectsService;
     private final ProjectAttachmentsService projectAttachmentsService;
     private Optional<Projects> projects;
-    private AttachmentGrid attachmentGrid;
+    private DefaultUtils defaultUtils;
     private List<ProjectAttachmentsDTO> listOfProjectAttachments;
     private final BackendService backendService;
     private Button uploadBtn;
@@ -179,6 +173,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
         // Text databaseDetail = new Text("Connected to: "+ dbServer+ ", Database: " + dbName + " AgentJob: " + agentName);
 
         setProjectParameterGrid(filteredProjectParameters);
+        defaultUtils = new DefaultUtils(projectsService, projectAttachmentsService);
 
         //Componente QS-Grid:
         qsGrid = new QS_Grid(projectConnectionService, backendService);
@@ -242,17 +237,19 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
     }
 
     private Component getAttachmentTab() {
-        attachmentGrid = new AttachmentGrid(projectsService, projectAttachmentsService);
-        return attachmentGrid.getProjectAttachements();
+        return defaultUtils.getProjectAttachements();
     }
 
     private Component getDescriptionTab() {
-        VerticalLayout content = new VerticalLayout();
-        H1 h1=new H1();
-        h1.add("Description...");
-
-        content.add(h1);
-        return content;
+        return defaultUtils.getProjectDescription();
+    }
+    private void updateDescription() {
+        defaultUtils.setProjectId(projectId);
+        defaultUtils.setDescription();
+    }
+    private void updateAttachmentGrid(List<ProjectAttachmentsDTO> projectAttachmentsDTOS) {
+        defaultUtils.setProjectId(projectId);
+        defaultUtils.setAttachmentGridItems(projectAttachmentsDTOS);
     }
 
     private Component getUpladTab() {
@@ -351,12 +348,8 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
         projects = projectsService.findById(projectId);
         projects.ifPresent(value -> listOfProjectAttachments = projectsService.getProjectAttachmentsWithoutFileContent(value));
 
+        updateDescription();
         updateAttachmentGrid(listOfProjectAttachments);
-    }
-
-    private void updateAttachmentGrid(List<ProjectAttachmentsDTO> projectAttachmentsDTOS) {
-        attachmentGrid.setItems(projectAttachmentsDTOS);
-        attachmentGrid.setProjectId(projectId);
     }
 
     private void setProjectParameterGrid(List<ProjectParameter> listOfProjectParameters) {
