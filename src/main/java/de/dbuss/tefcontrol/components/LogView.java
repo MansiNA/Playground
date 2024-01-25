@@ -2,6 +2,8 @@ package de.dbuss.tefcontrol.components;
 
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.richtexteditor.RichTextEditor;
 import com.vaadin.flow.component.textfield.TextArea;
@@ -54,5 +56,35 @@ public class LogView extends VerticalLayout {
         UI.getCurrent().getPage().executeJs("arguments[0].scrollTop = arguments[0].scrollHeight;", textArea.getElement());
     }
 
+    public void logMessage3(String level, String message) {
+        Span span = new Span();
+        span.getElement().setProperty("innerHTML", getStyledMessage(level, message));
+        Div logEntry = new Div(span);
+        textArea.getElement().appendChild(logEntry.getElement());
 
+        // Scroll to the bottom after appending the message
+        UI.getCurrent().getPage().executeJs("arguments[0].scrollTop = arguments[0].scrollHeight;", textArea.getElement());
+    }
+
+    private String getStyledMessage(String level, String message) {
+        String color;
+
+        // Set color based on log level
+        switch (level) {
+            case "INFO":
+                color = "green";
+                break;
+            case "WARN":
+                color = "orange";
+                break;
+            case "ERROR":
+                color = "red";
+                break;
+            default:
+                color = "black";
+        }
+
+        // Apply styling using HTML
+        return "<span style='color: " + color + ";'><strong>" + level + "</strong> " + message + "</span><br>";
+    }
 }

@@ -12,6 +12,7 @@ import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.*;
+import de.dbuss.tefcontrol.components.LogView;
 import de.dbuss.tefcontrol.components.QS_Callback;
 import de.dbuss.tefcontrol.components.QS_Grid;
 import de.dbuss.tefcontrol.data.entity.Constants;
@@ -62,12 +63,18 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
     private AuthenticatedUser authenticatedUser;
     private int upload_id;
     Boolean isVisible = false;
+
     Grid<ProjectParameter> parameterGrid = new Grid<>(ProjectParameter.class, false);
+    private LogView logView;
+    private Boolean isLogsVisible = false;
+
 
     public CobiAdminView(ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, BackendService backendService, AuthenticatedUser authenticatedUser) {
         this.projectConnectionService = projectConnectionService;
         this.authenticatedUser=authenticatedUser;
 
+        logView = new LogView();
+        logView.logMessage(Constants.INFO, "Starting CobiAdminView");
         qsBtn = new Button("QS and Start Job");
        // qsBtn.setEnabled(false);
 
@@ -124,7 +131,7 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
         hl.add( qsBtn, qsGrid);
 
         qsBtn.addClickListener(e ->{
-
+            logView.logMessage(Constants.INFO, "Starting qsBtn.addClickListener for save and QsGrid ");
             ProjectUpload projectUpload = new ProjectUpload();
             projectUpload.setFileName("");
             //  projectUpload.setUserName(MainLayout.userName);
@@ -160,6 +167,7 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
             currentPeriods.setUpload_ID(upload_id);
             currentScenarios.setUpload_ID(upload_id);
 
+            logView.logMessage(Constants.INFO, "Saving current Period in saveCobiAdminCurrentPeriods() ");
             String resultOfPeriods = projectConnectionService.saveCobiAdminCurrentPeriods(currentPeriods, dbUrl, dbUser, dbPassword, tableCurrentPeriods);
             Notification notification;
             if (resultOfPeriods.equals(Constants.OK)) {
@@ -171,6 +179,7 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
                 notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
             }
 
+            logView.logMessage(Constants.INFO, "Saving current Scenario in saveCobiAdminCurrentScenarios() ");
             String resultOfScenarios = projectConnectionService.saveCobiAdminCurrentScenarios(currentScenarios, dbUrl, dbUser, dbPassword, tableCurrentSenarios);
             if (resultOfScenarios.equals(Constants.OK)) {
                 notification = Notification.show(" Current Scenarios Rows Uploaded successfully", 6000, Notification.Position.MIDDLE);
@@ -195,11 +204,14 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
             CallbackHandler callbackHandler = new CallbackHandler();
             qsGrid.createDialog(callbackHandler, projectId, upload_id);
             qsGrid.showDialog(true);
+            logView.logMessage(Constants.INFO, "Ending qsBtn.addClickListener for save and QsGrid ");
+
         });
 
         add(hl);
 
         parameterGrid.setVisible(false);
+        logView.setVisible(false);
 
         if(MainLayout.isAdmin) {
             UI.getCurrent().addShortcutListener(
@@ -208,17 +220,29 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
                         parameterGrid.setVisible(isVisible);
                     },
                     Key.KEY_I, KeyModifier.ALT);
+            UI.getCurrent().addShortcutListener(
+                    () -> {
+                        isLogsVisible = !isLogsVisible;
+                        logView.setVisible(isLogsVisible);
+                    },
+                    Key.KEY_V, KeyModifier.ALT);
+
         }
+        add(logView);
+        logView.logMessage(Constants.INFO, "Ending CobiAdminView");
     }
 
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
+        logView.logMessage(Constants.INFO, "Starting beforeEnter for update");
         RouteParameters parameters = event.getRouteParameters();
         projectId = Integer.parseInt(parameters.get("project_Id").orElse(null));
+        logView.logMessage(Constants.INFO, "Ending beforeEnter for update");
     }
 
 
     private void setProjectParameterGrid(List<ProjectParameter> listOfProjectParameters) {
+        logView.logMessage(Constants.INFO, "Starting setProjectParameterGrid for set database detail in Grid");
         parameterGrid = new Grid<>(ProjectParameter.class, false);
         parameterGrid.addColumn(ProjectParameter::getName).setHeader("Name").setAutoWidth(true).setResizable(true);
         parameterGrid.addColumn(ProjectParameter::getValue).setHeader("Value").setAutoWidth(true).setResizable(true);
@@ -228,19 +252,23 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
         parameterGrid.addThemeVariants(GridVariant.LUMO_COMPACT);
         parameterGrid.setHeight("200px");
         parameterGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+        logView.logMessage(Constants.INFO, "Ending setProjectParameterGrid for set database detail in Grid");
     }
 
     public class CallbackHandler implements QS_Callback {
         // Die Methode, die aufgerufen wird, wenn die externe Methode abgeschlossen ist
         @Override
         public void onComplete(String result) {
+            logView.logMessage(Constants.INFO, "Starting CallbackHandler onComplete for execute Start Job");
             if(!result.equals("Cancel")) {
                 qsGrid.executeStartJobSteps(upload_id, agentName);
             }
+            logView.logMessage(Constants.INFO, "Ending CallbackHandler onComplete for execute Start Job");
         }
     }
 
     private Component getDimPeriodGrid() {
+        logView.logMessage(Constants.INFO, "Starting getDimPeriodGrid for Current Period");
         VerticalLayout content = new VerticalLayout();
 
         H3 p2 = new H3();
@@ -280,6 +308,7 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
                 Notification.show("No valid sql for Current Periods in project_properties", 5000, Notification.Position.MIDDLE);
             }
             comboBox.addValueChangeListener(event -> {
+                logView.logMessage(Constants.INFO, "Selecting Current Month ");
                 cp.setCurrent_month(event.getValue());
                 currentPeriods.setCurrent_month(event.getValue());
             });
@@ -304,10 +333,12 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
 
         content.add(p2, grid_period);
         content.setHeightFull();
+        logView.logMessage(Constants.INFO, "Ending getDimPeriodGrid for Current Period ");
         return content;
     }
 
     private Component getDimScenarioGrid() {
+        logView.logMessage(Constants.INFO, "Starting getDimScenarioGrid() for Current Scenario ");
         VerticalLayout content = new VerticalLayout();
 
         List<String> qfc = projectConnectionService.getCobiAdminQFCPlanOutlook(dbUrl, dbUser, dbPassword, sqlQfcScenarios);
@@ -342,6 +373,7 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
                 Notification.show("No valid sql for Current Scenarios in project_properties", 5000, Notification.Position.MIDDLE);
             }
             comboBox.addValueChangeListener(event -> {
+                logView.logMessage(Constants.INFO, "Selecting Current QFP ");
                 cs.setCurrent_QFC(event.getValue());
                 currentScenarios.setCurrent_QFC(event.getValue());
             });
@@ -362,6 +394,7 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
             }
 
             comboBox.addValueChangeListener(event -> {
+                logView.logMessage(Constants.INFO, "Selecting Current Plan ");
                 cs.setCurrent_Plan(event.getValue());
                 currentScenarios.setCurrent_Plan(event.getValue());
             });
@@ -382,6 +415,7 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
             }
 
             comboBox.addValueChangeListener(event -> {
+                logView.logMessage(Constants.INFO, "Selecting Current Outlook ");
                 cs.setCurrent_Outlook(event.getValue());
                 currentScenarios.setCurrent_Outlook(event.getValue());
             });
@@ -404,6 +438,7 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
 
         content.add(p3, grid_scenario);
         content.setHeightFull();
+        logView.logMessage(Constants.INFO, "Ending getDimScenarioGrid() for Current Scenario ");
         return content;
     }
 
