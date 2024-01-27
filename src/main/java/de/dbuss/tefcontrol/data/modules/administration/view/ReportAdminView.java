@@ -42,6 +42,8 @@ public class ReportAdminView extends VerticalLayout implements BeforeEnterObserv
     private CurrentPeriods currentPeriods;
     private int projectId;
     Boolean isVisible = false;
+    Boolean isLogsVisible = false;
+
     Grid<ProjectParameter> parameterGrid = new Grid<>(ProjectParameter.class, false);
     private static final Logger logger = LoggerFactory.getLogger(ReportAdminView.class);
     private LogView logView;
@@ -49,7 +51,7 @@ public class ReportAdminView extends VerticalLayout implements BeforeEnterObserv
     public ReportAdminView(ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, BackendService backendService, AuthenticatedUser authenticatedUser) {
         this.projectConnectionService = projectConnectionService;
         logView = new LogView();
-        logView.logMessage(Constants.INFO, "Starting ReportAdminView....");
+        logView.logMessage(Constants.INFO, "Starting ReportAdminView");
         List<ProjectParameter> listOfProjectParameters = projectParameterService.findAll();
         List<ProjectParameter> filteredProjectParameters = listOfProjectParameters.stream()
                 .filter(projectParameter -> Constants.REPORT_ADMINISTRATION.equals(projectParameter.getNamespace()))
@@ -95,6 +97,7 @@ public class ReportAdminView extends VerticalLayout implements BeforeEnterObserv
         startRohdatenReportBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_SUCCESS);
 
         startRohdatenReportBtn.addClickListener(e -> {
+            logView.logMessage(Constants.INFO, "startRohdatenReportBtn.addClickListener for Start Reporting");
             startRohdatenReportBtn.setEnabled(false);
             startRohdatenReportBtn.setText("running");
             String resultOfPeriods = projectConnectionService.executeReportAdminPeriods(currentPeriods, dbUrl, dbUser, dbPassword);
@@ -122,7 +125,7 @@ public class ReportAdminView extends VerticalLayout implements BeforeEnterObserv
         HorizontalLayout hl = new HorizontalLayout();
 
         hl.add(getDimPeriodGrid(), startRohdatenReportBtn);
-        hl.setAlignItems(Alignment.CENTER);
+        hl.setAlignItems(Alignment.BASELINE);
 
         add(hl);
 
@@ -135,9 +138,16 @@ public class ReportAdminView extends VerticalLayout implements BeforeEnterObserv
 
                         isVisible = !isVisible;
                         parameterGrid.setVisible(isVisible);
-                        logView.setVisible(true);
                     },
                     Key.KEY_I, KeyModifier.ALT);
+
+            UI.getCurrent().addShortcutListener(
+                    () -> {
+
+                        isLogsVisible = !isLogsVisible;
+                        logView.setVisible(isLogsVisible);
+                    },
+                    Key.KEY_V, KeyModifier.ALT);
 
         }
         add(logView);
@@ -145,7 +155,7 @@ public class ReportAdminView extends VerticalLayout implements BeforeEnterObserv
     }
 
     private void setProjectParameterGrid(List<ProjectParameter> listOfProjectParameters) {
-        logView.logMessage(Constants.INFO, "Starting setProjectParameterGrid....");
+        logView.logMessage(Constants.INFO, "Starting setProjectParameterGrid() for database detail grid");
         parameterGrid = new Grid<>(ProjectParameter.class, false);
         parameterGrid.addColumn(ProjectParameter::getName).setHeader("Name").setAutoWidth(true).setResizable(true);
         parameterGrid.addColumn(ProjectParameter::getValue).setHeader("Value").setAutoWidth(true).setResizable(true);
@@ -155,14 +165,18 @@ public class ReportAdminView extends VerticalLayout implements BeforeEnterObserv
         parameterGrid.addThemeVariants(GridVariant.LUMO_COMPACT);
         parameterGrid.setHeight("200px");
         parameterGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+        logView.logMessage(Constants.INFO, "Ending setProjectParameterGrid() for database detail grid");
     }
 
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
+        logView.logMessage(Constants.INFO, "Starting beforeEnter() for update");
         RouteParameters parameters = event.getRouteParameters();
         projectId = Integer.parseInt(parameters.get("project_Id").orElse(null));
+        logView.logMessage(Constants.INFO, "Starting beforeEnter() for update");
     }
     private Component getDimPeriodGrid() {
+        logView.logMessage(Constants.INFO, "Starting getDimPeriodGrid() for current period grid");
         VerticalLayout content = new VerticalLayout();
 
         List<CurrentPeriods> periods = new ArrayList<>();
@@ -187,6 +201,7 @@ public class ReportAdminView extends VerticalLayout implements BeforeEnterObserv
             cp.setCurrent_month(selectedValue);
             currentPeriods.setCurrent_month(selectedValue);
             comboBox.addValueChangeListener(event -> {
+                logView.logMessage(Constants.INFO, "Selecting current period value");
                 cp.setCurrent_month(event.getValue());
                 currentPeriods.setCurrent_month(event.getValue());
             });
@@ -215,8 +230,10 @@ public class ReportAdminView extends VerticalLayout implements BeforeEnterObserv
         content.setHeightFull();
         content.setWidth("250px");
         content.setHeight("150px");
-
+        content.setAlignItems(Alignment.BASELINE);
+        logView.logMessage(Constants.INFO, "Ending getDimPeriodGrid() for current period grid");
         return content;
+
     }
 
 }
