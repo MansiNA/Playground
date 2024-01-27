@@ -23,6 +23,7 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.stereotype.Component;
 
 import javax.naming.Context;
+import javax.naming.NamingException;
 import javax.naming.directory.DirContext;
 import javax.naming.directory.InitialDirContext;
 import java.util.Hashtable;
@@ -65,11 +66,7 @@ public class SecurityConfiguration extends VaadinWebSecurity {
             String password = authentication.getCredentials().toString();
 
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-
-
-            System.out.println("Authentifiziere User: " + username + " / " + password);
-
-
+            //System.out.println("Authentifiziere User: " + username + " / " + password);
             User user = userService.getUserByUsername(username);
 
             if (user == null)
@@ -124,20 +121,18 @@ public class SecurityConfiguration extends VaadinWebSecurity {
         //String ldapUrl = "ldap://91.107.232.133:10389";
 
 
-
-
         //String ldapUser= username + "@viaginterkom.de";
         //String ldapUser= username + "@fhhnet.stadt.hamburg.de";
 //        String ldapUser= username + "@wimpi.net";
 
-    //    String ldapUser = "uid=" + username + ",ou=users,dc=wimpi,dc=net"; // Adjust the DN pattern
+        //    String ldapUser = "uid=" + username + ",ou=users,dc=wimpi,dc=net"; // Adjust the DN pattern
 
         String ldapUser = p_ldapUserPrefix + username + p_ldapUserPostfix;
 
         String ldapPassword = password;
 
         System.out.println("Anmelden User: " + ldapUser);
-      //  System.out.println("Password: " + ldapPassword);
+        //  System.out.println("Password: " + ldapPassword);
         System.out.println("URL: " + ldapUrl);
 
 
@@ -146,25 +141,34 @@ public class SecurityConfiguration extends VaadinWebSecurity {
         env.put(Context.PROVIDER_URL, ldapUrl);
         //env.put(Context.SECURITY_PRINCIPAL, ldapUser);
         env.put(Context.SECURITY_PRINCIPAL, ldapUser);
+        env.put("com.sun.jndi.ldap.connect.timeout", "500000");
+        env.put("com.sun.jndi.ldap.read.timeout", "500000");
 
         env.put(Context.SECURITY_CREDENTIALS, ldapPassword);
 
+        long start = 0;
         try {
             // Attempt to create an initial context with the provided credentials
 
+            start = System.currentTimeMillis();
             System.out.println("Aufruf InitialDirContext Start");
             DirContext context = new InitialDirContext(env);
 
+            System.out.println("Time for Login: " + ((System.currentTimeMillis() - start)) + " ms.");
             // Close the context after use
             context.close();
             System.out.println("Aufruf InitialDirContext Ende");
 
             System.out.println("Check User against AD is successfully...");
 
+
             return true;
-        } catch (Exception e) {
+        } catch (NamingException e) {
             // Handle exceptions (e.g., authentication failure)
             System.out.println("Check User against AD failed!!!");
+
+            System.out.println("Failed because " + e.getRootCause()
+                    .getMessage() + ". Timeout: " + ((System.currentTimeMillis() - start)) + " ms.");
             //System.out.println("Still act like it was successful");
             //return true;
 
