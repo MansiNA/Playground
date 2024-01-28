@@ -37,16 +37,16 @@ public class WelcomeView extends VerticalLayout {
         this.authenticatedUser = authenticatedUser;
         this.projectsService = projectsService;
 
-        add(new H2("Hallo und willkommen"));
+      //  add(new H2("Hallo und willkommen"));
 
-        String yourContent ="Auf dieser Seite werden Tools und Hilfsmittel bereitgestellt, um Administrative-Tätigkeiten zu vereinfachen.<br />" +
-                "Ebenso werden Funktionen bereitgestellt, Informationen direkt aus DB-Tabellen zu entnehmen.<br />" +
-                "Ideen, Anregungen oder Verbesserungsvorschläge sind herzlich willkommen!&#128512;<br /><br />" +
-                "Bitte mit Telefonica AD-User einloggen und die gewünschte Funktionalität auswählen.<br /><br />" +
-                "Viele Grüße<br /><b>Euer Consys-Team</b>" ;
+       // String yourContent ="Auf dieser Seite werden Tools und Hilfsmittel bereitgestellt, um Administrative-Tätigkeiten zu vereinfachen.<br />" +
+       //         "Ebenso werden Funktionen bereitgestellt, Informationen direkt aus DB-Tabellen zu entnehmen.<br />" +
+       //         "Ideen, Anregungen oder Verbesserungsvorschläge sind herzlich willkommen!&#128512;<br /><br />" +
+       //         "Bitte mit Telefonica AD-User einloggen und die gewünschte Funktionalität auswählen.<br /><br />" +
+       //         "Viele Grüße<br /><b>Euer Consys-Team</b>" ;
 
-        Html html = new Html("<text>" + yourContent + "</text>");
-        add(html);
+       // Html html = new Html("<text>" + yourContent + "</text>");
+       // add(html);
 
         Optional<User> maybeUser = authenticatedUser.get();
         if (maybeUser.isPresent()) {
@@ -57,6 +57,9 @@ public class WelcomeView extends VerticalLayout {
                     .anyMatch(role -> role == Role.ADMIN);
         }
 
+        getStyle().setPadding("0px");
+      //  getStyle().setMargin("0px -20px 0px 0px");
+       // getStyle().setMargin("-25px");
         add( getProjectsDescription());
     }
 
@@ -91,6 +94,9 @@ public class WelcomeView extends VerticalLayout {
             builder.config = config;
         }).createVaadinCKEditor();
 
+        editor.getStyle().setMargin ("-5px");
+
+
         editor.setReadOnly(true);
 
         saveBtn.addClickListener((event -> {
@@ -111,6 +117,10 @@ public class WelcomeView extends VerticalLayout {
             saveBtn.setVisible(true);
             //editor.setReadOnly(false);
         });
+
+
+
+
         content.add(editor,editBtn,saveBtn);
 
         editor.setValue(projects != null ? projects.getDescription() : "");
