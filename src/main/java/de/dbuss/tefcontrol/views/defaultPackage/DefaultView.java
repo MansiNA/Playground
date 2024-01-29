@@ -968,6 +968,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver,
         }).createVaadinCKEditor();
 
         editor.setReadOnly(true);
+        editor.getStyle().setMargin ("-5px");
 
         saveBtn.addClickListener((event -> {
             log.info("executing saveBtn.addClickListener for description save button click");

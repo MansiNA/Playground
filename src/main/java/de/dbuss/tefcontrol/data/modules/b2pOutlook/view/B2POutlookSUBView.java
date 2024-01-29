@@ -154,7 +154,7 @@ public class B2POutlookSUBView extends VerticalLayout implements BeforeEnterObse
         logView.setVisible(false);
         add(logView);
 
-        if(MainLayout.isAdmin) {
+       /* if(MainLayout.isAdmin) {
             UI.getCurrent().addShortcutListener(
                     () -> {
                         start_thread();
@@ -173,7 +173,24 @@ public class B2POutlookSUBView extends VerticalLayout implements BeforeEnterObse
                         parameterGrid.setVisible(isVisible);
                     },
                     Key.KEY_I, KeyModifier.ALT);
+        }*/
+
+        if (MainLayout.isAdmin) {
+            UI.getCurrent().addShortcutListener(
+                    () -> {
+                        isVisible = !isVisible;
+                        parameterGrid.setVisible(isVisible);
+                    },
+                    Key.KEY_I, KeyModifier.ALT);
+
+            UI.getCurrent().addShortcutListener(
+                    () -> {
+                        isLogsVisible = !isLogsVisible;
+                        logView.setVisible(isLogsVisible);
+                    },
+                    Key.KEY_V, KeyModifier.ALT);
         }
+
         logView.logMessage(Constants.INFO, "Ending B2POutlookSUBView");
     }
     @Override
