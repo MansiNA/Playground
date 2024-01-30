@@ -12,6 +12,8 @@ import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.*;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.GenericCommentsView;
 import de.dbuss.tefcontrol.data.modules.pfgproductmapping.entity.CltvAllProduct;
 import de.dbuss.tefcontrol.data.modules.pfgproductmapping.entity.ProductHierarchie;
+import de.dbuss.tefcontrol.data.modules.tarifmapping.entity.CLTVProduct;
+import de.dbuss.tefcontrol.data.modules.tarifmapping.entity.MissingCLTVProduct;
 import de.dbuss.tefcontrol.data.repository.ProjectConnectionRepository;
 import de.dbuss.tefcontrol.data.modules.techkpi.view.Tech_KPIView;
 import jakarta.annotation.PostConstruct;
@@ -34,6 +36,7 @@ import org.springframework.stereotype.Service;
 import javax.sql.DataSource;
 import java.sql.*;
 import java.util.*;
+import java.util.Date;
 
 @Slf4j
 @Service
@@ -1495,4 +1498,63 @@ public class ProjectConnectionService {
         }
     }
 
+
+    public List<CLTVProduct> getCLTVProducts(String dbUrl, String dbUser, String dbPassword, String tableName) {
+
+        try {
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
+            String sqlQuery = "SELECT * FROM " + tableName;
+
+            // Create a RowMapper to map the query result to a CLTV_HW_Measures object
+            RowMapper<CLTVProduct> rowMapper = (rs, rowNum) -> {
+                CLTVProduct cltvProduct = new CLTVProduct();
+                cltvProduct.setNode(rs.getString("Node"));
+                cltvProduct.setChild(rs.getString("Child"));
+                cltvProduct.setCltvTarif(rs.getString("CLTV_Tarif"));
+                cltvProduct.setProductType(rs.getString("Product_Type"));
+                cltvProduct.setUser(rs.getString("User"));
+                cltvProduct.setVerarbDatum(rs.getDate("verarb_datum"));
+                return cltvProduct;
+            };
+
+            List<CLTVProduct> fetchedData = jdbcTemplate.query(sqlQuery, rowMapper);
+
+            return fetchedData;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            errorMessage = handleDatabaseError(ex);
+            return Collections.emptyList();
+        }
+
+    }
+
+    public List<MissingCLTVProduct> getMissingCLTVProducts(String dbUrl, String dbUser, String dbPassword, String tableName) {
+
+        try {
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
+            String sqlQuery = "SELECT * FROM " + tableName;
+
+            // Create a RowMapper to map the query result to a CLTV_HW_Measures object
+            RowMapper<MissingCLTVProduct> rowMapper = (rs, rowNum) -> {
+                MissingCLTVProduct missingCLTVProduct = new MissingCLTVProduct();
+                missingCLTVProduct.setTariffGroupId(rs.getString("TariffGroupID"));
+                missingCLTVProduct.setTariffGroupName(rs.getString("TariffGroupName"));
+                missingCLTVProduct.setTariffGroupL4Name(rs.getString("TariffGroupL4Name"));
+                return missingCLTVProduct;
+            };
+
+            List<MissingCLTVProduct> fetchedData = jdbcTemplate.query(sqlQuery, rowMapper);
+
+            return fetchedData;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            errorMessage = handleDatabaseError(ex);
+            return Collections.emptyList();
+        }
+
+    }
 }
