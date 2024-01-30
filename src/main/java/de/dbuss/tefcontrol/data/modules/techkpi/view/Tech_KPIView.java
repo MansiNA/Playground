@@ -557,9 +557,8 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
                 }
 
-                logView.logMessage(Constants.INFO, "Saved file data in database");
             } catch (Exception e) {
-                logView.logMessage(Constants.ERROR, "Error while saving file data in database");
+
                 ui.access(() -> {
                     Notification.show("Error during KPI_Actuals upload! ", 4000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
                 });
@@ -660,7 +659,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                     });
 
                 }
-                logView.logMessage(Constants.INFO, "Saved file data in database");
+                // logView.logMessage(Constants.INFO, "Saved file data in database");
             } catch (Exception e) {
                 ui.access(() -> {
                     logView.logMessage(Constants.ERROR, "Error while saving file data in database");
