@@ -79,8 +79,6 @@ public class TarifMappingView extends VerticalLayout implements BeforeEnterObser
     Dialog dialog;
     private TextField nodeField;
     private TextField childField;
-    private ComboBox<String> cltvTarrifCombobox;
-    private ComboBox<String> productTypeCombobox;
     private List<CLTVProduct> cltvAllProducts;
     private List<CLTVProduct> listOfCltvProducts;
     private List<MissingCLTVProduct> missingCLTVProducts;
@@ -228,6 +226,9 @@ public class TarifMappingView extends VerticalLayout implements BeforeEnterObser
     private Component getUpladTab() {
         logView.logMessage(Constants.INFO, "Sarting getUpladTab() for set upload data");
 
+        cltvAllProducts = projectConnectionService.getCLTVProducts(dbUrl, dbUser, dbPassword, tableName);
+        missingCLTVProducts = projectConnectionService.getMissingCLTVProducts(dbUrl, dbUser, dbPassword, missingTableName);
+
         showAllBtn = new Button("show all");
 
         VerticalLayout content = new VerticalLayout();
@@ -238,10 +239,6 @@ public class TarifMappingView extends VerticalLayout implements BeforeEnterObser
 
         setupCLTVProductGrid();
         setupMissingCLTVProductGrid();
-
-        // Set data for grids
-        cltvAllProducts = projectConnectionService.getCLTVProducts(dbUrl, dbUser, dbPassword, tableName);
-        missingCLTVProducts = projectConnectionService.getMissingCLTVProducts(dbUrl, dbUser, dbPassword, missingTableName);
 
         listOfCltvProducts = cltvAllProducts.stream()
                 .filter(product -> product.getCltvTarif() == null || product.getProductType() == null)
@@ -286,9 +283,6 @@ public class TarifMappingView extends VerticalLayout implements BeforeEnterObser
 
         childField.setValue(draggedItem.getTariffGroupId());
         nodeField.setValue(draggedItem.getTariffGroupL4Name());
-        cltvTarrifCombobox.addValueChangeListener(event -> {
-
-        });
     }
 
     private VerticalLayout createDialogLayout() {
@@ -297,25 +291,8 @@ public class TarifMappingView extends VerticalLayout implements BeforeEnterObser
         childField.setEnabled(false);
         nodeField = new TextField("Node");
         nodeField.setEnabled(false);
-        cltvTarrifCombobox = new ComboBox<>("CltvTarrif");
-        productTypeCombobox = new ComboBox<>("ProductType");
 
-        List<String> cltvtarrifList = cltvAllProducts.stream()
-                .map(CLTVProduct::getCltvTarif)
-                .filter(Objects::nonNull)
-                .distinct()
-                .collect(Collectors.toList());
-        cltvTarrifCombobox.setItems(cltvtarrifList);
-        cltvTarrifCombobox.setValue(cltvtarrifList.get(0));
-        List<String> productTypeList = cltvAllProducts.stream()
-                .map(CLTVProduct::getProductType)
-                .filter(Objects::nonNull)
-                .distinct()
-                .collect(Collectors.toList());
-        productTypeCombobox.setItems(productTypeList);
-        productTypeCombobox.setValue(productTypeList.get(0));
-
-        VerticalLayout dialogLayout = new VerticalLayout(childField, nodeField, cltvTarrifCombobox, productTypeCombobox);
+        VerticalLayout dialogLayout = new VerticalLayout(childField, nodeField);
         dialogLayout.setPadding(false);
         dialogLayout.setSpacing(false);
         dialogLayout.setAlignItems(FlexComponent.Alignment.STRETCH);
@@ -331,10 +308,9 @@ public class TarifMappingView extends VerticalLayout implements BeforeEnterObser
         addChildButton.addClickListener(clickEvent -> {
             CLTVProduct cltvProduct = new CLTVProduct();
             cltvProduct.setChild(childField.getValue());
-            cltvProduct.setCltvTarif(cltvTarrifCombobox.getValue());
-            cltvProduct.setProductType(productTypeCombobox.getValue());
             cltvProduct.setUser(MainLayout.userName);
-            cltvAllProducts.add(cltvProduct);
+            listOfCltvProducts.add(cltvProduct);
+            cltvProductGrid.setItems(listOfCltvProducts);
             save2DB(cltvProduct);
         });
         return addChildButton;
@@ -345,10 +321,9 @@ public class TarifMappingView extends VerticalLayout implements BeforeEnterObser
         addNodeButton.addClickListener(clickEvent -> {
             CLTVProduct cltvProduct = new CLTVProduct();
             cltvProduct.setNode(nodeField.getValue());
-            cltvProduct.setCltvTarif(cltvTarrifCombobox.getValue());
-            cltvProduct.setProductType(productTypeCombobox.getValue());
             cltvProduct.setUser(MainLayout.userName);
-            cltvAllProducts.add(cltvProduct);
+            listOfCltvProducts.add(cltvProduct);
+            cltvProductGrid.setItems(listOfCltvProducts);
             save2DB(cltvProduct);
         });
         return addNodeButton;
@@ -375,6 +350,19 @@ public class TarifMappingView extends VerticalLayout implements BeforeEnterObser
 
     private void setupCLTVProductGrid() {
         cltvProductGrid = new Grid<>(CLTVProduct.class);
+
+        List<String> cltvtarrifList = cltvAllProducts.stream()
+                .map(CLTVProduct::getCltvTarif)
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+
+        List<String> productTypeList = cltvAllProducts.stream()
+                .map(CLTVProduct::getProductType)
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+
         String NODE = "node";
         String CHILD = "child";
         String CLTVTARIF = "cltvTarif";
@@ -384,14 +372,38 @@ public class TarifMappingView extends VerticalLayout implements BeforeEnterObser
 
         String EDIT_COLUMN = "vaadin-crud-edit-column";
 
-        cltvProductGrid.setColumns(NODE, CHILD, CLTVTARIF, PRODUCTTYPE, USER);
+        cltvProductGrid.setColumns(NODE, CHILD, USER);
 
         cltvProductGrid.getColumnByKey(NODE).setHeader("Node").setWidth("120px").setFlexGrow(0).setResizable(true);
         cltvProductGrid.getColumnByKey(CHILD).setHeader("Child").setWidth("60px").setFlexGrow(0).setResizable(true);
-        cltvProductGrid.getColumnByKey(CLTVTARIF).setHeader("CltvTarif").setWidth("80px").setFlexGrow(0).setResizable(true);
-        cltvProductGrid.getColumnByKey(PRODUCTTYPE).setHeader("ProductType").setWidth("80px").setFlexGrow(0).setResizable(true);
+       // cltvProductGrid.getColumnByKey(CLTVTARIF).setHeader("CltvTarif").setWidth("80px").setFlexGrow(0).setResizable(true);
+      //  cltvProductGrid.getColumnByKey(PRODUCTTYPE).setHeader("ProductType").setWidth("80px").setFlexGrow(0).setResizable(true);
         cltvProductGrid.getColumnByKey(USER).setHeader("User").setWidth("100px").setFlexGrow(0).setResizable(true);
       //  cltvProductGrid.getColumnByKey(VERARDATUM).setHeader("VerarbDatum").setWidth("200px").setFlexGrow(0).setResizable(true);
+
+        cltvProductGrid.addComponentColumn(productHierarchie -> {
+            ComboBox<String> cltvTarrifCombobox = new ComboBox<>();
+            cltvTarrifCombobox.setWidth("130px");
+            cltvTarrifCombobox.setItems(cltvtarrifList);
+            cltvTarrifCombobox.setValue(cltvtarrifList.get(0));
+            //   comboBox.setHeight("40px");
+            cltvTarrifCombobox.addValueChangeListener(event -> {
+
+            });
+            return cltvTarrifCombobox;
+        }).setKey(CLTVTARIF).setHeader("CltvTarif").setFlexGrow(0).setWidth("140px");
+
+        cltvProductGrid.addComponentColumn(productHierarchie -> {
+            ComboBox<String> productTypeCombobox = new ComboBox<>();
+            productTypeCombobox.setWidth("130px");
+            productTypeCombobox.setItems(productTypeList);
+            productTypeCombobox.setValue(productTypeList.get(0));
+            //   comboBox.setHeight("40px");
+            productTypeCombobox.addValueChangeListener(event -> {
+
+            });
+            return productTypeCombobox;
+        }).setKey(PRODUCTTYPE).setHeader("ProductType").setFlexGrow(0).setWidth("140px");
 
         cltvProductGrid.getColumns().forEach(col -> col.setAutoWidth(true));
         // gridMGSR.setHeightFull();
