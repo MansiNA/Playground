@@ -311,6 +311,8 @@ public class TarifMappingView extends VerticalLayout implements BeforeEnterObser
             cltvProduct.setUser(MainLayout.userName);
             listOfCltvProducts.add(cltvProduct);
             cltvProductGrid.setItems(listOfCltvProducts);
+            missingCLTVProducts.remove(draggedItem);
+            missingCLTVProductGrid.setItems(missingCLTVProducts);
             save2DB(cltvProduct);
         });
         return addChildButton;
@@ -324,6 +326,8 @@ public class TarifMappingView extends VerticalLayout implements BeforeEnterObser
             cltvProduct.setUser(MainLayout.userName);
             listOfCltvProducts.add(cltvProduct);
             cltvProductGrid.setItems(listOfCltvProducts);
+            missingCLTVProducts.remove(draggedItem);
+            missingCLTVProductGrid.setItems(missingCLTVProducts);
             save2DB(cltvProduct);
         });
         return addNodeButton;
