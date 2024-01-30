@@ -388,10 +388,10 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
                     });
 
                 }
-                logView.logMessage(Constants.INFO, "Saved file data in database");
+           //     logView.logMessage(Constants.INFO, "Saved file data in database");
             } catch (Exception e) {
                 ui.access(() -> {
-                    logView.logMessage(Constants.ERROR, "Error while saving file data in database");
+               //     logView.logMessage(Constants.ERROR, "Error while saving file data in database");
                     Notification.show("Error during Comments upload! ", 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
 
                 });
