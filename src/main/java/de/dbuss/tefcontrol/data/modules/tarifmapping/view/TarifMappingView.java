@@ -7,18 +7,12 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
-import com.vaadin.flow.component.crud.BinderCrudEditor;
-import com.vaadin.flow.component.crud.Crud;
-import com.vaadin.flow.component.crud.CrudEditor;
 import com.vaadin.flow.component.dialog.Dialog;
-import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.dnd.GridDragEndEvent;
 import com.vaadin.flow.component.grid.dnd.GridDragStartEvent;
 import com.vaadin.flow.component.grid.dnd.GridDropMode;
-import com.vaadin.flow.component.html.Article;
-import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
@@ -26,11 +20,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.component.textfield.TextField;
-import com.vaadin.flow.component.upload.Upload;
-import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
-import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.provider.DataProvider;
-import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.provider.Query;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
@@ -38,36 +28,20 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteParameters;
 import de.dbuss.tefcontrol.components.DefaultUtils;
 import de.dbuss.tefcontrol.components.LogView;
-import de.dbuss.tefcontrol.components.QS_Callback;
-import de.dbuss.tefcontrol.components.QS_Grid;
 import de.dbuss.tefcontrol.data.dto.ProjectAttachmentsDTO;
 import de.dbuss.tefcontrol.data.entity.*;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.OutlookMGSR;
 import de.dbuss.tefcontrol.data.modules.tarifmapping.entity.CLTVProduct;
 import de.dbuss.tefcontrol.data.modules.tarifmapping.entity.MissingCLTVProduct;
 import de.dbuss.tefcontrol.data.service.*;
-import de.dbuss.tefcontrol.dataprovider.GenericDataProvider;
 import de.dbuss.tefcontrol.security.AuthenticatedUser;
 import de.dbuss.tefcontrol.views.MainLayout;
 import jakarta.annotation.security.RolesAllowed;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.springframework.security.access.method.P;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.util.concurrent.ListenableFuture;
 
-import java.io.InputStream;
-import java.lang.reflect.Field;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -101,11 +75,16 @@ public class TarifMappingView extends VerticalLayout implements BeforeEnterObser
     Grid<ProjectParameter> parameterGrid = new Grid<>(ProjectParameter.class, false);
     private LogView logView;
     private Boolean isLogsVisible = false;
-
+    private MissingCLTVProduct draggedItem;
     Dialog dialog;
-    static TextField nodeField;
-    static TextField childField;
-
+    private TextField nodeField;
+    private TextField childField;
+    private ComboBox<String> cltvTarrifCombobox;
+    private ComboBox<String> productTypeCombobox;
+    private List<CLTVProduct> cltvAllProducts;
+    private List<CLTVProduct> listOfCltvProducts;
+    private List<MissingCLTVProduct> missingCLTVProducts;
+    private Button showAllBtn;
     public TarifMappingView(ProjectParameterService projectParameterService, ProjectConnectionService projectConnectionService, BackendService backendService, AuthenticatedUser authenticatedUser, ProjectsService projectsService, ProjectAttachmentsService projectAttachmentsService) {
 
         this.backendService = backendService;
@@ -189,47 +168,13 @@ public class TarifMappingView extends VerticalLayout implements BeforeEnterObser
         VerticalLayout dialogLayout = createDialogLayout();
         dialog.add(dialogLayout);
 
-
         Button cancelButton = new Button("Cancel", e -> dialog.close());
         dialog.getFooter().add(cancelButton);
         dialog.getFooter().add(createChildButton(dialog));
         dialog.getFooter().add(createNodeButton(dialog));
 
-
-
         logView.logMessage(Constants.INFO, "Ending TarifMappingView");
     }
-
-    private static VerticalLayout createDialogLayout() {
-
-        childField = new TextField("Child");
-        childField.setEnabled(false);
-        nodeField = new TextField("Node");
-        nodeField.setEnabled(false);
-
-        VerticalLayout dialogLayout = new VerticalLayout(childField, nodeField);
-        dialogLayout.setPadding(false);
-        dialogLayout.setSpacing(false);
-        dialogLayout.setAlignItems(FlexComponent.Alignment.STRETCH);
-        dialogLayout.getStyle().set("width", "18rem").set("max-width", "100%");
-
-        return dialogLayout;
-    }
-
-    private static Button createChildButton(Dialog dialog) {
-        Button addChildButton = new Button("Add Child", e -> dialog.close());
-        addChildButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-
-        return addChildButton;
-    }
-
-    private static Button createNodeButton(Dialog dialog) {
-        Button addChildButton = new Button("Add Node", e -> dialog.close());
-        addChildButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-
-        return addChildButton;
-    }
-
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
         logView.logMessage(Constants.INFO, "Starting beforeEnter() for update");
@@ -283,7 +228,7 @@ public class TarifMappingView extends VerticalLayout implements BeforeEnterObser
     private Component getUpladTab() {
         logView.logMessage(Constants.INFO, "Sarting getUpladTab() for set upload data");
 
-        Button showAllBtn= new Button("show all");
+        showAllBtn = new Button("show all");
 
         VerticalLayout content = new VerticalLayout();
 
@@ -295,9 +240,14 @@ public class TarifMappingView extends VerticalLayout implements BeforeEnterObser
         setupMissingCLTVProductGrid();
 
         // Set data for grids
-        List<CLTVProduct> cltvProducts = projectConnectionService.getCLTVProducts(dbUrl, dbUser, dbPassword, tableName);
-        List<MissingCLTVProduct> missingCLTVProducts = projectConnectionService.getMissingCLTVProducts(dbUrl, dbUser, dbPassword, missingTableName);
-        cltvProductGrid.setItems(cltvProducts);
+        cltvAllProducts = projectConnectionService.getCLTVProducts(dbUrl, dbUser, dbPassword, tableName);
+        missingCLTVProducts = projectConnectionService.getMissingCLTVProducts(dbUrl, dbUser, dbPassword, missingTableName);
+
+        listOfCltvProducts = cltvAllProducts.stream()
+                .filter(product -> product.getCltvTarif() == null || product.getProductType() == null)
+                .collect(Collectors.toList());
+
+        cltvProductGrid.setItems(listOfCltvProducts);
         missingCLTVProductGrid.setItems(missingCLTVProducts);
 
         missingCLTVProductGrid.setDropMode(GridDropMode.ON_GRID);
@@ -306,14 +256,12 @@ public class TarifMappingView extends VerticalLayout implements BeforeEnterObser
         cltvProductGrid.addDropListener(e -> {
             System.out.println("Dropped" +e.getDropTargetItem());
             dialog.open();
-
-
         });
 
-
+        showAllBtn.addClickListener(event -> toggleView());
         // Enable drag-and-drop for grids
         enableDragAndDrop(cltvProductGrid);
-        enableDragAndDrop(missingCLTVProductGrid);
+      //  enableDragAndDrop(missingCLTVProductGrid);
 
         // Add grids to the layout
         content.add(cltvProductGrid, missingCLTVProductGrid);
@@ -321,22 +269,109 @@ public class TarifMappingView extends VerticalLayout implements BeforeEnterObser
         logView.logMessage(Constants.INFO, "Ending getUpladTab() for set upload data");
         return content;
     }
-
+    private void toggleView() {
+        if (showAllBtn.getText().equals("show only missing")) {
+            // Show all rows
+            cltvProductGrid.setItems(listOfCltvProducts);
+            showAllBtn.setText("show all");
+        } else {
+            // Show only missing rows
+            cltvProductGrid.setItems(cltvAllProducts);
+            showAllBtn.setText("show only missing");
+        }
+    }
     private void handleDragStart(GridDragStartEvent<MissingCLTVProduct> e) {
         draggedItem = e.getDraggedItems().get(0);
         System.out.println("Dragged start for" + draggedItem.getTariffGroupId());
 
         childField.setValue(draggedItem.getTariffGroupId());
         nodeField.setValue(draggedItem.getTariffGroupL4Name());
+        cltvTarrifCombobox.addValueChangeListener(event -> {
 
+        });
+    }
+
+    private VerticalLayout createDialogLayout() {
+
+        childField = new TextField("Child");
+        childField.setEnabled(false);
+        nodeField = new TextField("Node");
+        nodeField.setEnabled(false);
+        cltvTarrifCombobox = new ComboBox<>("CltvTarrif");
+        productTypeCombobox = new ComboBox<>("ProductType");
+
+        List<String> cltvtarrifList = cltvAllProducts.stream()
+                .map(CLTVProduct::getCltvTarif)
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+        cltvTarrifCombobox.setItems(cltvtarrifList);
+        cltvTarrifCombobox.setValue(cltvtarrifList.get(0));
+        List<String> productTypeList = cltvAllProducts.stream()
+                .map(CLTVProduct::getProductType)
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+        productTypeCombobox.setItems(productTypeList);
+        productTypeCombobox.setValue(productTypeList.get(0));
+
+        VerticalLayout dialogLayout = new VerticalLayout(childField, nodeField, cltvTarrifCombobox, productTypeCombobox);
+        dialogLayout.setPadding(false);
+        dialogLayout.setSpacing(false);
+        dialogLayout.setAlignItems(FlexComponent.Alignment.STRETCH);
+        dialogLayout.getStyle().set("width", "18rem").set("max-width", "100%");
+
+        return dialogLayout;
+    }
+
+    private Button createChildButton(Dialog dialog) {
+        Button addChildButton = new Button("Add Child", e -> dialog.close());
+        addChildButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
+        addChildButton.addClickListener(clickEvent -> {
+            CLTVProduct cltvProduct = new CLTVProduct();
+            cltvProduct.setChild(childField.getValue());
+            cltvProduct.setCltvTarif(cltvTarrifCombobox.getValue());
+            cltvProduct.setProductType(productTypeCombobox.getValue());
+            cltvProduct.setUser(MainLayout.userName);
+            cltvAllProducts.add(cltvProduct);
+            save2DB(cltvProduct);
+        });
+        return addChildButton;
+    }
+    private Button createNodeButton(Dialog dialog) {
+        Button addNodeButton = new Button("Add Node", e -> dialog.close());
+        addNodeButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        addNodeButton.addClickListener(clickEvent -> {
+            CLTVProduct cltvProduct = new CLTVProduct();
+            cltvProduct.setNode(nodeField.getValue());
+            cltvProduct.setCltvTarif(cltvTarrifCombobox.getValue());
+            cltvProduct.setProductType(productTypeCombobox.getValue());
+            cltvProduct.setUser(MainLayout.userName);
+            cltvAllProducts.add(cltvProduct);
+            save2DB(cltvProduct);
+        });
+        return addNodeButton;
+    }
+
+    private void save2DB(CLTVProduct cltvProduct) {
+        String result = projectConnectionService.saveCLTVProduct(cltvProduct, dbUrl, dbUser, dbPassword, tableName);
+        Notification notification;
+        if (result.equals(Constants.OK)){
+            logView.logMessage(Constants.INFO, "Saved file data in database");
+            notification = Notification.show("CLTVProduct Uploaded successfully",5000, Notification.Position.MIDDLE);
+            notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+        } else {
+            logView.logMessage(Constants.ERROR, "Error while saving file data in database");
+            notification = Notification.show("Error during CLTVProduct upload " + result ,5000, Notification.Position.MIDDLE);
+            notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+        }
     }
 
     private void handleDragEnd(GridDragEndEvent<MissingCLTVProduct> e) {
 
         System.out.println("Dragged end " );
     }
-    private MissingCLTVProduct draggedItem;
-
 
     private void setupCLTVProductGrid() {
         cltvProductGrid = new Grid<>(CLTVProduct.class);
@@ -349,14 +384,14 @@ public class TarifMappingView extends VerticalLayout implements BeforeEnterObser
 
         String EDIT_COLUMN = "vaadin-crud-edit-column";
 
-        cltvProductGrid.setColumns(NODE, CHILD, CLTVTARIF, PRODUCTTYPE, USER, VERARDATUM);
+        cltvProductGrid.setColumns(NODE, CHILD, CLTVTARIF, PRODUCTTYPE, USER);
 
         cltvProductGrid.getColumnByKey(NODE).setHeader("Node").setWidth("120px").setFlexGrow(0).setResizable(true);
         cltvProductGrid.getColumnByKey(CHILD).setHeader("Child").setWidth("60px").setFlexGrow(0).setResizable(true);
         cltvProductGrid.getColumnByKey(CLTVTARIF).setHeader("CltvTarif").setWidth("80px").setFlexGrow(0).setResizable(true);
         cltvProductGrid.getColumnByKey(PRODUCTTYPE).setHeader("ProductType").setWidth("80px").setFlexGrow(0).setResizable(true);
         cltvProductGrid.getColumnByKey(USER).setHeader("User").setWidth("100px").setFlexGrow(0).setResizable(true);
-        cltvProductGrid.getColumnByKey(VERARDATUM).setHeader("VerarbDatum").setWidth("200px").setFlexGrow(0).setResizable(true);
+      //  cltvProductGrid.getColumnByKey(VERARDATUM).setHeader("VerarbDatum").setWidth("200px").setFlexGrow(0).setResizable(true);
 
         cltvProductGrid.getColumns().forEach(col -> col.setAutoWidth(true));
         // gridMGSR.setHeightFull();
@@ -371,7 +406,7 @@ public class TarifMappingView extends VerticalLayout implements BeforeEnterObser
                 , cltvProductGrid.getColumnByKey(CLTVTARIF)
                 , cltvProductGrid.getColumnByKey(PRODUCTTYPE)
                 , cltvProductGrid.getColumnByKey(USER)
-                , cltvProductGrid.getColumnByKey(VERARDATUM)
+            //    , cltvProductGrid.getColumnByKey(VERARDATUM)
         );
         //    , gridFinancials.getColumnByKey(EDIT_COLUMN));
 
@@ -410,30 +445,6 @@ public class TarifMappingView extends VerticalLayout implements BeforeEnterObser
     private void enableDragAndDrop(Grid<?> grid) {
         grid.setDropMode(GridDropMode.BETWEEN);
         grid.setSelectionMode(Grid.SelectionMode.SINGLE);
-      //  grid.addDragEndListener(this::handleDragEnd);
-        // Add drop listener
-        missingCLTVProductGrid.addDropListener(event -> {
-            // Get the dragged item
-            MissingCLTVProduct draggedItem = event.getDropTargetItem().get();
-
-            // Remove the item from the source grid
-            List<MissingCLTVProduct> missingCLTVProducts= getMissingDataProviderAllItems();
-            missingCLTVProducts.remove(draggedItem);
-            missingCLTVProductGrid.setItems(missingCLTVProducts);
-            missingCLTVProductGrid.getDataProvider().refreshAll();
-
-            // Add the item to the target grid
-         //   cltvProductGrid.getDataProvider().getItems().add(new CLTVProduct(draggedItem));
-            List<CLTVProduct> cltvProducts = getCLTVProductDataProviderAllItems();
-            CLTVProduct cltvProduct = new CLTVProduct();
-            cltvProduct.setChild(draggedItem.getTariffGroupName());
-            cltvProduct.setNode(draggedItem.getTariffGroupId());
-            cltvProducts.add(cltvProduct);
-            cltvProductGrid.setItems(cltvProducts);
-            cltvProductGrid.getDataProvider().refreshAll();
-        });
-
-
     }
     private List<CLTVProduct> getCLTVProductDataProviderAllItems() {
         DataProvider<CLTVProduct, Void> existDataProvider = (DataProvider<CLTVProduct, Void>) cltvProductGrid.getDataProvider();

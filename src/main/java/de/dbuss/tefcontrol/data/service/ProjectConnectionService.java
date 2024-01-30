@@ -36,7 +36,6 @@ import org.springframework.stereotype.Service;
 import javax.sql.DataSource;
 import java.sql.*;
 import java.util.*;
-import java.util.Date;
 
 @Slf4j
 @Service
@@ -1556,5 +1555,30 @@ public class ProjectConnectionService {
             return Collections.emptyList();
         }
 
+    }
+
+    public String saveCLTVProduct(CLTVProduct item, String dbUrl, String dbUser, String dbPassword, String tableName) {
+
+        try {
+
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
+            String sqlInsert = "INSERT INTO " + tableName + " (Node, Child, CLTV_Tarif, Product_Type, [User]) VALUES (?, ?, ?, ?, ?)";
+
+            jdbcTemplate.update(
+                    sqlInsert,
+                    item.getNode(),
+                    item.getChild(),
+                    item.getCltvTarif(),
+                    item.getProductType(),
+                    item.getUser()
+            );
+
+            return Constants.OK;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return handleDatabaseError(e);
+        }
     }
 }
