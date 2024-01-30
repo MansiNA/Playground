@@ -5,20 +5,27 @@ import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.KeyModifier;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.crud.BinderCrudEditor;
 import com.vaadin.flow.component.crud.Crud;
 import com.vaadin.flow.component.crud.CrudEditor;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.grid.dnd.GridDragEndEvent;
+import com.vaadin.flow.component.grid.dnd.GridDragStartEvent;
 import com.vaadin.flow.component.grid.dnd.GridDropMode;
 import com.vaadin.flow.component.html.Article;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.TabSheet;
+import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.data.binder.Binder;
@@ -95,6 +102,10 @@ public class TarifMappingView extends VerticalLayout implements BeforeEnterObser
     private LogView logView;
     private Boolean isLogsVisible = false;
 
+    Dialog dialog;
+    static TextField nodeField;
+    static TextField childField;
+
     public TarifMappingView(ProjectParameterService projectParameterService, ProjectConnectionService projectConnectionService, BackendService backendService, AuthenticatedUser authenticatedUser, ProjectsService projectsService, ProjectAttachmentsService projectAttachmentsService) {
 
         this.backendService = backendService;
@@ -170,7 +181,53 @@ public class TarifMappingView extends VerticalLayout implements BeforeEnterObser
                     Key.KEY_I, KeyModifier.ALT);
 
         }
+
+        dialog = new Dialog();
+
+        dialog.setHeaderTitle("Add Mapping");
+
+        VerticalLayout dialogLayout = createDialogLayout();
+        dialog.add(dialogLayout);
+
+
+        Button cancelButton = new Button("Cancel", e -> dialog.close());
+        dialog.getFooter().add(cancelButton);
+        dialog.getFooter().add(createChildButton(dialog));
+        dialog.getFooter().add(createNodeButton(dialog));
+
+
+
         logView.logMessage(Constants.INFO, "Ending TarifMappingView");
+    }
+
+    private static VerticalLayout createDialogLayout() {
+
+        childField = new TextField("Child");
+        childField.setEnabled(false);
+        nodeField = new TextField("Node");
+        nodeField.setEnabled(false);
+
+        VerticalLayout dialogLayout = new VerticalLayout(childField, nodeField);
+        dialogLayout.setPadding(false);
+        dialogLayout.setSpacing(false);
+        dialogLayout.setAlignItems(FlexComponent.Alignment.STRETCH);
+        dialogLayout.getStyle().set("width", "18rem").set("max-width", "100%");
+
+        return dialogLayout;
+    }
+
+    private static Button createChildButton(Dialog dialog) {
+        Button addChildButton = new Button("Add Child", e -> dialog.close());
+        addChildButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
+        return addChildButton;
+    }
+
+    private static Button createNodeButton(Dialog dialog) {
+        Button addChildButton = new Button("Add Node", e -> dialog.close());
+        addChildButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
+        return addChildButton;
     }
 
     @Override
@@ -225,10 +282,14 @@ public class TarifMappingView extends VerticalLayout implements BeforeEnterObser
     }
     private Component getUpladTab() {
         logView.logMessage(Constants.INFO, "Sarting getUpladTab() for set upload data");
+
+        Button showAllBtn= new Button("show all");
+
         VerticalLayout content = new VerticalLayout();
 
-        content.setSizeFull();
-        content.setHeightFull();
+        content.setWidth("600px");
+        content.setHeight("500px");
+        content.add(showAllBtn);
 
         setupCLTVProductGrid();
         setupMissingCLTVProductGrid();
@@ -238,6 +299,17 @@ public class TarifMappingView extends VerticalLayout implements BeforeEnterObser
         List<MissingCLTVProduct> missingCLTVProducts = projectConnectionService.getMissingCLTVProducts(dbUrl, dbUser, dbPassword, missingTableName);
         cltvProductGrid.setItems(cltvProducts);
         missingCLTVProductGrid.setItems(missingCLTVProducts);
+
+        missingCLTVProductGrid.setDropMode(GridDropMode.ON_GRID);
+        missingCLTVProductGrid.setRowsDraggable(true);
+        missingCLTVProductGrid.addDragStartListener(this::handleDragStart);
+        cltvProductGrid.addDropListener(e -> {
+            System.out.println("Dropped" +e.getDropTargetItem());
+            dialog.open();
+
+
+        });
+
 
         // Enable drag-and-drop for grids
         enableDragAndDrop(cltvProductGrid);
@@ -249,6 +321,21 @@ public class TarifMappingView extends VerticalLayout implements BeforeEnterObser
         logView.logMessage(Constants.INFO, "Ending getUpladTab() for set upload data");
         return content;
     }
+
+    private void handleDragStart(GridDragStartEvent<MissingCLTVProduct> e) {
+        draggedItem = e.getDraggedItems().get(0);
+        System.out.println("Dragged start for" + draggedItem.getTariffGroupId());
+
+        childField.setValue(draggedItem.getTariffGroupId());
+        nodeField.setValue(draggedItem.getTariffGroupL4Name());
+
+    }
+
+    private void handleDragEnd(GridDragEndEvent<MissingCLTVProduct> e) {
+
+        System.out.println("Dragged end " );
+    }
+    private MissingCLTVProduct draggedItem;
 
 
     private void setupCLTVProductGrid() {
