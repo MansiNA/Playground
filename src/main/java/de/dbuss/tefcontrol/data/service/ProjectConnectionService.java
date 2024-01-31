@@ -1588,12 +1588,12 @@ public class ProjectConnectionService {
             DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
             jdbcTemplate = new JdbcTemplate(dataSource);
 
-            String sqlUpdate = "UPDATE [PIT2].[dbo].[IN_FRONT_CLTV_Product] " +
-                    "SET CLTV_Tarif = ?, Product_Type = ? " +
+            String sqlUpdate = "UPDATE " + tableName +
+                    " SET CLTV_Tarif = ?, Product_Type = ? " +
                     "WHERE Node = ?";
 
-            String sqlUpdateChild = "UPDATE [PIT2].[dbo].[IN_FRONT_CLTV_Product] " +
-                    "SET CLTV_Tarif = ?, Product_Type = ? " +
+            String sqlUpdateChild = "UPDATE " + tableName +
+                    " SET CLTV_Tarif = ?, Product_Type = ? " +
                     "WHERE Child = ?";
 
             for (CLTVProduct item : updatedCltvProductsList) {
