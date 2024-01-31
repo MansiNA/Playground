@@ -1588,22 +1588,30 @@ public class ProjectConnectionService {
             DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
             jdbcTemplate = new JdbcTemplate(dataSource);
 
-          //  String sqlUpdate = "UPDATE " + tableName + " SET CLTV_Tarif = ?, Product_Type = ? WHERE Id = ?";
             String sqlUpdate = "UPDATE [PIT2].[dbo].[IN_FRONT_CLTV_Product] " +
-                    "SET CLTV_Tarif = 'XY', Product_Type = 'PO' " +
-                    "WHERE (Node = ? OR (Node IS NULL AND ? IS NULL)) " +
-                    "AND (Child = ? OR (Child IS NULL AND ? IS NULL));";
+                    "SET CLTV_Tarif = ?, Product_Type = ? " +
+                    "WHERE Node = ?";
 
+            String sqlUpdateChild = "UPDATE [PIT2].[dbo].[IN_FRONT_CLTV_Product] " +
+                    "SET CLTV_Tarif = ?, Product_Type = ? " +
+                    "WHERE Child = ?";
 
             for (CLTVProduct item : updatedCltvProductsList) {
-                jdbcTemplate.update(
-                        sqlUpdate,
-                        item.getCltvTarif(),
-                        item.getProductType(),
-                        item.getNode(),
-                        item.getChild()
-                     //   item.getId()
-                );
+                if (item.getNode() != null) {
+                    jdbcTemplate.update(
+                            sqlUpdate,
+                            item.getCltvTarif(),
+                            item.getProductType(),
+                            item.getNode()
+                    );
+                } else if (item.getChild() != null) {
+                    jdbcTemplate.update(
+                            sqlUpdateChild,
+                            item.getCltvTarif(),
+                            item.getProductType(),
+                            item.getChild()
+                    );
+                }
             }
 
             return Constants.OK;
