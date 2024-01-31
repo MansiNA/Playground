@@ -1509,6 +1509,7 @@ public class ProjectConnectionService {
             // Create a RowMapper to map the query result to a CLTV_HW_Measures object
             RowMapper<CLTVProduct> rowMapper = (rs, rowNum) -> {
                 CLTVProduct cltvProduct = new CLTVProduct();
+             //   cltvProduct.setId(rs.getInt("ID"));
                 cltvProduct.setNode(rs.getString("Node"));
                 cltvProduct.setChild(rs.getString("Child"));
                 cltvProduct.setCltvTarif(rs.getString("CLTV_Tarif"));
@@ -1581,4 +1582,59 @@ public class ProjectConnectionService {
             return handleDatabaseError(e);
         }
     }
+
+    public String updateCLTVProducts(String dbUrl, String dbUser, String dbPassword, String tableName, List<CLTVProduct> updatedCltvProductsList) {
+        try {
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
+            String sqlUpdate = "UPDATE [PIT2].[dbo].[IN_FRONT_CLTV_Product] " +
+                    "SET CLTV_Tarif = ?, Product_Type = ? " +
+                    "WHERE Node = ?";
+
+            String sqlUpdateChild = "UPDATE [PIT2].[dbo].[IN_FRONT_CLTV_Product] " +
+                    "SET CLTV_Tarif = ?, Product_Type = ? " +
+                    "WHERE Child = ?";
+
+            for (CLTVProduct item : updatedCltvProductsList) {
+                if (item.getNode() != null) {
+                    jdbcTemplate.update(
+                            sqlUpdate,
+                            item.getCltvTarif(),
+                            item.getProductType(),
+                            item.getNode()
+                    );
+                } else if (item.getChild() != null) {
+                    jdbcTemplate.update(
+                            sqlUpdateChild,
+                            item.getCltvTarif(),
+                            item.getProductType(),
+                            item.getChild()
+                    );
+                }
+            }
+
+            return Constants.OK;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return handleDatabaseError(e);
+        }
+    }
+
+    public String deleteMissingCLTVProduct(String dbUrl, String dbUser, String dbPassword, String tableName, String tariffGroupId) {
+        try {
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
+            String sqlDelete = "DELETE FROM " + tableName + " WHERE TariffGroupID = ?";
+
+            jdbcTemplate.update(sqlDelete, tariffGroupId);
+
+            return Constants.OK;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return handleDatabaseError(e);
+        }
+    }
+
 }
