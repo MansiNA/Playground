@@ -80,7 +80,7 @@ public class TarifMappingView extends VerticalLayout implements BeforeEnterObser
     private TextField nodeField;
     private TextField childField;
     private List<CLTVProduct> cltvAllProducts;
-    private List<CLTVProduct> listOfCltvProducts;
+    private List<CLTVProduct> listOfFilterCltvProducts;
     private List<MissingCLTVProduct> missingCLTVProducts;
     private Button showAllBtn;
     public TarifMappingView(ProjectParameterService projectParameterService, ProjectConnectionService projectConnectionService, BackendService backendService, AuthenticatedUser authenticatedUser, ProjectsService projectsService, ProjectAttachmentsService projectAttachmentsService) {
@@ -240,11 +240,11 @@ public class TarifMappingView extends VerticalLayout implements BeforeEnterObser
         setupCLTVProductGrid();
         setupMissingCLTVProductGrid();
 
-        listOfCltvProducts = cltvAllProducts.stream()
+        listOfFilterCltvProducts = cltvAllProducts.stream()
                 .filter(product -> product.getCltvTarif() == null || product.getProductType() == null)
                 .collect(Collectors.toList());
 
-        cltvProductGrid.setItems(listOfCltvProducts);
+        cltvProductGrid.setItems(listOfFilterCltvProducts);
         missingCLTVProductGrid.setItems(missingCLTVProducts);
 
         missingCLTVProductGrid.setDropMode(GridDropMode.ON_GRID);
@@ -269,7 +269,7 @@ public class TarifMappingView extends VerticalLayout implements BeforeEnterObser
     private void toggleView() {
         if (showAllBtn.getText().equals("show only missing")) {
             // Show all rows
-            cltvProductGrid.setItems(listOfCltvProducts);
+            cltvProductGrid.setItems(listOfFilterCltvProducts);
             showAllBtn.setText("show all");
         } else {
             // Show only missing rows
@@ -309,10 +309,11 @@ public class TarifMappingView extends VerticalLayout implements BeforeEnterObser
             CLTVProduct cltvProduct = new CLTVProduct();
             cltvProduct.setChild(childField.getValue());
             cltvProduct.setUser(MainLayout.userName);
-            listOfCltvProducts.add(cltvProduct);
-            cltvProductGrid.setItems(listOfCltvProducts);
+            listOfFilterCltvProducts.add(cltvProduct);
+            cltvProductGrid.setItems(listOfFilterCltvProducts);
             missingCLTVProducts.remove(draggedItem);
             missingCLTVProductGrid.setItems(missingCLTVProducts);
+            projectConnectionService.deleteMissingCLTVProduct(dbUrl, dbUser, dbPassword, missingTableName, draggedItem.getTariffGroupId());
             save2DB(cltvProduct);
         });
         return addChildButton;
@@ -324,10 +325,11 @@ public class TarifMappingView extends VerticalLayout implements BeforeEnterObser
             CLTVProduct cltvProduct = new CLTVProduct();
             cltvProduct.setNode(nodeField.getValue());
             cltvProduct.setUser(MainLayout.userName);
-            listOfCltvProducts.add(cltvProduct);
-            cltvProductGrid.setItems(listOfCltvProducts);
+            listOfFilterCltvProducts.add(cltvProduct);
+            cltvProductGrid.setItems(listOfFilterCltvProducts);
             missingCLTVProducts.remove(draggedItem);
             missingCLTVProductGrid.setItems(missingCLTVProducts);
+            projectConnectionService.deleteMissingCLTVProduct(dbUrl, dbUser, dbPassword, missingTableName, draggedItem.getTariffGroupId());
             save2DB(cltvProduct);
         });
         return addNodeButton;
@@ -367,6 +369,14 @@ public class TarifMappingView extends VerticalLayout implements BeforeEnterObser
                 .distinct()
                 .collect(Collectors.toList());
 
+        for (CLTVProduct product : cltvAllProducts) {
+            String line = String.format("Node: %s, Child: %s, CLTV Tariff: %s, Product Type: %s, User: %s, Verarb Datum: %s",
+                    product.getNode(), product.getChild(), product.getCltvTarif(),
+                    product.getProductType(), product.getUser(), product.getVerarbDatum());
+
+            System.out.println(line);
+        }
+
         String NODE = "node";
         String CHILD = "child";
         String CLTVTARIF = "cltvTarif";
@@ -385,25 +395,57 @@ public class TarifMappingView extends VerticalLayout implements BeforeEnterObser
         cltvProductGrid.getColumnByKey(USER).setHeader("User").setWidth("100px").setFlexGrow(0).setResizable(true);
       //  cltvProductGrid.getColumnByKey(VERARDATUM).setHeader("VerarbDatum").setWidth("200px").setFlexGrow(0).setResizable(true);
 
-        cltvProductGrid.addComponentColumn(productHierarchie -> {
+        cltvProductGrid.addComponentColumn(cltvProduct -> {
             ComboBox<String> cltvTarrifCombobox = new ComboBox<>();
-            cltvTarrifCombobox.setWidth("130px");
-            cltvTarrifCombobox.setItems(cltvtarrifList);
-            cltvTarrifCombobox.setValue(cltvtarrifList.get(0));
-            //   comboBox.setHeight("40px");
+            cltvTarrifCombobox.setPlaceholder("select or enter value...");
+            if(cltvtarrifList != null && !cltvtarrifList.isEmpty()) {
+                cltvTarrifCombobox.setItems(cltvtarrifList);
+            }
+            System.out.println(cltvProduct.getNode() + "...."+ cltvProduct.getChild() + cltvProduct.getCltvTarif());
+            if(cltvProduct.getCltvTarif() != null) {
+                cltvTarrifCombobox.setValue(cltvProduct.getCltvTarif());
+            }
+            cltvTarrifCombobox.setAllowCustomValue(true);
+            cltvTarrifCombobox.setWidth("260px");
+            cltvTarrifCombobox.addCustomValueSetListener(e -> {
+                String customValue = e.getDetail();
+                cltvtarrifList.add(customValue);
+                cltvTarrifCombobox.setItems(cltvtarrifList);
+                cltvProduct.setCltvTarif(customValue);
+                updateCLTVProduct(cltvProduct);
+            });
             cltvTarrifCombobox.addValueChangeListener(event -> {
-
+                cltvProduct.setCltvTarif(event.getValue());
+                System.out.println("update cltv...");
+                updateCLTVProduct(cltvProduct);
+                System.out.println("update cltv...after");
             });
             return cltvTarrifCombobox;
         }).setKey(CLTVTARIF).setHeader("CltvTarif").setFlexGrow(0).setWidth("140px");
 
-        cltvProductGrid.addComponentColumn(productHierarchie -> {
+        cltvProductGrid.addComponentColumn(cltvProduct -> {
             ComboBox<String> productTypeCombobox = new ComboBox<>();
-            productTypeCombobox.setWidth("130px");
-            productTypeCombobox.setItems(productTypeList);
-            productTypeCombobox.setValue(productTypeList.get(0));
-            //   comboBox.setHeight("40px");
+            productTypeCombobox.setPlaceholder("select or enter value...");
+            if(productTypeList != null && !productTypeList.isEmpty()) {
+                productTypeCombobox.setItems(productTypeList);
+            }
+            System.out.println(cltvProduct.getNode() + "...."+ cltvProduct.getChild() + cltvProduct.getProductType());
+            if(cltvProduct.getProductType() != null) {
+                productTypeCombobox.setValue(cltvProduct.getProductType());
+            }
+
+            productTypeCombobox.setAllowCustomValue(true);
+            productTypeCombobox.setWidth("260px");
+            productTypeCombobox.addCustomValueSetListener(e -> {
+                String customValue = e.getDetail();
+                productTypeList.add(customValue);
+                productTypeCombobox.setItems(productTypeList);
+                cltvProduct.setProductType(customValue);
+                updateCLTVProduct(cltvProduct);
+            });
             productTypeCombobox.addValueChangeListener(event -> {
+                cltvProduct.setProductType(event.getValue());
+                updateCLTVProduct(cltvProduct);
 
             });
             return productTypeCombobox;
@@ -431,6 +473,27 @@ public class TarifMappingView extends VerticalLayout implements BeforeEnterObser
 
     }
 
+    private void updateCLTVProduct(CLTVProduct cltvProduct) {
+        String result = projectConnectionService.updateCLTVProduct(dbUrl, dbUser, dbPassword, cltvProduct, tableName);
+        Notification notification;
+        if (result.equals(Constants.OK)){
+            logView.logMessage(Constants.INFO, "Updated data in database");
+            updateGridList(cltvProduct);
+            notification = Notification.show("CLTVProduct updated successfully",5000, Notification.Position.MIDDLE);
+            notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+        } else {
+            logView.logMessage(Constants.ERROR, "Error while updating data in database");
+            notification = Notification.show("Error during CLTVProduct update " + result ,5000, Notification.Position.MIDDLE);
+            notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+        }
+    }
+
+    private void updateGridList(CLTVProduct cltvProduct) {
+        if(cltvProduct.getCltvTarif() != null && cltvProduct.getProductType() != null) {
+            listOfFilterCltvProducts.remove(cltvProduct);
+            cltvProductGrid.setItems(listOfFilterCltvProducts);
+        }
+    }
     private void setupMissingCLTVProductGrid() {
         missingCLTVProductGrid = new Grid<>(MissingCLTVProduct.class);
         String TARIFFGROUPID = "tariffGroupId";

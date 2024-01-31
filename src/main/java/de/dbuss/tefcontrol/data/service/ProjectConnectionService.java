@@ -1581,4 +1581,43 @@ public class ProjectConnectionService {
             return handleDatabaseError(e);
         }
     }
+
+    public String updateCLTVProduct(String dbUrl, String dbUser, String dbPassword, CLTVProduct item, String tableName) {
+        try {
+        //    DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+        //    jdbcTemplate = new JdbcTemplate(dataSource);
+
+             String sqlUpdate = "UPDATE " + tableName + " SET CLTV_Tarif = ?, Product_Type = ? WHERE Node = ? AND Child = ?";
+          //  String sqlUpdate = "UPDATE " + tableName + " SET CLTV_Tarif = ?, Product_Type = ? WHERE Node = ? AND (CLTV_Tarif IS NULL OR Product_Type IS NULL)";
+            jdbcTemplate.update(
+                    sqlUpdate,
+                    item.getCltvTarif(),
+                    item.getProductType(),
+                    item.getNode(),
+                    item.getChild()
+            );
+
+            return Constants.OK;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return handleDatabaseError(e);
+        }
+    }
+
+    public String deleteMissingCLTVProduct(String dbUrl, String dbUser, String dbPassword, String tableName, String tariffGroupId) {
+        try {
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
+            String sqlDelete = "DELETE FROM " + tableName + " WHERE TariffGroupID = ?";
+
+            jdbcTemplate.update(sqlDelete, tariffGroupId);
+
+            return Constants.OK;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return handleDatabaseError(e);
+        }
+    }
+
 }
