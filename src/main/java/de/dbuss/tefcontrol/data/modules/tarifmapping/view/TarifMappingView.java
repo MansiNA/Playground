@@ -256,7 +256,6 @@ public class TarifMappingView extends VerticalLayout implements BeforeEnterObser
         missingCLTVProductGrid.setRowsDraggable(true);
         missingCLTVProductGrid.addDragStartListener(this::handleDragStart);
         cltvProductGrid.addDropListener(e -> {
-            System.out.println("Dropped" +e.getDropTargetItem());
             dialog.open();
         });
 
@@ -276,6 +275,7 @@ public class TarifMappingView extends VerticalLayout implements BeforeEnterObser
         return content;
     }
     private void toggleView() {
+        logView.logMessage(Constants.INFO, "Sarting toggleView() for show all data Or missing data");
         if (showAllBtn.getText().equals("show only missing")) {
             // Show all rows
             saveBtn.setVisible(true);
@@ -284,20 +284,24 @@ public class TarifMappingView extends VerticalLayout implements BeforeEnterObser
         } else {
             // Show only missing rows
             saveBtn.setVisible(false);
+            cltvAllProducts = projectConnectionService.getCLTVProducts(dbUrl, dbUser, dbPassword, tableName);
             cltvProductGrid.setItems(cltvAllProducts);
             showAllBtn.setText("show only missing");
         }
+        logView.logMessage(Constants.INFO, "Ending toggleView() for show all data Or missing data");
     }
     private void handleDragStart(GridDragStartEvent<MissingCLTVProduct> e) {
+        logView.logMessage(Constants.INFO, "Sarting handleDragStart() for drag & drop");
         draggedItem = e.getDraggedItems().get(0);
         System.out.println("Dragged start for" + draggedItem.getTariffGroupId());
 
         childField.setValue(draggedItem.getTariffGroupId());
         nodeField.setValue(draggedItem.getTariffGroupL4Name());
+        logView.logMessage(Constants.INFO, "Ending handleDragStart() for drag & drop");
     }
 
     private VerticalLayout createDialogLayout() {
-
+        logView.logMessage(Constants.INFO, "Sarting createDialogLayout() for child and node dialog");
         childField = new TextField("Child");
         childField.setEnabled(false);
         nodeField = new TextField("Node");
@@ -308,11 +312,12 @@ public class TarifMappingView extends VerticalLayout implements BeforeEnterObser
         dialogLayout.setSpacing(false);
         dialogLayout.setAlignItems(FlexComponent.Alignment.STRETCH);
         dialogLayout.getStyle().set("width", "18rem").set("max-width", "100%");
-
+        logView.logMessage(Constants.INFO, "Ending createDialogLayout() for child and node dialog");
         return dialogLayout;
     }
 
     private Button createChildButton(Dialog dialog) {
+        logView.logMessage(Constants.INFO, "Sarting createChildButton() for add child button");
         Button addChildButton = new Button("Add Child", e -> dialog.close());
         addChildButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
@@ -327,9 +332,11 @@ public class TarifMappingView extends VerticalLayout implements BeforeEnterObser
           //  projectConnectionService.deleteMissingCLTVProduct(dbUrl, dbUser, dbPassword, missingTableName, draggedItem.getTariffGroupId());
             save2DB(cltvProduct);
         });
+        logView.logMessage(Constants.INFO, "Ending createChildButton() for add child button");
         return addChildButton;
     }
     private Button createNodeButton(Dialog dialog) {
+        logView.logMessage(Constants.INFO, "Starting createNodeButton() for add node button");
         Button addNodeButton = new Button("Add Node", e -> dialog.close());
         addNodeButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         addNodeButton.addClickListener(clickEvent -> {
@@ -343,6 +350,7 @@ public class TarifMappingView extends VerticalLayout implements BeforeEnterObser
          //   projectConnectionService.deleteMissingCLTVProduct(dbUrl, dbUser, dbPassword, missingTableName, draggedItem.getTariffGroupId());
             save2DB(cltvProduct);
         });
+        logView.logMessage(Constants.INFO, "Ending createNodeButton() for add node button");
         return addNodeButton;
     }
 
@@ -485,16 +493,22 @@ public class TarifMappingView extends VerticalLayout implements BeforeEnterObser
     }
 
     private void updateCLTVProduct() {
-        String result = projectConnectionService.updateCLTVProducts(dbUrl, dbUser, dbPassword, tableName, updatedCltvProductsList);
         Notification notification;
-        if (result.equals(Constants.OK)){
-            logView.logMessage(Constants.INFO, "Updated data in database");
-            updateGridList();
-            notification = Notification.show("CLTVProduct updated successfully",5000, Notification.Position.MIDDLE);
-            notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+        if(!updatedCltvProductsList.isEmpty()) {
+            String result = projectConnectionService.updateCLTVProducts(dbUrl, dbUser, dbPassword, tableName, updatedCltvProductsList);
+            if (result.equals(Constants.OK)) {
+                logView.logMessage(Constants.INFO, "Updated data in database");
+                updateGridList();
+                notification = Notification.show("CLTVProduct updated successfully", 5000, Notification.Position.MIDDLE);
+                notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+            } else {
+                logView.logMessage(Constants.ERROR, "Error while updating data in database");
+                notification = Notification.show("Error during CLTVProduct update " + result, 5000, Notification.Position.MIDDLE);
+                notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+            }
         } else {
-            logView.logMessage(Constants.ERROR, "Error while updating data in database");
-            notification = Notification.show("Error during CLTVProduct update " + result ,5000, Notification.Position.MIDDLE);
+            logView.logMessage(Constants.ERROR, "no any data for update");
+            notification = Notification.show("No any changes data", 5000, Notification.Position.MIDDLE);
             notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
         }
     }
