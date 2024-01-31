@@ -236,8 +236,8 @@ public class TarifMappingView extends VerticalLayout implements BeforeEnterObser
 
         VerticalLayout content = new VerticalLayout();
 
-        content.setWidth("600px");
-        content.setHeight("500px");
+        //content.setWidth("600px");
+        //content.setHeight("500px");
         HorizontalLayout hl = new HorizontalLayout(showAllBtn, saveBtn);
         hl.setAlignItems(Alignment.BASELINE);
         content.add(hl);
