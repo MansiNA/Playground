@@ -1509,6 +1509,7 @@ public class ProjectConnectionService {
             // Create a RowMapper to map the query result to a CLTV_HW_Measures object
             RowMapper<CLTVProduct> rowMapper = (rs, rowNum) -> {
                 CLTVProduct cltvProduct = new CLTVProduct();
+             //   cltvProduct.setId(rs.getInt("ID"));
                 cltvProduct.setNode(rs.getString("Node"));
                 cltvProduct.setChild(rs.getString("Child"));
                 cltvProduct.setCltvTarif(rs.getString("CLTV_Tarif"));
@@ -1582,20 +1583,28 @@ public class ProjectConnectionService {
         }
     }
 
-    public String updateCLTVProduct(String dbUrl, String dbUser, String dbPassword, CLTVProduct item, String tableName) {
+    public String updateCLTVProducts(String dbUrl, String dbUser, String dbPassword, String tableName, List<CLTVProduct> updatedCltvProductsList) {
         try {
-        //    DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
-        //    jdbcTemplate = new JdbcTemplate(dataSource);
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
 
-             String sqlUpdate = "UPDATE " + tableName + " SET CLTV_Tarif = ?, Product_Type = ? WHERE Node = ? AND Child = ?";
-          //  String sqlUpdate = "UPDATE " + tableName + " SET CLTV_Tarif = ?, Product_Type = ? WHERE Node = ? AND (CLTV_Tarif IS NULL OR Product_Type IS NULL)";
-            jdbcTemplate.update(
-                    sqlUpdate,
-                    item.getCltvTarif(),
-                    item.getProductType(),
-                    item.getNode(),
-                    item.getChild()
-            );
+          //  String sqlUpdate = "UPDATE " + tableName + " SET CLTV_Tarif = ?, Product_Type = ? WHERE Id = ?";
+            String sqlUpdate = "UPDATE [PIT2].[dbo].[IN_FRONT_CLTV_Product] " +
+                    "SET CLTV_Tarif = 'XY', Product_Type = 'PO' " +
+                    "WHERE (Node = ? OR (Node IS NULL AND ? IS NULL)) " +
+                    "AND (Child = ? OR (Child IS NULL AND ? IS NULL));";
+
+
+            for (CLTVProduct item : updatedCltvProductsList) {
+                jdbcTemplate.update(
+                        sqlUpdate,
+                        item.getCltvTarif(),
+                        item.getProductType(),
+                        item.getNode(),
+                        item.getChild()
+                     //   item.getId()
+                );
+            }
 
             return Constants.OK;
         } catch (Exception e) {

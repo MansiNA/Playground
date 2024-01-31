@@ -9,6 +9,7 @@ import java.util.Date;
 @Setter
 public class CLTVProduct {
 
+    // private int id;
     private String node;
     private String child;
     private String cltvTarif;
