@@ -5,6 +5,7 @@ import com.vaadin.flow.component.notification.NotificationVariant;
 import de.dbuss.tefcontrol.data.entity.*;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.B2pOutlookSub;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.OutlookMGSR;
+import de.dbuss.tefcontrol.data.modules.b2pmapsaleschannel.entity.MapSalesChannel;
 import de.dbuss.tefcontrol.data.modules.cltv_Inflow.entity.CLTVInflow;
 import de.dbuss.tefcontrol.data.modules.administration.entity.CurrentPeriods;
 import de.dbuss.tefcontrol.data.modules.administration.entity.CurrentScenarios;
@@ -1637,4 +1638,55 @@ public class ProjectConnectionService {
         }
     }
 
+    public List<MapSalesChannel> getMapSalesChannelList(String dbUrl, String dbUser, String dbPassword, String tableName) {
+
+        try {
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
+            String sqlQuery = "SELECT * FROM " + tableName;
+
+            // Create a RowMapper to map the query result to a CLTV_HW_Measures object
+            RowMapper<MapSalesChannel> rowMapper = (rs, rowNum) -> {
+                MapSalesChannel mapSalesChannel = new MapSalesChannel();
+              //  mapSalesChannel.setUploadId(rs.getLong("Upload_ID"));
+                mapSalesChannel.setSalesChannel(rs.getString("Sales_Channel"));
+                mapSalesChannel.setChannel(rs.getString("Channel"));
+                return mapSalesChannel;
+            };
+
+            List<MapSalesChannel> fetchedData = jdbcTemplate.query(sqlQuery, rowMapper);
+
+            return fetchedData;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            errorMessage = handleDatabaseError(ex);
+            return Collections.emptyList();
+        }
+
+    }
+
+    public String saveMapSalesChannel(String dbUrl, String dbUser, String dbPassword, String tableName, int uploadId, List<MapSalesChannel> data) {
+        try {
+
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
+            String sqlInsert = "INSERT INTO " + tableName + " ([Upload_ID], [Sales_Channel], [Channel]) VALUES (?, ?, ?)";
+
+            // Loop through the data and insert new records
+            for (MapSalesChannel item : data) {
+                jdbcTemplate.update(
+                        sqlInsert,
+                        uploadId,
+                        item.getSalesChannel(),
+                        item.getChannel()
+                );
+            }
+            return Constants.OK;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return handleDatabaseError(e);
+        }
+    }
 }

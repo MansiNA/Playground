@@ -27,6 +27,7 @@ import de.dbuss.tefcontrol.data.entity.Projects;
 import de.dbuss.tefcontrol.data.entity.User;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.view.B2POutlookFINView;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.view.B2POutlookSUBView;
+import de.dbuss.tefcontrol.data.modules.b2pmapsaleschannel.view.B2BMapSalesChannelView;
 import de.dbuss.tefcontrol.data.modules.cltv_Inflow.view.CLTVInflowView;
 import de.dbuss.tefcontrol.data.modules.administration.view.CobiAdminView;
 import de.dbuss.tefcontrol.data.modules.hwmapping.view.HWMapping;
@@ -122,6 +123,7 @@ public class MainLayout extends AppLayout {
         urlToViewMap.put(Constants.HW_MAPPING, HWMapping.class);
         urlToViewMap.put(Constants.REPORT_ADMINISTRATION, ReportAdminView.class);
         urlToViewMap.put(Constants.TARIFMAPPING, TarifMappingView.class);
+        urlToViewMap.put(Constants.B2B_MAPSALESCHANNEL, B2BMapSalesChannelView.class);
 
         setPrimarySection(Section.DRAWER);
         addDrawerContent();

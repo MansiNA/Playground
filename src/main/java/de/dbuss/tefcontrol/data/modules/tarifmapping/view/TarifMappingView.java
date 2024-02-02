@@ -46,7 +46,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Route(value = "Tarif_Mapping/:project_Id", layout = MainLayout.class)
-@RolesAllowed({"FLIP", "ADMIN"})
+@RolesAllowed({"ADMIN"})
 public class TarifMappingView extends VerticalLayout implements BeforeEnterObserver {
 
     private final ProjectConnectionService projectConnectionService;
