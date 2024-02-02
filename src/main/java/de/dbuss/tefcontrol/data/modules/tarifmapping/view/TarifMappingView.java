@@ -430,8 +430,8 @@ public class TarifMappingView extends VerticalLayout implements BeforeEnterObser
             cltvTarrifCombobox.addCustomValueSetListener(e -> {
                 String customValue = e.getDetail();
                 cltvtarrifList.add(customValue);
-                cltvTarrifCombobox.setValue(customValue);
                 cltvTarrifCombobox.setItems(cltvtarrifList);
+                cltvTarrifCombobox.setValue(customValue);
                 cltvProduct.setCltvTarif(customValue);
                 updatedCltvProductsList.add(cltvProduct);
                 updateCLTVProduct();
