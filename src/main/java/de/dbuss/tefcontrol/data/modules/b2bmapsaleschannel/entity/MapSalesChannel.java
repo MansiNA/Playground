@@ -1,4 +1,4 @@
-package de.dbuss.tefcontrol.data.modules.b2pmapsaleschannel.entity;
+package de.dbuss.tefcontrol.data.modules.b2bmapsaleschannel.entity;
 
 import lombok.Getter;
 import lombok.Setter;

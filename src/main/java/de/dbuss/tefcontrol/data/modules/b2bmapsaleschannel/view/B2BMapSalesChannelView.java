@@ -1,4 +1,4 @@
-package de.dbuss.tefcontrol.data.modules.b2pmapsaleschannel.view;
+package de.dbuss.tefcontrol.data.modules.b2bmapsaleschannel.view;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Key;
@@ -31,7 +31,7 @@ import de.dbuss.tefcontrol.components.QS_Callback;
 import de.dbuss.tefcontrol.components.QS_Grid;
 import de.dbuss.tefcontrol.data.dto.ProjectAttachmentsDTO;
 import de.dbuss.tefcontrol.data.entity.*;
-import de.dbuss.tefcontrol.data.modules.b2pmapsaleschannel.entity.MapSalesChannel;
+import de.dbuss.tefcontrol.data.modules.b2bmapsaleschannel.entity.MapSalesChannel;
 import de.dbuss.tefcontrol.data.service.*;
 import de.dbuss.tefcontrol.dataprovider.GenericDataProvider;
 import de.dbuss.tefcontrol.security.AuthenticatedUser;
@@ -72,7 +72,7 @@ public class B2BMapSalesChannelView extends VerticalLayout implements BeforeEnte
     private TextField nodeField;
     private TextField childField;
     private List<MapSalesChannel> mapSalesChannelList;
-    private Button showAllBtn;
+    //private Button showAllBtn;
     private QS_Grid qsGrid;
     private Button qsBtn;
     private int upload_id;
@@ -113,11 +113,13 @@ public class B2BMapSalesChannelView extends VerticalLayout implements BeforeEnte
                 tableName = projectParameter.getValue();
             } else if (Constants.SOURCETABLE.equals(projectParameter.getName())){
                 sourceTable = projectParameter.getValue();
-            } else if (Constants.AGENT_NAME.equals(projectParameter.getName())){
+            } else if (Constants.DB_JOBS.equals(projectParameter.getName())){
                 agentName = projectParameter.getValue();
             }
             // }
         }
+
+        System.out.println("Agent-Name: " + agentName);
 
         dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
 
@@ -216,7 +218,7 @@ public class B2BMapSalesChannelView extends VerticalLayout implements BeforeEnte
 
         mapSalesChannelList = projectConnectionService.getMapSalesChannelList(dbUrl, dbUser, dbPassword, sourceTable);
 
-        showAllBtn = new Button("show all");
+      //  showAllBtn = new Button("show all");
         // saveBtn = new Button("save");
 
         VerticalLayout content = new VerticalLayout();
@@ -286,6 +288,9 @@ public class B2BMapSalesChannelView extends VerticalLayout implements BeforeEnte
         public void onComplete(String result) {
             logView.logMessage(Constants.INFO, "Starting CallbackHandler onComplete for execute Start Job");
             if(!result.equals("Cancel")) {
+
+                logView.logMessage(Constants.INFO,"executeStartJobSteps: upload_id->" + upload_id + " AgentName->" + agentName );
+
                 qsGrid.executeStartJobSteps(upload_id, agentName);
             }
             logView.logMessage(Constants.INFO, "Ending CallbackHandler onComplete for execute Start Job");
@@ -298,7 +303,9 @@ public class B2BMapSalesChannelView extends VerticalLayout implements BeforeEnte
         content.setSizeFull();
         content.setHeightFull();
         crud = new Crud<>(MapSalesChannel.class, createEditor());
+
         crud.setToolbarVisible(false);
+        crud.getDeleteButton().setText("Huihu");// .setVisible(true);
         crud.setHeightFull();
         crud.setSizeFull();
         setupMapSalsChannelGrid();
@@ -309,15 +316,18 @@ public class B2BMapSalesChannelView extends VerticalLayout implements BeforeEnte
 
     private CrudEditor<MapSalesChannel> createEditor() {
         logView.logMessage(Constants.INFO, "createEditor() for create Editor");
-        TextField salesChannelFeild = new TextField("SalesChannel");
+
+        TextField salesChannelField = new TextField("SalesChannel");
+        salesChannelField.setEnabled(false);
         TextArea channelField = new TextArea("Channel");
-        FormLayout editFormLayout = new FormLayout(salesChannelFeild, channelField);
+        FormLayout editFormLayout = new FormLayout(salesChannelField, channelField);
         Binder<MapSalesChannel> editBinder = new Binder<>(MapSalesChannel.class);
         //editBinder.bindInstanceFields(editFormLayout);
-        editBinder.forField(salesChannelFeild).asRequired().bind(MapSalesChannel:: getSalesChannel,
+        editBinder.forField(salesChannelField).asRequired().bind(MapSalesChannel:: getSalesChannel,
                 MapSalesChannel::setSalesChannel);
         editBinder.forField(channelField).asRequired().bind(MapSalesChannel::getChannel,
                 MapSalesChannel::setChannel);
+
         return new BinderCrudEditor<>(editBinder, editFormLayout);
     }
 
@@ -361,10 +371,16 @@ public class B2BMapSalesChannelView extends VerticalLayout implements BeforeEnte
         GenericDataProvider dataProvider = new GenericDataProvider(getMapSalesChannelDataProviderAllItems());
 
         crud.addDeleteListener(
-                deleteEvent -> {dataProvider.delete(deleteEvent.getItem());
-                    mapSalesChannelGrid.setDataProvider(dataProvider);
 
-                });
+            deleteEvent -> {
+                Notification.show("Delete not allowed! ", 4000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+
+                //dataProvider.delete(deleteEvent.getItem());
+                //mapSalesChannelGrid.setDataProvider(dataProvider);
+                }
+
+
+                );
         crud.addSaveListener(
                 saveEvent -> {
                     dataProvider.persist(saveEvent.getItem());

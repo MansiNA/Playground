@@ -261,6 +261,7 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
         public void onComplete(String result) {
             logView.logMessage(Constants.INFO, "Starting CallbackHandler onComplete for execute Start Job");
             if(!result.equals("Cancel")) {
+                logView.logMessage(Constants.INFO,"executeStartJobSteps: upload_id->" + upload_id + " AgentName->" + agentName );
                 qsGrid.executeStartJobSteps(upload_id, agentName);
             }
             logView.logMessage(Constants.INFO, "Ending CallbackHandler onComplete for execute Start Job");

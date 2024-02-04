@@ -5,7 +5,7 @@ import com.vaadin.flow.component.notification.NotificationVariant;
 import de.dbuss.tefcontrol.data.entity.*;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.B2pOutlookSub;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.OutlookMGSR;
-import de.dbuss.tefcontrol.data.modules.b2pmapsaleschannel.entity.MapSalesChannel;
+import de.dbuss.tefcontrol.data.modules.b2bmapsaleschannel.entity.MapSalesChannel;
 import de.dbuss.tefcontrol.data.modules.cltv_Inflow.entity.CLTVInflow;
 import de.dbuss.tefcontrol.data.modules.administration.entity.CurrentPeriods;
 import de.dbuss.tefcontrol.data.modules.administration.entity.CurrentScenarios;
