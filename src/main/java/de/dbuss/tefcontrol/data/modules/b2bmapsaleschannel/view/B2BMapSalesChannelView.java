@@ -119,8 +119,6 @@ public class B2BMapSalesChannelView extends VerticalLayout implements BeforeEnte
             // }
         }
 
-        System.out.println("Agent-Name: " + agentName);
-
         dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
 
         setProjectParameterGrid(filteredProjectParameters);
@@ -222,6 +220,7 @@ public class B2BMapSalesChannelView extends VerticalLayout implements BeforeEnte
         // saveBtn = new Button("save");
 
         VerticalLayout content = new VerticalLayout();
+        content.setHeightFull();
 
         HorizontalLayout hl = new HorizontalLayout();
         hl.setAlignItems(Alignment.BASELINE);
