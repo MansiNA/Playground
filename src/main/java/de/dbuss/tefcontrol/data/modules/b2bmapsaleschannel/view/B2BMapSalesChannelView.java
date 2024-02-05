@@ -302,9 +302,8 @@ public class B2BMapSalesChannelView extends VerticalLayout implements BeforeEnte
         content.setSizeFull();
         content.setHeightFull();
         crud = new Crud<>(MapSalesChannel.class, createEditor());
-
+        crud.getDeleteButton().getElement().getStyle().set("display", "none");
         crud.setToolbarVisible(false);
-        crud.getDeleteButton().setVisible(false);
         crud.setHeightFull();
         crud.setSizeFull();
         setupMapSalsChannelGrid();
