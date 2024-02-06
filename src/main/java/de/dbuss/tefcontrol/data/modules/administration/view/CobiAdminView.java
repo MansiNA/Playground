@@ -11,19 +11,18 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.router.*;
+import de.dbuss.tefcontrol.components.DefaultUtils;
 import de.dbuss.tefcontrol.components.LogView;
 import de.dbuss.tefcontrol.components.QS_Callback;
 import de.dbuss.tefcontrol.components.QS_Grid;
-import de.dbuss.tefcontrol.data.entity.Constants;
-import de.dbuss.tefcontrol.data.entity.ProjectParameter;
-import de.dbuss.tefcontrol.data.entity.ProjectUpload;
-import de.dbuss.tefcontrol.data.entity.User;
+import de.dbuss.tefcontrol.data.dto.ProjectAttachmentsDTO;
+import de.dbuss.tefcontrol.data.entity.*;
 import de.dbuss.tefcontrol.data.modules.administration.entity.CurrentPeriods;
 import de.dbuss.tefcontrol.data.modules.administration.entity.CurrentScenarios;
-import de.dbuss.tefcontrol.data.service.BackendService;
-import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
-import de.dbuss.tefcontrol.data.service.ProjectParameterService;
+import de.dbuss.tefcontrol.data.modules.b2pOutlook.view.B2POutlookFINView;
+import de.dbuss.tefcontrol.data.service.*;
 import de.dbuss.tefcontrol.security.AuthenticatedUser;
 import de.dbuss.tefcontrol.views.MainLayout;
 import jakarta.annotation.security.RolesAllowed;
@@ -41,6 +40,9 @@ import static com.vaadin.flow.component.button.ButtonVariant.LUMO_TERTIARY_INLIN
 @RolesAllowed({"ADMIN", "MAPPING", "FLIP"})
 public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver {
     private final ProjectConnectionService projectConnectionService;
+    private final ProjectsService projectsService;
+    private final ProjectAttachmentsService projectAttachmentsService;
+    private BackendService backendService;
     private String tableCurrentPeriods;
     private String tableCurrentSenarios;
     private String sqlPlanScenarios;
@@ -54,7 +56,7 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
     private CurrentScenarios currentScenarios;
     private CurrentPeriods currentPeriods;
     private int projectId;
-
+    private Optional<Projects> projects;
     private QS_Grid qsGrid;
     private Button qsBtn;
 
@@ -67,11 +69,15 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
     Grid<ProjectParameter> parameterGrid = new Grid<>(ProjectParameter.class, false);
     private LogView logView;
     private Boolean isLogsVisible = false;
+    private DefaultUtils defaultUtils;
+    private List<ProjectAttachmentsDTO> listOfProjectAttachments;
 
-
-    public CobiAdminView(ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, BackendService backendService, AuthenticatedUser authenticatedUser) {
+    public CobiAdminView(ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, BackendService backendService, AuthenticatedUser authenticatedUser, ProjectsService projectsService, ProjectAttachmentsService projectAttachmentsService) {
         this.projectConnectionService = projectConnectionService;
-        this.authenticatedUser=authenticatedUser;
+        this.authenticatedUser = authenticatedUser;
+        this.projectsService = projectsService;
+        this.projectAttachmentsService = projectAttachmentsService;
+        this.backendService = backendService;
 
         logView = new LogView();
         logView.logMessage(Constants.INFO, "Starting CobiAdminView");
@@ -116,19 +122,112 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
         }
         dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
         setProjectParameterGrid(filteredProjectParameters);
-
-        H1 h1 = new H1("FLIP Administration");
-        Article p1 = new Article();
-        p1.setText("Auf diese Seite lassen sich verschiedene Einstellungen zur COBI-Beladung vornehmen.");
-        add();
-        add(h1, p1, parameterGrid, getDimPeriodGrid(), getDimScenarioGrid());
+        defaultUtils = new DefaultUtils(projectsService, projectAttachmentsService);
 
         //Componente QS-Grid:
         qsGrid = new QS_Grid(projectConnectionService, backendService);
 
+        HorizontalLayout vl = new HorizontalLayout();
+        vl.add(getTabsheet());
+
+        vl.setHeightFull();
+        vl.setSizeFull();
+
+        setHeightFull();
+        setSizeFull();
+
+        add(vl,parameterGrid);
+
+        parameterGrid.setVisible(false);
+        logView.setVisible(false);
+
+        if(MainLayout.isAdmin) {
+            UI.getCurrent().addShortcutListener(
+                    () -> {
+                        isVisible = !isVisible;
+                        parameterGrid.setVisible(isVisible);
+                    },
+                    Key.KEY_I, KeyModifier.ALT);
+            UI.getCurrent().addShortcutListener(
+                    () -> {
+                        isLogsVisible = !isLogsVisible;
+                        logView.setVisible(isLogsVisible);
+                    },
+                    Key.KEY_V, KeyModifier.ALT);
+
+        }
+        add(logView);
+        logView.logMessage(Constants.INFO, "Ending CobiAdminView");
+    }
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+        logView.logMessage(Constants.INFO, "Starting beforeEnter for update");
+        RouteParameters parameters = event.getRouteParameters();
+        projectId = Integer.parseInt(parameters.get("project_Id").orElse(null));
+
+        projects = projectsService.findById(projectId);
+
+        projects.ifPresent(value -> listOfProjectAttachments = projectsService.getProjectAttachmentsWithoutFileContent(value));
+
+        updateDescription();
+        updateAttachmentGrid(listOfProjectAttachments);
+        logView.logMessage(Constants.INFO, "Ending beforeEnter for update");
+    }
+
+    private TabSheet getTabsheet() {
+        logView.logMessage(Constants.INFO, "Starting getTabsheet() for Tabs");
+        //log.info("Starting getTabsheet() for Tabsheet");
+        TabSheet tabSheet = new TabSheet();
+
+        tabSheet.add("Upload", getUpladTab());
+        tabSheet.add("Description", getDescriptionTab());
+        tabSheet.add("Attachments", getAttachmentTab());
+
+        tabSheet.setSizeFull();
+        tabSheet.setHeightFull();
+        //log.info("Ending getTabsheet() for Tabsheet");
+        logView.logMessage(Constants.INFO, "Ending getTabsheet() for Tabs");
+        return tabSheet;
+    }
+
+
+    private Component getAttachmentTab() {
+        logView.logMessage(Constants.INFO, "Set Attachment in getAttachmentTab()");
+        return defaultUtils.getProjectAttachements();
+    }
+
+    private Component getDescriptionTab() {
+        logView.logMessage(Constants.INFO, "Set Description in getDescriptionTab()");
+        return defaultUtils.getProjectDescription();
+    }
+    private void updateDescription() {
+        logView.logMessage(Constants.INFO, "Update Attachment in updateDescription()");
+        defaultUtils.setProjectId(projectId);
+        defaultUtils.setDescription();
+    }
+    private void updateAttachmentGrid(List<ProjectAttachmentsDTO> projectAttachmentsDTOS) {
+        logView.logMessage(Constants.INFO, "Update Description in updateAttachmentGrid()");
+        defaultUtils.setProjectId(projectId);
+        defaultUtils.setAttachmentGridItems(projectAttachmentsDTOS);
+    }
+    private Component getUpladTab() {
+        logView.logMessage(Constants.INFO, "Sarting getUpladTab() for set upload data");
+        VerticalLayout content = new VerticalLayout();
+
+        H1 h1 = new H1("FLIP Administration");
+        Article p1 = new Article();
+        p1.setText("Auf diese Seite lassen sich verschiedene Einstellungen zur COBI-Beladung vornehmen.");
+        content.add(h1, p1, getDimPeriodGrid(), getDimScenarioGrid());
+
         HorizontalLayout hl = new HorizontalLayout();
         hl.setAlignItems(Alignment.BASELINE);
         hl.add( qsBtn, qsGrid);
+
+        content.add(hl);
+
+        content.setSizeFull();
+        content.setHeightFull();
 
         qsBtn.addClickListener(e ->{
             logView.logMessage(Constants.INFO, "Starting qsBtn.addClickListener for save and QsGrid ");
@@ -208,38 +307,9 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
 
         });
 
-        add(hl);
-
-        parameterGrid.setVisible(false);
-        logView.setVisible(false);
-
-        if(MainLayout.isAdmin) {
-            UI.getCurrent().addShortcutListener(
-                    () -> {
-                        isVisible = !isVisible;
-                        parameterGrid.setVisible(isVisible);
-                    },
-                    Key.KEY_I, KeyModifier.ALT);
-            UI.getCurrent().addShortcutListener(
-                    () -> {
-                        isLogsVisible = !isLogsVisible;
-                        logView.setVisible(isLogsVisible);
-                    },
-                    Key.KEY_V, KeyModifier.ALT);
-
-        }
-        add(logView);
-        logView.logMessage(Constants.INFO, "Ending CobiAdminView");
+        logView.logMessage(Constants.INFO, "Ending getUpladTab() for set upload data");
+        return content;
     }
-
-    @Override
-    public void beforeEnter(BeforeEnterEvent event) {
-        logView.logMessage(Constants.INFO, "Starting beforeEnter for update");
-        RouteParameters parameters = event.getRouteParameters();
-        projectId = Integer.parseInt(parameters.get("project_Id").orElse(null));
-        logView.logMessage(Constants.INFO, "Ending beforeEnter for update");
-    }
-
 
     private void setProjectParameterGrid(List<ProjectParameter> listOfProjectParameters) {
         logView.logMessage(Constants.INFO, "Starting setProjectParameterGrid for set database detail in Grid");
