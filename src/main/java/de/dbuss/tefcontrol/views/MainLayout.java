@@ -21,12 +21,12 @@ import com.vaadin.flow.router.RouterLink;
 import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.server.auth.AccessAnnotationChecker;
 import com.vaadin.flow.theme.lumo.LumoUtility;
-import de.dbuss.tefcontrol.data.Role;
 import de.dbuss.tefcontrol.data.entity.Constants;
 import de.dbuss.tefcontrol.data.entity.Projects;
 import de.dbuss.tefcontrol.data.entity.User;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.view.B2POutlookFINView;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.view.B2POutlookSUBView;
+import de.dbuss.tefcontrol.data.modules.b2bmapsaleschannel.view.B2BMapSalesChannelView;
 import de.dbuss.tefcontrol.data.modules.cltv_Inflow.view.CLTVInflowView;
 import de.dbuss.tefcontrol.data.modules.administration.view.CobiAdminView;
 import de.dbuss.tefcontrol.data.modules.hwmapping.view.HWMapping;
@@ -35,6 +35,7 @@ import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.PBICentralComments
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.PBIFlashFinancials;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.PBITechComments;
 import de.dbuss.tefcontrol.data.modules.administration.view.ReportAdminView;
+import de.dbuss.tefcontrol.data.modules.tarifmapping.view.TarifMappingView;
 import de.dbuss.tefcontrol.data.modules.techkpi.view.Tech_KPIView;
 import de.dbuss.tefcontrol.data.service.ProjectsService;
 import de.dbuss.tefcontrol.data.service.UserService;
@@ -48,7 +49,6 @@ import java.io.ByteArrayInputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 
 import de.dbuss.tefcontrol.views.login.LoginView;
 import lombok.extern.slf4j.Slf4j;
@@ -120,6 +120,8 @@ public class MainLayout extends AppLayout {
         urlToViewMap.put(Constants.COBI_ADMINISTRATION, CobiAdminView.class);
         urlToViewMap.put(Constants.HW_MAPPING, HWMapping.class);
         urlToViewMap.put(Constants.REPORT_ADMINISTRATION, ReportAdminView.class);
+        urlToViewMap.put(Constants.TARIFMAPPING, TarifMappingView.class);
+        urlToViewMap.put(Constants.B2B_MAPSALESCHANNEL, B2BMapSalesChannelView.class);
 
         setPrimarySection(Section.DRAWER);
         addDrawerContent();

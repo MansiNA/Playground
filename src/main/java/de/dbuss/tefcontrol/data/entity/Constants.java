@@ -80,4 +80,11 @@ public class Constants {
     public static final String REPORT_ADMINISTRATION = "REPORT_Administration";
     public static final String TABLE_REPORTINGCONFIG = "Table_ReportingConfig";
 
+    // This constant is used for REPORT_Administration module
+    public static final String TARIFMAPPING = "Tarif_Mapping";
+    public static final String MISSING_TABLE = "Missing_Table";
+
+    // This constant is used for B2B_MapSalesChannel module
+    public static final String B2B_MAPSALESCHANNEL = "B2B_MapSalesChannel";
+    public static final String SOURCETABLE = "SourceTable";
 }

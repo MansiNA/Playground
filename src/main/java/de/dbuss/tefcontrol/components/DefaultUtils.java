@@ -224,7 +224,7 @@ public class DefaultUtils extends VerticalLayout {
                 crud.getGrid().getElement().getStyle().set("display", "none");
                 crud.getNewButton().getElement().getStyle().set("display", "none");
 
-                add(crud);
+                UI.getCurrent().add(crud);
             }
         });
 

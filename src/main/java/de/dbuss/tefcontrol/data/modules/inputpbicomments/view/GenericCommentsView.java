@@ -24,6 +24,7 @@ import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.provider.*;
 import com.vaadin.flow.router.*;
 import de.dbuss.tefcontrol.components.DefaultUtils;
+import de.dbuss.tefcontrol.components.LogView;
 import de.dbuss.tefcontrol.components.QS_Callback;
 import de.dbuss.tefcontrol.components.QS_Grid;
 import de.dbuss.tefcontrol.data.dto.ProjectAttachmentsDTO;
@@ -88,6 +89,8 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
     public static Map<String, Integer> projectUploadIdMap = new HashMap<>();
     private Boolean isVisible = false;
     Grid<ProjectParameter> parameterGrid = new Grid<>(ProjectParameter.class, false);
+    private LogView logView;
+    private Boolean isLogsVisible = false;
 
     public GenericCommentsView(AuthenticatedUser authenticatedUser, ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, BackendService backendService, ProjectsService projectsService, ProjectAttachmentsService projectAttachmentsService) {
 
@@ -96,6 +99,8 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
         this.backendService = backendService;
         this.projectsService = projectsService;
         this.projectAttachmentsService = projectAttachmentsService;
+        logView = new LogView();
+        logView.logMessage(Constants.INFO, "Starting GenericCommentsView");
 
         uploadBtn = new Button("Upload");
         uploadBtn.setEnabled(false);
@@ -152,6 +157,8 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
         add(vl,parameterGrid);
 
         parameterGrid.setVisible(false);
+        logView.setVisible(false);
+        add(logView);
 
         if(MainLayout.isAdmin) {
             UI.getCurrent().addShortcutListener(
@@ -160,10 +167,18 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
                         parameterGrid.setVisible(isVisible);
                     },
                     Key.KEY_I, KeyModifier.ALT);
+            UI.getCurrent().addShortcutListener(
+                    () -> {
+                        isLogsVisible = !isLogsVisible;
+                        logView.setVisible(isLogsVisible);
+                    },
+                    Key.KEY_V, KeyModifier.ALT);
         }
+        logView.logMessage(Constants.INFO, "Ending GenericCommentsView");
     }
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
+        logView.logMessage(Constants.INFO, "Starting beforeEnter() for update");
         RouteParameters parameters = event.getRouteParameters();
         projectId = Integer.parseInt(parameters.get("project_Id").orElse(null));
         projects = projectsService.findById(projectId);
@@ -171,10 +186,11 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
 
         updateDescription();
         updateAttachmentGrid(listOfProjectAttachments);
+        logView.logMessage(Constants.INFO, "Ending beforeEnter() for update");
     }
 
     private TabSheet getTabsheet() {
-
+        logView.logMessage(Constants.INFO, "Starting getTabsheet() for Tabs");
         //log.info("Starting getTabsheet() for Tabsheet");
         TabSheet tabSheet = new TabSheet();
 
@@ -185,26 +201,31 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
         tabSheet.setSizeFull();
         tabSheet.setHeightFull();
         //log.info("Ending getTabsheet() for Tabsheet");
-
+        logView.logMessage(Constants.INFO, "Ending getTabsheet() for Tabs");
         return tabSheet;
     }
 
     private Component getAttachmentTab() {
+        logView.logMessage(Constants.INFO, "Set Attachment in getAttachmentTab()");
         return defaultUtils.getProjectAttachements();
     }
 
     private Component getDescriptionTab() {
+        logView.logMessage(Constants.INFO, "Set Description in getDescriptionTab()");
         return defaultUtils.getProjectDescription();
     }
     private void updateDescription() {
+        logView.logMessage(Constants.INFO, "Update Attachment in updateDescription()");
         defaultUtils.setProjectId(projectId);
         defaultUtils.setDescription();
     }
     private void updateAttachmentGrid(List<ProjectAttachmentsDTO> projectAttachmentsDTOS) {
+        logView.logMessage(Constants.INFO, "Update Description in updateAttachmentGrid()");
         defaultUtils.setProjectId(projectId);
         defaultUtils.setAttachmentGridItems(projectAttachmentsDTOS);
     }
     private Component getUpladTab() {
+        logView.logMessage(Constants.INFO, "Sarting getUpladTab() for set upload data");
         VerticalLayout content = new VerticalLayout();
 
         content.add(textArea);
@@ -218,11 +239,13 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
         content.add(getGenericCommentsGrid());
 
         uploadBtn.addClickListener(e ->{
+            logView.logMessage(Constants.INFO, "Uploading in uploadBtn.addClickListener");
             save2db();
             //qsBtn.setEnabled(true);
         });
 
         qsBtn.addClickListener(e ->{
+            logView.logMessage(Constants.INFO, "executing sqls in qsBtn.addClickListener");
             // if (qsGrid.projectId != projectId) {
             hl.remove(qsGrid);
             qsGrid = new QS_Grid(projectConnectionService, backendService);
@@ -232,11 +255,12 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
 
             qsGrid.showDialog(true);
         });
-
+        logView.logMessage(Constants.INFO, "Ending getUpladTab() for set upload data");
         return content;
     }
 
     private void setProjectParameterGrid(List<ProjectParameter> listOfProjectParameters) {
+        logView.logMessage(Constants.INFO, "Starting setProjectParameterGrid() for set database detail in Grid");
         parameterGrid = new Grid<>(ProjectParameter.class, false);
         parameterGrid.addColumn(ProjectParameter::getName).setHeader("Name").setAutoWidth(true).setResizable(true);
         parameterGrid.addColumn(ProjectParameter::getValue).setHeader("Value").setAutoWidth(true).setResizable(true);
@@ -246,12 +270,14 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
         parameterGrid.addThemeVariants(GridVariant.LUMO_COMPACT);
         parameterGrid.setHeight("200px");
         parameterGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+        logView.logMessage(Constants.INFO, "Ending setProjectParameterGrid() for set database detail in Grid");
     }
 
     public class CallbackHandler implements QS_Callback {
         // Die Methode, die aufgerufen wird, wenn die externe Methode abgeschlossen ist
         @Override
         public void onComplete(String result) {
+            logView.logMessage(Constants.INFO, "Starting CallbackHandler onComplete for execute Start Job");
             if(!result.equals("Cancel")) {
 
                /* Map.Entry<String, Integer> lastEntry = projectUploadIdMap.entrySet().stream()
@@ -260,11 +286,12 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
                 int upload_id = lastEntry.getValue();
                */
                 qsGrid.executeStartJobSteps(upload_id, agentName);
-
             }
+            logView.logMessage(Constants.INFO, "Ending CallbackHandler onComplete for execute Start Job");
         }
     }
     private void save2db() {
+        logView.logMessage(Constants.INFO, "Starting save2db() for saving file data in database");
         List<GenericComments> allGenericCommentsItems = getGenericCommentsDataProviderAllItems();
 
         ProjectUpload projectUpload = new ProjectUpload();
@@ -285,6 +312,7 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
 
         projectUpload.setModulName("GenericComments");
 
+        logView.logMessage(Constants.INFO, "Get file upload id from database");
         projectConnectionService.getJdbcConnection(dbUrl, dbUser, dbPassword); // Set Connection to target DB
         upload_id = projectConnectionService.saveUploadedGenericFileData(projectUpload);
 
@@ -298,6 +326,7 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
     }
 
     private void saveAllCommentsdata(List<GenericComments> allGenericCommentsItems) {
+        logView.logMessage(Constants.INFO, "Starting saveAllCommentsdata() for save all comments");
         AtomicReference<String> returnStatus = new AtomicReference<>("false");
         int totalRows = allGenericCommentsItems.size();
         progressBar.setVisible(true);
@@ -359,9 +388,10 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
                     });
 
                 }
+           //     logView.logMessage(Constants.INFO, "Saved file data in database");
             } catch (Exception e) {
                 ui.access(() -> {
-
+               //     logView.logMessage(Constants.ERROR, "Error while saving file data in database");
                     Notification.show("Error during Comments upload! ", 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
 
                 });
@@ -372,11 +402,13 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
 
                 if (returnStatus.toString().equals(Constants.OK))
                 {
+                    logView.logMessage(Constants.INFO, "Saved file data in database");
                     Notification.show("Comments saved " + totalRows + " rows.",5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
                     qsBtn.setEnabled(true);
                 }
                 else
                 {
+                    logView.logMessage(Constants.ERROR, "Error while saving file data in database");
                     Notification.show("Error during Comments upload! " + returnStatus.toString(), 15000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
                 }
 
@@ -384,10 +416,11 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
             });
 
         }).start();
-
+        logView.logMessage(Constants.INFO, "Ending saveAllCommentsdata() for save all comments");
     }
 
     private Component getGenericCommentsGrid() {
+        logView.logMessage(Constants.INFO, "Starting getGenericCommentsGrid() for get GenericCommentsGrid");
         VerticalLayout content = new VerticalLayout();
         crudGenericComments = new Crud<>(GenericComments.class, createGenericCommentsEditor());
         setupGenericCommentsGrid();
@@ -402,11 +435,12 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
         });
         crudGenericComments.setHeightFull();
         content.setHeight("340px");
+        logView.logMessage(Constants.INFO, "Ending getGenericCommentsGrid() for get GenericCommentsGrid");
         return content;
     }
 
     private CrudEditor<GenericComments> createGenericCommentsEditor() {
-
+        logView.logMessage(Constants.INFO, "createGenericCommentsEditor() for create Editor");
         TextArea comment = new TextArea("Comment");
 
         comment.setHeight("250px");
@@ -424,9 +458,11 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
     }
 
     private void setupUploader() {
+        logView.logMessage(Constants.INFO, "Starting setupUploader() for setup file uploader");
         singleFileUpload.setWidth("600px");
 
         singleFileUpload.addSucceededListener(event -> {
+            logView.logMessage(Constants.INFO, "FIle Upload in Fileuploader");
             // Get information about the uploaded file
             InputStream fileData = memoryBuffer.getInputStream();
             fileName = event.getFileName();
@@ -453,12 +489,12 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
             uploadBtn.setEnabled(true);
             qsBtn.setEnabled(false);
 
-
+            logView.logMessage(Constants.INFO, "Ending setupUploader() for setup file uploader");
         });
     }
 
     private void parseExcelFile(InputStream fileData, String fileName) {
-
+        logView.logMessage(Constants.INFO, "Starting parseExcelFile() for parse uploaded file");
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
         Article article = new Article();
 
@@ -488,8 +524,9 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
                 }
             });
 
-
+            logView.logMessage(Constants.INFO, "Ending parseExcelFile() for parse uploaded file");
         } catch (Exception e) {
+            logView.logMessage(Constants.ERROR, "Error while parse uploaded file");
             e.printStackTrace();
         }
     }
@@ -501,7 +538,7 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
                         .anyMatch(comment -> comment.getFileName().equals(fileName)));
     }
     private void setupGenericCommentsGrid() {
-
+        logView.logMessage(Constants.INFO, "Starting setupGenericCommentsGrid() for setup GenericCommentsGrid");
         String FILENAME = "fileName";
         String REGISTERNAME = "registerName";
         String LINENUMBER = "lineNumber";
@@ -556,10 +593,12 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
                 , gridGenericComments.getColumnByKey(PAYMENTTYPE)
                 , gridGenericComments.getColumnByKey(COMMENT));
         //    , gridFinancials.getColumnByKey(EDIT_COLUMN));
+
+        logView.logMessage(Constants.INFO, "Ending setupGenericCommentsGrid() for setup GenericCommentsGrid");
     }
 
     public <T> List<T>  parseSheet(String fileName, XSSFSheet my_worksheet, Class<T> targetType) {
-
+        logView.logMessage(Constants.INFO, "Starting parseSheet() for parse sheet of file");
         try {
             List<T> resultList = new ArrayList<>();
             Iterator<Row> rowIterator = my_worksheet.iterator();
@@ -620,8 +659,10 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
                 }
                 resultList.add(entity);
             }
+            logView.logMessage(Constants.INFO, "Ending parseSheet() for parse sheet of file");
             return resultList;
         } catch (Exception e) {
+            logView.logMessage(Constants.ERROR, "Error while parse sheet of file");
             e.printStackTrace();
             return null;
         }
@@ -629,6 +670,7 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
     }
 
     private void setupDataProviderEvent() {
+        logView.logMessage(Constants.INFO, "Starting setupDataProviderEvent() for setup dataProvider");
         GenericDataProvider financialsdataProvider = new GenericDataProvider(getGenericCommentsDataProviderAllItems());
 
         crudGenericComments.addDeleteListener(
@@ -641,9 +683,11 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
                     financialsdataProvider.persist(saveEvent.getItem());
                     crudGenericComments.setDataProvider(financialsdataProvider);
                 });
+        logView.logMessage(Constants.INFO, "Ending setupDataProviderEvent() for setup dataProvider");
     }
 
     private List<GenericComments> getGenericCommentsDataProviderAllItems() {
+        logView.logMessage(Constants.INFO, "getGenericCommentsDataProviderAllItems() for get dataProvider all item");
         DataProvider<GenericComments, Void> existDataProvider = (DataProvider<GenericComments, Void>) gridGenericComments.getDataProvider();
         List<GenericComments> listOfGenericComments = existDataProvider.fetch(new Query<>()).collect(Collectors.toList());
         return listOfGenericComments;

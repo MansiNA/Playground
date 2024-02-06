@@ -23,6 +23,7 @@ import com.wontlost.ckeditor.Config;
 import com.wontlost.ckeditor.VaadinCKEditor;
 import com.wontlost.ckeditor.VaadinCKEditorBuilder;
 import de.dbuss.tefcontrol.components.DefaultUtils;
+import de.dbuss.tefcontrol.components.LogView;
 import de.dbuss.tefcontrol.components.QS_Callback;
 import de.dbuss.tefcontrol.components.QS_Grid;
 import de.dbuss.tefcontrol.data.Role;
@@ -90,6 +91,8 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
     private AuthenticatedUser authenticatedUser;
     private Boolean isVisible = false;
     Grid<ProjectParameter> parameterGrid = new Grid<>(ProjectParameter.class, false);
+    private LogView logView;
+    private Boolean isLogsVisible = false;
 
     public B2POutlookFINView(ProjectParameterService projectParameterService, ProjectConnectionService projectConnectionService, BackendService backendService,  AuthenticatedUser authenticatedUser, ProjectsService projectsService, ProjectAttachmentsService projectAttachmentsService) {
 
@@ -98,6 +101,8 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
         this.authenticatedUser=authenticatedUser;
         this.projectsService = projectsService;
         this.projectAttachmentsService = projectAttachmentsService;
+        logView = new LogView();
+        logView.logMessage(Constants.INFO, "Starting B2POutlookFINView");
 
         uploadBtn = new Button("Upload");
         uploadBtn.setEnabled(false);
@@ -151,13 +156,17 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
         add(vl,parameterGrid);
 
         parameterGrid.setVisible(false);
-        System.out.println("Is admin: " + checkAdminRole());
+        logView.setVisible(false);
+        add(logView);
 
-        if(MainLayout.isAdmin) {
+/*        if(MainLayout.isAdmin) {
             UI.getCurrent().addShortcutListener(
-                    () -> start_thread(),
+                    () -> {
+                        start_thread();
+                        isLogsVisible = !isLogsVisible;
+                        logView.setVisible(isLogsVisible);
+                    },
                     Key.KEY_V, KeyModifier.ALT);
-
             UI.getCurrent().addShortcutListener(
                     () -> future.cancel(true),
                     Key.KEY_S, KeyModifier.ALT);
@@ -169,11 +178,30 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
                     },
                     Key.KEY_I, KeyModifier.ALT);
 
+        }*/
+
+        if (MainLayout.isAdmin) {
+            UI.getCurrent().addShortcutListener(
+                    () -> {
+                        isVisible = !isVisible;
+                        parameterGrid.setVisible(isVisible);
+                    },
+                    Key.KEY_I, KeyModifier.ALT);
+
+            UI.getCurrent().addShortcutListener(
+                    () -> {
+                        isLogsVisible = !isLogsVisible;
+                        logView.setVisible(isLogsVisible);
+                    },
+                    Key.KEY_V, KeyModifier.ALT);
         }
+
+        logView.logMessage(Constants.INFO, "Ending B2POutlookFINView");
     }
 
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
+        logView.logMessage(Constants.INFO, "Starting beforeEnter() for update");
         RouteParameters parameters = event.getRouteParameters();
         projectId = Integer.parseInt(parameters.get("project_Id").orElse(null));
 
@@ -183,10 +211,11 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
 
         updateDescription();
         updateAttachmentGrid(listOfProjectAttachments);
+        logView.logMessage(Constants.INFO, "Ending beforeEnter() for update");
     }
 
     private TabSheet getTabsheet() {
-
+        logView.logMessage(Constants.INFO, "Starting getTabsheet() for Tabs");
         //log.info("Starting getTabsheet() for Tabsheet");
         TabSheet tabSheet = new TabSheet();
 
@@ -197,26 +226,31 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
         tabSheet.setSizeFull();
         tabSheet.setHeightFull();
         //log.info("Ending getTabsheet() for Tabsheet");
-
+        logView.logMessage(Constants.INFO, "Ending getTabsheet() for Tabs");
         return tabSheet;
     }
 
     private Component getAttachmentTab() {
+        logView.logMessage(Constants.INFO, "Set Attachment in getAttachmentTab()");
         return defaultUtils.getProjectAttachements();
     }
 
     private Component getDescriptionTab() {
+        logView.logMessage(Constants.INFO, "Set Description in getDescriptionTab()");
         return defaultUtils.getProjectDescription();
     }
     private void updateDescription() {
+        logView.logMessage(Constants.INFO, "Update Attachment in updateDescription()");
         defaultUtils.setProjectId(projectId);
         defaultUtils.setDescription();
     }
     private void updateAttachmentGrid(List<ProjectAttachmentsDTO> projectAttachmentsDTOS) {
+        logView.logMessage(Constants.INFO, "Update Description in updateAttachmentGrid()");
         defaultUtils.setProjectId(projectId);
         defaultUtils.setAttachmentGridItems(projectAttachmentsDTOS);
     }
     private Component getUpladTab() {
+        logView.logMessage(Constants.INFO, "Sarting getUpladTab() for set upload data");
         VerticalLayout content = new VerticalLayout();
 
         setupUploader();
@@ -229,11 +263,13 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
         content.add(getMGSRGrid());
 
         uploadBtn.addClickListener(e ->{
+            logView.logMessage(Constants.INFO, "Uploading in uploadBtn.addClickListener");
             save2db();
             qsBtn.setEnabled(true);
         });
 
         qsBtn.addClickListener(e ->{
+            logView.logMessage(Constants.INFO, "executing sqls in qsBtn.addClickListener");
             //   if (qsGrid.projectId != projectId) {
             hl.remove(qsGrid);
             qsGrid = new QS_Grid(projectConnectionService, backendService);
@@ -243,7 +279,7 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
             //  }
             qsGrid.showDialog(true);
         });
-
+        logView.logMessage(Constants.INFO, "Ending getUpladTab() for set upload data");
         return content;
     }
 
@@ -261,6 +297,7 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
     }
 
     private void setProjectParameterGrid(List<ProjectParameter> listOfProjectParameters) {
+        logView.logMessage(Constants.INFO, "Starting setProjectParameterGrid() for set database detail in Grid");
         parameterGrid = new Grid<>(ProjectParameter.class, false);
         parameterGrid.addColumn(ProjectParameter::getName).setHeader("Name").setAutoWidth(true).setResizable(true);
         parameterGrid.addColumn(ProjectParameter::getValue).setHeader("Value").setAutoWidth(true).setResizable(true);
@@ -270,19 +307,23 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
         parameterGrid.addThemeVariants(GridVariant.LUMO_COMPACT);
         parameterGrid.setHeight("200px");
         parameterGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+        logView.logMessage(Constants.INFO, "Ending setProjectParameterGrid() for set database detail in Grid");
     }
 
     public class CallbackHandler implements QS_Callback {
         // Die Methode, die aufgerufen wird, wenn die externe Methode abgeschlossen ist
         @Override
         public void onComplete(String result) {
+            logView.logMessage(Constants.INFO, "Starting CallbackHandler onComplete for execute Start Job");
             if(!result.equals("Cancel")) {
                 qsGrid.executeStartJobSteps(upload_id, agentName);
             }
+            logView.logMessage(Constants.INFO, "Ending CallbackHandler onComplete for execute Start Job");
         }
     }
 
     private void save2db(){
+        logView.logMessage(Constants.INFO, "Starting save2db() for saving file data in database");
         ProjectUpload projectUpload = new ProjectUpload();
         projectUpload.setFileName(fileName);
         //projectUpload.setUserName(MainLayout.userName);
@@ -295,6 +336,7 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
 
         projectUpload.setModulName("B2POutlookFIN");
 
+        logView.logMessage(Constants.INFO, "Get file upload id from database");
         projectConnectionService.getJdbcConnection(dbUrl, dbUser, dbPassword); // Set Connection to target DB
         upload_id = projectConnectionService.saveUploadedGenericFileData(projectUpload);
 
@@ -320,16 +362,19 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
         }
         String resultFinancial = projectConnectionService.saveOutlookMGSR(listOfAllData, tableName, dbUrl, dbUser, dbPassword, upload_id);
         if (resultFinancial.equals(Constants.OK)){
+            logView.logMessage(Constants.INFO, "Saved file data in database");
             notification = Notification.show(listOfAllData.size() + " B2P_Outlook Rows Uploaded successfully",5000, Notification.Position.MIDDLE);
             notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
         } else {
+            logView.logMessage(Constants.ERROR, "Error while saving file data in database");
             notification = Notification.show("Error during B2P_Outlook upload: " + resultFinancial ,5000, Notification.Position.MIDDLE);
             notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
         }
+        logView.logMessage(Constants.INFO, "Ending save2db() for saving file data in database");
     }
 
     private void start_thread() {
-
+        logView.logMessage(Constants.INFO, "Starting start_thread() for Ui task");
         Notification.show("starte Thread");
 
         UI ui = getUI().orElseThrow();
@@ -342,18 +387,20 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
         );
 
 
-
+        logView.logMessage(Constants.INFO, "Ending start_thread() for Ui task");
     }
 
     private void updateUi(UI ui, String result) {
-
+        logView.logMessage(Constants.INFO, "Starting updateUi()");
 
         ui.access(() -> {
             Notification.show(result,6000, Notification.Position.MIDDLE);
         });
+        logView.logMessage(Constants.INFO, "Ending updateUi()");
     }
 
     private Component getMGSRGrid() {
+        logView.logMessage(Constants.INFO, "Starting getMGSRGrid() for get MGSRGrid");
         VerticalLayout content = new VerticalLayout();
         content.setSizeFull();
         content.setHeightFull();
@@ -363,19 +410,20 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
         crudMGSR.setSizeFull();
         setupMGSRGrid();
         content.add(crudMGSR);
-
+        logView.logMessage(Constants.INFO, "Ending getMGSRGrid() for get MGSRGrid");
         return content;
     }
 
     private CrudEditor<OutlookMGSR> createMGSREditor() {
-
+        logView.logMessage(Constants.INFO, "createMGSREditor() for create Editor");
         FormLayout editForm = new FormLayout();
         Binder<OutlookMGSR> binder = new Binder<>(OutlookMGSR.class);
+
         return new BinderCrudEditor<>(binder, editForm);
     }
 
     private void setupMGSRGrid() {
-
+        logView.logMessage(Constants.INFO, "Starting setupMGSRGrid() for setup MGSRGrid");
         String ZEILE = "zeile";
         String MONTH = "month";
         String PLLINE = "pl_Line";
@@ -432,12 +480,14 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
 
 
         gridMGSR.addThemeVariants(GridVariant.LUMO_COMPACT);
-
+        logView.logMessage(Constants.INFO, "Ending setupMGSRGrid() for setup MGSRGrid");
     }
     private void setupUploader() {
+        logView.logMessage(Constants.INFO, "Starting setupUploader() for setup file uploader");
         singleFileUpload.setWidth("600px");
 
         singleFileUpload.addSucceededListener(event -> {
+            logView.logMessage(Constants.INFO, "FIle Upload in Fileuploader");
             // Get information about the uploaded file
             InputStream fileData = memoryBuffer.getInputStream();
             fileName = event.getFileName();
@@ -456,9 +506,11 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
             uploadBtn.setEnabled(true);
             qsBtn.setEnabled(false);
         });
+        logView.logMessage(Constants.INFO, "Ending setupUploader() for setup file uploader");
     }
 
     private void parseExcelFile(InputStream fileData, String fileName) {
+        logView.logMessage(Constants.INFO, "Starting parseExcelFile() for parse uploaded file");
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
         Article article = new Article();
@@ -493,13 +545,15 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
                     listOfAllSheets.add(sheetData);
                 }
             });
-
+            logView.logMessage(Constants.INFO, "Ending parseExcelFile() for parse uploaded file");
         } catch (Exception e) {
+            logView.logMessage(Constants.ERROR, "Error while parse uploaded file");
             e.printStackTrace();
         }
     }
 
     public <T> List<T>  parseSheet(XSSFSheet sheet, Class<T> targetType) {
+        logView.logMessage(Constants.INFO, "Starting parseSheet() for parse sheet of file");
         List<T> resultList = new ArrayList<>();
         try {
             // List<T> resultList = new ArrayList<>();
@@ -580,8 +634,10 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
                     break;
                 }
             }
+            logView.logMessage(Constants.INFO, "Ending parseSheet() for parse sheet of file");
             return resultList;
         } catch (Exception e) {
+            logView.logMessage(Constants.ERROR, "Error while parse sheet of file");
             e.printStackTrace();
             Notification.show(sheet.getSheetName() +" sheet having a parsing problem", 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
             return resultList;

@@ -775,7 +775,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver,
         // Create a file upload component
         MultiFileMemoryBuffer buffer = new MultiFileMemoryBuffer();
         Upload fileUpload = new Upload(buffer);
-        fileUpload.setAcceptedFileTypes(".doc", ".xlsx",".xls" , ".ppt", ".msg", ".pdf", ".pptx", ".ppt");
+        fileUpload.setAcceptedFileTypes(".doc", ".xlsx",".xls" , ".ppt", ".msg", ".pdf", ".pptx", ".ppt", ".txt", ".sql");
         fileUpload.setUploadButton(new Button("Search file"));
 
         Div dropLabel = new Div();
@@ -968,6 +968,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver,
         }).createVaadinCKEditor();
 
         editor.setReadOnly(true);
+        editor.getStyle().setMargin ("-5px");
 
         saveBtn.addClickListener((event -> {
             log.info("executing saveBtn.addClickListener for description save button click");

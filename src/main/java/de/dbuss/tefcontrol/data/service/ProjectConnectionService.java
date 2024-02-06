@@ -5,6 +5,7 @@ import com.vaadin.flow.component.notification.NotificationVariant;
 import de.dbuss.tefcontrol.data.entity.*;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.B2pOutlookSub;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.OutlookMGSR;
+import de.dbuss.tefcontrol.data.modules.b2bmapsaleschannel.entity.MapSalesChannel;
 import de.dbuss.tefcontrol.data.modules.cltv_Inflow.entity.CLTVInflow;
 import de.dbuss.tefcontrol.data.modules.administration.entity.CurrentPeriods;
 import de.dbuss.tefcontrol.data.modules.administration.entity.CurrentScenarios;
@@ -12,6 +13,8 @@ import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.*;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.GenericCommentsView;
 import de.dbuss.tefcontrol.data.modules.pfgproductmapping.entity.CltvAllProduct;
 import de.dbuss.tefcontrol.data.modules.pfgproductmapping.entity.ProductHierarchie;
+import de.dbuss.tefcontrol.data.modules.tarifmapping.entity.CLTVProduct;
+import de.dbuss.tefcontrol.data.modules.tarifmapping.entity.MissingCLTVProduct;
 import de.dbuss.tefcontrol.data.repository.ProjectConnectionRepository;
 import de.dbuss.tefcontrol.data.modules.techkpi.view.Tech_KPIView;
 import jakarta.annotation.PostConstruct;
@@ -1495,4 +1498,195 @@ public class ProjectConnectionService {
         }
     }
 
+
+    public List<CLTVProduct> getCLTVProducts(String dbUrl, String dbUser, String dbPassword, String tableName) {
+
+        try {
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
+            String sqlQuery = "SELECT * FROM " + tableName;
+
+            // Create a RowMapper to map the query result to a CLTV_HW_Measures object
+            RowMapper<CLTVProduct> rowMapper = (rs, rowNum) -> {
+                CLTVProduct cltvProduct = new CLTVProduct();
+             //   cltvProduct.setId(rs.getInt("ID"));
+                cltvProduct.setNode(rs.getString("Node"));
+                cltvProduct.setChild(rs.getString("Child"));
+                cltvProduct.setCltvTarif(rs.getString("CLTV_Tarif"));
+                cltvProduct.setProductType(rs.getString("Product_Type"));
+                cltvProduct.setUser(rs.getString("User"));
+                cltvProduct.setVerarbDatum(rs.getDate("verarb_datum"));
+                return cltvProduct;
+            };
+
+            List<CLTVProduct> fetchedData = jdbcTemplate.query(sqlQuery, rowMapper);
+
+            return fetchedData;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            errorMessage = handleDatabaseError(ex);
+            return Collections.emptyList();
+        }
+
+    }
+
+    public List<MissingCLTVProduct> getMissingCLTVProducts(String dbUrl, String dbUser, String dbPassword, String tableName) {
+
+        try {
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
+            String sqlQuery = "SELECT * FROM " + tableName;
+
+            // Create a RowMapper to map the query result to a CLTV_HW_Measures object
+            RowMapper<MissingCLTVProduct> rowMapper = (rs, rowNum) -> {
+                MissingCLTVProduct missingCLTVProduct = new MissingCLTVProduct();
+                missingCLTVProduct.setTariffGroupId(rs.getString("TariffGroupID"));
+                missingCLTVProduct.setTariffGroupName(rs.getString("TariffGroupName"));
+                missingCLTVProduct.setTariffGroupL4Name(rs.getString("TariffGroupL4Name"));
+                return missingCLTVProduct;
+            };
+
+            List<MissingCLTVProduct> fetchedData = jdbcTemplate.query(sqlQuery, rowMapper);
+
+            return fetchedData;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            errorMessage = handleDatabaseError(ex);
+            return Collections.emptyList();
+        }
+
+    }
+
+    public String saveCLTVProduct(CLTVProduct item, String dbUrl, String dbUser, String dbPassword, String tableName) {
+
+        try {
+
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
+            String sqlInsert = "INSERT INTO " + tableName + " (Node, Child, CLTV_Tarif, Product_Type, [User]) VALUES (?, ?, ?, ?, ?)";
+
+            jdbcTemplate.update(
+                    sqlInsert,
+                    item.getNode(),
+                    item.getChild(),
+                    item.getCltvTarif(),
+                    item.getProductType(),
+                    item.getUser()
+            );
+
+            return Constants.OK;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return handleDatabaseError(e);
+        }
+    }
+
+    public String updateCLTVProducts(String dbUrl, String dbUser, String dbPassword, String tableName, List<CLTVProduct> updatedCltvProductsList) {
+        try {
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
+            String sqlUpdate = "UPDATE " + tableName +
+                    " SET CLTV_Tarif = ?, Product_Type = ? " +
+                    "WHERE Node = ?";
+
+            String sqlUpdateChild = "UPDATE " + tableName +
+                    " SET CLTV_Tarif = ?, Product_Type = ? " +
+                    "WHERE Child = ?";
+
+            for (CLTVProduct item : updatedCltvProductsList) {
+                if (item.getNode() != null) {
+                    jdbcTemplate.update(
+                            sqlUpdate,
+                            item.getCltvTarif(),
+                            item.getProductType(),
+                            item.getNode()
+                    );
+                } else if (item.getChild() != null) {
+                    jdbcTemplate.update(
+                            sqlUpdateChild,
+                            item.getCltvTarif(),
+                            item.getProductType(),
+                            item.getChild()
+                    );
+                }
+            }
+
+            return Constants.OK;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return handleDatabaseError(e);
+        }
+    }
+
+    public String deleteMissingCLTVProduct(String dbUrl, String dbUser, String dbPassword, String tableName, String tariffGroupId) {
+        try {
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
+            String sqlDelete = "DELETE FROM " + tableName + " WHERE TariffGroupID = ?";
+
+            jdbcTemplate.update(sqlDelete, tariffGroupId);
+
+            return Constants.OK;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return handleDatabaseError(e);
+        }
+    }
+
+    public List<MapSalesChannel> getMapSalesChannelList(String dbUrl, String dbUser, String dbPassword, String tableName) {
+
+        try {
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
+            String sqlQuery = "SELECT * FROM " + tableName;
+
+            // Create a RowMapper to map the query result to a CLTV_HW_Measures object
+            RowMapper<MapSalesChannel> rowMapper = (rs, rowNum) -> {
+                MapSalesChannel mapSalesChannel = new MapSalesChannel();
+              //  mapSalesChannel.setUploadId(rs.getLong("Upload_ID"));
+                mapSalesChannel.setSalesChannel(rs.getString("Sales_Channel"));
+                mapSalesChannel.setChannel(rs.getString("Channel"));
+                return mapSalesChannel;
+            };
+
+            List<MapSalesChannel> fetchedData = jdbcTemplate.query(sqlQuery, rowMapper);
+
+            return fetchedData;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            errorMessage = handleDatabaseError(ex);
+            return Collections.emptyList();
+        }
+
+    }
+
+    public String saveMapSalesChannel(String dbUrl, String dbUser, String dbPassword, String tableName, int uploadId, List<MapSalesChannel> data) {
+        try {
+
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
+            String sqlInsert = "INSERT INTO " + tableName + " ([Upload_ID], [Sales_Channel], [Channel]) VALUES (?, ?, ?)";
+
+            // Loop through the data and insert new records
+            for (MapSalesChannel item : data) {
+                jdbcTemplate.update(
+                        sqlInsert,
+                        uploadId,
+                        item.getSalesChannel(),
+                        item.getChannel()
+                );
+            }
+            return Constants.OK;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return handleDatabaseError(e);
+        }
+    }
 }

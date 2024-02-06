@@ -19,6 +19,7 @@ import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.router.*;
 import de.dbuss.tefcontrol.components.DefaultUtils;
+import de.dbuss.tefcontrol.components.LogView;
 import de.dbuss.tefcontrol.components.QS_Callback;
 import de.dbuss.tefcontrol.components.QS_Grid;
 import de.dbuss.tefcontrol.data.dto.ProjectAttachmentsDTO;
@@ -120,6 +121,8 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
     public static Map<String, Integer> projectUploadIdMap = new HashMap<>();
     //Div htmlDivToDO;
     //CheckboxGroup<String> TodoList;
+    private LogView logView;
+    private Boolean isLogsVisible = false;
 
     public Tech_KPIView(JdbcTemplate jdbcTemplate, ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, BackendService backendService, AuthenticatedUser authenticatedUser,  ProjectsService projectsService, ProjectAttachmentsService projectAttachmentsService) {
         this.jdbcTemplate = jdbcTemplate;
@@ -128,6 +131,9 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
         this.authenticatedUser = authenticatedUser;
         this.projectsService = projectsService;
         this.projectAttachmentsService = projectAttachmentsService;
+
+        logView = new LogView();
+        logView.logMessage(Constants.INFO, "Starting Tech_KPIView");
 
         uploadBtn = new Button("Upload");
         uploadBtn.setEnabled(false);
@@ -210,8 +216,15 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
         add(hl,parameterGrid);
 
         parameterGrid.setVisible(false);
-
+        logView.setVisible(false);
+        add(logView);
         if(MainLayout.isAdmin) {
+            UI.getCurrent().addShortcutListener(
+                    () -> {
+                        isLogsVisible = !isLogsVisible;
+                        logView.setVisible(isLogsVisible);
+                    },
+                    Key.KEY_V, KeyModifier.ALT);
             UI.getCurrent().addShortcutListener(
                     () -> {
                         isVisible = !isVisible;
@@ -219,9 +232,10 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                     },
                     Key.KEY_I, KeyModifier.ALT);
         }
+        logView.logMessage(Constants.INFO, "Ending Tech_KPIView");
     }
     private TabSheet getTabsheet() {
-
+        logView.logMessage(Constants.INFO, "Starting getTabsheet() for Tabs");
         //log.info("Starting getTabsheet() for Tabsheet");
         TabSheet tabSheet = new TabSheet();
 
@@ -232,27 +246,32 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
         tabSheet.setSizeFull();
         tabSheet.setHeightFull();
         //log.info("Ending getTabsheet() for Tabsheet");
-
+        logView.logMessage(Constants.INFO, "Ending getTabsheet() for Tabs");
         return tabSheet;
     }
 
     private Component getAttachmentTab() {
+        logView.logMessage(Constants.INFO, "Set Attachment in getAttachmentTab()");
         return defaultUtils.getProjectAttachements();
     }
 
     private Component getDescriptionTab() {
+        logView.logMessage(Constants.INFO, "Set Description in getDescriptionTab()");
         return defaultUtils.getProjectDescription();
     }
     private void updateDescription() {
+        logView.logMessage(Constants.INFO, "Update Attachment in updateDescription()");
         defaultUtils.setProjectId(projectId);
         defaultUtils.setDescription();
     }
     private void updateAttachmentGrid(List<ProjectAttachmentsDTO> projectAttachmentsDTOS) {
+        logView.logMessage(Constants.INFO, "Update Description in updateAttachmentGrid()");
         defaultUtils.setProjectId(projectId);
         defaultUtils.setAttachmentGridItems(projectAttachmentsDTOS);
     }
 
     private Component getUpladTab() {
+        logView.logMessage(Constants.INFO, "Sarting getUpladTab() for set upload data");
         VerticalLayout content = new VerticalLayout();
 
         content.setSizeFull();
@@ -268,13 +287,13 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
         Details details = new Details("Import Details", textArea);
         details.setOpened(false);
 
-        Div htmlDiv = new Div();
-        htmlDiv.getElement().setProperty("innerHTML", "<h2>Import KPI Excel-File</h2><p>Mit dieser Seite lässt sich die KPI_DB.xlsx " +
-                "Datei direkt in die Datenbank einlesen.</br>Die Daten der Blätter \"<b>KPI_Actuals</b>\" und \"<b>KPI_Fact</b>\" werden automatisch in die Stage Tabellen <ul><li>Stage_Tech_KPI.KPI_Actuals</li><li>Stage_Tech_KPI.KPI_Fact</li></ul>geladen. " +
-                "Dazu einfach die Datei auswählen oder per drag&drop hochladen. </br>Nach einer entsprechenden QS-Rückmeldung bzgl. Datenqualität, kann die weitere Verarbeitung per Button \"Freigabe\" erfolgen.");
+       // Div htmlDiv = new Div();
+       // htmlDiv.getElement().setProperty("innerHTML", "<h2>Import KPI Excel-File</h2><p>Mit dieser Seite lässt sich die KPI_DB.xlsx " +
+       //         "Datei direkt in die Datenbank einlesen.</br>Die Daten der Blätter \"<b>KPI_Actuals</b>\" und \"<b>KPI_Fact</b>\" werden automatisch in die Stage Tabellen <ul><li>Stage_Tech_KPI.KPI_Actuals</li><li>Stage_Tech_KPI.KPI_Fact</li></ul>geladen. " +
+       //         "Dazu einfach die Datei auswählen oder per drag&drop hochladen. </br>Nach einer entsprechenden QS-Rückmeldung bzgl. Datenqualität, kann die weitere Verarbeitung per Button \"Freigabe\" erfolgen.");
 
         // Div zur Ansicht hinzufügen
-        content.add(htmlDiv);
+        //content.add(htmlDiv);
 
         HorizontalLayout hl=new HorizontalLayout(singleFileUpload, uploadBtn, qsBtn, qsGrid);
         content.add(hl, parameterGrid, progressBarFact, progressBarPlan, progressBarActuals);
@@ -282,7 +301,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
         content.add(getFileTabsheet());
 
         uploadBtn.addClickListener(e->{
-
+            logView.logMessage(Constants.INFO, "Uploading in uploadBtn.addClickListener");
             ui.setPollInterval(500);
 
             ProjectUpload projectUpload = new ProjectUpload();
@@ -294,7 +313,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                 projectUpload.setUserName(user.getUsername());
             }
             projectUpload.setModulName("Tech_KPI");
-
+            logView.logMessage(Constants.INFO, "Get file upload id from database");
             projectConnectionService.getJdbcConnection(dbUrl, dbUser, dbPassword); // Set Connection to target DB
             upload_id = projectConnectionService.saveUploadedGenericFileData(projectUpload);
 
@@ -309,6 +328,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
         });
 
         qsBtn.addClickListener(e ->{
+            logView.logMessage(Constants.INFO, "executing sqls in qsBtn.addClickListener");
             //   if (qsGrid.projectId != projectId) {
             hl.remove(qsGrid);
             qsGrid = new QS_Grid(projectConnectionService, backendService);
@@ -323,7 +343,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
     }
 
     private TabSheet getFileTabsheet() {
-
+        logView.logMessage(Constants.INFO, "Starting getFileTabsheet() for files tabs ");
         Component getActuals=gridActuals;
         Component getFact=gridFact;
         Component getPlan = gridPlan;
@@ -337,12 +357,13 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
         tabSheet.setHeightFull();
         tabSheet.addThemeVariants(TabSheetVariant.MATERIAL_BORDERED);
         tabSheet.setHeightFull();
+        logView.logMessage(Constants.INFO, "Ending getFileTabsheet() for files tabs ");
         return tabSheet;
-
     }
 
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
+        logView.logMessage(Constants.INFO, "Starting beforeEnter() for update");
         RouteParameters parameters = event.getRouteParameters();
         projectId = Integer.parseInt(parameters.get("project_Id").orElse(null));
         projects = projectsService.findById(projectId);
@@ -350,9 +371,11 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
         updateDescription();
         updateAttachmentGrid(listOfProjectAttachments);
+        logView.logMessage(Constants.INFO, "Ending beforeEnter() for update");
     }
 
     private void setProjectParameterGrid(List<ProjectParameter> listOfProjectParameters) {
+        logView.logMessage(Constants.INFO, "Starting setProjectParameterGrid() for set database detail in Grid");
         parameterGrid = new Grid<>(ProjectParameter.class, false);
         parameterGrid.addColumn(ProjectParameter::getName).setHeader("Name").setAutoWidth(true).setResizable(true);
         parameterGrid.addColumn(ProjectParameter::getValue).setHeader("Value").setAutoWidth(true).setResizable(true);
@@ -362,15 +385,18 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
         parameterGrid.addThemeVariants(GridVariant.LUMO_COMPACT);
         parameterGrid.setHeight("200px");
         parameterGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+        logView.logMessage(Constants.INFO, "Ending setProjectParameterGrid() for set database detail in Grid");
     }
 
     public class CallbackHandler implements QS_Callback {
         // Die Methode, die aufgerufen wird, wenn die externe Methode abgeschlossen ist
         @Override
         public void onComplete(String result) {
+            logView.logMessage(Constants.INFO, "Starting CallbackHandler onComplete for execute Start Job");
             if(!result.equals("Cancel")) {
                 qsGrid.executeStartJobSteps(upload_id, agentName);
             }
+            logView.logMessage(Constants.INFO, "Ending CallbackHandler onComplete for execute Start Job");
         }
     }
    /* private void setupQSGrid() {
@@ -483,6 +509,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
     }
     private void saveActualsEntities() {
+        logView.logMessage(Constants.INFO, "Starting saveActualsEntities() for saving Actuals file data in database");
         String sheet="KPI_Actuals";
         AtomicReference<String> returnStatus= new AtomicReference<>("false");
         int totalRows = listOfKPI_Actuals.size();
@@ -530,8 +557,8 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
                 }
 
-
             } catch (Exception e) {
+
                 ui.access(() -> {
                     Notification.show("Error during KPI_Actuals upload! ", 4000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
                 });
@@ -543,20 +570,23 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
                 if (returnStatus.toString().equals(Constants.OK))
                 {
+                    logView.logMessage(Constants.INFO, "Saved file data in database");
                     Notification.show("KPI_Actuals saved " + totalRows + " rows.",3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
                 }
                 else
                 {
+                    logView.logMessage(Constants.ERROR, "Error while saving file data in database");
                     Notification.show("Error during KPI_Actuals upload! " + returnStatus.toString(), 4000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
                 }
 
             });
 
         }).start();
-
+        logView.logMessage(Constants.INFO, "Ending saveActualsEntities() for saving Actuals file data in database");
     }
 
     private void saveFactEntities() {
+        logView.logMessage(Constants.INFO, "Starting saveFactEntities() for saving Fact file data in database");
         AtomicReference<String> returnStatus= new AtomicReference<>("false");
         int totalRows = listOfKPI_Fact.size();
         progressBarFact.setVisible(true);
@@ -629,9 +659,10 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                     });
 
                 }
+                // logView.logMessage(Constants.INFO, "Saved file data in database");
             } catch (Exception e) {
                 ui.access(() -> {
-
+                    logView.logMessage(Constants.ERROR, "Error while saving file data in database");
                     Notification.show("Error during KPI_Fact upload! ", 15000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
                   
                 });
@@ -642,11 +673,13 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
                 if (returnStatus.toString().equals(Constants.OK))
                 {
+                    logView.logMessage(Constants.INFO, "Saved file data in database");
                     Notification.show("KPI_Fact saved " + totalRows + " rows.",5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
                     qsBtn.setEnabled(true);
                 }
                 else
                 {
+                    logView.logMessage(Constants.ERROR, "Error while saving file data in database");
                     Notification.show("Error during KPI_Fact upload! " + returnStatus.toString(), 15000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
                 }
 
@@ -654,7 +687,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
             });
 
         }).start();
-
+        logView.logMessage(Constants.INFO, "Ending saveFactEntities() for saving Fact file data in database");
     }
 
     private void truncateTable(String tableName) {
@@ -736,6 +769,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
     }
 
     private void setupKPIActualsGrid() {
+        logView.logMessage(Constants.INFO, "Starting setupKPIActualsGrid() for setup KPIActualsGridSRGrid");
         gridActuals = new Grid<>(KPI_Actuals.class, false);
 
         gridActuals.setHeight("300px");
@@ -761,10 +795,11 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
         gridActuals.addColumn(KPI_Actuals::getSourceContact).setHeader("SourceContact").setAutoWidth(true).setSortable(true).setResizable(true);
         gridActuals.addColumn(KPI_Actuals::getSourceLink).setHeader("SourceLink").setAutoWidth(true).setSortable(true).setResizable(true);
         gridActuals.setHeightFull();
-
+        logView.logMessage(Constants.INFO, "Ending setupKPIActualsGrid() for setup KPIActualsGridSRGrid");
     }
 
     private void setupKPIFactGrid() {
+        logView.logMessage(Constants.INFO, "Starting setupKPIFactGrid() for setup KPIFactGrid");
         gridFact = new Grid<>(KPI_Fact.class, false);
         gridFact.addColumn(KPI_Fact::getRow).setHeader("Zeile").setAutoWidth(true).setSortable(true).setResizable(true);
         gridFact.addColumn(KPI_Fact::getNT_ID).setHeader("NT ID").setAutoWidth(true).setSortable(true).setResizable(true);
@@ -773,6 +808,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
         gridFact.addColumn(KPI_Fact::getDate).setHeader("Date").setAutoWidth(true).setSortable(true).setResizable(true);
         gridFact.addColumn(KPI_Fact::getWert).setHeader("Wert").setAutoWidth(true).setSortable(true).setResizable(true);
         gridFact.setHeightFull();
+        logView.logMessage(Constants.INFO, "Ending setupKPIFactGrid() for setup KPIFactGrid");
     }
 
     private void setupKPIPlanGrid() {
@@ -789,7 +825,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
     }
     private void setupUploader() {
-        System.out.println("setup uploader................start");
+        logView.logMessage(Constants.INFO, "Starting setupUploader() for setup file uploader");
         singleFileUpload.setWidth("450px");
 
         singleFileUpload.addStartedListener(e->{
@@ -800,6 +836,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
         });
 
         singleFileUpload.addSucceededListener(event -> {
+            logView.logMessage(Constants.INFO, "FIle Upload in Fileuploader");
             // Get information about the uploaded file
             fileData_Fact = memoryBuffer.getInputStream();
             fileData_Actuals = memoryBuffer.getInputStream();
@@ -848,10 +885,10 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
 
 
         });
-        System.out.println("setup uploader................over");
+        System.out.println("setup uploader................over");  logView.logMessage(Constants.INFO, "Ending setupUploader() for setup file uploader");
     }
     public List<KPI_Fact> parseExcelFile_Fact(InputStream fileData, String fileName, String sheetName) {
-
+        logView.logMessage(Constants.INFO, "Starting parseExcelFile_Fact() for parse uploaded file");
 
         List<KPI_Fact> listOfKPI_Fact = new ArrayList<>();
         try {
@@ -1031,18 +1068,18 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
      //       accordion.add(factPanel);
 
             errors_Count+=errors_Fact;
-
+            logView.logMessage(Constants.INFO, "Ending parseExcelFile_Fact() for parse uploaded file");
             return listOfKPI_Fact;
 
-
         } catch (Exception e) {
+            logView.logMessage(Constants.ERROR, "Error while parse uploaded file");
             e.printStackTrace();
             return null;
         }
 
     }
     public List<KPI_Actuals> parseExcelFile_Actuals(InputStream fileData, String fileName, String sheetName) {
-
+        logView.logMessage(Constants.INFO, "Starting parseExcelFile_Actuals() for parse uploaded file");
 
         List<KPI_Actuals> listOfKPI_Actuals = new ArrayList<>();
         try {
@@ -1350,8 +1387,10 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
           //  accordion.add(actualsPanel);
 
             errors_Count+=errors_Actuals;
+            logView.logMessage(Constants.INFO, "Ending parseExcelFile_Actuals() for parse uploaded file");
             return listOfKPI_Actuals;
         } catch (Exception e) {
+            logView.logMessage(Constants.ERROR, "Error while parse uploaded file");
             e.printStackTrace();
             return null;
         }
@@ -1550,7 +1589,6 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
             super(message);
         }
     }
-
 
     private Double checkCellDouble(String sheetName, Cell cell, Integer zeile, String spalte)  {
 

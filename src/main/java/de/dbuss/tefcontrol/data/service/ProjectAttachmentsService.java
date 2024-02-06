@@ -32,7 +32,11 @@ public class ProjectAttachmentsService {
         return mapToProjectAttachmentsDTO(repository.save(entity));
     }
 
-    public ProjectAttachmentsDTO updateGridValues(ProjectAttachmentsDTO dto) {
+    @Transactional
+    public void updateGridValues(ProjectAttachmentsDTO dto) {
+        repository.updateFilenameAndDescription(dto.getId(), dto.getFilename(), dto.getDescription());
+    }
+    public ProjectAttachmentsDTO updateGridValuesOld(ProjectAttachmentsDTO dto) {
         // get ProjectAttachmentsDTO to ProjectAttachments entity
         ProjectAttachments entity = repository.findById(dto.getId()).get();
         entity.setFilename(dto.getFilename());
