@@ -11,14 +11,15 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.router.*;
+import de.dbuss.tefcontrol.components.DefaultUtils;
 import de.dbuss.tefcontrol.components.LogView;
-import de.dbuss.tefcontrol.data.entity.Constants;
-import de.dbuss.tefcontrol.data.entity.ProjectParameter;
+import de.dbuss.tefcontrol.components.QS_Grid;
+import de.dbuss.tefcontrol.data.dto.ProjectAttachmentsDTO;
+import de.dbuss.tefcontrol.data.entity.*;
 import de.dbuss.tefcontrol.data.modules.administration.entity.CurrentPeriods;
-import de.dbuss.tefcontrol.data.service.BackendService;
-import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
-import de.dbuss.tefcontrol.data.service.ProjectParameterService;
+import de.dbuss.tefcontrol.data.service.*;
 import de.dbuss.tefcontrol.security.AuthenticatedUser;
 import de.dbuss.tefcontrol.views.MainLayout;
 import jakarta.annotation.security.RolesAllowed;
@@ -34,6 +35,8 @@ import java.util.stream.Collectors;
 @RolesAllowed({"ADMIN", "MAPPING", "USER"})
 public class ReportAdminView extends VerticalLayout implements BeforeEnterObserver {
     private final ProjectConnectionService projectConnectionService;
+    private final ProjectsService projectsService;
+    private final ProjectAttachmentsService projectAttachmentsService;
     private String tableReportingConfig;
     private String dbUrl;
     private String dbUser;
@@ -41,15 +44,21 @@ public class ReportAdminView extends VerticalLayout implements BeforeEnterObserv
     private String agentName;
     private CurrentPeriods currentPeriods;
     private int projectId;
+    private Optional<Projects> projects;
     Boolean isVisible = false;
     Boolean isLogsVisible = false;
 
     Grid<ProjectParameter> parameterGrid = new Grid<>(ProjectParameter.class, false);
     private static final Logger logger = LoggerFactory.getLogger(ReportAdminView.class);
     private LogView logView;
+    private DefaultUtils defaultUtils;
+    private List<ProjectAttachmentsDTO> listOfProjectAttachments;
 
-    public ReportAdminView(ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, BackendService backendService, AuthenticatedUser authenticatedUser) {
+    public ReportAdminView(ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, BackendService backendService, AuthenticatedUser authenticatedUser, ProjectsService projectsService, ProjectAttachmentsService projectAttachmentsService) {
         this.projectConnectionService = projectConnectionService;
+        this.projectsService = projectsService;
+        this.projectAttachmentsService = projectAttachmentsService;
+
         logView = new LogView();
         logView.logMessage(Constants.INFO, "Starting ReportAdminView");
         List<ProjectParameter> listOfProjectParameters = projectParameterService.findAll();
@@ -77,57 +86,23 @@ public class ReportAdminView extends VerticalLayout implements BeforeEnterObserv
         //    }
         }
 
-        H1 h1 = new H1("Report Administration");
 
         dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
 
         setProjectParameterGrid(filteredProjectParameters);
+        defaultUtils = new DefaultUtils(projectsService, projectAttachmentsService);
 
-        H2 h2 = new H2("Rohdatenreporting:");
+        HorizontalLayout vl = new HorizontalLayout();
+        vl.add(getTabsheet());
 
-        HorizontalLayout header = new HorizontalLayout(h2);
-        header.setAlignItems(Alignment.BASELINE);
+        vl.setHeightFull();
+        vl.setSizeFull();
 
-        Article p1 = new Article();
-        p1.setText("Erstellung des \"Rohdatenreports\" und Ablage unter \\\\dewsttwak11\\Ablagen\\Rohdatenauswertung\\Report_Out.");
+        setHeightFull();
+        setSizeFull();
 
-        add(h1, header, p1, parameterGrid);
+        add(vl,parameterGrid);
 
-        Button startRohdatenReportBtn = new Button("Start Report");
-        startRohdatenReportBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_SUCCESS);
-
-        startRohdatenReportBtn.addClickListener(e -> {
-            logView.logMessage(Constants.INFO, "startRohdatenReportBtn.addClickListener for Start Reporting");
-            startRohdatenReportBtn.setEnabled(false);
-            startRohdatenReportBtn.setText("running");
-            String resultOfPeriods = projectConnectionService.executeReportAdminPeriods(currentPeriods, dbUrl, dbUser, dbPassword);
-            System.out.println(resultOfPeriods+"......................................");
-            System.err.println(resultOfPeriods);
-            Notification notification;
-            if (resultOfPeriods.equals(Constants.OK)) {
-                notification = Notification.show("Reporting Monat " + currentPeriods.getCurrent_month() + " updated successfully", 5000, Notification.Position.MIDDLE);
-                notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-            } else {
-                notification = Notification.show("Error during upload: " + resultOfPeriods, 15000, Notification.Position.MIDDLE);
-                notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
-            }
-
-            String message = projectConnectionService.startAgent(projectId);
-            if (!message.contains("Error")) {
-                Notification.show(message, 6000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-            } else {
-                String AgenterrorMessage = "ERROR: Job " + agentName + " already running please try again later...";
-                Notification.show(AgenterrorMessage, 6000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
-            }
-
-        });
-
-        HorizontalLayout hl = new HorizontalLayout();
-
-        hl.add(getDimPeriodGrid(), startRohdatenReportBtn);
-        hl.setAlignItems(Alignment.BASELINE);
-
-        add(hl);
 
         parameterGrid.setVisible(false);
         logView.setVisible(false);
@@ -173,8 +148,110 @@ public class ReportAdminView extends VerticalLayout implements BeforeEnterObserv
         logView.logMessage(Constants.INFO, "Starting beforeEnter() for update");
         RouteParameters parameters = event.getRouteParameters();
         projectId = Integer.parseInt(parameters.get("project_Id").orElse(null));
+        projects = projectsService.findById(projectId);
+
+        projects.ifPresent(value -> listOfProjectAttachments = projectsService.getProjectAttachmentsWithoutFileContent(value));
+
+        updateDescription();
+        updateAttachmentGrid(listOfProjectAttachments);
+        logView.logMessage(Constants.INFO, "Ending beforeEnter for update");
         logView.logMessage(Constants.INFO, "Starting beforeEnter() for update");
     }
+
+    private TabSheet getTabsheet() {
+        logView.logMessage(Constants.INFO, "Starting getTabsheet() for Tabs");
+        //log.info("Starting getTabsheet() for Tabsheet");
+        TabSheet tabSheet = new TabSheet();
+
+        tabSheet.add("Upload", getUpladTab());
+        tabSheet.add("Description", getDescriptionTab());
+        tabSheet.add("Attachments", getAttachmentTab());
+
+        tabSheet.setSizeFull();
+        tabSheet.setHeightFull();
+        //log.info("Ending getTabsheet() for Tabsheet");
+        logView.logMessage(Constants.INFO, "Ending getTabsheet() for Tabs");
+        return tabSheet;
+    }
+
+
+    private Component getAttachmentTab() {
+        logView.logMessage(Constants.INFO, "Set Attachment in getAttachmentTab()");
+        return defaultUtils.getProjectAttachements();
+    }
+
+    private Component getDescriptionTab() {
+        logView.logMessage(Constants.INFO, "Set Description in getDescriptionTab()");
+        return defaultUtils.getProjectDescription();
+    }
+    private void updateDescription() {
+        logView.logMessage(Constants.INFO, "Update Attachment in updateDescription()");
+        defaultUtils.setProjectId(projectId);
+        defaultUtils.setDescription();
+    }
+    private void updateAttachmentGrid(List<ProjectAttachmentsDTO> projectAttachmentsDTOS) {
+        logView.logMessage(Constants.INFO, "Update Description in updateAttachmentGrid()");
+        defaultUtils.setProjectId(projectId);
+        defaultUtils.setAttachmentGridItems(projectAttachmentsDTOS);
+    }
+    private Component getUpladTab() {
+        logView.logMessage(Constants.INFO, "Sarting getUpladTab() for set upload data");
+        VerticalLayout content = new VerticalLayout();
+
+        content.setSizeFull();
+        content.setHeightFull();
+
+        H1 h1 = new H1("Report Administration");
+        H2 h2 = new H2("Rohdatenreporting:");
+
+        HorizontalLayout header = new HorizontalLayout(h2);
+        header.setAlignItems(Alignment.BASELINE);
+
+        Article p1 = new Article();
+        p1.setText("Erstellung des \"Rohdatenreports\" und Ablage unter \\\\dewsttwak11\\Ablagen\\Rohdatenauswertung\\Report_Out.");
+
+        content.add(h1, h2, p1);
+
+        Button startRohdatenReportBtn = new Button("Start Report");
+        startRohdatenReportBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_SUCCESS);
+
+        startRohdatenReportBtn.addClickListener(e -> {
+            logView.logMessage(Constants.INFO, "startRohdatenReportBtn.addClickListener for Start Reporting");
+            startRohdatenReportBtn.setEnabled(false);
+            startRohdatenReportBtn.setText("running");
+            String resultOfPeriods = projectConnectionService.executeReportAdminPeriods(currentPeriods, dbUrl, dbUser, dbPassword);
+            System.out.println(resultOfPeriods+"......................................");
+            System.err.println(resultOfPeriods);
+            Notification notification;
+            if (resultOfPeriods.equals(Constants.OK)) {
+                notification = Notification.show("Reporting Monat " + currentPeriods.getCurrent_month() + " updated successfully", 5000, Notification.Position.MIDDLE);
+                notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+            } else {
+                notification = Notification.show("Error during upload: " + resultOfPeriods, 15000, Notification.Position.MIDDLE);
+                notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+            }
+
+            String message = projectConnectionService.startAgent(projectId);
+            if (!message.contains("Error")) {
+                Notification.show(message, 6000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+            } else {
+                String AgenterrorMessage = "ERROR: Job " + agentName + " already running please try again later...";
+                Notification.show(AgenterrorMessage, 6000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+            }
+
+        });
+
+        HorizontalLayout hlayout = new HorizontalLayout();
+
+        hlayout.add(getDimPeriodGrid(), startRohdatenReportBtn);
+        hlayout.setAlignItems(Alignment.BASELINE);
+
+        content.add(hlayout);
+
+        logView.logMessage(Constants.INFO, "Ending getUpladTab() for set upload data");
+        return content;
+    }
+
     private Component getDimPeriodGrid() {
         logView.logMessage(Constants.INFO, "Starting getDimPeriodGrid() for current period grid");
         VerticalLayout content = new VerticalLayout();
