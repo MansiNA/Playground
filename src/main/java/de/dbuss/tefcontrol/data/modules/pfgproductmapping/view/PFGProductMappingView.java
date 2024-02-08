@@ -77,12 +77,9 @@ public class PFGProductMappingView extends VerticalLayout implements BeforeEnter
     private String dbUser;
     private String dbPassword;
     private int projectId;
-    private int upload_id;
     private Optional<Projects> projects;
     private DefaultUtils defaultUtils;
     private List<ProjectAttachmentsDTO> listOfProjectAttachments;
-    private QS_Grid qsGrid;
-    private Button qsBtn;
     private Button uploadBtn;
     private LogView logView;
     private Boolean isLogsVisible = false;
@@ -101,16 +98,11 @@ public class PFGProductMappingView extends VerticalLayout implements BeforeEnter
 
         uploadBtn = new Button("Upload");
 
-        qsBtn = new Button("QS and Start Job");
-        qsBtn.setEnabled(false);
-
         List<ProjectParameter> listOfProjectParameters = projectParameterService.findAll();
         List<ProjectParameter> filteredProjectParameters = listOfProjectParameters.stream()
                 .filter(projectParameter -> Constants.PFG_PRODUCT_MAPPING.equals(projectParameter.getNamespace()))
                 .collect(Collectors.toList());
 
-        String missingQuery = null;
-        String pfg_mapping_target = null;
         String dbServer = null;
         String dbName = null;
 
@@ -118,7 +110,7 @@ public class PFGProductMappingView extends VerticalLayout implements BeforeEnter
             //  if(projectParameter.getNamespace().equals(Constants.PFG_PRODUCT_MAPPING)) {
             if (Constants.MAPPINGALLPRODUCTS.equals(projectParameter.getName())) {
                 productsDb = projectParameter.getValue();
-            } else if (Constants.AGENT_NAME.equals(projectParameter.getName())) {
+            } else if (Constants.DB_JOBS.equals(projectParameter.getName())) {
                 agentName = projectParameter.getValue();
             } else if (Constants.MAPPINGMISSINGPRODUCTS.equals(projectParameter.getName())) {
                 targetView = projectParameter.getValue();
@@ -140,9 +132,6 @@ public class PFGProductMappingView extends VerticalLayout implements BeforeEnter
 
         setProjectParameterGrid(filteredProjectParameters);
         defaultUtils = new DefaultUtils(projectsService, projectAttachmentsService);
-
-        //Componente QS-Grid:
-        qsGrid = new QS_Grid(projectConnectionService, backendService);
 
         HorizontalLayout vl = new HorizontalLayout();
         vl.add(getTabsheet());
@@ -193,18 +182,6 @@ public class PFGProductMappingView extends VerticalLayout implements BeforeEnter
         logView.logMessage(Constants.INFO, "Ending beforeEnter() for update");
     }
 
-    public class CallbackHandler implements QS_Callback {
-        // Die Methode, die aufgerufen wird, wenn die externe Methode abgeschlossen ist
-        @Override
-        public void onComplete(String result) {
-            logView.logMessage(Constants.INFO, "Starting CallbackHandler onComplete for execute Start Job");
-            if(!result.equals("Cancel")) {
-                qsGrid.executeStartJobSteps(upload_id, agentName);
-            }
-            logView.logMessage(Constants.INFO, "Ending CallbackHandler onComplete for execute Start Job");
-        }
-    }
-
     private TabSheet getTabsheet() {
         logView.logMessage(Constants.INFO, "Starting getTabsheet() for Tabs");
         //log.info("Starting getTabsheet() for Tabsheet");
@@ -251,11 +228,11 @@ public class PFGProductMappingView extends VerticalLayout implements BeforeEnter
         configureForm();
         configureLoggingArea();
         configureMissingGrid();
-       // configureExecuteBtn();
+        configureExecuteBtn();
 
         HorizontalLayout hl = new HorizontalLayout();
 
-        hl.add(uploadBtn, qsBtn, qsGrid);
+        hl.add(startAgentBtn, uploadBtn);
 
         TabSheet tabSheet = new TabSheet();
         tabSheet.add("Missing Entries", getMissingMapping());
@@ -275,19 +252,6 @@ public class PFGProductMappingView extends VerticalLayout implements BeforeEnter
         uploadBtn.addClickListener(e ->{
             logView.logMessage(Constants.INFO, "Uploading in uploadBtn.addClickListener");
             save2db();
-            qsBtn.setEnabled(true);
-        });
-
-        qsBtn.addClickListener(e ->{
-            logView.logMessage(Constants.INFO, "executing sqls in qsBtn.addClickListener");
-            //   if (qsGrid.projectId != projectId) {
-            hl.remove(qsGrid);
-            qsGrid = new QS_Grid(projectConnectionService, backendService);
-            hl.add(qsGrid);
-            CallbackHandler callbackHandler = new CallbackHandler();
-            qsGrid.createDialog(callbackHandler, projectId, upload_id);
-            //  }
-            qsGrid.showDialog(true);
         });
 
         logView.logMessage(Constants.INFO, "Ending getUpladTab() for set upload data");
@@ -310,25 +274,6 @@ public class PFGProductMappingView extends VerticalLayout implements BeforeEnter
 
     private void save2db() {
         logView.logMessage(Constants.INFO, "Starting save2db() for save data");
-        ProjectUpload projectUpload = new ProjectUpload();
-        projectUpload.setFileName("");
-        //projectUpload.setUserName(MainLayout.userName);
-
-        Optional<User> maybeUser = authenticatedUser.get();
-        if (maybeUser.isPresent()) {
-            User user = maybeUser.get();
-            projectUpload.setUserName(user.getUsername());
-        }
-
-        projectUpload.setModulName("B2POutlookFIN");
-
-        logView.logMessage(Constants.INFO, "Get file upload id from database");
-        projectConnectionService.getJdbcConnection(dbUrl, dbUser, dbPassword); // Set Connection to target DB
-        upload_id = projectConnectionService.saveUploadedGenericFileData(projectUpload);
-
-        projectUpload.setUploadId(upload_id);
-
-        System.out.println("Upload_ID: " + upload_id);
 
         if (modifiedProducts != null && !modifiedProducts.isEmpty()) {
             String result = projectConnectionService.saveListOfProductHierarchie(modifiedProducts, dbUrl, dbUser, dbPassword, targetTable);
@@ -367,49 +312,24 @@ public class PFGProductMappingView extends VerticalLayout implements BeforeEnter
 
     private void configureExecuteBtn() {
         logView.logMessage(Constants.INFO, "Staring configureExecuteBtn() for save data");
-        String dbConnection="";
-        String agentJobName="";
-
-        try {
-            //String[] dbName = productDb.split("\\.");
-            String[] parts = agentName.split(":");
-
-            if (parts.length == 2) {
-                dbConnection = parts[0];
-                agentJobName = parts[1];
-
-            } else {
-                System.out.println("ERROR: No Connection/AgentJob for start Agent-Job!");
-            }
-
-          } catch (Exception e) {
-               e.printStackTrace();
-                 return ;
-           }
-
-
-        String finalAgentJobName = agentJobName;
 
         startAgentBtn.addClickListener(e->{
 
-           String erg= startJob(finalAgentJobName);
+            String message = projectConnectionService.startAgent(projectId);
+            if (!message.contains("Error")) {
+              //  startAgentBtn.setEnabled(false);
+                Notification.show(message, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+            } else {
+                Notification.show(message, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+            }
 
-           if(!erg.equals(Constants.OK))
-           {
-               Notification notification = Notification.show("ERROR: " + erg,10000, Notification.Position.MIDDLE);
-               notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
-
-           }
-           else {
-               startAgentBtn.setEnabled(false);
-           }
         });
 
-        startAgentBtn.setText("Execute Job " + agentJobName);
+        startAgentBtn.setText("Execute Job " + agentName);
 
         startAgentBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY,
                 ButtonVariant.LUMO_SUCCESS);
-        startAgentBtn.setTooltipText("Start of SQLServer Job: " + agentJobName );
+        startAgentBtn.setTooltipText("Start of SQLServer Job: " + agentName );
         logView.logMessage(Constants.INFO, "Ending configureExecuteBtn() for save data");
     }
 
@@ -425,8 +345,6 @@ public class PFGProductMappingView extends VerticalLayout implements BeforeEnter
         try {
             String sql = "msdb.dbo.sp_start_job @job_name='" + finalAgentJobName + "'";
             template.execute(sql);
-
-
         }
         catch (CannotGetJdbcConnectionException connectionException) {
             return connectionException.getMessage();
@@ -437,7 +355,6 @@ public class PFGProductMappingView extends VerticalLayout implements BeforeEnter
         }
 
         return Constants.OK;
-
 
     }
 
