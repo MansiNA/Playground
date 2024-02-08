@@ -167,6 +167,13 @@ public class PFGProductMappingView extends VerticalLayout implements BeforeEnter
                         parameterGrid.setVisible(isVisible);
                     },
                     Key.KEY_I, KeyModifier.ALT);
+
+            UI.getCurrent().addShortcutListener(
+                    () -> {
+                        isLogsVisible = !isLogsVisible;
+                        logView.setVisible(isLogsVisible);
+                    },
+                    Key.KEY_V, KeyModifier.ALT);
         }
         logView.logMessage(Constants.INFO, "Ending PFGProductMappingView");
     }
