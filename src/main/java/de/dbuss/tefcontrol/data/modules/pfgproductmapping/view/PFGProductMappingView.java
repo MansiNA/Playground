@@ -20,16 +20,17 @@ import com.vaadin.flow.component.tabs.TabSheetVariant;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.value.ValueChangeMode;
-import com.vaadin.flow.router.PageTitle;
-import com.vaadin.flow.router.Route;
-import com.vaadin.flow.router.RouteAlias;
-import de.dbuss.tefcontrol.data.entity.Constants;
-import de.dbuss.tefcontrol.data.entity.ProjectParameter;
+import com.vaadin.flow.router.*;
+import de.dbuss.tefcontrol.components.DefaultUtils;
+import de.dbuss.tefcontrol.components.LogView;
+import de.dbuss.tefcontrol.components.QS_Callback;
+import de.dbuss.tefcontrol.components.QS_Grid;
+import de.dbuss.tefcontrol.data.dto.ProjectAttachmentsDTO;
+import de.dbuss.tefcontrol.data.entity.*;
+import de.dbuss.tefcontrol.data.modules.b2pOutlook.view.B2POutlookFINView;
 import de.dbuss.tefcontrol.data.modules.pfgproductmapping.entity.ProductHierarchie;
-import de.dbuss.tefcontrol.data.entity.ProjectConnection;
-import de.dbuss.tefcontrol.data.service.ProductHierarchieService;
-import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
-import de.dbuss.tefcontrol.data.service.ProjectParameterService;
+import de.dbuss.tefcontrol.data.service.*;
+import de.dbuss.tefcontrol.security.AuthenticatedUser;
 import de.dbuss.tefcontrol.views.MainLayout;
 import jakarta.annotation.security.RolesAllowed;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,22 +47,26 @@ import java.util.stream.Stream;
 @Route(value = "PFG_Product_Mapping/:project_Id", layout = MainLayout.class)
 // @RouteAlias(value = "", layout = MainLayout.class)
 @RolesAllowed({"CLTV", "ADMIN"})
-public class PFGProductMappingView extends VerticalLayout {
+public class PFGProductMappingView extends VerticalLayout implements BeforeEnterObserver {
     @Autowired
     private JdbcTemplate template;
     private final ProductHierarchieService service;
     private final ProjectConnectionService projectConnectionService;
+    private final ProjectsService projectsService;
+    private final BackendService backendService;
+    private final ProjectAttachmentsService projectAttachmentsService;
+    private AuthenticatedUser authenticatedUser;
     Grid<ProductHierarchie> grid = new Grid<>(ProductHierarchie.class);
     GridPro<ProductHierarchie> missingGrid = new GridPro<>(ProductHierarchie.class);
     Button startAgentBtn = new Button("Execute Job");
-    Button saveButton = new Button("Save");
+   // Button saveButton = new Button("Save");
     TextField filterText = new TextField();
     Div textArea = new Div();
     VerticalLayout messageLayout = new VerticalLayout();
     PFGProductForm form;
     private UI ui ;
     private String productsDb;
-    private String dBAgentName;
+    private String agentName;
     private String selectedDbName;
     private String targetTable;
     private String targetView;
@@ -71,19 +76,33 @@ public class PFGProductMappingView extends VerticalLayout {
     private String dbUrl;
     private String dbUser;
     private String dbPassword;
+    private int projectId;
+    private Optional<Projects> projects;
+    private DefaultUtils defaultUtils;
+    private List<ProjectAttachmentsDTO> listOfProjectAttachments;
+    private Button uploadBtn;
+    private LogView logView;
+    private Boolean isLogsVisible = false;
 
-    public PFGProductMappingView( ProductHierarchieService service, ProjectParameterService projectParameterService, ProjectConnectionService projectConnectionService) {
+    public PFGProductMappingView( ProductHierarchieService service, ProjectParameterService projectParameterService, ProjectConnectionService projectConnectionService, AuthenticatedUser authenticatedUser, BackendService backendService, ProjectsService projectsService, ProjectAttachmentsService projectAttachmentsService) {
         this.service = service;
         this.projectConnectionService = projectConnectionService;
+        this.projectsService = projectsService;
+        this.projectAttachmentsService = projectAttachmentsService;
+        this.backendService = backendService;
+        this.authenticatedUser = authenticatedUser;
+
         ui= UI.getCurrent();
+        logView = new LogView();
+        logView.logMessage(Constants.INFO, "Starting PFGProductMappingView");
+
+        uploadBtn = new Button("Upload");
 
         List<ProjectParameter> listOfProjectParameters = projectParameterService.findAll();
         List<ProjectParameter> filteredProjectParameters = listOfProjectParameters.stream()
                 .filter(projectParameter -> Constants.PFG_PRODUCT_MAPPING.equals(projectParameter.getNamespace()))
                 .collect(Collectors.toList());
 
-        String missingQuery = null;
-        String pfg_mapping_target = null;
         String dbServer = null;
         String dbName = null;
 
@@ -91,8 +110,8 @@ public class PFGProductMappingView extends VerticalLayout {
             //  if(projectParameter.getNamespace().equals(Constants.PFG_PRODUCT_MAPPING)) {
             if (Constants.MAPPINGALLPRODUCTS.equals(projectParameter.getName())) {
                 productsDb = projectParameter.getValue();
-            } else if (Constants.AGENT_NAME.equals(projectParameter.getName())) {
-                dBAgentName = projectParameter.getValue();
+            } else if (Constants.DB_JOBS.equals(projectParameter.getName())) {
+                agentName = projectParameter.getValue();
             } else if (Constants.MAPPINGMISSINGPRODUCTS.equals(projectParameter.getName())) {
                 targetView = projectParameter.getValue();
             } else if (Constants.PFG_TABLE.equals(projectParameter.getName())) {
@@ -112,36 +131,22 @@ public class PFGProductMappingView extends VerticalLayout {
         dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
 
         setProjectParameterGrid(filteredProjectParameters);
+        defaultUtils = new DefaultUtils(projectsService, projectAttachmentsService);
 
-        addClassName("list-view");
+        HorizontalLayout vl = new HorizontalLayout();
+        vl.add(getTabsheet());
+
+        vl.setHeightFull();
+        vl.setSizeFull();
+
+        setHeightFull();
         setSizeFull();
-        configureGrid();
-        configureMissingGrid();
-        configureForm();
-        configureLoggingArea();
-        configureExecuteBtn();
-        configureSaveBtn();
 
-        HorizontalLayout hl = new HorizontalLayout();
-
-        hl.add(startAgentBtn, saveButton);
-
-        TabSheet tabSheet = new TabSheet();
-        tabSheet.add("Missing Entries", getMissingMapping());
-        tabSheet.add("All Entries",getPFGMapping());
-
-        tabSheet.setSizeFull();
-        tabSheet.setHeightFull();
-        tabSheet.addThemeVariants(TabSheetVariant.MATERIAL_BORDERED);
-
-        add(tabSheet);
-        add(hl, parameterGrid, tabSheet );
-
-        updateList();
-        updateMissingGrid();
-        closeEditor();
+        add(vl,parameterGrid);
 
         parameterGrid.setVisible(false);
+        logView.setVisible(false);
+        add(logView);
 
         if(MainLayout.isAdmin) {
 
@@ -151,10 +156,110 @@ public class PFGProductMappingView extends VerticalLayout {
                         parameterGrid.setVisible(isVisible);
                     },
                     Key.KEY_I, KeyModifier.ALT);
+
+            UI.getCurrent().addShortcutListener(
+                    () -> {
+                        isLogsVisible = !isLogsVisible;
+                        logView.setVisible(isLogsVisible);
+                    },
+                    Key.KEY_V, KeyModifier.ALT);
         }
+        logView.logMessage(Constants.INFO, "Ending PFGProductMappingView");
+    }
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+        logView.logMessage(Constants.INFO, "Starting beforeEnter() for update");
+        RouteParameters parameters = event.getRouteParameters();
+        projectId = Integer.parseInt(parameters.get("project_Id").orElse(null));
+
+        projects = projectsService.findById(projectId);
+
+        projects.ifPresent(value -> listOfProjectAttachments = projectsService.getProjectAttachmentsWithoutFileContent(value));
+
+        updateDescription();
+        updateAttachmentGrid(listOfProjectAttachments);
+        logView.logMessage(Constants.INFO, "Ending beforeEnter() for update");
+    }
+
+    private TabSheet getTabsheet() {
+        logView.logMessage(Constants.INFO, "Starting getTabsheet() for Tabs");
+        //log.info("Starting getTabsheet() for Tabsheet");
+        TabSheet tabSheet = new TabSheet();
+
+        tabSheet.add("Upload", getUpladTab());
+        tabSheet.add("Description", getDescriptionTab());
+        tabSheet.add("Attachments", getAttachmentTab());
+
+        tabSheet.setSizeFull();
+        tabSheet.setHeightFull();
+        //log.info("Ending getTabsheet() for Tabsheet");
+        logView.logMessage(Constants.INFO, "Ending getTabsheet() for Tabs");
+        return tabSheet;
+    }
+
+    private Component getAttachmentTab() {
+        logView.logMessage(Constants.INFO, "Set Attachment in getAttachmentTab()");
+        return defaultUtils.getProjectAttachements();
+    }
+
+    private Component getDescriptionTab() {
+        logView.logMessage(Constants.INFO, "Set Description in getDescriptionTab()");
+        return defaultUtils.getProjectDescription();
+    }
+    private void updateDescription() {
+        logView.logMessage(Constants.INFO, "Update Attachment in updateDescription()");
+        defaultUtils.setProjectId(projectId);
+        defaultUtils.setDescription();
+    }
+    private void updateAttachmentGrid(List<ProjectAttachmentsDTO> projectAttachmentsDTOS) {
+        logView.logMessage(Constants.INFO, "Update Description in updateAttachmentGrid()");
+        defaultUtils.setProjectId(projectId);
+        defaultUtils.setAttachmentGridItems(projectAttachmentsDTOS);
+    }
+    private Component getUpladTab() {
+        logView.logMessage(Constants.INFO, "Sarting getUpladTab() for set upload data");
+        VerticalLayout content = new VerticalLayout();
+        content.setSizeFull();
+        content.setHeightFull();
+        addClassName("list-view");
+        setSizeFull();
+        configureGrid();
+        configureForm();
+        configureLoggingArea();
+        configureMissingGrid();
+        configureExecuteBtn();
+
+        HorizontalLayout hl = new HorizontalLayout();
+
+        hl.add(startAgentBtn, uploadBtn);
+
+        TabSheet tabSheet = new TabSheet();
+        tabSheet.add("Missing Entries", getMissingMapping());
+        tabSheet.add("All Entries",getPFGMapping());
+
+        tabSheet.setSizeFull();
+        tabSheet.setHeightFull();
+        tabSheet.addThemeVariants(TabSheetVariant.MATERIAL_BORDERED);
+
+        content.add(tabSheet);
+        content.add(hl, tabSheet );
+
+        updateList();
+        updateMissingGrid();
+        closeEditor();
+
+        uploadBtn.addClickListener(e ->{
+            logView.logMessage(Constants.INFO, "Uploading in uploadBtn.addClickListener");
+            save2db();
+        });
+
+        logView.logMessage(Constants.INFO, "Ending getUpladTab() for set upload data");
+        return content;
     }
 
     private void setProjectParameterGrid(List<ProjectParameter> listOfProjectParameters) {
+        logView.logMessage(Constants.INFO, "Starting setProjectParameterGrid() for set database detail in Grid");
         parameterGrid = new Grid<>(ProjectParameter.class, false);
         parameterGrid.addColumn(ProjectParameter::getName).setHeader("Name").setAutoWidth(true).setResizable(true);
         parameterGrid.addColumn(ProjectParameter::getValue).setHeader("Value").setAutoWidth(true).setResizable(true);
@@ -164,28 +269,30 @@ public class PFGProductMappingView extends VerticalLayout {
         parameterGrid.addThemeVariants(GridVariant.LUMO_COMPACT);
         parameterGrid.setHeight("200px");
         parameterGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+        logView.logMessage(Constants.INFO, "Ending setProjectParameterGrid() for set database detail in Grid");
     }
 
-    private void configureSaveBtn() {
+    private void save2db() {
+        logView.logMessage(Constants.INFO, "Starting save2db() for save data");
 
-        saveButton.addClickListener(e -> {
-            if (modifiedProducts != null && !modifiedProducts.isEmpty()) {
-                    String result = projectConnectionService.saveListOfProductHierarchie(modifiedProducts, dbUrl, dbUser, dbPassword, targetTable);
-                    if (result.equals(Constants.OK)){
-                        Notification.show(modifiedProducts.size()+" Uploaded successfully",2000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-                        modifiedProducts.clear();
-                    } else {
-                        Notification.show( "Error during upload: "+ result,3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
-                    }
-                    updateMissingGrid();
-                    updateList();
+        if (modifiedProducts != null && !modifiedProducts.isEmpty()) {
+            String result = projectConnectionService.saveListOfProductHierarchie(modifiedProducts, dbUrl, dbUser, dbPassword, targetTable);
+            if (result.equals(Constants.OK)) {
+                Notification.show(modifiedProducts.size() + " Uploaded successfully", 2000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                modifiedProducts.clear();
             } else {
-                Notification.show( "Not any changed in products",3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                Notification.show("Error during upload: " + result, 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
             }
-        });
+            updateMissingGrid();
+            updateList();
+        } else {
+            Notification.show("Not any changed in products", 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+        }
+        logView.logMessage(Constants.INFO, "Ending save2db() for save data");
     }
 
     private Component getMissingMapping() {
+        logView.logMessage(Constants.INFO, "Staring getMissingMapping() for save data");
         VerticalLayout vl = new VerticalLayout();
 
       //  HorizontalLayout content = new HorizontalLayout(missingGrid);
@@ -196,59 +303,34 @@ public class PFGProductMappingView extends VerticalLayout {
         content.setHeightFull();
 
         vl.add(content);
-
         vl.setSizeFull();
         vl.setHeightFull();
 
+        logView.logMessage(Constants.INFO, "Ending getMissingMapping() for save data");
         return vl;
     }
 
     private void configureExecuteBtn() {
-
-        String dbConnection="";
-        String agentJobName="";
-
-        try {
-            //String[] dbName = productDb.split("\\.");
-            String[] parts = dBAgentName.split(":");
-
-            if (parts.length == 2) {
-                dbConnection = parts[0];
-                agentJobName = parts[1];
-
-            } else {
-                System.out.println("ERROR: No Connection/AgentJob for start Agent-Job!");
-            }
-
-          } catch (Exception e) {
-               e.printStackTrace();
-                 return ;
-           }
-
-
-        String finalAgentJobName = agentJobName;
+        logView.logMessage(Constants.INFO, "Staring configureExecuteBtn() for save data");
 
         startAgentBtn.addClickListener(e->{
 
-           String erg= startJob(finalAgentJobName);
+            String message = projectConnectionService.startAgent(projectId);
+            if (!message.contains("Error")) {
+              //  startAgentBtn.setEnabled(false);
+                Notification.show(message, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+            } else {
+                Notification.show(message, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+            }
 
-           if(!erg.equals(Constants.OK))
-           {
-               Notification notification = Notification.show("ERROR: " + erg,10000, Notification.Position.MIDDLE);
-               notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
-
-           }
-           else {
-               startAgentBtn.setEnabled(false);
-           }
         });
 
-        startAgentBtn.setText("Execute Job " + agentJobName);
+        startAgentBtn.setText("Execute Job " + agentName);
 
         startAgentBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY,
                 ButtonVariant.LUMO_SUCCESS);
-        startAgentBtn.setTooltipText("Start of SQLServer Job: " + agentJobName );
-
+        startAgentBtn.setTooltipText("Start of SQLServer Job: " + agentName );
+        logView.logMessage(Constants.INFO, "Ending configureExecuteBtn() for save data");
     }
 
     private String startJob( String finalAgentJobName) {
@@ -263,8 +345,6 @@ public class PFGProductMappingView extends VerticalLayout {
         try {
             String sql = "msdb.dbo.sp_start_job @job_name='" + finalAgentJobName + "'";
             template.execute(sql);
-
-
         }
         catch (CannotGetJdbcConnectionException connectionException) {
             return connectionException.getMessage();
@@ -275,7 +355,6 @@ public class PFGProductMappingView extends VerticalLayout {
         }
 
         return Constants.OK;
-
 
     }
 
@@ -298,13 +377,14 @@ public class PFGProductMappingView extends VerticalLayout {
     }
 
     private void updateList() {
-
+        logView.logMessage(Constants.INFO, "Staring updateList() for update data");
         //grid.setItems(service.findAllProducts(filterText.getValue()));
         List<ProductHierarchie> listOfProductHierarchie = projectConnectionService.fetchProductHierarchie(dbUrl, dbUser, dbPassword, targetTable, filterText.getValue());
         grid.setItems(listOfProductHierarchie);
         if (listOfProductHierarchie.isEmpty() && !projectConnectionService.getErrorMessage().isEmpty()){
             Notification.show(projectConnectionService.getErrorMessage(),4000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
         }
+        logView.logMessage(Constants.INFO, "Ending updateList() for update data");
     }
 
     private Component getContent() {
@@ -324,7 +404,7 @@ public class PFGProductMappingView extends VerticalLayout {
     }
 
     private Component getPFGMapping() {
-
+        logView.logMessage(Constants.INFO, "Staring getPFGMapping() for update data");
         VerticalLayout vl = new VerticalLayout();
 
         HorizontalLayout content = new HorizontalLayout(grid, form);
@@ -338,13 +418,13 @@ public class PFGProductMappingView extends VerticalLayout {
 
         vl.setSizeFull();
         vl.setHeightFull();
-
+        logView.logMessage(Constants.INFO, "Ending getPFGMapping() for update data");
         return vl;
 
     }
 
     private void configureForm() {
-
+        logView.logMessage(Constants.INFO, "Staring configureForm() for update data");
         var xx = projectConnectionService.getCltvAllProducts(dbUrl, dbUser, dbPassword, productsDb);
 
         if (xx.isEmpty() && !projectConnectionService.getErrorMessage().isEmpty()){
@@ -361,9 +441,11 @@ public class PFGProductMappingView extends VerticalLayout {
 
         //form.addDeleteListener(this::deleteProduct);
         //form.addCloseListener(e -> closeEditor());
+        logView.logMessage(Constants.INFO, "Ending configureForm() for update data");
     }
 
     private void saveProduct(PFGProductForm.SaveEvent event) {
+        logView.logMessage(Constants.INFO, "Staring saveProduct() for save product");
         String node = event.getProduct().getNode();
         String product = event.getProduct().getProduct_name();
 
@@ -390,15 +472,18 @@ public class PFGProductMappingView extends VerticalLayout {
       //  service.saveProduct(event.getProduct());
         updateList();
         closeEditor();
+        logView.logMessage(Constants.INFO, "Ending saveProduct() for save product");
     }
 
     private void deleteProduct(PFGProductForm.DeleteEvent event) {
+        logView.logMessage(Constants.INFO, "deleteProduct() for save product");
         service.deleteProduct(event.getProduct());
         updateList();
         closeEditor();
     }
 
     private void configureGrid() {
+        logView.logMessage(Constants.INFO, "Starting configureGrid() for all product grid");
         grid.addClassNames("PFG-grid");
         grid.setSizeFull();
         grid.setHeightFull();
@@ -414,10 +499,11 @@ public class PFGProductMappingView extends VerticalLayout {
 
 //        grid.addItemDoubleClickListener(event ->
 //                editProduct(event.getItem()));
-
+        logView.logMessage(Constants.INFO, "Ending configureGrid() for all product grid");
     }
 
     private void configureMissingGrid() {
+        logView.logMessage(Constants.INFO, "Starting configureMissingGrid() for missing grid");
         List<ProductHierarchie> listOfProductHierarchie = projectConnectionService.fetchProductHierarchie(dbUrl, dbUser, dbPassword, targetTable, filterText.getValue());
         List<String> listOfNodes = listOfProductHierarchie.stream()
                 .map(ProductHierarchie::getNode)
@@ -499,7 +585,7 @@ public class PFGProductMappingView extends VerticalLayout {
         missingGrid.setSelectionMode(Grid.SelectionMode.NONE);
         missingGrid.setEditOnClick(true);
         //missingGrid.addThemeVariants(GridProVariant.LUMO_HIGHLIGHT_EDITABLE_CELLS);
-
+        logView.logMessage(Constants.INFO, "Ending configureMissingGrid() for missing grid");
     }
 
     private static void showErrorNotification(String msg) {
@@ -510,6 +596,7 @@ public class PFGProductMappingView extends VerticalLayout {
     }
 
     private void updateMissingGrid(){
+        logView.logMessage(Constants.INFO, "Starting updateMissingGrid() for update missing grid");
         try {
             List<String> missingProducts = projectConnectionService.getAllMissingProducts(dbUrl, dbUser, dbPassword, targetView);
             List<ProductHierarchie> missingData = new ArrayList<>();
@@ -527,6 +614,7 @@ public class PFGProductMappingView extends VerticalLayout {
 
             Notification.show(projectConnectionService.getErrorMessage(),4000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
         }
+        logView.logMessage(Constants.INFO, "Ending updateMissingGrid() for update missing grid");
     }
 
     private boolean isValidNode(String node) {
