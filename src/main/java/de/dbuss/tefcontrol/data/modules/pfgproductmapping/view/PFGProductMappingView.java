@@ -23,14 +23,14 @@ import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.*;
 import de.dbuss.tefcontrol.components.DefaultUtils;
 import de.dbuss.tefcontrol.components.LogView;
+import de.dbuss.tefcontrol.components.QS_Callback;
+import de.dbuss.tefcontrol.components.QS_Grid;
 import de.dbuss.tefcontrol.data.dto.ProjectAttachmentsDTO;
-import de.dbuss.tefcontrol.data.entity.Constants;
-import de.dbuss.tefcontrol.data.entity.ProjectParameter;
-import de.dbuss.tefcontrol.data.entity.Projects;
+import de.dbuss.tefcontrol.data.entity.*;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.view.B2POutlookFINView;
 import de.dbuss.tefcontrol.data.modules.pfgproductmapping.entity.ProductHierarchie;
-import de.dbuss.tefcontrol.data.entity.ProjectConnection;
 import de.dbuss.tefcontrol.data.service.*;
+import de.dbuss.tefcontrol.security.AuthenticatedUser;
 import de.dbuss.tefcontrol.views.MainLayout;
 import jakarta.annotation.security.RolesAllowed;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,18 +53,20 @@ public class PFGProductMappingView extends VerticalLayout implements BeforeEnter
     private final ProductHierarchieService service;
     private final ProjectConnectionService projectConnectionService;
     private final ProjectsService projectsService;
+    private final BackendService backendService;
     private final ProjectAttachmentsService projectAttachmentsService;
+    private AuthenticatedUser authenticatedUser;
     Grid<ProductHierarchie> grid = new Grid<>(ProductHierarchie.class);
     GridPro<ProductHierarchie> missingGrid = new GridPro<>(ProductHierarchie.class);
     Button startAgentBtn = new Button("Execute Job");
-    Button saveButton = new Button("Save");
+   // Button saveButton = new Button("Save");
     TextField filterText = new TextField();
     Div textArea = new Div();
     VerticalLayout messageLayout = new VerticalLayout();
     PFGProductForm form;
     private UI ui ;
     private String productsDb;
-    private String dBAgentName;
+    private String agentName;
     private String selectedDbName;
     private String targetTable;
     private String targetView;
@@ -75,25 +77,32 @@ public class PFGProductMappingView extends VerticalLayout implements BeforeEnter
     private String dbUser;
     private String dbPassword;
     private int projectId;
+    private int upload_id;
     private Optional<Projects> projects;
     private DefaultUtils defaultUtils;
     private List<ProjectAttachmentsDTO> listOfProjectAttachments;
+    private QS_Grid qsGrid;
+    private Button qsBtn;
     private Button uploadBtn;
     private LogView logView;
     private Boolean isLogsVisible = false;
 
-    public PFGProductMappingView( ProductHierarchieService service, ProjectParameterService projectParameterService, ProjectConnectionService projectConnectionService, ProjectsService projectsService, ProjectAttachmentsService projectAttachmentsService) {
+    public PFGProductMappingView( ProductHierarchieService service, ProjectParameterService projectParameterService, ProjectConnectionService projectConnectionService, AuthenticatedUser authenticatedUser, BackendService backendService, ProjectsService projectsService, ProjectAttachmentsService projectAttachmentsService) {
         this.service = service;
         this.projectConnectionService = projectConnectionService;
         this.projectsService = projectsService;
         this.projectAttachmentsService = projectAttachmentsService;
+        this.backendService = backendService;
+        this.authenticatedUser = authenticatedUser;
 
         ui= UI.getCurrent();
         logView = new LogView();
         logView.logMessage(Constants.INFO, "Starting PFGProductMappingView");
 
         uploadBtn = new Button("Upload");
-        uploadBtn.setEnabled(false);
+
+        qsBtn = new Button("QS and Start Job");
+        qsBtn.setEnabled(false);
 
         List<ProjectParameter> listOfProjectParameters = projectParameterService.findAll();
         List<ProjectParameter> filteredProjectParameters = listOfProjectParameters.stream()
@@ -110,7 +119,7 @@ public class PFGProductMappingView extends VerticalLayout implements BeforeEnter
             if (Constants.MAPPINGALLPRODUCTS.equals(projectParameter.getName())) {
                 productsDb = projectParameter.getValue();
             } else if (Constants.AGENT_NAME.equals(projectParameter.getName())) {
-                dBAgentName = projectParameter.getValue();
+                agentName = projectParameter.getValue();
             } else if (Constants.MAPPINGMISSINGPRODUCTS.equals(projectParameter.getName())) {
                 targetView = projectParameter.getValue();
             } else if (Constants.PFG_TABLE.equals(projectParameter.getName())) {
@@ -131,6 +140,10 @@ public class PFGProductMappingView extends VerticalLayout implements BeforeEnter
 
         setProjectParameterGrid(filteredProjectParameters);
         defaultUtils = new DefaultUtils(projectsService, projectAttachmentsService);
+
+        //Componente QS-Grid:
+        qsGrid = new QS_Grid(projectConnectionService, backendService);
+
         HorizontalLayout vl = new HorizontalLayout();
         vl.add(getTabsheet());
 
@@ -171,6 +184,18 @@ public class PFGProductMappingView extends VerticalLayout implements BeforeEnter
         updateDescription();
         updateAttachmentGrid(listOfProjectAttachments);
         logView.logMessage(Constants.INFO, "Ending beforeEnter() for update");
+    }
+
+    public class CallbackHandler implements QS_Callback {
+        // Die Methode, die aufgerufen wird, wenn die externe Methode abgeschlossen ist
+        @Override
+        public void onComplete(String result) {
+            logView.logMessage(Constants.INFO, "Starting CallbackHandler onComplete for execute Start Job");
+            if(!result.equals("Cancel")) {
+                qsGrid.executeStartJobSteps(upload_id, agentName);
+            }
+            logView.logMessage(Constants.INFO, "Ending CallbackHandler onComplete for execute Start Job");
+        }
     }
 
     private TabSheet getTabsheet() {
@@ -216,15 +241,14 @@ public class PFGProductMappingView extends VerticalLayout implements BeforeEnter
         addClassName("list-view");
         setSizeFull();
         configureGrid();
-        configureMissingGrid();
         configureForm();
         configureLoggingArea();
-        configureExecuteBtn();
-        configureSaveBtn();
+        configureMissingGrid();
+       // configureExecuteBtn();
 
         HorizontalLayout hl = new HorizontalLayout();
 
-        hl.add(startAgentBtn, saveButton);
+        hl.add(uploadBtn, qsBtn, qsGrid);
 
         TabSheet tabSheet = new TabSheet();
         tabSheet.add("Missing Entries", getMissingMapping());
@@ -240,6 +264,24 @@ public class PFGProductMappingView extends VerticalLayout implements BeforeEnter
         updateList();
         updateMissingGrid();
         closeEditor();
+
+        uploadBtn.addClickListener(e ->{
+            logView.logMessage(Constants.INFO, "Uploading in uploadBtn.addClickListener");
+            save2db();
+            qsBtn.setEnabled(true);
+        });
+
+        qsBtn.addClickListener(e ->{
+            logView.logMessage(Constants.INFO, "executing sqls in qsBtn.addClickListener");
+            //   if (qsGrid.projectId != projectId) {
+            hl.remove(qsGrid);
+            qsGrid = new QS_Grid(projectConnectionService, backendService);
+            hl.add(qsGrid);
+            CallbackHandler callbackHandler = new CallbackHandler();
+            qsGrid.createDialog(callbackHandler, projectId, upload_id);
+            //  }
+            qsGrid.showDialog(true);
+        });
 
         logView.logMessage(Constants.INFO, "Ending getUpladTab() for set upload data");
         return content;
@@ -259,24 +301,42 @@ public class PFGProductMappingView extends VerticalLayout implements BeforeEnter
         logView.logMessage(Constants.INFO, "Ending setProjectParameterGrid() for set database detail in Grid");
     }
 
-    private void configureSaveBtn() {
-        logView.logMessage(Constants.INFO, "Starting configureSaveBtn() for save data");
-        saveButton.addClickListener(e -> {
-            if (modifiedProducts != null && !modifiedProducts.isEmpty()) {
-                    String result = projectConnectionService.saveListOfProductHierarchie(modifiedProducts, dbUrl, dbUser, dbPassword, targetTable);
-                    if (result.equals(Constants.OK)){
-                        Notification.show(modifiedProducts.size()+" Uploaded successfully",2000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-                        modifiedProducts.clear();
-                    } else {
-                        Notification.show( "Error during upload: "+ result,3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
-                    }
-                    updateMissingGrid();
-                    updateList();
+    private void save2db() {
+        logView.logMessage(Constants.INFO, "Starting save2db() for save data");
+        ProjectUpload projectUpload = new ProjectUpload();
+        projectUpload.setFileName("");
+        //projectUpload.setUserName(MainLayout.userName);
+
+        Optional<User> maybeUser = authenticatedUser.get();
+        if (maybeUser.isPresent()) {
+            User user = maybeUser.get();
+            projectUpload.setUserName(user.getUsername());
+        }
+
+        projectUpload.setModulName("B2POutlookFIN");
+
+        logView.logMessage(Constants.INFO, "Get file upload id from database");
+        projectConnectionService.getJdbcConnection(dbUrl, dbUser, dbPassword); // Set Connection to target DB
+        upload_id = projectConnectionService.saveUploadedGenericFileData(projectUpload);
+
+        projectUpload.setUploadId(upload_id);
+
+        System.out.println("Upload_ID: " + upload_id);
+
+        if (modifiedProducts != null && !modifiedProducts.isEmpty()) {
+            String result = projectConnectionService.saveListOfProductHierarchie(modifiedProducts, dbUrl, dbUser, dbPassword, targetTable);
+            if (result.equals(Constants.OK)) {
+                Notification.show(modifiedProducts.size() + " Uploaded successfully", 2000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                modifiedProducts.clear();
             } else {
-                Notification.show( "Not any changed in products",3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                Notification.show("Error during upload: " + result, 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
             }
-        });
-        logView.logMessage(Constants.INFO, "Ending configureSaveBtn() for save data");
+            updateMissingGrid();
+            updateList();
+        } else {
+            Notification.show("Not any changed in products", 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+        }
+        logView.logMessage(Constants.INFO, "Ending save2db() for save data");
     }
 
     private Component getMissingMapping() {
@@ -305,7 +365,7 @@ public class PFGProductMappingView extends VerticalLayout implements BeforeEnter
 
         try {
             //String[] dbName = productDb.split("\\.");
-            String[] parts = dBAgentName.split(":");
+            String[] parts = agentName.split(":");
 
             if (parts.length == 2) {
                 dbConnection = parts[0];
