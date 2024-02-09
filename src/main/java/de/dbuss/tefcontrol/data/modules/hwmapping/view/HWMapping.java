@@ -8,6 +8,7 @@ import com.vaadin.flow.component.crud.BinderCrudEditor;
 import com.vaadin.flow.component.crud.Crud;
 import com.vaadin.flow.component.crud.CrudEditor;
 import com.vaadin.flow.component.details.Details;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
@@ -111,7 +112,6 @@ public class HWMapping extends VerticalLayout implements BeforeEnterObserver {
         List<ProjectParameter> filteredProjectParameters = listOfProjectParameters.stream()
                 .filter(projectParameter -> Constants.HW_MAPPING.equals(projectParameter.getNamespace()))
                 .collect(Collectors.toList());
-
 
         for (ProjectParameter projectParameter : filteredProjectParameters) {
          //   if(projectParameter.getNamespace().equals(Constants.HW_MAPPING)) {
@@ -269,9 +269,22 @@ public class HWMapping extends VerticalLayout implements BeforeEnterObserver {
             startJobBtn.setEnabled(true);
         });
 
-        addMonthButton.addClickListener(e -> {
+        // Create a confirmation dialog for removing files
+        Dialog confirmationDialog = new Dialog();
+        confirmationDialog.setCloseOnOutsideClick(false);
+        confirmationDialog.setCloseOnEsc(false);
+        confirmationDialog.add(new Text("neuen Monat hinzufügen?"));
+        Button addButton = new Button("Ja");
+        Button cancelButton = new Button("Nein");
+        addButton.getStyle().set("margin-right", "10px");
 
+        addMonthButton.addClickListener(e -> {
             //ToDO Abfrage, ob wirklich ein neuer Monat hinzugefügt werden soll...
+            confirmationDialog.open();
+        });
+
+        addButton.addClickListener(confirmEvent -> {
+            log.info("executing confirmButton.addClickListener for delete selected file in Attachment tab");
             logView.logMessage(Constants.INFO,"executing addMonthButton.addClickListener for add months in DB");
             String message = projectConnectionService.addMonthsInCLTVHWMeasure(dbUrl, dbUser,dbPassword, sql_addMonths);
             if (message.equals(Constants.OK)) {
@@ -281,7 +294,16 @@ public class HWMapping extends VerticalLayout implements BeforeEnterObserver {
             } else {
                 Notification.show(message, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
             }
+            confirmationDialog.close(); // Close the confirmation dialog
         });
+
+        cancelButton.addClickListener(cancelEvent -> {
+            log.info("executing cancelButton.addClickListener for cancel selected file in Attachment tab");
+            confirmationDialog.close(); // Close the confirmation dialog
+        });
+        // Add buttons to the footer
+        confirmationDialog.getFooter().add(cancelButton);
+        confirmationDialog.getFooter().add(addButton);
 
         startJobBtn.addClickListener(e -> {
             logView.logMessage(Constants.INFO,"executing startJobBtn.addClickListener for start agent");
