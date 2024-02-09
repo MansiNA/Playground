@@ -1,9 +1,6 @@
 package de.dbuss.tefcontrol.data.modules.hwmapping.view;
 
-import com.vaadin.flow.component.Key;
-import com.vaadin.flow.component.KeyModifier;
-import com.vaadin.flow.component.Text;
-import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.*;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
@@ -24,18 +21,27 @@ import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.progressbar.ProgressBar;
+import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.provider.DataProvider;
 import com.vaadin.flow.data.provider.Query;
 import com.vaadin.flow.router.*;
 import com.vaadin.flow.server.StreamResource;
+import de.dbuss.tefcontrol.components.DefaultUtils;
+import de.dbuss.tefcontrol.components.LogView;
+import de.dbuss.tefcontrol.components.QS_Grid;
+import de.dbuss.tefcontrol.data.dto.ProjectAttachmentsDTO;
 import de.dbuss.tefcontrol.data.entity.CLTV_HW_Measures;
 import de.dbuss.tefcontrol.data.entity.Constants;
 import de.dbuss.tefcontrol.data.entity.ProjectParameter;
+import de.dbuss.tefcontrol.data.entity.Projects;
+import de.dbuss.tefcontrol.data.modules.b2pOutlook.view.B2POutlookFINView;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.Subscriber;
+import de.dbuss.tefcontrol.data.service.ProjectAttachmentsService;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
 import de.dbuss.tefcontrol.data.service.ProjectParameterService;
+import de.dbuss.tefcontrol.data.service.ProjectsService;
 import de.dbuss.tefcontrol.dataprovider.GenericDataProvider;
 import de.dbuss.tefcontrol.views.MainLayout;
 import jakarta.annotation.security.RolesAllowed;
@@ -50,6 +56,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -60,6 +67,8 @@ public class HWMapping extends VerticalLayout implements BeforeEnterObserver {
 
     private final ProjectParameterService projectParameterService;
     private final ProjectConnectionService projectConnectionService;
+    private final ProjectsService projectsService;
+    private final ProjectAttachmentsService projectAttachmentsService;
     private List<CLTV_HW_Measures> listOfCLTVMeasures;
     private Crud<CLTV_HW_Measures> crud;
     private Grid<CLTV_HW_Measures> grid;
@@ -81,21 +90,22 @@ public class HWMapping extends VerticalLayout implements BeforeEnterObserver {
     private int projectId;
     private Boolean isVisible = false;
     Grid<ProjectParameter> parameterGrid = new Grid<>(ProjectParameter.class, false);
+    private Optional<Projects> projects;
+    private DefaultUtils defaultUtils;
+    private List<ProjectAttachmentsDTO> listOfProjectAttachments;
+    private LogView logView;
+    private Boolean isLogsVisible = false;
 
-    public HWMapping(@Value("${csv_exportPath}") String p_exportPath, ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService) {
+    public HWMapping(@Value("${csv_exportPath}") String p_exportPath, ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, ProjectsService projectsService, ProjectAttachmentsService projectAttachmentsService) {
 
         this.exportPath = p_exportPath;
         this.projectConnectionService = projectConnectionService;
         this.projectParameterService = projectParameterService;
+        this.projectsService = projectsService;
+        this.projectAttachmentsService = projectAttachmentsService;
 
-        crud = new Crud<>(CLTV_HW_Measures.class, createEditor());
-        listOfCLTVMeasures = new ArrayList<CLTV_HW_Measures>();
-
-        downloadButton = new Button("Download");
-        Button saveButton = new Button("Save");
-        Button addMonthButton = new Button("add Month");
-        Button startJobBtn = new Button("Start Essbase");
-        startJobBtn.setEnabled(true);
+        logView = new LogView();
+        logView.logMessage(Constants.INFO, "Starting HWMapping");
 
         List<ProjectParameter> listOfProjectParameters = projectParameterService.findAll();
         List<ProjectParameter> filteredProjectParameters = listOfProjectParameters.stream()
@@ -127,6 +137,105 @@ public class HWMapping extends VerticalLayout implements BeforeEnterObserver {
      //   Text databaseDetail = new Text("Connected to: "+ dbServer+ ", Database: " + dbName + " AgentJob: " + agentName);
 
         setProjectParameterGrid(filteredProjectParameters);
+        defaultUtils = new DefaultUtils(projectsService, projectAttachmentsService);
+
+        HorizontalLayout vl = new HorizontalLayout();
+        vl.add(getTabsheet());
+
+        vl.setHeightFull();
+        vl.setSizeFull();
+
+        setHeightFull();
+        setSizeFull();
+
+        add(vl,parameterGrid);
+
+        parameterGrid.setVisible(false);
+        logView.setVisible(false);
+        add(logView);
+
+        if(MainLayout.isAdmin) {
+            UI.getCurrent().addShortcutListener(
+                    () -> {
+                        isVisible = !isVisible;
+                        parameterGrid.setVisible(isVisible);
+                    },
+                    Key.KEY_I, KeyModifier.ALT);
+
+            UI.getCurrent().addShortcutListener(
+                    () -> {
+                        isLogsVisible = !isLogsVisible;
+                        logView.setVisible(isLogsVisible);
+                    },
+                    Key.KEY_V, KeyModifier.ALT);
+        }
+        logView.logMessage(Constants.INFO, "Ending HWMapping");
+    }
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+        logView.logMessage(Constants.INFO, "Starting beforeEnter() for update");
+        RouteParameters parameters = event.getRouteParameters();
+        projectId = Integer.parseInt(parameters.get("project_Id").orElse(null));
+
+        projects = projectsService.findById(projectId);
+
+        projects.ifPresent(value -> listOfProjectAttachments = projectsService.getProjectAttachmentsWithoutFileContent(value));
+
+        updateDescription();
+        updateAttachmentGrid(listOfProjectAttachments);
+        logView.logMessage(Constants.INFO, "Ending beforeEnter() for update");
+    }
+
+    private TabSheet getTabsheet() {
+        logView.logMessage(Constants.INFO, "Starting getTabsheet() for Tabs");
+        //log.info("Starting getTabsheet() for Tabsheet");
+        TabSheet tabSheet = new TabSheet();
+
+        tabSheet.add("Upload", getUpladTab());
+        tabSheet.add("Description", getDescriptionTab());
+        tabSheet.add("Attachments", getAttachmentTab());
+
+        tabSheet.setSizeFull();
+        tabSheet.setHeightFull();
+        //log.info("Ending getTabsheet() for Tabsheet");
+        logView.logMessage(Constants.INFO, "Ending getTabsheet() for Tabs");
+        return tabSheet;
+    }
+
+    private Component getAttachmentTab() {
+        logView.logMessage(Constants.INFO, "Set Attachment in getAttachmentTab()");
+        return defaultUtils.getProjectAttachements();
+    }
+
+    private Component getDescriptionTab() {
+        logView.logMessage(Constants.INFO, "Set Description in getDescriptionTab()");
+        return defaultUtils.getProjectDescription();
+    }
+    private void updateDescription() {
+        logView.logMessage(Constants.INFO, "Update Description in updateDescription()");
+        defaultUtils.setProjectId(projectId);
+        defaultUtils.setDescription();
+    }
+    private void updateAttachmentGrid(List<ProjectAttachmentsDTO> projectAttachmentsDTOS) {
+        logView.logMessage(Constants.INFO, "Update Attachment in updateAttachmentGrid()");
+        defaultUtils.setProjectId(projectId);
+        defaultUtils.setAttachmentGridItems(projectAttachmentsDTOS);
+    }
+    private Component getUpladTab() {
+        logView.logMessage(Constants.INFO, "Sarting getUpladTab() for set upload data");
+        VerticalLayout content = new VerticalLayout();
+
+        content.setSizeFull();
+        content.setHeightFull();
+        crud = new Crud<>(CLTV_HW_Measures.class, createEditor());
+        listOfCLTVMeasures = new ArrayList<CLTV_HW_Measures>();
+
+        downloadButton = new Button("Download");
+        Button saveButton = new Button("Save");
+        Button addMonthButton = new Button("add Month");
+        Button startJobBtn = new Button("Start Essbase");
+        startJobBtn.setEnabled(true);
 
         setupGrid();
         setUpDownloadButton();
@@ -141,7 +250,7 @@ public class HWMapping extends VerticalLayout implements BeforeEnterObserver {
         updateCLTVHWMeasuredataGrid();
 
         saveButton.addClickListener(clickEvent -> {
-            log.info("executing uploadButton.addClickListener for Save data in DB");
+            logView.logMessage(Constants.INFO,"executing saveButton.addClickListener for Save data in DB");
             List<CLTV_HW_Measures>allItems = getDataProviderAllItems();
 
             Notification notification = Notification.show(allItems.size() + " Rows Uploaded start",2000, Notification.Position.MIDDLE);
@@ -163,7 +272,7 @@ public class HWMapping extends VerticalLayout implements BeforeEnterObserver {
         addMonthButton.addClickListener(e -> {
 
             //ToDO Abfrage, ob wirklich ein neuer Monat hinzugefügt werden soll...
-
+            logView.logMessage(Constants.INFO,"executing addMonthButton.addClickListener for add months in DB");
             String message = projectConnectionService.addMonthsInCLTVHWMeasure(dbUrl, dbUser,dbPassword, sql_addMonths);
             if (message.equals(Constants.OK)) {
                 Notification.show("added successfully", 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
@@ -175,6 +284,7 @@ public class HWMapping extends VerticalLayout implements BeforeEnterObserver {
         });
 
         startJobBtn.addClickListener(e -> {
+            logView.logMessage(Constants.INFO,"executing startJobBtn.addClickListener for start agent");
             String message = projectConnectionService.startAgent(projectId);
             if (!message.contains("Error")) {
                 Notification.show(message, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
@@ -186,21 +296,14 @@ public class HWMapping extends VerticalLayout implements BeforeEnterObserver {
         checkbox = new Checkbox();
         checkbox.setLabel("Show Pivot");
         checkbox.addClickListener(e->{showPivot();});
-        add(horl, parameterGrid, crud, checkbox);
+        content.add(horl, crud, checkbox);
 
-        parameterGrid.setVisible(false);
-
-        if(MainLayout.isAdmin) {
-            UI.getCurrent().addShortcutListener(
-                    () -> {
-                        isVisible = !isVisible;
-                        parameterGrid.setVisible(isVisible);
-                    },
-                    Key.KEY_I, KeyModifier.ALT);
-        }
+        logView.logMessage(Constants.INFO, "Ending getUpladTab() for set upload data");
+        return content;
     }
 
     private void setProjectParameterGrid(List<ProjectParameter> listOfProjectParameters) {
+        logView.logMessage(Constants.INFO, "Starting setProjectParameterGrid() for set database detail in Grid");
         parameterGrid = new Grid<>(ProjectParameter.class, false);
         parameterGrid.addColumn(ProjectParameter::getName).setHeader("Name").setAutoWidth(true).setResizable(true);
         parameterGrid.addColumn(ProjectParameter::getValue).setHeader("Value").setAutoWidth(true).setResizable(true);
@@ -210,15 +313,11 @@ public class HWMapping extends VerticalLayout implements BeforeEnterObserver {
         parameterGrid.addThemeVariants(GridVariant.LUMO_COMPACT);
         parameterGrid.setHeight("200px");
         parameterGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+        logView.logMessage(Constants.INFO, "Ending setProjectParameterGrid() for set database detail in Grid");
     }
 
-    @Override
-    public void beforeEnter(BeforeEnterEvent event) {
-        RouteParameters parameters = event.getRouteParameters();
-        projectId = Integer.parseInt(parameters.get("project_Id").orElse(null));
-    }
     private void updateCLTVHWMeasuredataGrid() {
-        log.info("setCLTVHWMeasuredataToGrid for fetch data from DB");
+        logView.logMessage(Constants.INFO, "updateCLTVHWMeasuredataGrid for fetch data from DB");
         try {
             // Perform fetch operations using the selected data source
             fetchListOfCLTVMeasures = projectConnectionService.getCLTVHWMeasuresData(tableName, dbUrl, dbUser, dbPassword);
@@ -238,7 +337,7 @@ public class HWMapping extends VerticalLayout implements BeforeEnterObserver {
     }
 
     private void setUpDownloadButton() {
-        log.info("Starting setUpDownloadButton() prepare excel file for export");
+        logView.logMessage(Constants.INFO, "Starting setUpDownloadButton() prepare excel file for export");
         String exportFileName = "HW_Mapping.xls";
         downloadButton.addThemeVariants(ButtonVariant.LUMO_SMALL);
         downloadButton.addThemeVariants(ButtonVariant.LUMO_SUCCESS);
@@ -263,10 +362,10 @@ public class HWMapping extends VerticalLayout implements BeforeEnterObserver {
             }
         });
 
-        log.info("Ending setUpDownloadButton() prepare excel file for export");
+        logView.logMessage(Constants.INFO, "Ending setUpDownloadButton() prepare excel file for export");
     }
     public void generateAndExportExcel(String file) {
-        log.info("Starting generateAndExportExcel() generate excel file");
+        logView.logMessage(Constants.INFO, "Starting generateAndExportExcel() generate excel file");
         try {
             // List<CLTV_HW_Measures> dataToExport = projectConnectionService.fetchDataFromDatabase(selectedDbName);
             List<CLTV_HW_Measures> dataToExport = getDataProviderAllItems();
@@ -313,23 +412,23 @@ public class HWMapping extends VerticalLayout implements BeforeEnterObserver {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        log.info("Ending generateAndExportExcel() generate excel file");
+        logView.logMessage(Constants.INFO, "Ending generateAndExportExcel() generate excel file");
     }
 
     private InputStream getStream(File file) {
-        log.info("Starting getStream() for excel file");
+        logView.logMessage(Constants.INFO, "Starting getStream() for excel file");
         FileInputStream stream = null;
         try {
             stream = new FileInputStream(file);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
-        log.info("Starting getStream() for excel file");
+        logView.logMessage(Constants.INFO, "Starting getStream() for excel file");
         return stream;
     }
 
     private CrudEditor<CLTV_HW_Measures> createEditor() {
-        log.info("Starting createEditor() for crude editor");
+        logView.logMessage(Constants.INFO, "Starting createEditor() for crude editor");
         TextField value = new TextField("Value");
 
         FormLayout editForm = new FormLayout(value);
@@ -337,12 +436,12 @@ public class HWMapping extends VerticalLayout implements BeforeEnterObserver {
         Binder<CLTV_HW_Measures> binder = new Binder<>(CLTV_HW_Measures.class);
         binder.forField(value).asRequired().bind(CLTV_HW_Measures::getValue,
                 CLTV_HW_Measures::setValue);
-        log.info("Ending createEditor() for crude editor");
+        logView.logMessage(Constants.INFO, "Ending createEditor() for crude editor");
         return new BinderCrudEditor<>(binder, editForm);
     }
 
     private void setupGrid() {
-        log.info("Starting setupGrid() for crude editor");
+        logView.logMessage(Constants.INFO, "Starting setupGrid() for crude editor");
         String ID = "id";
         String MONAT_ID = "monat_ID";
         String DEVICE = "device";
@@ -374,29 +473,29 @@ public class HWMapping extends VerticalLayout implements BeforeEnterObserver {
             crud.getDeleteButton().getElement().getStyle().set("display", "none");
         });
         crud.setToolbarVisible(false);
-        log.info("Ending setupGrid() for crude editor");
+        logView.logMessage(Constants.INFO, "Ending setupGrid() for crude editor");
     }
 
     private void setupDataProviderEvent() {
-        log.info("Starting setupDataProviderEvent() for crude editor save, delete events");
+        logView.logMessage(Constants.INFO, "Starting setupDataProviderEvent() for crude editor save, delete events");
         GenericDataProvider dataProvider = new GenericDataProvider(getDataProviderAllItems());
 
         crud.addDeleteListener(
                 deleteEvent -> {dataProvider.delete(deleteEvent.getItem());
-                    log.info("Executing crud.addDeleteListener for crude editor delete events");
+                    logView.logMessage(Constants.INFO,"Executing crud.addDeleteListener for crude editor delete events");
                     crud.setDataProvider(dataProvider);
                 });
         crud.addSaveListener(
                 saveEvent -> {
                     dataProvider.persist(saveEvent.getItem());
-                    log.info("Executing crud.addDeleteListener for crude editor save events");
+                    logView.logMessage(Constants.INFO,"Executing crud.addDeleteListener for crude editor save events");
                     crud.setDataProvider(dataProvider);
                 });
-        log.info("Ending setupDataProviderEvent() for crude editor save, delete events");
+        logView.logMessage(Constants.INFO, "Ending setupDataProviderEvent() for crude editor save, delete events");
     }
 
-    private void showPivot()
-    {
+    private void showPivot() {
+        logView.logMessage(Constants.INFO, "Staring showPivot() for pivot table");
         if(!checkbox.getValue())
         {
             remove(hl);
@@ -432,14 +531,14 @@ public class HWMapping extends VerticalLayout implements BeforeEnterObserver {
 
         // Damit Gesamtsummen (Totals) nicht angezeigt werden in styles.css einfügen:
         //  .pvtTotal, .pvtTotalLabel, .pvtGrandTotal {display: none}
-
+        logView.logMessage(Constants.INFO, "Ending showPivot() for pivot table");
     }
 
     private List<CLTV_HW_Measures> getDataProviderAllItems() {
-        log.info("Starting getDataProviderAllItems for grid dataprovider list");
+        logView.logMessage(Constants.INFO,"Starting getDataProviderAllItems for grid dataprovider list");
         DataProvider<CLTV_HW_Measures, Void> existDataProvider = (DataProvider<CLTV_HW_Measures, Void>) grid.getDataProvider();
         List<CLTV_HW_Measures> listOfCLTVMeasures = existDataProvider.fetch(new Query<>()).collect(Collectors.toList());
-        log.info("Ending getDataProviderAllItems for grid dataprovider list");
+        logView.logMessage(Constants.INFO,"Ending getDataProviderAllItems for grid dataprovider list");
         return listOfCLTVMeasures;
     }
 }
