@@ -434,9 +434,9 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
             ComboBox<String> comboBox = new ComboBox<>();
             comboBox.setItems(qfc);
             if(aktCurrentScenarios != null && !aktCurrentScenarios.isEmpty()) {
-                comboBox.setValue(aktCurrentScenarios.get(2));
-                currentScenarios.setCurrent_QFC(aktCurrentScenarios.get(2));
-                cs.setCurrent_QFC(aktCurrentScenarios.get(2));
+                comboBox.setValue(aktCurrentScenarios.get(3));
+                currentScenarios.setCurrent_QFC(aktCurrentScenarios.get(3));
+                cs.setCurrent_QFC(aktCurrentScenarios.get(3));
             } else {
                 comboBox.setValue(qfc.get(0));
                 currentScenarios.setCurrent_QFC(qfc.get(0));
@@ -493,7 +493,30 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
             return comboBox;
         }).setHeader("Current Outlook").setFlexGrow(0).setAutoWidth(true);
 
-        grid_scenario.setWidth("650px");
+        grid_scenario.addComponentColumn(cs -> {
+            ComboBox<String> comboBox = new ComboBox<>();
+            comboBox.setItems(outlook);
+            if(aktCurrentScenarios != null && !aktCurrentScenarios.isEmpty()) {
+                comboBox.setValue(aktCurrentScenarios.get(2));
+                currentScenarios.setPrior_Outlook(aktCurrentScenarios.get(2));
+                cs.setPrior_Outlook(aktCurrentScenarios.get(2));
+            } else {
+                comboBox.setValue(outlook.get(0));
+                currentScenarios.setPrior_Outlook(outlook.get(0));
+                cs.setPrior_Outlook(outlook.get(0));
+                //  Notification.show("No valid sql in project_properties", 5000, Notification.Position.MIDDLE);
+            }
+
+            comboBox.addValueChangeListener(event -> {
+                logView.logMessage(Constants.INFO, "Selecting Prior Outlook: " + event.getValue());
+                cs.setPrior_Outlook(event.getValue());
+                currentScenarios.setPrior_Outlook(event.getValue());
+            });
+            return comboBox;
+        }).setHeader("Prior Outlook").setFlexGrow(0).setAutoWidth(true);
+
+
+        grid_scenario.setWidth("750px");
         grid_scenario.setHeight("100px");
         //grid_scenario.addThemeVariants(GridVariant.LUMO_COLUMN_BORDERS);
         grid_scenario.addThemeVariants(GridVariant.LUMO_COMPACT);

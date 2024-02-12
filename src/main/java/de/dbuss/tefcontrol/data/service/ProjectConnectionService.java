@@ -1427,8 +1427,8 @@ public class ProjectConnectionService {
           //  String sqlDelete = "DELETE FROM " + targetTable;
           //  jdbcTemplate.update(sqlDelete);
 
-            String sql = "INSERT INTO " + targetTable + " (Upload_ID, Current_Plan, Current_Outlook, Current_QFC) VALUES (?, ?, ?, ?)";
-            jdbcTemplate.update(sql, data.getUpload_ID(), data.getCurrent_Plan(), data.getCurrent_Outlook(), data.getCurrent_QFC());
+            String sql = "INSERT INTO " + targetTable + " (Upload_ID, Current_Plan, Current_Outlook, Prior_Outlook, Current_QFC) VALUES (?,?, ?, ?, ?)";
+            jdbcTemplate.update(sql, data.getUpload_ID(), data.getCurrent_Plan(), data.getCurrent_Outlook(), data.getPrior_Outlook(), data.getCurrent_QFC());
 
             return Constants.OK;
         } catch (Exception e) {

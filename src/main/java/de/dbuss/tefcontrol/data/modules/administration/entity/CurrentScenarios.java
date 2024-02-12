@@ -12,6 +12,7 @@ public class CurrentScenarios {
 
     private String current_Plan;
     private String current_Outlook;
+    private String prior_Outlook;
     private String current_QFC;
 
 }
