@@ -215,10 +215,10 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
         logView.logMessage(Constants.INFO, "Sarting getUpladTab() for set upload data");
         VerticalLayout content = new VerticalLayout();
 
-        H1 h1 = new H1("FLIP Administration");
-        Article p1 = new Article();
-        p1.setText("Auf diese Seite lassen sich verschiedene Einstellungen zur COBI-Beladung vornehmen.");
-        content.add(h1, p1, getDimPeriodGrid(), getDimScenarioGrid());
+   //     H1 h1 = new H1("FLIP Administration");
+   //     Article p1 = new Article();
+   //     p1.setText("Auf diese Seite lassen sich verschiedene Einstellungen zur COBI-Beladung vornehmen.");
+        content.add(getDimPeriodGrid(), getDimScenarioGrid());
 
         HorizontalLayout hl = new HorizontalLayout();
         hl.setAlignItems(Alignment.BASELINE);
@@ -226,8 +226,8 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
 
         content.add(hl);
 
-        content.setSizeFull();
-        content.setHeightFull();
+//        content.setSizeFull();
+//        content.setHeightFull();
 
         qsBtn.addClickListener(e ->{
             logView.logMessage(Constants.INFO, "Starting qsBtn.addClickListener for save and QsGrid ");
