@@ -208,7 +208,7 @@ public class ReportAdminView extends VerticalLayout implements BeforeEnterObserv
         header.setAlignItems(Alignment.BASELINE);
 
         Article p1 = new Article();
-        p1.setText("Erstellung des \"Rohdatenreports\" und Ablage unter \\\\dewsttwak11\\Ablagen\\Rohdatenauswertung\\Report_Out.");
+        p1.setText("Erstellung des \"Rohdatenreports\" und Ablage unter \\\\dewsttwak11\\Ablagen\\Rohdatenauswertung.");
 
         content.add(h1, h2, p1);
 

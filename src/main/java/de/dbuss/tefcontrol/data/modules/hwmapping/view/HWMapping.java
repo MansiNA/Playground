@@ -148,11 +148,11 @@ public class HWMapping extends VerticalLayout implements BeforeEnterObserver {
         setHeightFull();
         setSizeFull();
 
-        add(vl,parameterGrid);
+        add(logView,parameterGrid, vl);
 
         parameterGrid.setVisible(false);
         logView.setVisible(false);
-        add(logView);
+
 
         if(MainLayout.isAdmin) {
             UI.getCurrent().addShortcutListener(
