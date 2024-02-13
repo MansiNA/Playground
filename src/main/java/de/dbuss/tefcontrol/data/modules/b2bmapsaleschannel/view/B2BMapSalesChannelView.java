@@ -88,7 +88,7 @@ public class B2BMapSalesChannelView extends VerticalLayout implements BeforeEnte
         logView = new LogView();
         logView.logMessage(Constants.INFO, "Starting B2BMapSalesChannelView");
 
-        qsBtn = new Button("QS and Start Job");
+        qsBtn = new Button("Save and Start Job");
       //  qsBtn.setEnabled(false);
 
         List<ProjectParameter> listOfProjectParameters = projectParameterService.findAll();
@@ -302,10 +302,12 @@ public class B2BMapSalesChannelView extends VerticalLayout implements BeforeEnte
         content.setSizeFull();
         content.setHeightFull();
         crud = new Crud<>(MapSalesChannel.class, createEditor());
-        crud.getDeleteButton().getElement().getStyle().set("display", "none");
-        crud.setToolbarVisible(false);
+      //  crud.getDeleteButton().getElement().getStyle().set("display", "none");
+      //  crud.setToolbarVisible(false);
         crud.setHeightFull();
         crud.setSizeFull();
+
+       // crud.getSaveButton().setText("OK");
         setupMapSalsChannelGrid();
         content.add(crud);
         logView.logMessage(Constants.INFO, "Ending getMapSalesChannelGrid() for get MapSalsChannel crud Grid");
@@ -316,7 +318,7 @@ public class B2BMapSalesChannelView extends VerticalLayout implements BeforeEnte
         logView.logMessage(Constants.INFO, "createEditor() for create Editor");
 
         TextField salesChannelField = new TextField("SalesChannel");
-        salesChannelField.setEnabled(false);
+       // salesChannelField.setEnabled(false);
         TextArea channelField = new TextArea("Channel");
         FormLayout editFormLayout = new FormLayout(salesChannelField, channelField);
         Binder<MapSalesChannel> editBinder = new Binder<>(MapSalesChannel.class);
@@ -371,10 +373,11 @@ public class B2BMapSalesChannelView extends VerticalLayout implements BeforeEnte
         crud.addDeleteListener(
 
             deleteEvent -> {
-                Notification.show("Delete not allowed! ", 4000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+               // Notification.show("Delete not allowed! ", 4000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
 
-                //dataProvider.delete(deleteEvent.getItem());
-                //mapSalesChannelGrid.setDataProvider(dataProvider);
+                var item=deleteEvent.getItem();
+                dataProvider.delete(item);
+                mapSalesChannelGrid.setDataProvider(dataProvider);
                 }
 
 
