@@ -516,8 +516,8 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
         }).setHeader("Prior Outlook").setFlexGrow(0).setAutoWidth(true);
 
 
-        grid_scenario.setWidth("750px");
-        grid_scenario.setHeight("100px");
+        grid_scenario.setWidth("850px");
+        grid_scenario.setHeight("150px");
         //grid_scenario.addThemeVariants(GridVariant.LUMO_COLUMN_BORDERS);
         grid_scenario.addThemeVariants(GridVariant.LUMO_COMPACT);
         grid_scenario.addThemeVariants(GridVariant.LUMO_NO_BORDER);
