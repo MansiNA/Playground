@@ -561,7 +561,7 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
 
             int rowNumber=0;
             Integer Error_count=0;
-            System.out.println(sheet.getPhysicalNumberOfRows()+"$$$$$$$$$" + sheet.getSheetName());
+            System.out.println("Sheet: " + sheet.getSheetName() + " has " + sheet.getPhysicalNumberOfRows() + " rows ") ;
 
             while (rowIterator.hasNext() ) {
                 Row row = rowIterator.next();
@@ -577,6 +577,7 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
 
                 Field[] fields = targetType.getDeclaredFields();
                 for (int index = 0; index < fields.length; index++) {
+               // for (int index = 0; index <= 9; index++) {
                     Cell cell = null;
                     if (index != 0) {
                         cell = row.getCell(index - 1);
@@ -614,7 +615,20 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
                                     }
                                 } else {
                                     // Handle regular string cell
-                                    field.set(entity, cell.getStringCellValue());
+
+                                    try {
+                                        field.set(entity, cell.getStringCellValue());
+                                    }
+                                    catch (Exception e) {
+                                        System.out.println("Field getType:" + field.getType());
+                                        System.out.println(e.getMessage());
+                                        int spalte = cell.getColumnIndex()+1;
+                                        System.out.println("Zelle " + rowNumber + " Spalte: " + spalte + " Wert " +  cell.toString() + " konnte nicht automatisch als String verarbeitet werden, wird versucht manuell als String zu konvertieren...");
+                                        Double value = cell.getNumericCellValue();
+                                        field.set(entity, String.valueOf(value));
+
+                                    }
+
                                 }
                             }
                         }
@@ -639,7 +653,7 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
         } catch (Exception e) {
             logView.logMessage(Constants.ERROR, "Error while parse sheet of file");
             e.printStackTrace();
-            Notification.show(sheet.getSheetName() +" sheet having a parsing problem", 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+            Notification.show(sheet.getSheetName() +" sheet having a parsing problem", 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
             return resultList;
         }
 
