@@ -35,6 +35,7 @@ import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.PBICentralComments
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.PBIFlashFinancials;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.PBITechComments;
 import de.dbuss.tefcontrol.data.modules.administration.view.ReportAdminView;
+import de.dbuss.tefcontrol.data.modules.kpi.Strategic_KPIView;
 import de.dbuss.tefcontrol.data.modules.tarifmapping.view.TarifMappingView;
 import de.dbuss.tefcontrol.data.modules.kpi.Tech_KPIView;
 import de.dbuss.tefcontrol.data.service.ProjectsService;
@@ -122,6 +123,7 @@ public class MainLayout extends AppLayout {
         urlToViewMap.put(Constants.REPORT_ADMINISTRATION, ReportAdminView.class);
         urlToViewMap.put(Constants.TARIFMAPPING, TarifMappingView.class);
         urlToViewMap.put(Constants.B2B_MAPSALESCHANNEL, B2BMapSalesChannelView.class);
+        urlToViewMap.put(Constants.Strategic_KPI, Strategic_KPIView.class);
 
         setPrimarySection(Section.DRAWER);
         addDrawerContent();
