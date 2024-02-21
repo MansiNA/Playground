@@ -58,6 +58,11 @@ public class Constants {
     public static final String TABLE_FACT = "Table_Fact";
     public static final String TABLE_PLAN = "Table_Plan";
 
+    // This constant is used for Strategic_KPI module
+    public static final String FACT_TABLE = "Fact_Table";
+    public static final String DIM_TABLE = "Dim_Table";
+
+
     // This constant is used for PBI flash financials  module
     public static final String PBI_FLASH_FINANCIALS = "PBI_FlashFinancials";
     public static final String B2P_FLASH_FINANCIALS = "B2P Flash Financials";

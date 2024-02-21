@@ -9,6 +9,8 @@ import com.vaadin.flow.component.details.Details;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Article;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.TabSheet;
@@ -22,18 +24,22 @@ import de.dbuss.tefcontrol.components.QS_Grid;
 import de.dbuss.tefcontrol.data.dto.ProjectAttachmentsDTO;
 import de.dbuss.tefcontrol.data.entity.*;
 import de.dbuss.tefcontrol.data.service.ProjectAttachmentsService;
+import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
 import de.dbuss.tefcontrol.data.service.ProjectParameterService;
 import de.dbuss.tefcontrol.data.service.ProjectsService;
+import de.dbuss.tefcontrol.security.AuthenticatedUser;
 import de.dbuss.tefcontrol.views.MainLayout;
 import jakarta.annotation.security.RolesAllowed;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 @PageTitle("Strategic KPI | TEF-Control")
@@ -62,18 +68,26 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
     private String dbUser;
     private String dbPassword;
     private String agentName;
+    private String factTableName;
+    private String dimTableName;
     MemoryBuffer memoryBuffer = new MemoryBuffer();
     Upload singleFileUpload = new Upload(memoryBuffer);
 
     private Button uploadBtn;
+    private int upload_id;
     private DefaultUtils defaultUtils;
 
+    private AuthenticatedUser authenticatedUser;
+    private final ProjectConnectionService projectConnectionService;
+    private JdbcTemplate jdbcTemplate;
     private List<Fact_CC_KPI> listOfFact_CC_KPI = new ArrayList<Fact_CC_KPI>();
-    public Strategic_KPIView(ProjectParameterService projectParameterService, ProjectsService projectsService, ProjectAttachmentsService projectAttachmentsService) {
+    public Strategic_KPIView(JdbcTemplate jdbcTemplate, ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, ProjectsService projectsService, ProjectAttachmentsService projectAttachmentsService, AuthenticatedUser authenticatedUser) {
 
+        this.jdbcTemplate = jdbcTemplate;
         this.projectsService = projectsService;
         this.projectAttachmentsService = projectAttachmentsService;
-
+        this.authenticatedUser = authenticatedUser;
+        this.projectConnectionService = projectConnectionService;
 
         logView = new LogView();
         logView.logMessage(Constants.INFO, "Starting Strategic_KPIView");
@@ -99,7 +113,14 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
                 dbUser = projectParameter.getValue();
             } else if (Constants.DB_PASSWORD.equals(projectParameter.getName())) {
                 dbPassword = projectParameter.getValue();
-            } else if (Constants.DB_JOBS.equals(projectParameter.getName())) {
+            }
+            else if (Constants.FACT_TABLE.equals(projectParameter.getName())) {
+                factTableName = projectParameter.getValue();
+            }
+            else if (Constants.DIM_TABLE.equals(projectParameter.getName())) {
+                dimTableName = projectParameter.getValue();
+            }
+            else if (Constants.DB_JOBS.equals(projectParameter.getName())) {
                 agentName = projectParameter.getValue();
             }
             // }
@@ -183,6 +204,31 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
         content.add(hl, parameterGrid);
 
 
+        uploadBtn.addClickListener(e->{
+            logView.logMessage(Constants.INFO, "Uploading in uploadBtn.addClickListener");
+        //    ui.setPollInterval(500);
+
+            ProjectUpload projectUpload = new ProjectUpload();
+            projectUpload.setFileName(fileName);
+            //projectUpload.setUserName(MainLayout.userName);
+            Optional<User> maybeUser = authenticatedUser.get();
+            if (maybeUser.isPresent()) {
+                User user = maybeUser.get();
+                projectUpload.setUserName(user.getUsername());
+            }
+            projectUpload.setModulName("Tech_KPI");
+            logView.logMessage(Constants.INFO, "Get file upload id from database");
+            projectConnectionService.getJdbcConnection(dbUrl, dbUser, dbPassword); // Set Connection to target DB
+            upload_id = projectConnectionService.saveUploadedGenericFileData(projectUpload);
+
+            projectUpload.setUploadId(upload_id);
+
+            System.out.println("Upload_ID: " + upload_id);
+
+            saveFactEntities();
+
+        });
+
 
         content.setSizeFull();
         content.setHeightFull();
@@ -190,6 +236,30 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
 
 
         return content;
+    }
+
+    private void saveFactEntities() {
+        logView.logMessage(Constants.INFO, "Starting saveFactEntities() for saving Fact file data in database");
+        AtomicReference<String> returnStatus= new AtomicReference<>("false");
+        int totalRows = listOfFact_CC_KPI.size();
+
+        System.out.println("Upload Data to DB");
+
+        projectConnectionService.getJdbcConnection(dbUrl, dbUser, dbPassword);
+
+        String resultKPIFact = projectConnectionService.saveStrategic_KPIFact(listOfFact_CC_KPI, factTableName, upload_id);
+         returnStatus.set(resultKPIFact);
+
+        System.out.println("ResultKPIFact: " + returnStatus.toString());
+
+        if (returnStatus.toString().equals(Constants.OK)){
+                        //System.out.println("Alles in Butter...");
+        }
+        else{
+            System.out.println("Fehler aufgetreten...");
+        }
+
+        logView.logMessage(Constants.INFO, "Ending saveFactEntities() for saving Fact file data in database");
     }
 
     private void setupUploader() {
@@ -636,7 +706,7 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
             return Segment;
         }
 
-        public void setSegment(String NT_ID) {
+        public void setSegment(String Segment) {
             this.Segment = Segment;
         }
 

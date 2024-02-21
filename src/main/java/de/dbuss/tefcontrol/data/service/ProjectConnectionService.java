@@ -11,6 +11,7 @@ import de.dbuss.tefcontrol.data.modules.administration.entity.CurrentPeriods;
 import de.dbuss.tefcontrol.data.modules.administration.entity.CurrentScenarios;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.*;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.GenericCommentsView;
+import de.dbuss.tefcontrol.data.modules.kpi.Strategic_KPIView;
 import de.dbuss.tefcontrol.data.modules.pfgproductmapping.entity.CltvAllProduct;
 import de.dbuss.tefcontrol.data.modules.pfgproductmapping.entity.ProductHierarchie;
 import de.dbuss.tefcontrol.data.modules.tarifmapping.entity.CLTVProduct;
@@ -395,6 +396,39 @@ public class ProjectConnectionService {
             e.printStackTrace();
             errorMessage = handleDatabaseError(e);
         }
+    }
+
+    public String saveStrategic_KPIFact(List<Strategic_KPIView.Fact_CC_KPI> data, String tableName, int upload_id) {
+
+        try {
+
+            String sqlInsert = "INSERT INTO "+ tableName +" (Upload_ID, Zeile, Period, Scenario, Segment,CC_KPI,Amount ) VALUES (?, ?, ?, ?, ?, ?, ?)";
+
+
+            jdbcTemplate.batchUpdate(sqlInsert, data, data.size(), (ps, entity) -> {
+
+                ps.setInt(1, upload_id);
+                ps.setInt(2, entity.getRow());
+                ps.setInt(3, entity.getPeriod());
+                ps.setString(4, entity.getScenario());
+                ps.setString(5, entity.getSegment());
+                ps.setString(6, entity.getCC_KPI());
+
+                if (entity.getAmount() == null){
+                    ps.setString(7,null);
+                }
+                else
+                {
+                    ps.setDouble (7, entity.getAmount());
+                }
+
+            });
+            return Constants.OK;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return handleDatabaseError(e);
+        }
+
     }
 
     public String saveKPIFact(List<Tech_KPIView.KPI_Fact> data, String tableName, int upload_id) {
