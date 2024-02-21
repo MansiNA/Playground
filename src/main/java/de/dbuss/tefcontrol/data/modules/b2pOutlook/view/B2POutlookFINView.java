@@ -553,7 +553,7 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
     }
 
     public <T> List<T>  parseSheet(XSSFSheet sheet, Class<T> targetType) {
-        logView.logMessage(Constants.INFO, "Starting parseSheet() for parse sheet of file");
+        logView.logMessage(Constants.INFO, "### Start parseSheet() ###");
         List<T> resultList = new ArrayList<>();
         try {
             // List<T> resultList = new ArrayList<>();
@@ -561,7 +561,8 @@ public class B2POutlookFINView extends VerticalLayout implements BeforeEnterObse
 
             int rowNumber=0;
             Integer Error_count=0;
-            System.out.println("Sheet: " + sheet.getSheetName() + " has " + sheet.getPhysicalNumberOfRows() + " rows ") ;
+            //System.out.println("Sheet: " + sheet.getSheetName() + " has " + sheet.getPhysicalNumberOfRows() + " rows ") ;
+            logView.logMessage(Constants.INFO, "Sheet: " + sheet.getSheetName() + " has " + sheet.getPhysicalNumberOfRows() + " rows ");
 
             while (rowIterator.hasNext() ) {
                 Row row = rowIterator.next();

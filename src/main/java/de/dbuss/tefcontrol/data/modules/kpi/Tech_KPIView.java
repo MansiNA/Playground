@@ -1,4 +1,4 @@
-package de.dbuss.tefcontrol.data.modules.techkpi.view;
+package de.dbuss.tefcontrol.data.modules.kpi;
 
 import com.vaadin.flow.component.*;
 import com.vaadin.flow.component.button.Button;

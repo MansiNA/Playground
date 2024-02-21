@@ -36,7 +36,7 @@ import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.PBIFlashFinancials
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.PBITechComments;
 import de.dbuss.tefcontrol.data.modules.administration.view.ReportAdminView;
 import de.dbuss.tefcontrol.data.modules.tarifmapping.view.TarifMappingView;
-import de.dbuss.tefcontrol.data.modules.techkpi.view.Tech_KPIView;
+import de.dbuss.tefcontrol.data.modules.kpi.Tech_KPIView;
 import de.dbuss.tefcontrol.data.service.ProjectsService;
 import de.dbuss.tefcontrol.data.service.UserService;
 import de.dbuss.tefcontrol.security.AuthenticatedUser;

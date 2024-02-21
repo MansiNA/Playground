@@ -16,7 +16,7 @@ import de.dbuss.tefcontrol.data.modules.pfgproductmapping.entity.ProductHierarch
 import de.dbuss.tefcontrol.data.modules.tarifmapping.entity.CLTVProduct;
 import de.dbuss.tefcontrol.data.modules.tarifmapping.entity.MissingCLTVProduct;
 import de.dbuss.tefcontrol.data.repository.ProjectConnectionRepository;
-import de.dbuss.tefcontrol.data.modules.techkpi.view.Tech_KPIView;
+import de.dbuss.tefcontrol.data.modules.kpi.Tech_KPIView;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
