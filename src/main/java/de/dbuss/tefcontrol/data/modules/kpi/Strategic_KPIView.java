@@ -54,8 +54,9 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
     private Boolean isLogsVisible = false;
     private Boolean isVisible = false;
     Integer errors_Count=0;
-    InputStream fileData_Fact;
-    InputStream  fileData_Dim;
+    InputStream fileDataFact;
+    InputStream fileDataDim;
+
     String fileName = "";
     long contentLength = 0;
     String mimeType = "";
@@ -81,6 +82,7 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
     private final ProjectConnectionService projectConnectionService;
     private JdbcTemplate jdbcTemplate;
     private List<Fact_CC_KPI> listOfFact_CC_KPI = new ArrayList<Fact_CC_KPI>();
+    private List<Dim_CC_KPI> listOfDim_CC_KPI = new ArrayList<Dim_CC_KPI>();
     public Strategic_KPIView(JdbcTemplate jdbcTemplate, ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, ProjectsService projectsService, ProjectAttachmentsService projectAttachmentsService, AuthenticatedUser authenticatedUser) {
 
         this.jdbcTemplate = jdbcTemplate;
@@ -225,7 +227,7 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
 
             System.out.println("Upload_ID: " + upload_id);
 
-            saveFactEntities();
+            saveEntities();
 
         });
 
@@ -238,7 +240,7 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
         return content;
     }
 
-    private void saveFactEntities() {
+    private void saveEntities() {
         logView.logMessage(Constants.INFO, "Starting saveFactEntities() for saving Fact file data in database");
         AtomicReference<String> returnStatus= new AtomicReference<>("false");
         int totalRows = listOfFact_CC_KPI.size();
@@ -248,7 +250,7 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
         projectConnectionService.getJdbcConnection(dbUrl, dbUser, dbPassword);
 
         String resultKPIFact = projectConnectionService.saveStrategic_KPIFact(listOfFact_CC_KPI, factTableName, upload_id);
-         returnStatus.set(resultKPIFact);
+        returnStatus.set(resultKPIFact);
 
         System.out.println("ResultKPIFact: " + returnStatus.toString());
 
@@ -258,6 +260,23 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
         else{
             System.out.println("Fehler aufgetreten...");
         }
+
+        String resultKPIDim = projectConnectionService.saveStrategic_KPIDim(listOfDim_CC_KPI, dimTableName, upload_id);
+        returnStatus.set(resultKPIDim);
+
+        System.out.println("ResultKPIDim: " + returnStatus.toString());
+
+        if (returnStatus.toString().equals(Constants.OK)){
+            //System.out.println("Alles in Butter...");
+        }
+        else{
+            System.out.println("Fehler aufgetreten...");
+        }
+
+
+
+
+
 
         logView.logMessage(Constants.INFO, "Ending saveFactEntities() for saving Fact file data in database");
     }
@@ -276,8 +295,8 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
         singleFileUpload.addSucceededListener(event -> {
             logView.logMessage(Constants.INFO, "File Uploaded: >" + event.getFileName() + "<");
             // Get information about the uploaded file
-            fileData_Fact = memoryBuffer.getInputStream();
-            fileData_Dim = memoryBuffer.getInputStream();
+            fileDataFact = memoryBuffer.getInputStream();
+            fileDataDim = memoryBuffer.getInputStream();
 
             fileName = event.getFileName();
             contentLength = event.getContentLength();
@@ -288,7 +307,8 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
 
             singleFileUpload.clearFileList();
 
-            listOfFact_CC_KPI = parseExcelFile_Fact(fileData_Fact, fileName,"Fact_CC_KPI");
+            listOfFact_CC_KPI = parseExcelFile_Fact(fileDataFact, fileName,"Fact_CC_KPI");
+            listOfDim_CC_KPI = parseExcelFile_Dim(fileDataDim, fileName,"DIM_CC_KPI");
 
 //            factInfo="Fact (" + listOfKPI_Fact.size() + " rows)";
 //            actualsInfo="Fact (" + listOfKPI_Actuals.size() + " rows)";
@@ -495,6 +515,165 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
         }
 
     }
+    public List<Dim_CC_KPI> parseExcelFile_Dim(InputStream fileData, String fileName, String sheetName) {
+        logView.logMessage(Constants.INFO, "Starting parseExcelFile_Dim() for parse uploaded file");
+
+        List<Dim_CC_KPI> listOfKPI_Dim = new ArrayList<>();
+        try {
+            if(fileName.isEmpty() || fileName.length()==0)
+            {
+                //  article=new Article();
+                //  article.setText(LocalDateTime.now().format(formatter) + ": Error: Keine Datei angegeben!");
+                //  textArea.add(article);
+            }
+
+            if(!mimeType.contains("openxmlformats-officedocument"))
+            {
+                //  article=new Article();
+                //  article.setText(LocalDateTime.now().format(formatter) + ": Error: ungültiges Dateiformat!");
+                //  textArea.add(article);
+            }
+
+            System.out.println("Excel import: "+  fileName + " => Mime-Type: " + mimeType  + " Größe " + contentLength + " Byte");
+            //textArea.setText(LocalDateTime.now().format(formatter) + ": Info: Verarbeite Datei: " + fileName + " (" + contentLength + " Byte)");
+            //message.setText(LocalDateTime.now().format(formatter) + ": Info: reading file: " + fileName);
+
+            //addRowsBT.setEnabled(false);
+            //replaceRowsBT.setEnabled(false);
+            //spinner.setVisible(true);
+
+            //  HSSFWorkbook my_xls_workbook = new HSSFWorkbook(fileData);
+            XSSFWorkbook my_xls_workbook = new XSSFWorkbook(fileData);
+            //   HSSFSheet my_worksheet = my_xls_workbook.getSheetAt(0);
+            XSSFSheet my_worksheet = my_xls_workbook.getSheet(sheetName);
+            Iterator<Row> rowIterator = my_worksheet.iterator();
+
+            Integer RowNumber=0;
+            errors_Fact=0;
+
+            while(rowIterator.hasNext() )
+            {
+                Dim_CC_KPI kPI_Dim = new Dim_CC_KPI();
+                Row row = rowIterator.next();
+                RowNumber++;
+
+                if (errors_Fact>0){ break; } //Wenn bereits Fehler aufgetreten ist, beenden.
+
+
+
+                Iterator<Cell> cellIterator = row.cellIterator();
+
+
+
+                while(cellIterator.hasNext()) {
+
+                    if(RowNumber==1 ) //Überschrift nicht betrachten, aber Anzahl Spalten kontrollieren
+                    {
+
+
+                        if (row.getLastCellNum()<3)
+                        {
+                            //   article=new Article();
+                            //   article.setText(LocalDateTime.now().format(formatter) + ": Error: Count Columns: " + row.getLastCellNum() + " Expected: 5! (NT ID | XTD | Scenario_Name | Date | Amount)");
+                            //   textArea.add(article);
+                            errors_Fact=1;
+                        }
+
+                        break;
+                    }
+
+
+                    Cell cell = cellIterator.next();
+                    kPI_Dim.setRow(RowNumber);
+
+                    if(cell.getColumnIndex()==0)
+                    {
+                        String ColumnName="CC_KPI";
+                        try {
+                            kPI_Dim.setCC_KPI(checkCellString(sheetName, cell, RowNumber,ColumnName));
+                        }
+                        catch(Exception e)
+                        {
+                            //  article=new Article();
+                            //  article.setText(LocalDateTime.now().format(formatter) + " " + sheetName + ": Error: Zeile " + RowNumber.toString() + ", Spalte " + ColumnName + ": " + e.getMessage());
+                            //  textArea.add(article);
+                            errors_Fact++;
+
+                        }
+                    }
+
+                    if(cell.getColumnIndex()==1)
+                    {
+                        String ColumnName="CC_KPI_Gen01";
+                        try {
+                            kPI_Dim.setCC_KPI_Gen01(checkCellString(sheetName, cell, RowNumber,ColumnName));
+                        }
+                        catch(Exception e)
+                        {
+                            // article=new Article();
+                            // article.setText(LocalDateTime.now().format(formatter) + " " + sheetName + ": Error: Zeile " + RowNumber.toString() + ", Spalte " + ColumnName + ": " + e.getMessage());
+                            // textArea.add(article);
+                            errors_Fact++;
+
+                        }
+                    }
+                    if(cell.getColumnIndex()==2)
+                    {
+                        String ColumnName="CC_KPI_Gen02";
+                        try {
+                            kPI_Dim.setCC_KPI_Gen02(checkCellString(sheetName, cell, RowNumber,ColumnName));
+                        }
+                        catch(Exception e)
+                        {
+                            //article=new Article();
+                            //article.setText(LocalDateTime.now().format(formatter) + " " + sheetName + ": Error: Zeile " + RowNumber.toString() + ", Spalte " + ColumnName + ": " + e.getMessage());
+                            //textArea.add(article);
+                            errors_Fact++;
+
+                        }
+                    }
+
+
+                }
+
+                if(kPI_Dim.isValid() )
+                {
+                    listOfKPI_Dim.add(kPI_Dim);
+                }
+                else
+                {
+                    System.out.println("Fact: skip empty row : " + kPI_Dim.getRow());
+                }
+
+
+            }
+
+            //       article=new Article();
+            //       article.getStyle().set("white-space","pre-line");
+            //       article.add("\n");
+            //article.add(LocalDateTime.now().format(formatter) + " ==> " + sheetName + ": Count Rows: " + listOfKPI_Fact.size() + " Count Errrors: " + errors_Fact);
+            //       article.add("==> Summary: " + sheetName + ": Count Rows: " + listOfKPI_Fact.size() + " Count Errrors: " + errors_Fact);
+            //       article.add("\n");
+            //       textArea.add(article);
+
+            //       planInfo = "KPI Plan 0 rows";
+
+            System.out.println("Anzahl Zeilen im Excel: " + listOfKPI_Dim.size());
+            //      accordion.remove(factPanel);
+            //       factPanel = new AccordionPanel( "KPI_Fact (" + listOfKPI_Fact.size()+ " rows)", gridFact);
+            //       accordion.add(factPanel);
+
+            errors_Count+=errors_Fact;
+            logView.logMessage(Constants.INFO, "Ending parseExcelFile_Dim() for parse uploaded file");
+            return listOfKPI_Dim;
+
+        } catch (Exception e) {
+            logView.logMessage(Constants.ERROR, "Error while parse uploaded file");
+            e.printStackTrace();
+            return null;
+        }
+
+    }
 
 
     private String checkCellString(String sheetName, Cell cell, Integer zeile, String spalte) {
@@ -681,15 +860,10 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
     public class Fact_CC_KPI {
 
         private int row;
-
         private int Period ;
-
         private String Scenario = "";
         private String Segment = "";
         private String CC_KPI = "";
-
-        private java.util.Date Date;
-
         private Double Amount;
 
         public int getPeriod(){return Period;};
@@ -727,14 +901,6 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
             Scenario = scenario;
         }
 
-        public Date getDate() {
-            return Date;
-        }
-
-        public void setDate(Date date) {
-            Date = date;
-        }
-
         public Double getAmount() {return Amount;}
 
         public void setAmount(Double amount) {
@@ -744,6 +910,58 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
         public boolean isValid() {
             if (Segment == null || Segment.isEmpty()) {
                 if (Scenario == null || Scenario.isEmpty()) {
+                    if (CC_KPI == null || CC_KPI.isEmpty()) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+    }
+
+    public class Dim_CC_KPI {
+
+        private int row;
+        private String CC_KPI = "";
+        private String CC_KPI_Gen01 = "";
+        private String CC_KPI_Gen02 = "";
+
+        public int getRow() {
+            return row;
+        }
+
+        public void setRow(int row) {
+            this.row = row;
+        }
+
+        public String getCC_KPI() {
+            return CC_KPI;
+        }
+
+        public void setCC_KPI(String CC_KPI) {
+            this.CC_KPI = CC_KPI;
+        }
+
+
+        public String getCC_KPI_Gen01() {
+            return CC_KPI_Gen01;
+        }
+
+        public void setCC_KPI_Gen01(String cc_kpi_gen01) {
+            CC_KPI_Gen01 = cc_kpi_gen01;
+        }
+
+        public String getCC_KPI_Gen02() {
+            return CC_KPI_Gen02;
+        }
+
+        public void setCC_KPI_Gen02(String cc_kpi_gen02) {
+            CC_KPI_Gen02 = cc_kpi_gen02;
+        }
+        public boolean isValid() {
+            if (CC_KPI == null || CC_KPI.isEmpty()) {
+                if (CC_KPI_Gen01 == null || CC_KPI_Gen01.isEmpty()) {
                     if (CC_KPI == null || CC_KPI.isEmpty()) {
                         return false;
                     }

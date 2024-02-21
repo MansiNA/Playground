@@ -431,6 +431,30 @@ public class ProjectConnectionService {
 
     }
 
+    public String saveStrategic_KPIDim(List<Strategic_KPIView.Dim_CC_KPI> data, String tableName, int upload_id) {
+
+        try {
+
+            String sqlInsert = "INSERT INTO "+ tableName +" (Upload_ID, Zeile, CC_KPI, CC_KPI_Gen01, CC_KPI_Gen02 ) VALUES (?, ?, ?, ?, ?)";
+
+
+            jdbcTemplate.batchUpdate(sqlInsert, data, data.size(), (ps, entity) -> {
+
+                ps.setInt(1, upload_id);
+                ps.setInt(2, entity.getRow());
+                ps.setString(3, entity.getCC_KPI());
+                ps.setString(4,entity.getCC_KPI_Gen01());
+                ps.setString(5, entity.getCC_KPI_Gen02());
+
+            });
+            return Constants.OK;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return handleDatabaseError(e);
+        }
+
+    }
+
     public String saveKPIFact(List<Tech_KPIView.KPI_Fact> data, String tableName, int upload_id) {
 
         try {
