@@ -9,6 +9,7 @@ import com.vaadin.flow.component.details.Details;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Article;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -38,6 +39,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.io.InputStream;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -58,6 +60,9 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
     InputStream fileDataDim;
 
     String fileName = "";
+    Article article = new Article();
+    Div textArea = new Div();
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
     long contentLength = 0;
     String mimeType = "";
     Integer errors_Fact=0;
@@ -94,7 +99,7 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
         logView = new LogView();
         logView.logMessage(Constants.INFO, "Starting Strategic_KPIView");
 
-        uploadBtn = new Button("Upload");
+        uploadBtn = new Button("QS and Start Job");
         uploadBtn.setEnabled(false);
 
         List<ProjectParameter> listOfProjectParameters = projectParameterService.findAll();
@@ -202,8 +207,8 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
 
         setupUploader();
 
-        HorizontalLayout hl=new HorizontalLayout(singleFileUpload, uploadBtn);
-        content.add(hl, parameterGrid);
+        HorizontalLayout hl=new HorizontalLayout(singleFileUpload);
+        content.add(hl, textArea, uploadBtn, parameterGrid);
 
 
         uploadBtn.addClickListener(e->{
@@ -218,13 +223,15 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
                 User user = maybeUser.get();
                 projectUpload.setUserName(user.getUsername());
             }
-            projectUpload.setModulName("Tech_KPI");
+            projectUpload.setModulName("Strategic_KPI");
+
             logView.logMessage(Constants.INFO, "Get file upload id from database");
             projectConnectionService.getJdbcConnection(dbUrl, dbUser, dbPassword); // Set Connection to target DB
             upload_id = projectConnectionService.saveUploadedGenericFileData(projectUpload);
 
             projectUpload.setUploadId(upload_id);
 
+            logView.logMessage(Constants.INFO, "upload id: " + upload_id);
             System.out.println("Upload_ID: " + upload_id);
 
             saveEntities();
@@ -245,32 +252,31 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
         AtomicReference<String> returnStatus= new AtomicReference<>("false");
         int totalRows = listOfFact_CC_KPI.size();
 
-        System.out.println("Upload Data to DB");
+        //System.out.println("Upload Data to DB");
 
         projectConnectionService.getJdbcConnection(dbUrl, dbUser, dbPassword);
 
         String resultKPIFact = projectConnectionService.saveStrategic_KPIFact(listOfFact_CC_KPI, factTableName, upload_id);
         returnStatus.set(resultKPIFact);
 
-        System.out.println("ResultKPIFact: " + returnStatus.toString());
-
         if (returnStatus.toString().equals(Constants.OK)){
-                        //System.out.println("Alles in Butter...");
+            logView.logMessage(Constants.INFO, "ResultKPIFact: " + returnStatus.toString());
         }
         else{
-            System.out.println("Fehler aufgetreten...");
+            logView.logMessage(Constants.ERROR, "ERROR: " + returnStatus.toString());
         }
 
         String resultKPIDim = projectConnectionService.saveStrategic_KPIDim(listOfDim_CC_KPI, dimTableName, upload_id);
         returnStatus.set(resultKPIDim);
 
-        System.out.println("ResultKPIDim: " + returnStatus.toString());
+        //System.out.println("ResultKPIDim: " + returnStatus.toString());
+        logView.logMessage(Constants.INFO, "ResultKPIDim: " + returnStatus.toString());
 
         if (returnStatus.toString().equals(Constants.OK)){
-            //System.out.println("Alles in Butter...");
+            logView.logMessage(Constants.INFO, "ResultKPIFact: " + returnStatus.toString());
         }
         else{
-            System.out.println("Fehler aufgetreten...");
+            logView.logMessage(Constants.ERROR, "ERROR: " + returnStatus.toString());
         }
 
 
@@ -302,6 +308,10 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
             contentLength = event.getContentLength();
             mimeType = event.getMIMEType();
 
+            article=new Article();
+            article.setText("Uploaded file: " + fileName + " (Size: " + contentLength/1024 + " KB)");
+            textArea.add(article);
+
             logView.logMessage(Constants.INFO, "contentLenght: >" + contentLength + "<");
             logView.logMessage(Constants.INFO, "mimeType: >" + mimeType + "<");
 
@@ -331,25 +341,19 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
         try {
             if(fileName.isEmpty() || fileName.length()==0)
             {
-              //  article=new Article();
-              //  article.setText(LocalDateTime.now().format(formatter) + ": Error: Keine Datei angegeben!");
-              //  textArea.add(article);
+                article=new Article();
+                article.setText("Error: Keine Datei angegeben!");
+                textArea.add(article);
             }
 
             if(!mimeType.contains("openxmlformats-officedocument"))
             {
-              //  article=new Article();
-              //  article.setText(LocalDateTime.now().format(formatter) + ": Error: ungültiges Dateiformat!");
-              //  textArea.add(article);
+                article=new Article();
+                article.setText("Error: ungültiges Dateiformat!");
+                textArea.add(article);
             }
 
             System.out.println("Excel import: "+  fileName + " => Mime-Type: " + mimeType  + " Größe " + contentLength + " Byte");
-            //textArea.setText(LocalDateTime.now().format(formatter) + ": Info: Verarbeite Datei: " + fileName + " (" + contentLength + " Byte)");
-            //message.setText(LocalDateTime.now().format(formatter) + ": Info: reading file: " + fileName);
-
-            //addRowsBT.setEnabled(false);
-            //replaceRowsBT.setEnabled(false);
-            //spinner.setVisible(true);
 
             //  HSSFWorkbook my_xls_workbook = new HSSFWorkbook(fileData);
             XSSFWorkbook my_xls_workbook = new XSSFWorkbook(fileData);
@@ -368,11 +372,7 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
 
                 if (errors_Fact>0){ break; } //Wenn bereits Fehler aufgetreten ist, beenden.
 
-
-
                 Iterator<Cell> cellIterator = row.cellIterator();
-
-
 
                 while(cellIterator.hasNext()) {
 
@@ -489,20 +489,11 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
 
             }
 
-     //       article=new Article();
-     //       article.getStyle().set("white-space","pre-line");
-     //       article.add("\n");
-            //article.add(LocalDateTime.now().format(formatter) + " ==> " + sheetName + ": Count Rows: " + listOfKPI_Fact.size() + " Count Errrors: " + errors_Fact);
-     //       article.add("==> Summary: " + sheetName + ": Count Rows: " + listOfKPI_Fact.size() + " Count Errrors: " + errors_Fact);
-     //       article.add("\n");
-     //       textArea.add(article);
 
-     //       planInfo = "KPI Plan 0 rows";
+            article=new Article();
+            article.setText("Anzahl Zeilen im Blatt " + sheetName + " -> " + listOfKPI_Fact.size());
+            textArea.add(article);
 
-            System.out.println("Anzahl Zeilen im Excel: " + listOfKPI_Fact.size());
-            //      accordion.remove(factPanel);
-            //       factPanel = new AccordionPanel( "KPI_Fact (" + listOfKPI_Fact.size()+ " rows)", gridFact);
-            //       accordion.add(factPanel);
 
             errors_Count+=errors_Fact;
             logView.logMessage(Constants.INFO, "Ending parseExcelFile_Fact() for parse uploaded file");
@@ -648,20 +639,11 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
 
             }
 
-            //       article=new Article();
-            //       article.getStyle().set("white-space","pre-line");
-            //       article.add("\n");
-            //article.add(LocalDateTime.now().format(formatter) + " ==> " + sheetName + ": Count Rows: " + listOfKPI_Fact.size() + " Count Errrors: " + errors_Fact);
-            //       article.add("==> Summary: " + sheetName + ": Count Rows: " + listOfKPI_Fact.size() + " Count Errrors: " + errors_Fact);
-            //       article.add("\n");
-            //       textArea.add(article);
-
-            //       planInfo = "KPI Plan 0 rows";
-
             System.out.println("Anzahl Zeilen im Excel: " + listOfKPI_Dim.size());
-            //      accordion.remove(factPanel);
-            //       factPanel = new AccordionPanel( "KPI_Fact (" + listOfKPI_Fact.size()+ " rows)", gridFact);
-            //       accordion.add(factPanel);
+
+            article=new Article();
+            article.setText("Anzahl Zeilen im Blatt " + sheetName + " -> " + listOfKPI_Dim.size());
+            textArea.add(article);
 
             errors_Count+=errors_Fact;
             logView.logMessage(Constants.INFO, "Ending parseExcelFile_Dim() for parse uploaded file");
