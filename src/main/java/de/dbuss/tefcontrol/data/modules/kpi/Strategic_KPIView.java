@@ -21,13 +21,11 @@ import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.router.*;
 import de.dbuss.tefcontrol.components.DefaultUtils;
 import de.dbuss.tefcontrol.components.LogView;
+import de.dbuss.tefcontrol.components.QS_Callback;
 import de.dbuss.tefcontrol.components.QS_Grid;
 import de.dbuss.tefcontrol.data.dto.ProjectAttachmentsDTO;
 import de.dbuss.tefcontrol.data.entity.*;
-import de.dbuss.tefcontrol.data.service.ProjectAttachmentsService;
-import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
-import de.dbuss.tefcontrol.data.service.ProjectParameterService;
-import de.dbuss.tefcontrol.data.service.ProjectsService;
+import de.dbuss.tefcontrol.data.service.*;
 import de.dbuss.tefcontrol.security.AuthenticatedUser;
 import de.dbuss.tefcontrol.views.MainLayout;
 import jakarta.annotation.security.RolesAllowed;
@@ -51,6 +49,8 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
 
     private LogView logView;
     private int projectId;
+    private QS_Grid qsGrid;
+    private final BackendService backendService;
     private Optional<Projects> projects;
     private List<ProjectAttachmentsDTO> listOfProjectAttachments;
     private Boolean isLogsVisible = false;
@@ -88,13 +88,14 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
     private JdbcTemplate jdbcTemplate;
     private List<Fact_CC_KPI> listOfFact_CC_KPI = new ArrayList<Fact_CC_KPI>();
     private List<Dim_CC_KPI> listOfDim_CC_KPI = new ArrayList<Dim_CC_KPI>();
-    public Strategic_KPIView(JdbcTemplate jdbcTemplate, ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, ProjectsService projectsService, ProjectAttachmentsService projectAttachmentsService, AuthenticatedUser authenticatedUser) {
+    public Strategic_KPIView(JdbcTemplate jdbcTemplate, ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, ProjectsService projectsService, ProjectAttachmentsService projectAttachmentsService, AuthenticatedUser authenticatedUser, BackendService backendService) {
 
         this.jdbcTemplate = jdbcTemplate;
         this.projectsService = projectsService;
         this.projectAttachmentsService = projectAttachmentsService;
         this.authenticatedUser = authenticatedUser;
         this.projectConnectionService = projectConnectionService;
+        this.backendService = backendService;
 
         logView = new LogView();
         logView.logMessage(Constants.INFO, "Starting Strategic_KPIView");
@@ -137,6 +138,8 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
         setProjectParameterGrid(filteredProjectParameters);
         defaultUtils = new DefaultUtils(projectsService, projectAttachmentsService);
 
+        qsGrid = new QS_Grid(projectConnectionService, backendService);
+
         HorizontalLayout hl = new HorizontalLayout();
         hl.add(getTabsheet());
         hl.setHeightFull();
@@ -145,7 +148,7 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
         setHeightFull();
         setSizeFull();
         getStyle().set("overflow", "auto");
-        add(hl,parameterGrid);
+        add(hl, parameterGrid);
 
         parameterGrid.setVisible(false);
         logView.setVisible(false);
@@ -207,7 +210,7 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
 
         setupUploader();
 
-        HorizontalLayout hl=new HorizontalLayout(singleFileUpload);
+        HorizontalLayout hl=new HorizontalLayout(singleFileUpload, qsGrid);
         content.add(hl, textArea, uploadBtn, parameterGrid);
 
 
@@ -236,6 +239,21 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
 
             saveEntities();
 
+            //Aufruf QS-Grid:
+            logView.logMessage(Constants.INFO, "executing QS-Grid");
+            //   if (qsGrid.projectId != projectId) {
+            hl.remove(qsGrid);
+            qsGrid = new QS_Grid(projectConnectionService, backendService);
+            hl.add(qsGrid);
+            CallbackHandler callbackHandler = new CallbackHandler();
+            qsGrid.createDialog(callbackHandler, projectId, upload_id);
+            //   }
+            qsGrid.showDialog(true);
+
+
+
+
+
         });
 
 
@@ -246,6 +264,19 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
 
         return content;
     }
+
+    public class CallbackHandler implements QS_Callback {
+        // Die Methode, die aufgerufen wird, wenn die externe Methode abgeschlossen ist
+        @Override
+        public void onComplete(String result) {
+            logView.logMessage(Constants.INFO, "Starting CallbackHandler onComplete for execute Start Job");
+            if(!result.equals("Cancel")) {
+                qsGrid.executeStartJobSteps(upload_id, agentName);
+            }
+            logView.logMessage(Constants.INFO, "Ending CallbackHandler onComplete for execute Start Job");
+        }
+    }
+
 
     private void saveEntities() {
         logView.logMessage(Constants.INFO, "Starting saveFactEntities() for saving Fact file data in database");
@@ -309,7 +340,7 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
             mimeType = event.getMIMEType();
 
             article=new Article();
-            article.setText("Uploaded file: " + fileName + " (Size: " + contentLength/1024 + " KB)");
+            article.setText("Uploaded File: >>" + fileName + "<< (Size: " + contentLength/1024 + " KB)");
             textArea.add(article);
 
             logView.logMessage(Constants.INFO, "contentLenght: >" + contentLength + "<");
@@ -491,7 +522,7 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
 
 
             article=new Article();
-            article.setText("Anzahl Zeilen im Blatt " + sheetName + " -> " + listOfKPI_Fact.size());
+            article.setText("Count Rows Sheet: " + sheetName + " => " + listOfKPI_Fact.size());
             textArea.add(article);
 
 
@@ -500,6 +531,9 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
             return listOfKPI_Fact;
 
         } catch (Exception e) {
+            article=new Article();
+            article.setText("Error while parse file!: " + e.getMessage());
+            textArea.add(article);
             logView.logMessage(Constants.ERROR, "Error while parse uploaded file");
             e.printStackTrace();
             return null;
@@ -642,7 +676,7 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
             System.out.println("Anzahl Zeilen im Excel: " + listOfKPI_Dim.size());
 
             article=new Article();
-            article.setText("Anzahl Zeilen im Blatt " + sheetName + " -> " + listOfKPI_Dim.size());
+            article.setText("Count Rows sheet: " + sheetName + " => " + listOfKPI_Dim.size());
             textArea.add(article);
 
             errors_Count+=errors_Fact;
@@ -650,6 +684,9 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
             return listOfKPI_Dim;
 
         } catch (Exception e) {
+            article=new Article();
+            article.setText("Error while parse file!: " + e.getMessage());
+            textArea.add(article);
             logView.logMessage(Constants.ERROR, "Error while parse uploaded file");
             e.printStackTrace();
             return null;
