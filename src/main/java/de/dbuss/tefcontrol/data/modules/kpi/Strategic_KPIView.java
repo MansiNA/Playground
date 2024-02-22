@@ -351,13 +351,9 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
             listOfFact_CC_KPI = parseExcelFile_Fact(fileDataFact, fileName,"Fact_CC_KPI");
             listOfDim_CC_KPI = parseExcelFile_Dim(fileDataDim, fileName,"DIM_CC_KPI");
 
-//            factInfo="Fact (" + listOfKPI_Fact.size() + " rows)";
-//            actualsInfo="Fact (" + listOfKPI_Actuals.size() + " rows)";
-
             if (errors_Count==0)
             {
                 uploadBtn.setEnabled(true);
-//                qsBtn.setEnabled(false);
             }
 
 
@@ -401,7 +397,13 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
                 Row row = rowIterator.next();
                 RowNumber++;
 
-                if (errors_Fact>0){ break; } //Wenn bereits Fehler aufgetreten ist, beenden.
+                if (errors_Fact >0 | errors_Count!=0){
+                    errors_Count++;
+                    article=new Article();
+                    article.setText("Abort further processing...");
+                    textArea.add(article);
+                    return null;
+                }
 
                 Iterator<Cell> cellIterator = row.cellIterator();
 
@@ -409,13 +411,11 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
 
                     if(RowNumber==1 ) //Überschrift nicht betrachten, aber Anzahl Spalten kontrollieren
                     {
-
-
                         if (row.getLastCellNum()<5)
                         {
-                         //   article=new Article();
-                         //   article.setText(LocalDateTime.now().format(formatter) + ": Error: Count Columns: " + row.getLastCellNum() + " Expected: 5! (NT ID | XTD | Scenario_Name | Date | Amount)");
-                         //   textArea.add(article);
+                            article=new Article();
+                            article.setText(LocalDateTime.now().format(formatter) + ": Error: Count Columns: " + row.getLastCellNum() + " Expected: 5! (Period | Scenario | Segment | CC_KPI | Amount)");
+                            textArea.add(article);
                             errors_Fact=1;
                         }
 
@@ -430,15 +430,15 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
                     {
                         String ColumnName="Period";
                         try {
-                            kPI_Fact.setPeriod(checkCellNumeric(sheetName, cell, RowNumber,ColumnName));
+                            //kPI_Fact.setPeriod(checkCellNumeric(sheetName, cell, RowNumber,ColumnName));
+                            kPI_Fact.setPeriod(getCellNumeric(cell));
                         }
                         catch(Exception e)
                         {
-                          //  article=new Article();
-                          //  article.setText(LocalDateTime.now().format(formatter) + " " + sheetName + ": Error: Zeile " + RowNumber.toString() + ", Spalte " + ColumnName + ": " + e.getMessage());
-                          //  textArea.add(article);
+                            article=new Article();
+                            article.setText("Sheet: " + sheetName + ": Error: Zeile " + RowNumber.toString() + ", Spalte " + ColumnName + ": " + e.getMessage());
+                            textArea.add(article);
                             errors_Fact++;
-
                         }
                     }
 
@@ -446,13 +446,14 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
                     {
                         String ColumnName="Scenario";
                         try {
-                            kPI_Fact.setScenario(checkCellString(sheetName, cell, RowNumber,ColumnName));
+                            //kPI_Fact.setScenario(checkCellString(sheetName, cell, RowNumber,ColumnName));
+                            kPI_Fact.setScenario(getCellString(cell));
                         }
                         catch(Exception e)
                         {
-                           // article=new Article();
-                           // article.setText(LocalDateTime.now().format(formatter) + " " + sheetName + ": Error: Zeile " + RowNumber.toString() + ", Spalte " + ColumnName + ": " + e.getMessage());
-                           // textArea.add(article);
+                            article=new Article();
+                            article.setText("Sheet: " + sheetName + ": Error: Zeile " + RowNumber.toString() + ", Spalte " + ColumnName + ": " + e.getMessage());
+                            textArea.add(article);
                             errors_Fact++;
 
                         }
@@ -461,13 +462,14 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
                     {
                         String ColumnName="Segment";
                         try {
-                            kPI_Fact.setSegment(checkCellString(sheetName, cell, RowNumber,ColumnName));
+                            //kPI_Fact.setSegment(checkCellString(sheetName, cell, RowNumber,ColumnName));
+                            kPI_Fact.setSegment(getCellString(cell));
                         }
                         catch(Exception e)
                         {
-                            //article=new Article();
-                            //article.setText(LocalDateTime.now().format(formatter) + " " + sheetName + ": Error: Zeile " + RowNumber.toString() + ", Spalte " + ColumnName + ": " + e.getMessage());
-                            //textArea.add(article);
+                            article=new Article();
+                            article.setText("Sheet: " + sheetName + ": Error: Zeile " + RowNumber.toString() + ", Spalte " + ColumnName + ": " + e.getMessage());
+                            textArea.add(article);
                             errors_Fact++;
 
                         }
@@ -477,13 +479,14 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
                     {
                         String ColumnName="CC_KPI";
                         try {
-                            kPI_Fact.setCC_KPI(checkCellString(sheetName, cell, RowNumber,ColumnName));
+                            //kPI_Fact.setCC_KPI(checkCellString(sheetName, cell, RowNumber,ColumnName));
+                            kPI_Fact.setCC_KPI(getCellString(cell));
                         }
                         catch(Exception e)
                         {
-                          //  article=new Article();
-                          //  article.setText(LocalDateTime.now().format(formatter) + " " + sheetName + ": Error: Zeile " + RowNumber.toString() + ", Spalte " + ColumnName + ": " + e.getMessage());
-                          //  textArea.add(article);
+                            article=new Article();
+                            article.setText("Sheet: " + sheetName + ": Error: Zeile " + RowNumber.toString() + ", Spalte " + ColumnName + ": " + e.getMessage());
+                            textArea.add(article);
                             errors_Fact++;
 
                         }
@@ -493,14 +496,15 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
                     {
                         String ColumnName="Amount";
                         try {
-                            kPI_Fact.setAmount(checkCellDouble(sheetName, cell, RowNumber,ColumnName));
+                            //kPI_Fact.setAmount(checkCellDouble(sheetName, cell, RowNumber,ColumnName));
+                            kPI_Fact.setAmount(getCellDouble(cell));
                         }
 
                         catch(Exception e)
                         {
-                          //  article=new Article();
-                          //  article.setText(sheetName + ": Error: row " + RowNumber.toString() + ", column >" + ColumnName + "<  " + e.getMessage());
-                          //  textArea.add(article);
+                            article=new Article();
+                            article.setText("Sheet: " + sheetName + ": Error: Zeile " + RowNumber.toString() + ", Spalte " + ColumnName + ": " + e.getMessage());
+                            textArea.add(article);
                             errors_Fact++;
 
                         }
@@ -522,7 +526,7 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
 
 
             article=new Article();
-            article.setText("Count Rows Sheet: " + sheetName + " => " + listOfKPI_Fact.size());
+            article.setText("Count rows sheet: " + sheetName + " => " + listOfKPI_Fact.size());
             textArea.add(article);
 
 
@@ -547,16 +551,16 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
         try {
             if(fileName.isEmpty() || fileName.length()==0)
             {
-                //  article=new Article();
-                //  article.setText(LocalDateTime.now().format(formatter) + ": Error: Keine Datei angegeben!");
-                //  textArea.add(article);
+                  article=new Article();
+                  article.setText(LocalDateTime.now().format(formatter) + ": Error: Keine Datei angegeben!");
+                  textArea.add(article);
             }
 
             if(!mimeType.contains("openxmlformats-officedocument"))
             {
-                //  article=new Article();
-                //  article.setText(LocalDateTime.now().format(formatter) + ": Error: ungültiges Dateiformat!");
-                //  textArea.add(article);
+                  article=new Article();
+                  article.setText(LocalDateTime.now().format(formatter) + ": Error: ungültiges Dateiformat!");
+                  textArea.add(article);
             }
 
             System.out.println("Excel import: "+  fileName + " => Mime-Type: " + mimeType  + " Größe " + contentLength + " Byte");
@@ -582,13 +586,15 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
                 Row row = rowIterator.next();
                 RowNumber++;
 
-                if (errors_Fact>0){ break; } //Wenn bereits Fehler aufgetreten ist, beenden.
-
-
+                if (errors_Fact > 0 | errors_Count != 0) {
+                    article=new Article();
+                    article.setText("Abort further processing...");
+                    textArea.add(article);
+                    return null;
+                    //break;
+                }
 
                 Iterator<Cell> cellIterator = row.cellIterator();
-
-
 
                 while(cellIterator.hasNext()) {
 
@@ -598,9 +604,9 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
 
                         if (row.getLastCellNum()<3)
                         {
-                            //   article=new Article();
-                            //   article.setText(LocalDateTime.now().format(formatter) + ": Error: Count Columns: " + row.getLastCellNum() + " Expected: 5! (NT ID | XTD | Scenario_Name | Date | Amount)");
-                            //   textArea.add(article);
+                            article=new Article();
+                            article.setText(LocalDateTime.now().format(formatter) + ": Error: Count Columns: " + row.getLastCellNum() + " Expected: 3! (CC_KPI | CC_KPI_Gen01 | CC_KPI_Gen02)");
+                            textArea.add(article);
                             errors_Fact=1;
                         }
 
@@ -615,13 +621,14 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
                     {
                         String ColumnName="CC_KPI";
                         try {
-                            kPI_Dim.setCC_KPI(checkCellString(sheetName, cell, RowNumber,ColumnName));
+                            //kPI_Dim.setCC_KPI(checkCellString(sheetName, cell, RowNumber,ColumnName));
+                            kPI_Dim.setCC_KPI(getCellString(cell));
                         }
                         catch(Exception e)
                         {
-                            //  article=new Article();
-                            //  article.setText(LocalDateTime.now().format(formatter) + " " + sheetName + ": Error: Zeile " + RowNumber.toString() + ", Spalte " + ColumnName + ": " + e.getMessage());
-                            //  textArea.add(article);
+                            article=new Article();
+                            article.setText("ERROR: Sheet: >>" + sheetName + "<< row: " + RowNumber.toString() + ", column " + ColumnName + " => " + e.getMessage());
+                            textArea.add(article);
                             errors_Fact++;
 
                         }
@@ -631,13 +638,14 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
                     {
                         String ColumnName="CC_KPI_Gen01";
                         try {
-                            kPI_Dim.setCC_KPI_Gen01(checkCellString(sheetName, cell, RowNumber,ColumnName));
+                            //kPI_Dim.setCC_KPI_Gen01(checkCellString(sheetName, cell, RowNumber,ColumnName));
+                            kPI_Dim.setCC_KPI_Gen01(getCellString(cell));
                         }
                         catch(Exception e)
                         {
-                            // article=new Article();
-                            // article.setText(LocalDateTime.now().format(formatter) + " " + sheetName + ": Error: Zeile " + RowNumber.toString() + ", Spalte " + ColumnName + ": " + e.getMessage());
-                            // textArea.add(article);
+                            article=new Article();
+                            article.setText("ERROR: Sheet: >>" + sheetName + "<< row: " + RowNumber.toString() + ", column " + ColumnName + " => " + e.getMessage());
+                            textArea.add(article);
                             errors_Fact++;
 
                         }
@@ -646,18 +654,18 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
                     {
                         String ColumnName="CC_KPI_Gen02";
                         try {
-                            kPI_Dim.setCC_KPI_Gen02(checkCellString(sheetName, cell, RowNumber,ColumnName));
+                            //kPI_Dim.setCC_KPI_Gen02(checkCellString(sheetName, cell, RowNumber,ColumnName));
+                            kPI_Dim.setCC_KPI_Gen02(getCellString(cell));
                         }
                         catch(Exception e)
                         {
-                            //article=new Article();
-                            //article.setText(LocalDateTime.now().format(formatter) + " " + sheetName + ": Error: Zeile " + RowNumber.toString() + ", Spalte " + ColumnName + ": " + e.getMessage());
-                            //textArea.add(article);
+                            article=new Article();
+                            article.setText("ERROR: Sheet: >>" + sheetName + "<< row: " + RowNumber.toString() + ", column " + ColumnName + " => " + e.getMessage());
+                            textArea.add(article);
                             errors_Fact++;
 
                         }
                     }
-
 
                 }
 
@@ -676,7 +684,7 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
             System.out.println("Anzahl Zeilen im Excel: " + listOfKPI_Dim.size());
 
             article=new Article();
-            article.setText("Count Rows sheet: " + sheetName + " => " + listOfKPI_Dim.size());
+            article.setText("Count rows sheet: " + sheetName + " => " + listOfKPI_Dim.size());
             textArea.add(article);
 
             errors_Count+=errors_Fact;
@@ -694,6 +702,42 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
 
     }
 
+    private String getCellString(Cell cell) {
+
+        try {
+            if (cell.getCellType() == Cell.CELL_TYPE_STRING)
+            {
+                return cell.getStringCellValue();
+            }
+        }
+        catch(Exception e){
+            switch (e.getMessage()) {
+                case "Cannot get a text value from a error formula cell":
+                    return "";
+            }
+        }
+
+        throw new RuntimeException("Cell-value >>"+ cell.toString() + "<< is no string!");
+
+    }
+
+    private Double getCellDouble(Cell cell)  {
+
+        try {
+            if (cell.getCellType() == Cell.CELL_TYPE_NUMERIC)
+            {
+                Double wert;
+                wert = (double) cell.getNumericCellValue();
+                return  wert;
+            }
+        }
+        catch(Exception e){
+            throw new RuntimeException("Cell-value >>"+ cell.toString() + "<< is not numeric!");
+        }
+
+        throw new RuntimeException("Cell-value >>"+ cell.toString() + "<< is not numeric!");
+
+    }
 
     private String checkCellString(String sheetName, Cell cell, Integer zeile, String spalte) {
 
@@ -701,7 +745,12 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
 
             switch (cell.getCellType()){
                 case Cell.CELL_TYPE_NUMERIC:
-                    return cell.getStringCellValue();
+
+                    double erg =cell.getNumericCellValue();
+
+                    String ret=String.valueOf(erg);
+
+                    return ret;
                 case Cell.CELL_TYPE_STRING:
                     return cell.getStringCellValue();
                 case Cell.CELL_TYPE_FORMULA:
@@ -712,6 +761,7 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
                     return cell.getStringCellValue();
                 case Cell.CELL_TYPE_ERROR:
                     return  "";
+                default: return cell.getStringCellValue();
 
             }
         //    article.add("\n" + sheetName + " Error: row  >" + zeile.toString() + "<, column >" + spalte + "< konnte in checkCellString nicht aufgelöst werden. Typ=" + cell.getCellType());
@@ -732,8 +782,7 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
             //System.out.println("Zeile " + zeile.toString() + ", Spalte " + spalte + " konnte in checkCellString nicht aufgelöst werden. Typ=" + cell.getCellType() + e.getMessage());
         }
 
-
-        return  "######";
+        throw new RuntimeException("Wert kann nicht ermittelt werden!");
 
     }
 
@@ -792,6 +841,21 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
         }
     }
 
+    private Integer getCellNumeric(Cell cell) {
+        try {
+
+            if (cell.getCellType() == Cell.CELL_TYPE_NUMERIC)
+            {
+                return  (int) cell.getNumericCellValue();
+            }
+        }
+        catch(Exception e){
+            throw new RuntimeException("Cell-value >>"+ cell.toString() + "<< is no number!");
+        }
+
+        throw new RuntimeException("Cell-value >>"+ cell.toString() + "<< is no number!");
+
+    }
     private Integer checkCellNumeric(String sheetName, Cell cell, Integer zeile, String spalte) {
 
 
