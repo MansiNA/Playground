@@ -215,29 +215,7 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
 
 
         uploadBtn.addClickListener(e->{
-            logView.logMessage(Constants.INFO, "Uploading in uploadBtn.addClickListener");
-        //    ui.setPollInterval(500);
 
-            ProjectUpload projectUpload = new ProjectUpload();
-            projectUpload.setFileName(fileName);
-            //projectUpload.setUserName(MainLayout.userName);
-            Optional<User> maybeUser = authenticatedUser.get();
-            if (maybeUser.isPresent()) {
-                User user = maybeUser.get();
-                projectUpload.setUserName(user.getUsername());
-            }
-            projectUpload.setModulName("Strategic_KPI");
-
-            logView.logMessage(Constants.INFO, "Get file upload id from database");
-            projectConnectionService.getJdbcConnection(dbUrl, dbUser, dbPassword); // Set Connection to target DB
-            upload_id = projectConnectionService.saveUploadedGenericFileData(projectUpload);
-
-            projectUpload.setUploadId(upload_id);
-
-            logView.logMessage(Constants.INFO, "upload id: " + upload_id);
-            System.out.println("Upload_ID: " + upload_id);
-
-            saveEntities();
 
             //Aufruf QS-Grid:
             logView.logMessage(Constants.INFO, "executing QS-Grid");
@@ -278,7 +256,7 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
     }
 
 
-    private void saveEntities() {
+    private String saveEntities() {
         logView.logMessage(Constants.INFO, "Starting saveFactEntities() for saving Fact file data in database");
         AtomicReference<String> returnStatus= new AtomicReference<>("false");
         int totalRows = listOfFact_CC_KPI.size();
@@ -311,11 +289,8 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
         }
 
 
-
-
-
-
         logView.logMessage(Constants.INFO, "Ending saveFactEntities() for saving Fact file data in database");
+        return "data saved successfully to db...";
     }
 
     private void setupUploader() {
@@ -351,14 +326,51 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
             listOfFact_CC_KPI = parseExcelFile_Fact(fileDataFact, fileName,"Fact_CC_KPI");
             listOfDim_CC_KPI = parseExcelFile_Dim(fileDataDim, fileName,"DIM_CC_KPI");
 
+            logView.logMessage(Constants.INFO, "error_Count: " + errors_Count);
+
             if (errors_Count==0)
             {
+                logView.logMessage(Constants.INFO, "Uploading in uploadBtn.addClickListener");
+                //    ui.setPollInterval(500);
+
+                ProjectUpload projectUpload = new ProjectUpload();
+                projectUpload.setFileName(fileName);
+                //projectUpload.setUserName(MainLayout.userName);
+                Optional<User> maybeUser = authenticatedUser.get();
+                if (maybeUser.isPresent()) {
+                    User user = maybeUser.get();
+                    projectUpload.setUserName(user.getUsername());
+                }
+                projectUpload.setModulName("Strategic_KPI");
+
+                logView.logMessage(Constants.INFO, "Get file upload id from database");
+                projectConnectionService.getJdbcConnection(dbUrl, dbUser, dbPassword); // Set Connection to target DB
+                upload_id = projectConnectionService.saveUploadedGenericFileData(projectUpload);
+
+                projectUpload.setUploadId(upload_id);
+
+                logView.logMessage(Constants.INFO, "upload id: " + upload_id);
+                System.out.println("Upload_ID: " + upload_id);
+
+                String erg= saveEntities();
+
+                article=new Article();
+                article.setText(erg);
+                textArea.add(article);
+
+
                 uploadBtn.setEnabled(true);
             }
+            else {
+                article=new Article();
+                article.setText("data not saved to db");
+                textArea.add(article);
 
+            }
 
         });
-        System.out.println("setup uploader................over");  logView.logMessage(Constants.INFO, "Ending setupUploader() for setup file uploader");
+        System.out.println("setup uploader................over");
+        logView.logMessage(Constants.INFO, "Ending setupUploader() for setup file uploader");
     }
 
     public List<Fact_CC_KPI> parseExcelFile_Fact(InputStream fileData, String fileName, String sheetName) {
@@ -431,7 +443,7 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
                         String ColumnName="Period";
                         try {
                             //kPI_Fact.setPeriod(checkCellNumeric(sheetName, cell, RowNumber,ColumnName));
-                            kPI_Fact.setPeriod(getCellNumeric(cell));
+                            kPI_Fact.setPeriod(defaultUtils.getCellNumeric(cell));
                         }
                         catch(Exception e)
                         {
@@ -447,7 +459,10 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
                         String ColumnName="Scenario";
                         try {
                             //kPI_Fact.setScenario(checkCellString(sheetName, cell, RowNumber,ColumnName));
-                            kPI_Fact.setScenario(getCellString(cell));
+                            //kPI_Fact.setScenario(getCellString(cell));
+
+                            kPI_Fact.setScenario(defaultUtils.getCellString(cell));
+
                         }
                         catch(Exception e)
                         {
@@ -463,7 +478,7 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
                         String ColumnName="Segment";
                         try {
                             //kPI_Fact.setSegment(checkCellString(sheetName, cell, RowNumber,ColumnName));
-                            kPI_Fact.setSegment(getCellString(cell));
+                            kPI_Fact.setSegment(defaultUtils.getCellString(cell));
                         }
                         catch(Exception e)
                         {
@@ -480,7 +495,7 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
                         String ColumnName="CC_KPI";
                         try {
                             //kPI_Fact.setCC_KPI(checkCellString(sheetName, cell, RowNumber,ColumnName));
-                            kPI_Fact.setCC_KPI(getCellString(cell));
+                            kPI_Fact.setCC_KPI(defaultUtils.getCellString(cell));
                         }
                         catch(Exception e)
                         {
@@ -497,7 +512,7 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
                         String ColumnName="Amount";
                         try {
                             //kPI_Fact.setAmount(checkCellDouble(sheetName, cell, RowNumber,ColumnName));
-                            kPI_Fact.setAmount(getCellDouble(cell));
+                            kPI_Fact.setAmount(defaultUtils.getCellDouble(cell));
                         }
 
                         catch(Exception e)
@@ -622,7 +637,7 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
                         String ColumnName="CC_KPI";
                         try {
                             //kPI_Dim.setCC_KPI(checkCellString(sheetName, cell, RowNumber,ColumnName));
-                            kPI_Dim.setCC_KPI(getCellString(cell));
+                            kPI_Dim.setCC_KPI(defaultUtils.getCellString(cell));
                         }
                         catch(Exception e)
                         {
@@ -639,7 +654,7 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
                         String ColumnName="CC_KPI_Gen01";
                         try {
                             //kPI_Dim.setCC_KPI_Gen01(checkCellString(sheetName, cell, RowNumber,ColumnName));
-                            kPI_Dim.setCC_KPI_Gen01(getCellString(cell));
+                            kPI_Dim.setCC_KPI_Gen01(defaultUtils.getCellString(cell));
                         }
                         catch(Exception e)
                         {
@@ -655,7 +670,7 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
                         String ColumnName="CC_KPI_Gen02";
                         try {
                             //kPI_Dim.setCC_KPI_Gen02(checkCellString(sheetName, cell, RowNumber,ColumnName));
-                            kPI_Dim.setCC_KPI_Gen02(getCellString(cell));
+                            kPI_Dim.setCC_KPI_Gen02(defaultUtils.getCellString(cell));
                         }
                         catch(Exception e)
                         {
@@ -702,109 +717,6 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
 
     }
 
-    private String getCellString(Cell cell) {
-
-        try {
-            if (cell.getCellType() == Cell.CELL_TYPE_STRING)
-            {
-                return cell.getStringCellValue();
-            }
-        }
-        catch(Exception e){
-            switch (e.getMessage()) {
-                case "Cannot get a text value from a error formula cell":
-                    return "";
-            }
-        }
-
-        throw new RuntimeException("Cell-value >>"+ cell.toString() + "<< is no string!");
-
-    }
-
-    private Double getCellDouble(Cell cell)  {
-
-        try {
-            if (cell.getCellType() == Cell.CELL_TYPE_NUMERIC)
-            {
-                Double wert;
-                wert = (double) cell.getNumericCellValue();
-                return  wert;
-            }
-        }
-        catch(Exception e){
-            throw new RuntimeException("Cell-value >>"+ cell.toString() + "<< is not numeric!");
-        }
-
-        throw new RuntimeException("Cell-value >>"+ cell.toString() + "<< is not numeric!");
-
-    }
-
-    private Integer getCellNumeric(Cell cell) {
-        try {
-
-            if (cell.getCellType() == Cell.CELL_TYPE_NUMERIC)
-            {
-                return  (int) cell.getNumericCellValue();
-            }
-        }
-        catch(Exception e){
-            throw new RuntimeException("Cell-value >>"+ cell.toString() + "<< is no number!");
-        }
-
-        throw new RuntimeException("Cell-value >>"+ cell.toString() + "<< is no number!");
-
-    }
-    private Integer checkCellNumeric(String sheetName, Cell cell, Integer zeile, String spalte) {
-
-
-        switch (cell.getCellType()){
-            case Cell.CELL_TYPE_NUMERIC:
-                return  (int) cell.getNumericCellValue();
-            case Cell.CELL_TYPE_STRING:
-                return 0;
-            case Cell.CELL_TYPE_FORMULA:
-                return 0;
-            case Cell.CELL_TYPE_BLANK:
-                return 0;
-            case Cell.CELL_TYPE_BOOLEAN:
-                return 0;
-            case Cell.CELL_TYPE_ERROR:
-                return 0;
-
-        }
-
-        return 0;
-
-
-/*
-        if (cell.getCellType()!=Cell.CELL_TYPE_NUMERIC)
-        {
-            var CellType =cell.getCellType();
-
-            System.out.println("Zeile " + zeile.toString() + ", Spalte " + spalte + " konnte nicht gelesen werden, da ExcelTyp nicht numerisch, sonder hat Typ: " + CellType );
-            //     textArea.setValue(textArea.getValue() + "\n" + LocalDateTime.now().format(formatter) + ": Error: Zeile " + zeile.toString() + ", Spalte " + spalte + " konnte nicht gelesen werden, da ExcelTyp nicht Numeric!");
-            article.add("\nZeile " + zeile.toString() + ", Spalte " + spalte + "  konnte nicht gelesen werden, da ExcelTyp nicht Numeric!");
-            textArea.add(article);
-            return 0;
-        }
-        else
-        {
-            //System.out.println("Spalte: " + spalte + " Zeile: " + zeile.toString() + " Wert: " + cell.getNumericCellValue());
-            return  (int) cell.getNumericCellValue();
-        }
-
- */
-
-    }
-
-    private Double checkCellDouble(String sheetName, Cell cell, Integer zeile, String spalte)  {
-
-        Double wert;
-
-        wert = (double) cell.getNumericCellValue();
-        return  wert;
-
-    }
     private Component getDescriptionTab() {
         logView.logMessage(Constants.INFO, "Set Description in getDescriptionTab()");
         return defaultUtils.getProjectDescription();

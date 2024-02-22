@@ -31,6 +31,7 @@ import de.dbuss.tefcontrol.data.entity.Projects;
 import de.dbuss.tefcontrol.data.entity.User;
 import de.dbuss.tefcontrol.data.service.*;
 import de.dbuss.tefcontrol.views.MainLayout;
+import org.apache.poi.ss.usermodel.Cell;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -300,4 +301,58 @@ public class DefaultUtils extends VerticalLayout {
     public void setDescription() {
         editor.setValue(projects.get().getDescription());
     }
+
+
+    public String getCellString(Cell cell) {
+
+        try {
+            if (cell.getCellType() == Cell.CELL_TYPE_STRING)
+            {
+                return cell.getStringCellValue();
+            }
+        }
+        catch(Exception e){
+            switch (e.getMessage()) {
+                case "Cannot get a text value from a error formula cell":
+                    return "";
+            }
+        }
+
+        throw new RuntimeException("Cell-value >>"+ cell.toString() + "<< is no string!");
+
+    }
+    public Double getCellDouble(Cell cell)  {
+
+        try {
+            if (cell.getCellType() == Cell.CELL_TYPE_NUMERIC)
+            {
+                Double wert;
+                wert = (double) cell.getNumericCellValue();
+                return  wert;
+            }
+        }
+        catch(Exception e){
+            throw new RuntimeException("Cell-value >>"+ cell.toString() + "<< is not numeric!");
+        }
+
+        throw new RuntimeException("Cell-value >>"+ cell.toString() + "<< is not numeric!");
+
+    }
+
+    public Integer getCellNumeric(Cell cell) {
+        try {
+
+            if (cell.getCellType() == Cell.CELL_TYPE_NUMERIC)
+            {
+                return  (int) cell.getNumericCellValue();
+            }
+        }
+        catch(Exception e){
+            throw new RuntimeException("Cell-value >>"+ cell.toString() + "<< is no number!");
+        }
+
+        throw new RuntimeException("Cell-value >>"+ cell.toString() + "<< is no number!");
+
+    }
+
 }
