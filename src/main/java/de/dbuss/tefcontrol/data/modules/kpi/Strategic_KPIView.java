@@ -273,6 +273,7 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
         }
         else{
             logView.logMessage(Constants.ERROR, "ERROR: " + returnStatus.toString());
+            return "Data not save to db: " +  returnStatus.toString();
         }
 
         String resultKPIDim = projectConnectionService.saveStrategic_KPIDim(listOfDim_CC_KPI, dimTableName, upload_id);
@@ -286,11 +287,12 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
         }
         else{
             logView.logMessage(Constants.ERROR, "ERROR: " + returnStatus.toString());
+            return "Data not save to db: " +  returnStatus.toString();
         }
 
 
         logView.logMessage(Constants.INFO, "Ending saveFactEntities() for saving Fact file data in database");
-        return "data saved successfully to db...";
+        return "Data with upload_id " + upload_id + " saved successfully to db...";
     }
 
     private void setupUploader() {
@@ -306,6 +308,9 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
 
         singleFileUpload.addSucceededListener(event -> {
             logView.logMessage(Constants.INFO, "File Uploaded: >" + event.getFileName() + "<");
+
+            textArea.removeAll();
+
             // Get information about the uploaded file
             fileDataFact = memoryBuffer.getInputStream();
             fileDataDim = memoryBuffer.getInputStream();
@@ -354,12 +359,17 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
 
                 String erg= saveEntities();
 
+                if (erg.contains("successfully") )
+                {
+                    uploadBtn.setEnabled(true);
+                }
+
                 article=new Article();
                 article.setText(erg);
                 textArea.add(article);
 
 
-                uploadBtn.setEnabled(true);
+
             }
             else {
                 article=new Article();

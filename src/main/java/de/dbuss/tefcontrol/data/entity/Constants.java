@@ -92,5 +92,8 @@ public class Constants {
     // This constant is used for B2B_MapSalesChannel module
     public static final String B2B_MAPSALESCHANNEL = "B2B_MapSalesChannel";
     public static final String Strategic_KPI = "Strategic_KPI";
+
+    public static final String DimLineTapete = "DimLineTapete";
+
     public static final String SOURCETABLE = "SourceTable";
 }

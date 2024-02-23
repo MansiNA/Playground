@@ -38,6 +38,7 @@ import de.dbuss.tefcontrol.data.modules.administration.view.ReportAdminView;
 import de.dbuss.tefcontrol.data.modules.kpi.Strategic_KPIView;
 import de.dbuss.tefcontrol.data.modules.tarifmapping.view.TarifMappingView;
 import de.dbuss.tefcontrol.data.modules.kpi.Tech_KPIView;
+import de.dbuss.tefcontrol.data.modules.userimport.ImportDimLineTapete;
 import de.dbuss.tefcontrol.data.service.ProjectsService;
 import de.dbuss.tefcontrol.data.service.UserService;
 import de.dbuss.tefcontrol.security.AuthenticatedUser;
@@ -124,6 +125,8 @@ public class MainLayout extends AppLayout {
         urlToViewMap.put(Constants.TARIFMAPPING, TarifMappingView.class);
         urlToViewMap.put(Constants.B2B_MAPSALESCHANNEL, B2BMapSalesChannelView.class);
         urlToViewMap.put(Constants.Strategic_KPI, Strategic_KPIView.class);
+        urlToViewMap.put(Constants.DimLineTapete, ImportDimLineTapete.class);
+
 
         setPrimarySection(Section.DRAWER);
         addDrawerContent();
@@ -143,7 +146,7 @@ public class MainLayout extends AppLayout {
         viewTitle.setText("");
         //viewTitle.addClassNames(LumoUtility.FontSize.LARGE, LumoUtility.Margin.NONE);
 
-        Span version= new Span("V1.02");
+        Span version= new Span("V1.5");
 
         image.setHeight("60px");
         image.setWidth("150px");
