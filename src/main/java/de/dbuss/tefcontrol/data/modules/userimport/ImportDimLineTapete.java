@@ -1197,7 +1197,7 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
 
         projectConnectionService.getJdbcConnection(dbUrl, dbUser, dbPassword);
 
-        //String resultKPIFact = projectConnectionService.saveDimLineTapete(listOfDim_Line_Tapete, dimTableName, upload_id);
+        String result = projectConnectionService.saveDimLineTapete(listOfDim_Line_Tapete, dimTableName, upload_id);
        // returnStatus.set(resultKPIFact);
 
         if (returnStatus.toString().equals(Constants.OK)){
