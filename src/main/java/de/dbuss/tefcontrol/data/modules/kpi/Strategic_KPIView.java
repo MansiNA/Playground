@@ -407,7 +407,7 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
             //  HSSFWorkbook my_xls_workbook = new HSSFWorkbook(fileData);
             XSSFWorkbook my_xls_workbook = new XSSFWorkbook(fileData);
             //   HSSFSheet my_worksheet = my_xls_workbook.getSheetAt(0);
-            XSSFSheet my_worksheet = my_xls_workbook.getSheet("Fact_CC_KPI");
+            XSSFSheet my_worksheet = my_xls_workbook.getSheet(sheetName);
             Iterator<Row> rowIterator = my_worksheet.iterator();
 
             Integer RowNumber=0;
