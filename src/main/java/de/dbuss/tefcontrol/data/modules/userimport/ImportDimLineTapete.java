@@ -9,6 +9,7 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Article;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.TabSheet;
@@ -308,17 +309,15 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
                     uploadBtn.setEnabled(true);
                 }
 
-                article=new Article();
-                article.setText(erg);
-                textArea.add(article);
+                Paragraph p = new Paragraph(erg);
+                textArea.add(p);
 
 
 
             }
             else {
-                article=new Article();
-                article.setText("data not saved to db");
-                textArea.add(article);
+                Paragraph p = new Paragraph("data not saved to db");
+                textArea.add(p);
                 textArea.setClassName("Error");
 
             }
