@@ -611,8 +611,14 @@ public class QS_Grid extends Composite<Div> {
                     jdbcTemplate.execute(sql1);
                     //End Update Agent_Job_Uploads
 
+                    String message;
+                    try {
+                        message = projectConnectionService.startAgent(projectId);
+                    }
+                    catch( Exception e){
+                        message=e.getMessage();
+                    }
 
-                    String message = projectConnectionService.startAgent(projectId);
                     if (!message.contains("Error")) {
 
                         Notification.show(message, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);

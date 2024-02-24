@@ -1108,7 +1108,9 @@ public class ProjectConnectionService {
                    // Notification.show(job + " startet..." ,5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
                 } catch (Exception e) {
                     // Handle other exceptions
-                    result = handleDatabaseError(e);
+                    result=e.getMessage();
+
+                    //result = handleDatabaseError(e);
                   //  Notification.show("Error: " + errorMessage, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
                 }
 

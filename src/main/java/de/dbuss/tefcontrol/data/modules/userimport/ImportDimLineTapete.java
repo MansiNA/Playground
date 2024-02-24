@@ -140,6 +140,9 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
         getStyle().set("overflow", "auto");
         add(hl, parameterGrid);
 
+        textArea.setClassName("Info");
+        textArea.add("please upload Excel file...");
+
         parameterGrid.setVisible(false);
         logView.setVisible(false);
         add(logView);
@@ -224,6 +227,16 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
             logView.logMessage(Constants.INFO, "Starting CallbackHandler onComplete for execute Start Job");
             if(!result.equals("Cancel")) {
                 qsGrid.executeStartJobSteps(upload_id, agentName);
+                article=new Article();
+                article.setText("Job" + agentName + " started...");
+                textArea.add(article);
+
+            }
+            else
+            {
+                article=new Article();
+                article.setText("Job" + agentName + " not started");
+                textArea.add(article);
             }
             logView.logMessage(Constants.INFO, "Ending CallbackHandler onComplete for execute Start Job");
         }
@@ -308,6 +321,7 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
                 article=new Article();
                 article.setText("data not saved to db");
                 textArea.add(article);
+                textArea.setClassName("Error");
 
             }
 
@@ -1218,6 +1232,7 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
             article=new Article();
             article.setText("Error while parse file!: " + e.getMessage());
             textArea.add(article);
+            textArea.setClassName("Error");
             logView.logMessage(Constants.ERROR, "Error while parse uploaded file");
             e.printStackTrace();
             return null;

@@ -22,3 +22,16 @@
     padding-top: 5px !important;
     padding-left: 20px !important;
 }
+
+
+.Info{
+    border: 1px solid silver;
+    padding: 5px;
+    background: lightyellow;
+}
+
+.Error{
+    border: 1px solid silver;
+    padding: 5px;
+    background: lightcoral;
+}

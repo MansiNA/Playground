@@ -145,6 +145,9 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
         hl.setHeightFull();
         hl.setSizeFull();
 
+        textArea.setClassName("Info");
+        textArea.add("please upload Excel file...");
+
         setHeightFull();
         setSizeFull();
         getStyle().set("overflow", "auto");
@@ -250,7 +253,18 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
             logView.logMessage(Constants.INFO, "Starting CallbackHandler onComplete for execute Start Job");
             if(!result.equals("Cancel")) {
                 qsGrid.executeStartJobSteps(upload_id, agentName);
+                article=new Article();
+                article.setText("Job" + agentName + " started...");
+                textArea.add(article);
+
             }
+            else
+            {
+                article=new Article();
+                article.setText("Job" + agentName + " not started");
+                textArea.add(article);
+            }
+
             logView.logMessage(Constants.INFO, "Ending CallbackHandler onComplete for execute Start Job");
         }
     }
@@ -375,6 +389,7 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
                 article=new Article();
                 article.setText("data not saved to db");
                 textArea.add(article);
+                textArea.setClassName("Error");
 
             }
 
@@ -564,6 +579,7 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
             article.setText("Error while parse file!: " + e.getMessage());
             textArea.add(article);
             logView.logMessage(Constants.ERROR, "Error while parse uploaded file");
+            textArea.setClassName("Error");
             e.printStackTrace();
             return null;
         }
