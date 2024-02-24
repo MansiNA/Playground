@@ -305,10 +305,6 @@ public class DefaultUtils extends VerticalLayout {
 
     public String getCellString(Cell cell) {
 
-        int typ = cell.getCellType();
-
-        System.out.println("Typ: " + String.valueOf(typ) );
-
         try {
             if (cell.getCellType() == Cell.CELL_TYPE_STRING)
             {
