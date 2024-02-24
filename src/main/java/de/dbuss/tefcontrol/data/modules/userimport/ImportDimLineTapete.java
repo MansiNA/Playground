@@ -206,9 +206,6 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
             qsGrid.showDialog(true);
 
 
-
-
-
         });
 
 
@@ -219,6 +216,7 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
 
         return content;
     }
+
 
     public class CallbackHandler implements QS_Callback {
         // Die Methode, die aufgerufen wird, wenn die externe Methode abgeschlossen ist
