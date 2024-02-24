@@ -608,16 +608,17 @@ public class QS_Grid extends Composite<Div> {
                     //Update Agent_Job_Uploads
                     String sql1 = "UPDATE [Log].[Agent_Job_Uploads] SET [Upload_ID] = "+upload_id + " WHERE AgentJobName = '" + agentName +"' ;";
                     System.out.println("SQL executed: " + sql1);
-                    jdbcTemplate.execute(sql1);
-                    //End Update Agent_Job_Uploads
 
-                    String message;
                     try {
-                        message = projectConnectionService.startAgent(projectId);
+                        jdbcTemplate.execute(sql1);
                     }
-                    catch( Exception e){
-                        message=e.getMessage();
+                    catch (Exception e)
+                    {
+                        Notification.show("Update Agent_Job_Uploads failed: " + e.getMessage(), 8000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
                     }
+
+
+                    String message = projectConnectionService.startAgent(projectId);
 
                     if (!message.contains("Error")) {
 
