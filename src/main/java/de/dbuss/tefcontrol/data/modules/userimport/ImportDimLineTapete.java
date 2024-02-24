@@ -279,7 +279,7 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
                     User user = maybeUser.get();
                     projectUpload.setUserName(user.getUsername());
                 }
-                projectUpload.setModulName("Strategic_KPI");
+                projectUpload.setModulName("ImportDimLineTapete");
 
                 logView.logMessage(Constants.INFO, "Get file upload id from database");
                 projectConnectionService.getJdbcConnection(dbUrl, dbUser, dbPassword); // Set Connection to target DB
