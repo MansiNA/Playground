@@ -305,10 +305,18 @@ public class DefaultUtils extends VerticalLayout {
 
     public String getCellString(Cell cell) {
 
+        int typ = cell.getCellType();
+
+        System.out.println("Typ: " + String.valueOf(typ) );
+
         try {
             if (cell.getCellType() == Cell.CELL_TYPE_STRING)
             {
                 return cell.getStringCellValue();
+            }
+            else if(cell.getCellType() == Cell.CELL_TYPE_NUMERIC)  // Wenn Zelle vom Typ Number, dann in String wandeln.
+            {
+                return String.valueOf(cell.getNumericCellValue());
             }
         }
         catch(Exception e){

@@ -385,6 +385,7 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
                     if(cell.getColumnIndex()==0)
                     {
                         String ColumnName="PL_Line";
+
                         try {
                             //kPI_Fact.setPeriod(checkCellNumeric(sheetName, cell, RowNumber,ColumnName));
                             kPI_Fact.setPL_Line(defaultUtils.getCellString(cell));
@@ -396,6 +397,9 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
                             textArea.add(article);
                             errors_Fact++;
                         }
+
+                        //System.out.println("Column: " + ColumnName + " Value: " + kPI_Fact.getPL_Line());
+
                     }
 
                     if(cell.getColumnIndex()==1)
@@ -416,6 +420,9 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
                             errors_Fact++;
 
                         }
+
+                       // System.out.println("Column: " + ColumnName + " Value: " + kPI_Fact.getPL_Line_Name());
+
                     }
                     if(cell.getColumnIndex()==2)
                     {
@@ -432,6 +439,9 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
                             errors_Fact++;
 
                         }
+
+                        //System.out.println("Column: " + ColumnName + " Value: " + kPI_Fact.getPL_Line_Gen01());
+
                     }
 
                     if(cell.getColumnIndex()==3)
@@ -449,6 +459,9 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
                             errors_Fact++;
 
                         }
+
+                        //System.out.println("Column: " + ColumnName + " Value: " + kPI_Fact.getPL_Line_Gen01_Name());
+
                     }
 
                     if(cell.getColumnIndex()==4)
@@ -467,6 +480,8 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
                             errors_Fact++;
 
                         }
+
+                        //System.out.println("Column: " + ColumnName + " Value: " + kPI_Fact.getPL_Line_Gen02());
                     }
 
                     if(cell.getColumnIndex()==5)
@@ -525,7 +540,8 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
                         String ColumnName="PL_Line_Gen03_Sortierung";
                         try {
                             //kPI_Fact.setAmount(checkCellDouble(sheetName, cell, RowNumber,ColumnName));
-                            kPI_Fact.setPL_Line_Gen03_Sortierung(defaultUtils.getCellNumeric(cell));
+                            //kPI_Fact.setPL_Line_Gen03_Sortierung(defaultUtils.getCellNumeric(cell));
+                            kPI_Fact.setPL_Line_Gen03_Sortierung(defaultUtils.getCellString(cell));
                         }
 
                         catch(Exception e)
@@ -576,7 +592,8 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
                         String ColumnName="PL_Line_Gen04_Sortierung";
                         try {
                             //kPI_Fact.setAmount(checkCellDouble(sheetName, cell, RowNumber,ColumnName));
-                            kPI_Fact.setPL_Line_Gen04_Sortierung(defaultUtils.getCellNumeric(cell));
+                            //kPI_Fact.setPL_Line_Gen04_Sortierung(defaultUtils.getCellNumeric(cell));
+                            kPI_Fact.setPL_Line_Gen04_Sortierung(defaultUtils.getCellString(cell));
                         }
 
                         catch(Exception e)
@@ -621,13 +638,16 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
                             errors_Fact++;
 
                         }
+                        //System.out.println("Column: " + ColumnName + " Value: " + kPI_Fact.getPL_Line_Gen05_Name());
+
                     }
                     if(cell.getColumnIndex()==14)
                     {
                         String ColumnName="PL_Line_Gen05_Sortierung";
                         try {
                             //kPI_Fact.setAmount(checkCellDouble(sheetName, cell, RowNumber,ColumnName));
-                            kPI_Fact.setPL_Line_Gen05_Sortierung(defaultUtils.getCellNumeric(cell));
+                            //kPI_Fact.setPL_Line_Gen05_Sortierung(defaultUtils.getCellNumeric(cell));
+                            kPI_Fact.setPL_Line_Gen05_Sortierung(defaultUtils.getCellString(cell));
                         }
 
                         catch(Exception e)
@@ -638,6 +658,8 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
                             errors_Fact++;
 
                         }
+
+                        //System.out.println("Column: " + ColumnName + " Value: " + kPI_Fact.getPL_Line_Gen05_Sortierung());
                     }
                     if(cell.getColumnIndex()==15)
                     {
@@ -655,6 +677,8 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
                             errors_Fact++;
 
                         }
+
+                        //System.out.println("Column: " + ColumnName + " Value: " + kPI_Fact.getPL_Line_Gen06());
                     }
                     if(cell.getColumnIndex()==16)
                     {
@@ -672,13 +696,16 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
                             errors_Fact++;
 
                         }
+
+                        //System.out.println("Column: " + ColumnName + " Value: " + kPI_Fact.getPL_Line_Gen06_Name());
                     }
                     if(cell.getColumnIndex()==17)
                     {
                         String ColumnName="PL_Line_Gen06_Sortierung";
                         try {
                             //kPI_Fact.setAmount(checkCellDouble(sheetName, cell, RowNumber,ColumnName));
-                            kPI_Fact.setPL_Line_Gen06_Sortierung(defaultUtils.getCellNumeric(cell));
+                           // kPI_Fact.setPL_Line_Gen06_Sortierung(defaultUtils.getCellNumeric(cell));
+                            kPI_Fact.setPL_Line_Gen06_Sortierung(defaultUtils.getCellString(cell));
                         }
 
                         catch(Exception e)
@@ -689,6 +716,8 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
                             errors_Fact++;
 
                         }
+
+                        //System.out.println("Column: " + ColumnName + " Value: " + kPI_Fact.getPL_Line_Gen06_Sortierung());
                     }
                     if(cell.getColumnIndex()==18)
                     {
@@ -729,7 +758,8 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
                         String ColumnName="PL_Line_Gen07_Sortierung";
                         try {
                             //kPI_Fact.setAmount(checkCellDouble(sheetName, cell, RowNumber,ColumnName));
-                            kPI_Fact.setPL_Line_Gen07_Sortierung(defaultUtils.getCellNumeric(cell));
+                            //kPI_Fact.setPL_Line_Gen07_Sortierung(defaultUtils.getCellNumeric(cell));
+                            kPI_Fact.setPL_Line_Gen07_Sortierung(defaultUtils.getCellString(cell));
                         }
 
                         catch(Exception e)
@@ -780,7 +810,8 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
                         String ColumnName="PL_Line_Gen08_Sortierung";
                         try {
                             //kPI_Fact.setAmount(checkCellDouble(sheetName, cell, RowNumber,ColumnName));
-                            kPI_Fact.setPL_Line_Gen08_Sortierung(defaultUtils.getCellNumeric(cell));
+                            //kPI_Fact.setPL_Line_Gen08_Sortierung(defaultUtils.getCellNumeric(cell));
+                            kPI_Fact.setPL_Line_Gen08_Sortierung(defaultUtils.getCellString(cell));
                         }
 
                         catch(Exception e)
@@ -831,7 +862,8 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
                         String ColumnName="PL_Line_Gen09_Sortierung";
                         try {
                             //kPI_Fact.setAmount(checkCellDouble(sheetName, cell, RowNumber,ColumnName));
-                            kPI_Fact.setPL_Line_Gen09_Sortierung(defaultUtils.getCellNumeric(cell));
+                            //kPI_Fact.setPL_Line_Gen09_Sortierung(defaultUtils.getCellNumeric(cell));
+                            kPI_Fact.setPL_Line_Gen09_Sortierung(defaultUtils.getCellString(cell));
                         }
 
                         catch(Exception e)
@@ -882,7 +914,8 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
                         String ColumnName="PL_Line_Gen10_Sortierung";
                         try {
                             //kPI_Fact.setAmount(checkCellDouble(sheetName, cell, RowNumber,ColumnName));
-                            kPI_Fact.setPL_Line_Gen10_Sortierung(defaultUtils.getCellNumeric(cell));
+                            //kPI_Fact.setPL_Line_Gen10_Sortierung(defaultUtils.getCellNumeric(cell));
+                            kPI_Fact.setPL_Line_Gen10_Sortierung(defaultUtils.getCellString(cell));
                         }
 
                         catch(Exception e)
@@ -933,7 +966,8 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
                         String ColumnName="PL_Line_Gen11_Sortierung";
                         try {
                             //kPI_Fact.setAmount(checkCellDouble(sheetName, cell, RowNumber,ColumnName));
-                            kPI_Fact.setPL_Line_Gen11_Sortierung(defaultUtils.getCellNumeric(cell));
+                            //kPI_Fact.setPL_Line_Gen11_Sortierung(defaultUtils.getCellNumeric(cell));
+                            kPI_Fact.setPL_Line_Gen11_Sortierung(defaultUtils.getCellString(cell));
                         }
 
                         catch(Exception e)
@@ -984,7 +1018,8 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
                         String ColumnName="PL_Line_Gen12_Sortierung";
                         try {
                             //kPI_Fact.setAmount(checkCellDouble(sheetName, cell, RowNumber,ColumnName));
-                            kPI_Fact.setPL_Line_Gen12_Sortierung(defaultUtils.getCellNumeric(cell));
+                            //kPI_Fact.setPL_Line_Gen12_Sortierung(defaultUtils.getCellNumeric(cell));
+                            kPI_Fact.setPL_Line_Gen12_Sortierung(defaultUtils.getCellString(cell));
                         }
 
                         catch(Exception e)
@@ -1035,7 +1070,8 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
                         String ColumnName="PL_Line_Gen13_Sortierung";
                         try {
                             //kPI_Fact.setAmount(checkCellDouble(sheetName, cell, RowNumber,ColumnName));
-                            kPI_Fact.setPL_Line_Gen13_Sortierung(defaultUtils.getCellNumeric(cell));
+                            //kPI_Fact.setPL_Line_Gen13_Sortierung(defaultUtils.getCellNumeric(cell));
+                            kPI_Fact.setPL_Line_Gen13_Sortierung(defaultUtils.getCellString(cell));
                         }
 
                         catch(Exception e)
@@ -1086,7 +1122,8 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
                         String ColumnName="PL_Line_Gen14_Sortierung";
                         try {
                             //kPI_Fact.setAmount(checkCellDouble(sheetName, cell, RowNumber,ColumnName));
-                            kPI_Fact.setPL_Line_Gen14_Sortierung(defaultUtils.getCellNumeric(cell));
+                            //kPI_Fact.setPL_Line_Gen14_Sortierung(defaultUtils.getCellNumeric(cell));
+                            kPI_Fact.setPL_Line_Gen14_Sortierung(defaultUtils.getCellString(cell));
                         }
 
                         catch(Exception e)
@@ -1137,7 +1174,8 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
                         String ColumnName="PL_Line_Gen15_Sortierung";
                         try {
                             //kPI_Fact.setAmount(checkCellDouble(sheetName, cell, RowNumber,ColumnName));
-                            kPI_Fact.setPL_Line_Gen15_Sortierung(defaultUtils.getCellNumeric(cell));
+                            //kPI_Fact.setPL_Line_Gen15_Sortierung(defaultUtils.getCellNumeric(cell));
+                            kPI_Fact.setPL_Line_Gen15_Sortierung(defaultUtils.getCellString(cell));
                         }
 
                         catch(Exception e)
@@ -1189,7 +1227,7 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
 
 
     private String saveEntities() {
-        logView.logMessage(Constants.INFO, "Starting saveFactEntities() for saving Fact file data in database");
+        logView.logMessage(Constants.INFO, "Starting saveEntities() for saving data in database");
         AtomicReference<String> returnStatus= new AtomicReference<>("false");
         int totalRows = listOfDim_Line_Tapete.size();
 
@@ -1198,17 +1236,17 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
         projectConnectionService.getJdbcConnection(dbUrl, dbUser, dbPassword);
 
         String result = projectConnectionService.saveDimLineTapete(listOfDim_Line_Tapete, dimTableName, upload_id);
-       // returnStatus.set(resultKPIFact);
+        returnStatus.set(result);
 
         if (returnStatus.toString().equals(Constants.OK)){
-            logView.logMessage(Constants.INFO, "ResultKPIFact: " + returnStatus.toString());
+            logView.logMessage(Constants.INFO, "Result: " + returnStatus.toString());
         }
         else{
             logView.logMessage(Constants.ERROR, "ERROR: " + returnStatus.toString());
             return "Data not save to db: " +  returnStatus.toString();
         }
 
-        logView.logMessage(Constants.INFO, "Ending saveFactEntities() for saving Fact file data in database");
+        logView.logMessage(Constants.INFO, "Ending saveEntities() for saving data in database");
         return "Data with upload_id " + upload_id + " saved successfully to db...";
     }
 
@@ -1270,43 +1308,43 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
         private String PL_Line_Gen02_Name;
         private String PL_Line_Gen03;
         private String PL_Line_Gen03_Name;
-        private int PL_Line_Gen03_Sortierung;
+        private String PL_Line_Gen03_Sortierung;
         private String PL_Line_Gen04;
         private String PL_Line_Gen04_Name;
-        private int PL_Line_Gen04_Sortierung;
+        private String PL_Line_Gen04_Sortierung;
         private String PL_Line_Gen05;
         private String PL_Line_Gen05_Name;
-        private int PL_Line_Gen05_Sortierung;
+        private String PL_Line_Gen05_Sortierung;
         private String PL_Line_Gen06;
         private String PL_Line_Gen06_Name;
-        private int PL_Line_Gen06_Sortierung;
+        private String PL_Line_Gen06_Sortierung;
         private String PL_Line_Gen07;
         private String PL_Line_Gen07_Name;
-        private int PL_Line_Gen07_Sortierung;
+        private String PL_Line_Gen07_Sortierung;
         private String PL_Line_Gen08;
         private String PL_Line_Gen08_Name;
-        private int PL_Line_Gen08_Sortierung;
+        private String PL_Line_Gen08_Sortierung;
         private String PL_Line_Gen09;
         private String PL_Line_Gen09_Name;
-        private int PL_Line_Gen09_Sortierung;
+        private String PL_Line_Gen09_Sortierung;
         private String PL_Line_Gen10;
         private String PL_Line_Gen10_Name;
-        private int PL_Line_Gen10_Sortierung;
+        private String PL_Line_Gen10_Sortierung;
         private String PL_Line_Gen11;
         private String PL_Line_Gen11_Name;
-        private int PL_Line_Gen11_Sortierung;
+        private String PL_Line_Gen11_Sortierung;
         private String PL_Line_Gen12;
         private String PL_Line_Gen12_Name;
-        private int PL_Line_Gen12_Sortierung;
+        private String PL_Line_Gen12_Sortierung;
         private String PL_Line_Gen13;
         private String PL_Line_Gen13_Name;
-        private int PL_Line_Gen13_Sortierung;
+        private String PL_Line_Gen13_Sortierung;
         private String PL_Line_Gen14;
         private String PL_Line_Gen14_Name;
-        private int PL_Line_Gen14_Sortierung;
+        private String PL_Line_Gen14_Sortierung;
         private String PL_Line_Gen15;
         private String PL_Line_Gen15_Name;
-        private int PL_Line_Gen15_Sortierung;
+        private String PL_Line_Gen15_Sortierung;
 
 
         public boolean isValid() {
@@ -1388,11 +1426,11 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
             this.PL_Line_Gen03_Name = PL_Line_Gen03_Name;
         }
 
-        public int getPL_Line_Gen03_Sortierung() {
+        public String getPL_Line_Gen03_Sortierung() {
             return PL_Line_Gen03_Sortierung;
         }
 
-        public void setPL_Line_Gen03_Sortierung(int PL_Line_Gen03_Sortierung) {
+        public void setPL_Line_Gen03_Sortierung(String PL_Line_Gen03_Sortierung) {
             this.PL_Line_Gen03_Sortierung = PL_Line_Gen03_Sortierung;
         }
 
@@ -1412,11 +1450,11 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
             this.PL_Line_Gen04_Name = PL_Line_Gen04_Name;
         }
 
-        public int getPL_Line_Gen04_Sortierung() {
+        public String getPL_Line_Gen04_Sortierung() {
             return PL_Line_Gen04_Sortierung;
         }
 
-        public void setPL_Line_Gen04_Sortierung(int PL_Line_Gen04_Sortierung) {
+        public void setPL_Line_Gen04_Sortierung(String PL_Line_Gen04_Sortierung) {
             this.PL_Line_Gen04_Sortierung = PL_Line_Gen04_Sortierung;
         }
 
@@ -1436,11 +1474,11 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
             this.PL_Line_Gen05_Name = PL_Line_Gen05_Name;
         }
 
-        public int getPL_Line_Gen05_Sortierung() {
+        public String getPL_Line_Gen05_Sortierung() {
             return PL_Line_Gen05_Sortierung;
         }
 
-        public void setPL_Line_Gen05_Sortierung(int PL_Line_Gen05_Sortierung) {
+        public void setPL_Line_Gen05_Sortierung(String PL_Line_Gen05_Sortierung) {
             this.PL_Line_Gen05_Sortierung = PL_Line_Gen05_Sortierung;
         }
 
@@ -1460,11 +1498,11 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
             this.PL_Line_Gen06_Name = PL_Line_Gen06_Name;
         }
 
-        public int getPL_Line_Gen06_Sortierung() {
+        public String getPL_Line_Gen06_Sortierung() {
             return PL_Line_Gen06_Sortierung;
         }
 
-        public void setPL_Line_Gen06_Sortierung(int PL_Line_Gen06_Sortierung) {
+        public void setPL_Line_Gen06_Sortierung(String PL_Line_Gen06_Sortierung) {
             this.PL_Line_Gen06_Sortierung = PL_Line_Gen06_Sortierung;
         }
 
@@ -1484,11 +1522,11 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
             this.PL_Line_Gen07_Name = PL_Line_Gen07_Name;
         }
 
-        public int getPL_Line_Gen07_Sortierung() {
+        public String getPL_Line_Gen07_Sortierung() {
             return PL_Line_Gen07_Sortierung;
         }
 
-        public void setPL_Line_Gen07_Sortierung(int PL_Line_Gen07_Sortierung) {
+        public void setPL_Line_Gen07_Sortierung(String PL_Line_Gen07_Sortierung) {
             this.PL_Line_Gen07_Sortierung = PL_Line_Gen07_Sortierung;
         }
 
@@ -1508,11 +1546,11 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
             this.PL_Line_Gen08_Name = PL_Line_Gen08_Name;
         }
 
-        public int getPL_Line_Gen08_Sortierung() {
+        public String getPL_Line_Gen08_Sortierung() {
             return PL_Line_Gen08_Sortierung;
         }
 
-        public void setPL_Line_Gen08_Sortierung(int PL_Line_Gen08_Sortierung) {
+        public void setPL_Line_Gen08_Sortierung(String PL_Line_Gen08_Sortierung) {
             this.PL_Line_Gen08_Sortierung = PL_Line_Gen08_Sortierung;
         }
 
@@ -1532,11 +1570,11 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
             this.PL_Line_Gen09_Name = PL_Line_Gen09_Name;
         }
 
-        public int getPL_Line_Gen09_Sortierung() {
+        public String getPL_Line_Gen09_Sortierung() {
             return PL_Line_Gen09_Sortierung;
         }
 
-        public void setPL_Line_Gen09_Sortierung(int PL_Line_Gen09_Sortierung) {
+        public void setPL_Line_Gen09_Sortierung(String PL_Line_Gen09_Sortierung) {
             this.PL_Line_Gen09_Sortierung = PL_Line_Gen09_Sortierung;
         }
 
@@ -1556,11 +1594,11 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
             this.PL_Line_Gen10_Name = PL_Line_Gen10_Name;
         }
 
-        public int getPL_Line_Gen10_Sortierung() {
+        public String getPL_Line_Gen10_Sortierung() {
             return PL_Line_Gen10_Sortierung;
         }
 
-        public void setPL_Line_Gen10_Sortierung(int PL_Line_Gen10_Sortierung) {
+        public void setPL_Line_Gen10_Sortierung(String PL_Line_Gen10_Sortierung) {
             this.PL_Line_Gen10_Sortierung = PL_Line_Gen10_Sortierung;
         }
 
@@ -1580,11 +1618,11 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
             this.PL_Line_Gen11_Name = PL_Line_Gen11_Name;
         }
 
-        public int getPL_Line_Gen11_Sortierung() {
+        public String getPL_Line_Gen11_Sortierung() {
             return PL_Line_Gen11_Sortierung;
         }
 
-        public void setPL_Line_Gen11_Sortierung(int PL_Line_Gen11_Sortierung) {
+        public void setPL_Line_Gen11_Sortierung(String PL_Line_Gen11_Sortierung) {
             this.PL_Line_Gen11_Sortierung = PL_Line_Gen11_Sortierung;
         }
 
@@ -1604,11 +1642,11 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
             this.PL_Line_Gen12_Name = PL_Line_Gen12_Name;
         }
 
-        public int getPL_Line_Gen12_Sortierung() {
+        public String getPL_Line_Gen12_Sortierung() {
             return PL_Line_Gen12_Sortierung;
         }
 
-        public void setPL_Line_Gen12_Sortierung(int PL_Line_Gen12_Sortierung) {
+        public void setPL_Line_Gen12_Sortierung(String PL_Line_Gen12_Sortierung) {
             this.PL_Line_Gen12_Sortierung = PL_Line_Gen12_Sortierung;
         }
 
@@ -1628,11 +1666,11 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
             this.PL_Line_Gen13_Name = PL_Line_Gen13_Name;
         }
 
-        public int getPL_Line_Gen13_Sortierung() {
+        public String getPL_Line_Gen13_Sortierung() {
             return PL_Line_Gen13_Sortierung;
         }
 
-        public void setPL_Line_Gen13_Sortierung(int PL_Line_Gen13_Sortierung) {
+        public void setPL_Line_Gen13_Sortierung(String PL_Line_Gen13_Sortierung) {
             this.PL_Line_Gen13_Sortierung = PL_Line_Gen13_Sortierung;
         }
 
@@ -1652,11 +1690,11 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
             this.PL_Line_Gen14_Name = PL_Line_Gen14_Name;
         }
 
-        public int getPL_Line_Gen14_Sortierung() {
+        public String getPL_Line_Gen14_Sortierung() {
             return PL_Line_Gen14_Sortierung;
         }
 
-        public void setPL_Line_Gen14_Sortierung(int PL_Line_Gen14_Sortierung) {
+        public void setPL_Line_Gen14_Sortierung(String PL_Line_Gen14_Sortierung) {
             this.PL_Line_Gen14_Sortierung = PL_Line_Gen14_Sortierung;
         }
 
@@ -1676,11 +1714,11 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
             this.PL_Line_Gen15_Name = PL_Line_Gen15_Name;
         }
 
-        public int getPL_Line_Gen15_Sortierung() {
+        public String getPL_Line_Gen15_Sortierung() {
             return PL_Line_Gen15_Sortierung;
         }
 
-        public void setPL_Line_Gen15_Sortierung(int PL_Line_Gen15_Sortierung) {
+        public void setPL_Line_Gen15_Sortierung(String PL_Line_Gen15_Sortierung) {
             this.PL_Line_Gen15_Sortierung = PL_Line_Gen15_Sortierung;
         }
     }

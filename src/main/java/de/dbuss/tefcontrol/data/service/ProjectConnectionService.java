@@ -1754,60 +1754,169 @@ public class ProjectConnectionService {
 
         try {
 
-            String sqlInsert = "INSERT INTO "+ tableName +" ([Upload_ID],[File_Name],[Register_Name],[Line_Number],[PL_Line],[PL_Line_Name],[PL_Line_Gen01],[PL_Line_Gen01_Name],[PL_Line_Gen02],[PL_Line_Gen02_Name],[PL_Line_Gen03],[PL_Line_Gen03_Name],[PL_Line_Gen03_Sortierung],[PL_Line_Gen04],[PL_Line_Gen04_Name],[PL_Line_Gen04_Sortierung],[PL_Line_Gen05],[PL_Line_Gen05_Name],[PL_Line_Gen05_Sortierung],[PL_Line_Gen06],[PL_Line_Gen06_Name] ,[PL_Line_Gen06_Sortierung],[PL_Line_Gen07],[PL_Line_Gen07_Name],[PL_Line_Gen07_Sortierung],[PL_Line_Gen08],[PL_Line_Gen08_Name],[PL_Line_Gen08_Sortierung],[PL_Line_Gen09],[PL_Line_Gen09_Name],[PL_Line_Gen09_Sortierung],[PL_Line_Gen10],[PL_Line_Gen10_Name],[PL_Line_Gen10_Sortierung],[PL_Line_Gen11],[PL_Line_Gen11_Name],[PL_Line_Gen11_Sortierung],[PL_Line_Gen12],[PL_Line_Gen12_Name],[PL_Line_Gen12_Sortierung],[PL_Line_Gen13],[PL_Line_Gen13_Name],[PL_Line_Gen13_Sortierung],[PL_Line_Gen14],[PL_Line_Gen14_Name],[PL_Line_Gen14_Sortierung],[PL_Line_Gen15],[PL_Line_Gen15_Name],[PL_Line_Gen15_Sortierung] ) VALUES (?, ?, ?, ?, ?, ?, ?,?,?,?,?, ?, ?, ?, ?, ?, ?,?,?,?,?, ?, ?, ?, ?, ?, ?,?,?,?,?, ?, ?, ?, ?, ?, ?,?,?,?,?,?,?,?,?,?,?,?,?)";
+            String sqlInsert = "INSERT INTO "+ tableName +" ([Upload_ID], [Line_Number],[PL_Line],[PL_Line_Name],[PL_Line_Gen01],[PL_Line_Gen01_Name],[PL_Line_Gen02],[PL_Line_Gen02_Name],[PL_Line_Gen03],[PL_Line_Gen03_Name],[PL_Line_Gen03_Sortierung],[PL_Line_Gen04],[PL_Line_Gen04_Name],[PL_Line_Gen04_Sortierung],[PL_Line_Gen05],[PL_Line_Gen05_Name],[PL_Line_Gen05_Sortierung],[PL_Line_Gen06],[PL_Line_Gen06_Name] ,[PL_Line_Gen06_Sortierung],[PL_Line_Gen07],[PL_Line_Gen07_Name],[PL_Line_Gen07_Sortierung],[PL_Line_Gen08],[PL_Line_Gen08_Name],[PL_Line_Gen08_Sortierung],[PL_Line_Gen09],[PL_Line_Gen09_Name],[PL_Line_Gen09_Sortierung],[PL_Line_Gen10],[PL_Line_Gen10_Name],[PL_Line_Gen10_Sortierung],[PL_Line_Gen11],[PL_Line_Gen11_Name],[PL_Line_Gen11_Sortierung],[PL_Line_Gen12],[PL_Line_Gen12_Name],[PL_Line_Gen12_Sortierung],[PL_Line_Gen13],[PL_Line_Gen13_Name],[PL_Line_Gen13_Sortierung],[PL_Line_Gen14],[PL_Line_Gen14_Name],[PL_Line_Gen14_Sortierung],[PL_Line_Gen15],[PL_Line_Gen15_Name],[PL_Line_Gen15_Sortierung] ) VALUES (?, ?, ?, ?, ?, ?, ?,?,?,?,?, ?, ?, ?, ?, ?, ?,?,?,?,?, ?, ?, ?, ?, ?, ?,?,?,?,?, ?, ?, ?, ?, ?, ?,?,?,?,?,?,?,?,?,?,?)";
 
 
             jdbcTemplate.batchUpdate(sqlInsert, data, data.size(), (ps, entity) -> {
 
                 ps.setInt(1, upload_id);
-                ps.setString(2, "FileName");
-                ps.setString(3, "RegisterName");
-                ps.setInt(4, entity.getRow());
-                ps.setString(5, entity.getPL_Line());
-                ps.setString(6, entity.getPL_Line_Name());
-                ps.setString(7, entity.getPL_Line_Gen01());
-                ps.setString(8, entity.getPL_Line_Gen01_Name());
-                ps.setString(9, entity.getPL_Line_Gen02());
-                ps.setString(10, entity.getPL_Line_Gen02_Name());
-                ps.setString(11, entity.getPL_Line_Gen03());
-                ps.setString(12, entity.getPL_Line_Gen03_Name());
-                ps.setInt(13, entity.getPL_Line_Gen03_Sortierung());
-                ps.setString(14, entity.getPL_Line_Gen04());
-                ps.setString(15, entity.getPL_Line_Gen04_Name());
-                ps.setInt(16, entity.getPL_Line_Gen04_Sortierung());
-                ps.setString(17, entity.getPL_Line_Gen05());
-                ps.setString(18, entity.getPL_Line_Gen05_Name());
-                ps.setInt(19, entity.getPL_Line_Gen05_Sortierung());
-                ps.setString(20, entity.getPL_Line_Gen06());
-                ps.setString(21, entity.getPL_Line_Gen06_Name());
-                ps.setInt(22, entity.getPL_Line_Gen06_Sortierung());
-                ps.setString(23, entity.getPL_Line_Gen07());
-                ps.setString(24, entity.getPL_Line_Gen07_Name());
-                ps.setInt(25, entity.getPL_Line_Gen07_Sortierung());
-                ps.setString(26, entity.getPL_Line_Gen08());
-                ps.setString(27, entity.getPL_Line_Gen08_Name());
-                ps.setInt(28, entity.getPL_Line_Gen08_Sortierung());
-                ps.setString(29, entity.getPL_Line_Gen09());
-                ps.setString(30, entity.getPL_Line_Gen09_Name());
-                ps.setInt(31, entity.getPL_Line_Gen09_Sortierung());
-                ps.setString(32, entity.getPL_Line_Gen10());
-                ps.setString(33, entity.getPL_Line_Gen10_Name());
-                ps.setInt(34, entity.getPL_Line_Gen10_Sortierung());
-                ps.setString(35, entity.getPL_Line_Gen11());
-                ps.setString(36, entity.getPL_Line_Gen11_Name());
-                ps.setInt(37, entity.getPL_Line_Gen11_Sortierung());
-                ps.setString(38, entity.getPL_Line_Gen12());
-                ps.setString(39, entity.getPL_Line_Gen12_Name());
-                ps.setInt(40, entity.getPL_Line_Gen12_Sortierung());
-                ps.setString(41, entity.getPL_Line_Gen13());
-                ps.setString(42, entity.getPL_Line_Gen13_Name());
-                ps.setInt(43, entity.getPL_Line_Gen13_Sortierung());
-                ps.setString(44, entity.getPL_Line_Gen14());
-                ps.setString(45, entity.getPL_Line_Gen14_Name());
-                ps.setInt(46, entity.getPL_Line_Gen14_Sortierung());
-                ps.setString(47, entity.getPL_Line_Gen15());
-                ps.setString(48, entity.getPL_Line_Gen15_Name());
-                ps.setInt(49, entity.getPL_Line_Gen15_Sortierung());
+//                ps.setString(2, "FileName");
+//                ps.setString(3, "RegisterName");
+                ps.setInt(2, entity.getRow());
+                ps.setString(3, entity.getPL_Line());
+                ps.setString(4, entity.getPL_Line_Name());
+                ps.setString(5, entity.getPL_Line_Gen01());
+                ps.setString(6, entity.getPL_Line_Gen01_Name());
+                ps.setString(7, entity.getPL_Line_Gen02());
+                ps.setString(8, entity.getPL_Line_Gen02_Name());
+                ps.setString(9, entity.getPL_Line_Gen03());
+                ps.setString(10, entity.getPL_Line_Gen03_Name());
+  //              ps.setInt(11, entity.getPL_Line_Gen03_Sortierung());
+
+                if (entity.getPL_Line_Gen03_Sortierung() != null) {
+                    String integerPart = entity.getPL_Line_Gen03_Sortierung().split("\\.")[0];
+                    ps.setInt(11, Integer.parseInt(integerPart));
+                } else {
+                    ps.setNull(11, Types.INTEGER);
+                }
+
+
+                ps.setString(12, entity.getPL_Line_Gen04());
+                ps.setString(13, entity.getPL_Line_Gen04_Name());
+                //ps.setInt(14, entity.getPL_Line_Gen04_Sortierung());
+
+                if (entity.getPL_Line_Gen04_Sortierung() != null) {
+                    String integerPart = entity.getPL_Line_Gen04_Sortierung().split("\\.")[0];
+                    ps.setInt(14, Integer.parseInt(integerPart));
+                } else {
+                    ps.setNull(14, Types.INTEGER);
+                }
+
+
+                ps.setString(15, entity.getPL_Line_Gen05());
+                ps.setString(16, entity.getPL_Line_Gen05_Name());
+                //ps.setInt(17, entity.getPL_Line_Gen05_Sortierung());
+
+                if (entity.getPL_Line_Gen05_Sortierung() != null) {
+                    String integerPart = entity.getPL_Line_Gen05_Sortierung().split("\\.")[0];
+                    ps.setInt(17, Integer.parseInt(integerPart));
+                } else {
+                    ps.setNull(17, Types.INTEGER);
+                }
+
+
+                ps.setString(18, entity.getPL_Line_Gen06());
+                ps.setString(19, entity.getPL_Line_Gen06_Name());
+                //ps.setInt(20, entity.getPL_Line_Gen06_Sortierung());
+
+                if (entity.getPL_Line_Gen06_Sortierung() != null) {
+                    String integerPart = entity.getPL_Line_Gen06_Sortierung().split("\\.")[0];
+                    ps.setInt(20, Integer.parseInt(integerPart));
+                } else {
+                    ps.setNull(20, Types.INTEGER);
+                }
+
+                ps.setString(21, entity.getPL_Line_Gen07());
+                ps.setString(22, entity.getPL_Line_Gen07_Name());
+                //ps.setInt(23, entity.getPL_Line_Gen07_Sortierung());
+
+                if (entity.getPL_Line_Gen07_Sortierung() != null) {
+                    String integerPart = entity.getPL_Line_Gen07_Sortierung().split("\\.")[0];
+                    ps.setInt(23, Integer.parseInt(integerPart));
+                } else {
+                    ps.setNull(23, Types.INTEGER);
+                }
+
+                ps.setString(24, entity.getPL_Line_Gen08());
+                ps.setString(25, entity.getPL_Line_Gen08_Name());
+                //ps.setInt(26, entity.getPL_Line_Gen08_Sortierung());
+
+                if (entity.getPL_Line_Gen08_Sortierung() != null) {
+                    String integerPart = entity.getPL_Line_Gen08_Sortierung().split("\\.")[0];
+                    ps.setInt(26, Integer.parseInt(integerPart));
+                } else {
+                    ps.setNull(26, Types.INTEGER);
+                }
+
+                ps.setString(27, entity.getPL_Line_Gen09());
+                ps.setString(28, entity.getPL_Line_Gen09_Name());
+                //ps.setInt(29, entity.getPL_Line_Gen09_Sortierung());
+
+                if (entity.getPL_Line_Gen09_Sortierung() != null) {
+                    String integerPart = entity.getPL_Line_Gen09_Sortierung().split("\\.")[0];
+                    ps.setInt(29, Integer.parseInt(integerPart));
+                } else {
+                    ps.setNull(29, Types.INTEGER);
+                }
+
+                ps.setString(30, entity.getPL_Line_Gen10());
+                ps.setString(31, entity.getPL_Line_Gen10_Name());
+                //ps.setInt(32, entity.getPL_Line_Gen10_Sortierung());
+
+                if (entity.getPL_Line_Gen10_Sortierung() != null) {
+                    String integerPart = entity.getPL_Line_Gen10_Sortierung().split("\\.")[0];
+                    ps.setInt(32, Integer.parseInt(integerPart));
+                } else {
+                    ps.setNull(32, Types.INTEGER);
+                }
+
+
+                ps.setString(33, entity.getPL_Line_Gen11());
+                ps.setString(34, entity.getPL_Line_Gen11_Name());
+                //ps.setInt(35, entity.getPL_Line_Gen11_Sortierung());
+
+                if (entity.getPL_Line_Gen11_Sortierung() != null) {
+                    String integerPart = entity.getPL_Line_Gen11_Sortierung().split("\\.")[0];
+                    ps.setInt(35, Integer.parseInt(integerPart));
+                } else {
+                    ps.setNull(35, Types.INTEGER);
+                }
+
+
+                ps.setString(36, entity.getPL_Line_Gen12());
+                ps.setString(37, entity.getPL_Line_Gen12_Name());
+                //ps.setInt(38, entity.getPL_Line_Gen12_Sortierung());
+
+                if (entity.getPL_Line_Gen12_Sortierung() != null) {
+                    String integerPart = entity.getPL_Line_Gen12_Sortierung().split("\\.")[0];
+                    ps.setInt(38, Integer.parseInt(integerPart));
+                } else {
+                    ps.setNull(38, Types.INTEGER);
+                }
+
+
+                ps.setString(39, entity.getPL_Line_Gen13());
+                ps.setString(40, entity.getPL_Line_Gen13_Name());
+                //ps.setInt(41, entity.getPL_Line_Gen13_Sortierung());
+
+                if (entity.getPL_Line_Gen13_Sortierung() != null) {
+                    String integerPart = entity.getPL_Line_Gen13_Sortierung().split("\\.")[0];
+                    ps.setInt(41, Integer.parseInt(integerPart));
+                } else {
+                    ps.setNull(41, Types.INTEGER);
+                }
+
+                ps.setString(42, entity.getPL_Line_Gen14());
+                ps.setString(43, entity.getPL_Line_Gen14_Name());
+                //ps.setInt(44, entity.getPL_Line_Gen14_Sortierung());
+
+                if (entity.getPL_Line_Gen14_Sortierung() != null) {
+                    String integerPart = entity.getPL_Line_Gen14_Sortierung().split("\\.")[0];
+                    ps.setInt(44, Integer.parseInt(integerPart));
+                } else {
+                    ps.setNull(44, Types.INTEGER);
+                }
+
+                ps.setString(45, entity.getPL_Line_Gen15());
+                ps.setString(46, entity.getPL_Line_Gen15_Name());
+                //ps.setInt(47, entity.getPL_Line_Gen15_Sortierung());
+
+                if (entity.getPL_Line_Gen15_Sortierung() != null) {
+                    String integerPart = entity.getPL_Line_Gen15_Sortierung().split("\\.")[0];
+                    ps.setInt(47, Integer.parseInt(integerPart));
+                } else {
+                    ps.setNull(47, Types.INTEGER);
+                }
 
 
             });
