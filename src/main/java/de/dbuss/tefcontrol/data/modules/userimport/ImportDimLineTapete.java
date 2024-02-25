@@ -256,6 +256,7 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
             logView.logMessage(Constants.INFO, "File Uploaded: >" + event.getFileName() + "<");
 
             textArea.removeAll();
+            textArea.setClassName("Info");
 
             // Get information about the uploaded file
             fileDataFact = memoryBuffer.getInputStream();
