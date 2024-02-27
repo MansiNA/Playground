@@ -288,6 +288,7 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
         }
         else{
             logView.logMessage(Constants.ERROR, "ERROR: " + returnStatus.toString());
+            textArea.setClassName("Error");
             return "Data not save to db: " +  returnStatus.toString();
         }
 
@@ -301,7 +302,9 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
             logView.logMessage(Constants.INFO, "ResultKPIFact: " + returnStatus.toString());
         }
         else{
+
             logView.logMessage(Constants.ERROR, "ERROR: " + returnStatus.toString());
+            textArea.setClassName("Error");
             return "Data not save to db: " +  returnStatus.toString();
         }
 
@@ -708,6 +711,40 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
                         }
                     }
 
+                    if(cell.getColumnIndex()==3)
+                    {
+                        String ColumnName="Unit";
+                        try {
+                            //kPI_Dim.setCC_KPI_Gen02(checkCellString(sheetName, cell, RowNumber,ColumnName));
+                            kPI_Dim.setUnit(defaultUtils.getCellString(cell));
+                        }
+                        catch(Exception e)
+                        {
+                            article=new Article();
+                            article.setText("ERROR: Sheet: >>" + sheetName + "<< row: " + RowNumber.toString() + ", column " + ColumnName + " => " + e.getMessage());
+                            textArea.add(article);
+                            errors_Fact++;
+
+                        }
+                    }
+
+                    if(cell.getColumnIndex()==4)
+                    {
+                        String ColumnName="Definition";
+                        try {
+                            //kPI_Dim.setCC_KPI_Gen02(checkCellString(sheetName, cell, RowNumber,ColumnName));
+                            kPI_Dim.setDefinition(defaultUtils.getCellString(cell));
+                        }
+                        catch(Exception e)
+                        {
+                            article=new Article();
+                            article.setText("ERROR: Sheet: >>" + sheetName + "<< row: " + RowNumber.toString() + ", column " + ColumnName + " => " + e.getMessage());
+                            textArea.add(article);
+                            errors_Fact++;
+
+                        }
+                    }
+
                 }
 
                 if(kPI_Dim.isValid() )
@@ -845,6 +882,8 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
         private String CC_KPI = "";
         private String CC_KPI_Gen01 = "";
         private String CC_KPI_Gen02 = "";
+        private String Unit = "";
+        private String Definition = "";
 
         public int getRow() {
             return row;
@@ -873,6 +912,22 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
 
         public String getCC_KPI_Gen02() {
             return CC_KPI_Gen02;
+        }
+
+        public String getUnit() {
+            return Unit;
+        }
+
+        public void setUnit(String unit) {
+            Unit = unit;
+        }
+
+        public String getDefinition() {
+            return Definition;
+        }
+
+        public void setDefinition(String definition) {
+            Definition = definition;
         }
 
         public void setCC_KPI_Gen02(String cc_kpi_gen02) {

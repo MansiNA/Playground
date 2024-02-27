@@ -1256,6 +1256,7 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
         }
         else{
             logView.logMessage(Constants.ERROR, "ERROR: " + returnStatus.toString());
+            textArea.setClassName("Error");
             return "Data not save to db: " +  returnStatus.toString();
         }
 

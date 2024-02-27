@@ -426,8 +426,8 @@ public class ProjectConnectionService {
             });
             return Constants.OK;
         } catch (Exception e) {
-            e.printStackTrace();
-            return handleDatabaseError(e);
+            //e.printStackTrace();
+            return "ERROR: " + e.getMessage();
         }
 
     }
@@ -436,7 +436,7 @@ public class ProjectConnectionService {
 
         try {
 
-            String sqlInsert = "INSERT INTO "+ tableName +" (Upload_ID, Zeile, CC_KPI, CC_KPI_Gen01, CC_KPI_Gen02 ) VALUES (?, ?, ?, ?, ?)";
+            String sqlInsert = "INSERT INTO "+ tableName +" (Upload_ID, Zeile, CC_KPI, CC_KPI_Gen01, CC_KPI_Gen02, Unit, Definition ) VALUES (?, ?, ?, ?, ?,?,?)";
 
 
             jdbcTemplate.batchUpdate(sqlInsert, data, data.size(), (ps, entity) -> {
@@ -446,12 +446,14 @@ public class ProjectConnectionService {
                 ps.setString(3, entity.getCC_KPI());
                 ps.setString(4,entity.getCC_KPI_Gen01());
                 ps.setString(5, entity.getCC_KPI_Gen02());
+                ps.setString(6, entity.getUnit());
+                ps.setString(7, entity.getDefinition());
 
             });
             return Constants.OK;
         } catch (Exception e) {
-            e.printStackTrace();
-            return handleDatabaseError(e);
+           // e.printStackTrace();
+            return "ERROR: " + e.getMessage();
         }
 
     }
@@ -1924,8 +1926,8 @@ public class ProjectConnectionService {
             });
             return Constants.OK;
         } catch (Exception e) {
-            e.printStackTrace();
-            return handleDatabaseError(e);
+           // e.printStackTrace();
+            return "ERROR: " + e.getMessage();
         }
 
 
