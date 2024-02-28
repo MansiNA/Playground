@@ -1940,7 +1940,7 @@ public class ProjectConnectionService {
 
             try {
 
-                String sqlInsert = "INSERT INTO "+ tableName +" ([Upload_ID],[Zeile],[Month],[Segment],[ProfitCenter],[PL_LINE],[Scenario],[TypeofData],[Amount] ) VALUES (?, ?, ?, ?, ?, ?, ?,?,?)";
+                String sqlInsert = "INSERT INTO "+ tableName +" ([Upload_ID],Line_Number,[Month],[Segment],[ProfitCenter],[PL_LINE],[Scenario],[Type_of_Data],[Amount] ) VALUES (?, ?, ?, ?, ?, ?, ?,?,?)";
 
                 jdbcTemplate.batchUpdate(sqlInsert, data, data.size(), (ps, entity) -> {
                     ps.setInt(1, upload_id);
