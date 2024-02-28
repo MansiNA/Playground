@@ -38,6 +38,7 @@ import de.dbuss.tefcontrol.data.modules.administration.view.ReportAdminView;
 import de.dbuss.tefcontrol.data.modules.kpi.Strategic_KPIView;
 import de.dbuss.tefcontrol.data.modules.tarifmapping.view.TarifMappingView;
 import de.dbuss.tefcontrol.data.modules.kpi.Tech_KPIView;
+import de.dbuss.tefcontrol.data.modules.underlying_cobi;
 import de.dbuss.tefcontrol.data.modules.userimport.ImportDimLineTapete;
 import de.dbuss.tefcontrol.data.service.ProjectsService;
 import de.dbuss.tefcontrol.data.service.UserService;
@@ -126,6 +127,7 @@ public class MainLayout extends AppLayout {
         urlToViewMap.put(Constants.B2B_MAPSALESCHANNEL, B2BMapSalesChannelView.class);
         urlToViewMap.put(Constants.Strategic_KPI, Strategic_KPIView.class);
         urlToViewMap.put(Constants.DimLineTapete, ImportDimLineTapete.class);
+        urlToViewMap.put(Constants.UnderlyingCobi, underlying_cobi.class);
 
 
         setPrimarySection(Section.DRAWER);

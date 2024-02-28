@@ -55,7 +55,7 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
     private String dbUser;
     private String dbPassword;
     private String agentName;
-    private final ProjectsService projectsService;
+
     private int projectId;
     private Boolean isLogsVisible = false;
     long contentLength = 0;
@@ -75,12 +75,16 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
     Article article = new Article();
     Div textArea = new Div();
     private QS_Grid qsGrid;
-    private final ProjectAttachmentsService projectAttachmentsService;
+
     MemoryBuffer memoryBuffer = new MemoryBuffer();
     Upload singleFileUpload = new Upload(memoryBuffer);
+
+
+    private JdbcTemplate jdbcTemplate;
+    private final ProjectsService projectsService;
+    private final ProjectAttachmentsService projectAttachmentsService;
     private AuthenticatedUser authenticatedUser;
     private final ProjectConnectionService projectConnectionService;
-    private JdbcTemplate jdbcTemplate;
     private final BackendService backendService;
     private String dimTableName;
     public ImportDimLineTapete(JdbcTemplate jdbcTemplate, ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, ProjectsService projectsService, ProjectAttachmentsService projectAttachmentsService, AuthenticatedUser authenticatedUser, BackendService backendService) {
@@ -275,7 +279,15 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
             singleFileUpload.clearFileList();
 
             listOfDim_Line_Tapete = parseExcelFile(fileDataFact, fileName,"DimLineTapete");
-       //     listOfDim_CC_KPI = parseExcelFile_Dim(fileDataDim, fileName,"DIM_CC_KPI");
+
+            if (listOfDim_Line_Tapete == null){
+                article=new Article();
+                article.setText("Error: no Sheet with name >>DimLineTapete<< found!");
+                textArea.add(article);
+                textArea.setClassName("Error");
+                return;
+            }
+
 
             logView.logMessage(Constants.INFO, "error_Count: " + errors_Count);
 
@@ -297,6 +309,14 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
                 logView.logMessage(Constants.INFO, "Get file upload id from database");
                 projectConnectionService.getJdbcConnection(dbUrl, dbUser, dbPassword); // Set Connection to target DB
                 upload_id = projectConnectionService.saveUploadedGenericFileData(projectUpload);
+
+                if (upload_id == -1){
+                    article=new Article();
+                    article.setText("Error: could not generate upload_id !");
+                    textArea.add(article);
+                    textArea.setClassName("Error");
+                    return;
+                }
 
                 projectUpload.setUploadId(upload_id);
 
@@ -354,6 +374,12 @@ public class ImportDimLineTapete extends VerticalLayout implements BeforeEnterOb
             XSSFWorkbook my_xls_workbook = new XSSFWorkbook(fileData);
             //   HSSFSheet my_worksheet = my_xls_workbook.getSheetAt(0);
             XSSFSheet my_worksheet = my_xls_workbook.getSheet(sheetName);
+
+            if (my_worksheet == null){
+                return null;
+            }
+
+
             Iterator<Row> rowIterator = my_worksheet.iterator();
 
             Integer RowNumber=0;

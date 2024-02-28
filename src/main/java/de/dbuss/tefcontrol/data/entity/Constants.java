@@ -60,6 +60,7 @@ public class Constants {
 
     // This constant is used for Strategic_KPI module
     public static final String FACT_TABLE = "Fact_Table";
+    public static final String TARGET_TABLE = "Table";
     public static final String DIM_TABLE = "Dim_Table";
 
 
@@ -94,6 +95,7 @@ public class Constants {
     public static final String Strategic_KPI = "Strategic_KPI";
 
     public static final String DimLineTapete = "DimLineTapete";
+    public static final String UnderlyingCobi = "UnderlyingCobi";
 
     public static final String SOURCETABLE = "SourceTable";
 }

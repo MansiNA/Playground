@@ -16,6 +16,7 @@ import de.dbuss.tefcontrol.data.modules.pfgproductmapping.entity.CltvAllProduct;
 import de.dbuss.tefcontrol.data.modules.pfgproductmapping.entity.ProductHierarchie;
 import de.dbuss.tefcontrol.data.modules.tarifmapping.entity.CLTVProduct;
 import de.dbuss.tefcontrol.data.modules.tarifmapping.entity.MissingCLTVProduct;
+import de.dbuss.tefcontrol.data.modules.underlying_cobi;
 import de.dbuss.tefcontrol.data.modules.userimport.ImportDimLineTapete;
 import de.dbuss.tefcontrol.data.repository.ProjectConnectionRepository;
 import de.dbuss.tefcontrol.data.modules.kpi.Tech_KPIView;
@@ -1387,7 +1388,9 @@ public class ProjectConnectionService {
                 return -1 ;
             }
         } catch (Exception e) {
-            e.printStackTrace();
+
+            System.out.println("Error in saveUploadedGenericFileData:" + e.getMessage());
+            //e.printStackTrace();
             return -1;
         }
     }
@@ -1932,4 +1935,31 @@ public class ProjectConnectionService {
 
 
     }
+
+    public String saveUnderlyingCobi(List<underlying_cobi.underlyingFact> data, String tableName, int upload_id) {
+
+            try {
+
+                String sqlInsert = "INSERT INTO "+ tableName +" ([Upload_ID],[Zeile],[Month],[Segment],[ProfitCenter],[PL_LINE],[Scenario],[TypeofData],[Amount] ) VALUES (?, ?, ?, ?, ?, ?, ?,?,?)";
+
+                jdbcTemplate.batchUpdate(sqlInsert, data, data.size(), (ps, entity) -> {
+                    ps.setInt(1, upload_id);
+                    ps.setInt(2, entity.getRow());
+                    ps.setInt(3, entity.getMonth());
+                    ps.setString(4, entity.getSegment());
+                    ps.setString(5, entity.getProfitCenter());
+                    ps.setString(6, entity.getPl_Line());
+                    ps.setString(7, entity.getScenario());
+                    ps.setString(8, entity.getTypeOfData());
+                    ps.setDouble(9, entity.getAmount());
+
+                });
+                return Constants.OK;
+            } catch (Exception e) {
+                // e.printStackTrace();
+                return "ERROR: " + e.getMessage();
+            }
+
+
+        }
 }

@@ -350,6 +350,15 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
             listOfFact_CC_KPI = parseExcelFile_Fact(fileDataFact, fileName,"Fact_CC_KPI");
             listOfDim_CC_KPI = parseExcelFile_Dim(fileDataDim, fileName,"DIM_CC_KPI");
 
+            if (listOfFact_CC_KPI == null || listOfDim_CC_KPI == null ){
+                article=new Article();
+                article.setText("Error: no Sheet with name >>Fact_CC_KPI<< or >>DIM_CC_KPI<<found!");
+                textArea.add(article);
+                textArea.setClassName("Error");
+                return;
+            }
+
+
             logView.logMessage(Constants.INFO, "error_Count: " + errors_Count);
 
             if (errors_Count==0)
@@ -370,6 +379,14 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
                 logView.logMessage(Constants.INFO, "Get file upload id from database");
                 projectConnectionService.getJdbcConnection(dbUrl, dbUser, dbPassword); // Set Connection to target DB
                 upload_id = projectConnectionService.saveUploadedGenericFileData(projectUpload);
+
+                if (upload_id == -1){
+                    article=new Article();
+                    article.setText("Error: could not generate upload_id !");
+                    textArea.add(article);
+                    textArea.setClassName("Error");
+                    return;
+                }
 
                 projectUpload.setUploadId(upload_id);
 
@@ -426,6 +443,11 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
             XSSFWorkbook my_xls_workbook = new XSSFWorkbook(fileData);
             //   HSSFSheet my_worksheet = my_xls_workbook.getSheetAt(0);
             XSSFSheet my_worksheet = my_xls_workbook.getSheet(sheetName);
+
+            if (my_worksheet == null){
+                return null;
+            }
+
             Iterator<Row> rowIterator = my_worksheet.iterator();
 
             Integer RowNumber=0;
