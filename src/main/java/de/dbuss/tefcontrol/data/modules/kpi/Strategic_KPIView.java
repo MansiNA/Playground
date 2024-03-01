@@ -702,6 +702,23 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
 
                     if(cell.getColumnIndex()==1)
                     {
+                        String ColumnName="CC_KPI_Sort";
+                        try {
+                            //kPI_Dim.setCC_KPI(checkCellString(sheetName, cell, RowNumber,ColumnName));
+                            kPI_Dim.setCC_KPI_Sort(defaultUtils.getCellString(cell));
+                        }
+                        catch(Exception e)
+                        {
+                            article=new Article();
+                            article.setText("ERROR: Sheet: >>" + sheetName + "<< row: " + RowNumber.toString() + ", column " + ColumnName + " => " + e.getMessage());
+                            textArea.add(article);
+                            errors_Fact++;
+
+                        }
+                    }
+
+                    if(cell.getColumnIndex()==2)
+                    {
                         String ColumnName="CC_KPI_Gen01";
                         try {
                             //kPI_Dim.setCC_KPI_Gen01(checkCellString(sheetName, cell, RowNumber,ColumnName));
@@ -716,7 +733,7 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
 
                         }
                     }
-                    if(cell.getColumnIndex()==2)
+                    if(cell.getColumnIndex()==3)
                     {
                         String ColumnName="CC_KPI_Gen02";
                         try {
@@ -733,7 +750,7 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
                         }
                     }
 
-                    if(cell.getColumnIndex()==3)
+                    if(cell.getColumnIndex()==4)
                     {
                         String ColumnName="Unit";
                         try {
@@ -750,7 +767,7 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
                         }
                     }
 
-                    if(cell.getColumnIndex()==4)
+                    if(cell.getColumnIndex()==5)
                     {
                         String ColumnName="Definition";
                         try {
@@ -902,6 +919,7 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
 
         private int row;
         private String CC_KPI = "";
+        private String CC_KPI_Sort = "";
         private String CC_KPI_Gen01 = "";
         private String CC_KPI_Gen02 = "";
         private String Unit = "";
@@ -919,10 +937,17 @@ public class Strategic_KPIView extends VerticalLayout implements BeforeEnterObse
             return CC_KPI;
         }
 
+        public void setCC_KPI_Sort(String CC_KPI_Sort) {
+            this.CC_KPI_Sort = CC_KPI_Sort;
+        }
+
+        public String getCC_KPI_Sort() {
+            return CC_KPI_Sort;
+        }
+
         public void setCC_KPI(String CC_KPI) {
             this.CC_KPI = CC_KPI;
         }
-
 
         public String getCC_KPI_Gen01() {
             return CC_KPI_Gen01;

@@ -281,7 +281,7 @@ public class underlying_cobi extends VerticalLayout implements BeforeEnterObserv
                     User user = maybeUser.get();
                     projectUpload.setUserName(user.getUsername());
                 }
-                projectUpload.setModulName("Strategic_KPI");
+                projectUpload.setModulName("Underlying_Cobi");
 
                 logView.logMessage(Constants.INFO, "Get file upload id from database");
                 projectConnectionService.getJdbcConnection(dbUrl, dbUser, dbPassword); // Set Connection to target DB

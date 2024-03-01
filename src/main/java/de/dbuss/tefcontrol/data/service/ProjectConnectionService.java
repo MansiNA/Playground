@@ -437,7 +437,7 @@ public class ProjectConnectionService {
 
         try {
 
-            String sqlInsert = "INSERT INTO "+ tableName +" (Upload_ID, Zeile, CC_KPI, CC_KPI_Gen01, CC_KPI_Gen02, Unit, Definition ) VALUES (?, ?, ?, ?, ?,?,?)";
+            String sqlInsert = "INSERT INTO "+ tableName +" (Upload_ID, Zeile, CC_KPI, CC_KPI_Sort, CC_KPI_Gen01, CC_KPI_Gen02, Unit, Definition ) VALUES (?,?, ?, ?, ?, ?,?,?)";
 
 
             jdbcTemplate.batchUpdate(sqlInsert, data, data.size(), (ps, entity) -> {
@@ -445,10 +445,11 @@ public class ProjectConnectionService {
                 ps.setInt(1, upload_id);
                 ps.setInt(2, entity.getRow());
                 ps.setString(3, entity.getCC_KPI());
-                ps.setString(4,entity.getCC_KPI_Gen01());
-                ps.setString(5, entity.getCC_KPI_Gen02());
-                ps.setString(6, entity.getUnit());
-                ps.setString(7, entity.getDefinition());
+                ps.setString(4, entity.getCC_KPI_Sort());
+                ps.setString(5,entity.getCC_KPI_Gen01());
+                ps.setString(6, entity.getCC_KPI_Gen02());
+                ps.setString(7, entity.getUnit());
+                ps.setString(8, entity.getDefinition());
 
             });
             return Constants.OK;
