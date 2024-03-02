@@ -45,7 +45,9 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
     private final ProjectConnectionService projectConnectionService;
     private Crud<CLTVInflow> crud;
     private Grid<CLTVInflow> grid;
-    private GridPro<CLTVInflow> missingGrid = new GridPro<>(CLTVInflow.class);
+    //private GridPro<CLTVInflow> missingGrid = new GridPro<>(CLTVInflow.class);
+    private Grid<CLTVInflow> missingGrid = new Grid(CLTVInflow.class);
+    private GridPro<CasaTerm> casaGrid = new GridPro<>(CasaTerm.class);
 
     //private GridPro<CLTVInflow> missingGrid = new GridPro<>(CLTVInflow.class);
     Button saveButton = new Button(Constants.SAVE);
@@ -55,6 +57,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
     private String dbUser;
     private String dbPassword;
     private Button missingShowHidebtn = new Button("Show/Hide Columns");
+    private Button casaShowHidebtn = new Button("Show/Hide Columns");
     private Button allEntriesShowHidebtn = new Button("Show/Hide Columns");
     private int projectId;
 
@@ -129,13 +132,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
                     Notification.show("Error during upload: " + resultString, 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
                 }
             }
-
-        //    hl.remove(qsGrid);
-        //    qsGrid = new QS_Grid(projectConnectionService, backendService);
-        //    hl.add(qsGrid);
-        //    CallbackHandler callbackHandler = new CallbackHandler();
-        //    qsGrid.createDialog(callbackHandler, projectId);
-        //    qsGrid.showDialog(true);
+            saveButton.setEnabled(false);
         });
 
         updateGrid();
@@ -157,9 +154,9 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
 
         VerticalLayout vl = new VerticalLayout();
         configureCASAGrid();
-        vl.add(missingShowHidebtn);
+        //vl.add(casaShowHidebtn);
         vl.setAlignItems(Alignment.END);
-        vl.add(missingGrid);
+        vl.add(casaGrid);
         vl.setSizeFull();
         vl.setHeightFull();
         return vl;
@@ -260,7 +257,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         //content.setFlexGrow(2,crud);
         crud.setToolbarVisible(false);
         crud.setSizeFull();
-        content.add(allEntriesShowHidebtn);
+ //       content.add(allEntriesShowHidebtn);
         content.setAlignItems(Alignment.END);
         content.add(crud);
         content.setHeightFull();
@@ -270,7 +267,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
     private Component getMissingCLTV_InflowGrid() {
         VerticalLayout vl = new VerticalLayout();
         configureMissingGrid();
-        vl.add(missingShowHidebtn);
+   //     vl.add(missingShowHidebtn);
         vl.setAlignItems(Alignment.END);
         vl.add(missingGrid);
         vl.setSizeFull();
@@ -510,7 +507,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
 
         missingGrid.getColumns().forEach(col -> col.setAutoWidth(true));
         missingGrid.setSelectionMode(Grid.SelectionMode.NONE);
-        missingGrid.setEditOnClick(true);
+    //    missingGrid.setEditOnClick(true);
 
         // default hide
         contractFeatureIdColumn.setVisible(false);

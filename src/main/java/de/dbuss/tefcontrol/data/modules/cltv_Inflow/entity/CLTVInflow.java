@@ -50,9 +50,10 @@ public class CLTVInflow {
     @Column(name = "Controlling_Branding")
     private String controllingBranding;
 
+    @Column(name = "CLTV_Charge_Name")
+    private String cltvChargeName;
+
     @Column(name = "User")
     private String user;
 
-    @Column(name = "CLTV_Charge_Name")
-    private String cltvChargeName;
 }

@@ -34,4 +34,12 @@ public class CasaTerm {
 
     @Column(name = "Connect_Type")
     private String connectType;
+
+    @Column(name = "CLTV_Category_Name")
+    private String cltvCategoryName;
+
+    @Column(name = "Controlling_Branding")
+    private String controllingBranding;
+    @Column(name = "CLTV_Charge_Name")
+    private String cltvChargeName;
 }
