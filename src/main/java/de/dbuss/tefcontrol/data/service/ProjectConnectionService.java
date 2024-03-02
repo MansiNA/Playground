@@ -9,6 +9,7 @@ import de.dbuss.tefcontrol.data.modules.b2bmapsaleschannel.entity.MapSalesChanne
 import de.dbuss.tefcontrol.data.modules.cltv_Inflow.entity.CLTVInflow;
 import de.dbuss.tefcontrol.data.modules.administration.entity.CurrentPeriods;
 import de.dbuss.tefcontrol.data.modules.administration.entity.CurrentScenarios;
+import de.dbuss.tefcontrol.data.modules.cltv_Inflow.entity.CasaTerm;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.entity.*;
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.GenericCommentsView;
 import de.dbuss.tefcontrol.data.modules.kpi.Strategic_KPIView;
@@ -755,6 +756,50 @@ public class ProjectConnectionService {
             e.printStackTrace();
             return handleDatabaseError(e);
         }
+    }
+
+    public List<CasaTerm> getAllCASATerms(String tableName, String dbUrl, String dbUser, String dbPassword) {
+        try {
+
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
+            String sqlQuery = "SELECT * FROM " +tableName;
+
+            /*
+            // Create a RowMapper to map the query result to a CLTVInflow object
+            RowMapper<CLTVInflow> rowMapper = (rs, rowNum) -> {
+                CLTVInflow cltvInflow = new CLTVInflow();
+                cltvInflow.setContractFeatureId(rs.getLong("ContractFeature_id"));
+                cltvInflow.setAttributeClassesId(rs.getLong("AttributeClasses_ID"));
+                cltvInflow.setCfTypeClassName(rs.getString("CF_TYPE_CLASS_NAME"));
+                cltvInflow.setAttributeClassesName(rs.getString("AttributeClasses_NAME"));
+                cltvInflow.setContractFeatureSubCategoryName(rs.getString("ContractFeatureSubCategory_Name"));
+                cltvInflow.setContractFeatureName(rs.getString("ContractFeature_Name"));
+                cltvInflow.setCfTypeName(rs.getString("CF_TYPE_NAME"));
+                cltvInflow.setCfDurationInMonth(rs.getString("CF_Duration_in_Month"));
+                cltvInflow.setConnectType(rs.getString("Connect_Type"));
+                cltvInflow.setCltvCategoryName(rs.getString("CLTV_Category_Name"));
+                cltvInflow.setControllingBrandingDetailed(rs.getString("Controlling_Branding_Detailed"));
+                cltvInflow.setControllingBranding(rs.getString("Controlling_Branding"));
+                cltvInflow.setUser(rs.getString("User"));
+                cltvInflow.setCltvChargeName(rs.getString("CLTV_Charge_Name"));
+
+                return cltvInflow;
+            };
+
+            List<CLTVInflow> fetchedData = jdbcTemplate.query(sqlQuery, rowMapper);
+
+            return fetchedData;
+
+             */
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            errorMessage = handleDatabaseError(ex);
+            return Collections.emptyList();
+        }
+
+        return null;
     }
 
     public List<CLTVInflow> getAllCLTVInflow(String tableName, String dbUrl, String dbUser, String dbPassword) {

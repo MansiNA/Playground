@@ -26,6 +26,7 @@ import de.dbuss.tefcontrol.components.QS_Grid;
 import de.dbuss.tefcontrol.data.entity.Constants;
 import de.dbuss.tefcontrol.data.entity.ProjectParameter;
 import de.dbuss.tefcontrol.data.modules.cltv_Inflow.entity.CLTVInflow;
+import de.dbuss.tefcontrol.data.modules.cltv_Inflow.entity.CasaTerm;
 import de.dbuss.tefcontrol.data.service.BackendService;
 import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
 import de.dbuss.tefcontrol.data.service.ProjectParameterService;
@@ -37,7 +38,7 @@ import jakarta.annotation.security.RolesAllowed;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@PageTitle("CLTV Product-Mapping")
+@PageTitle("CLTV Inflow-Mapping")
 @Route(value = "CLTV_Inflow/:project_Id", layout = MainLayout.class)
 @RolesAllowed({"MAPPING", "ADMIN"})
 public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserver {
@@ -45,6 +46,8 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
     private Crud<CLTVInflow> crud;
     private Grid<CLTVInflow> grid;
     private GridPro<CLTVInflow> missingGrid = new GridPro<>(CLTVInflow.class);
+
+    //private GridPro<CLTVInflow> missingGrid = new GridPro<>(CLTVInflow.class);
     Button saveButton = new Button(Constants.SAVE);
     private List<CLTVInflow> modifiedCLTVInflow = new ArrayList<>();
     private String tableName;
@@ -54,16 +57,14 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
     private Button missingShowHidebtn = new Button("Show/Hide Columns");
     private Button allEntriesShowHidebtn = new Button("Show/Hide Columns");
     private int projectId;
-    private QS_Grid qsGrid;
-    private Button qsBtn;
+
     private Boolean isVisible = false;
     Grid<ProjectParameter> parameterGrid = new Grid<>(ProjectParameter.class, false);
 
     public CLTVInflowView(ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, BackendService backendService) {
         this.projectConnectionService = projectConnectionService;
 
-        qsBtn = new Button("Start Job");
-        qsBtn.setEnabled(false);
+        saveButton.setEnabled(false);
 
         addClassName("list-view");
         setSizeFull();
@@ -97,9 +98,10 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
      //   Text databaseDetail = new Text("Connected to: "+ dbServer+ ", Database: " + dbName+ ", Table: " + tableName);
         setProjectParameterGrid(filteredProjectParameters);
         //Componente QS-Grid:
-        qsGrid = new QS_Grid(projectConnectionService, backendService);
+        //qsGrid = new QS_Grid(projectConnectionService, backendService);
 
         TabSheet tabSheet = new TabSheet();
+        tabSheet.add("CASA Entries", getCASA_Grid());
         tabSheet.add("Missing Entries", getMissingCLTV_InflowGrid());
         tabSheet.add("All Entries",getCLTV_InflowGrid());
 
@@ -109,17 +111,31 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
 
         HorizontalLayout hl = new HorizontalLayout();
         // hl.add(saveButton,databaseDetail);
-        hl.add(qsBtn, qsGrid);
+        hl.add(saveButton);
         hl.setAlignItems(Alignment.BASELINE);
         add(hl, parameterGrid, tabSheet );
 
-        qsBtn.addClickListener(e ->{
-            hl.remove(qsGrid);
-            qsGrid = new QS_Grid(projectConnectionService, backendService);
-            hl.add(qsGrid);
-            CallbackHandler callbackHandler = new CallbackHandler();
-            qsGrid.createDialog(callbackHandler, projectId);
-            qsGrid.showDialog(true);
+        saveButton.addClickListener(e ->{
+
+
+            if (modifiedCLTVInflow != null && !modifiedCLTVInflow.isEmpty()) {
+                String resultString = projectConnectionService.updateListOfCLTVInflow(modifiedCLTVInflow, tableName, dbUrl, dbUser, dbPassword);
+                if (resultString.equals(Constants.OK)) {
+                    Notification.show(modifiedCLTVInflow.size() + " Uploaded successfully", 2000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                    modifiedCLTVInflow.clear();
+                    updateGrid();
+                    updateMissingGrid();
+                } else {
+                    Notification.show("Error during upload: " + resultString, 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                }
+            }
+
+        //    hl.remove(qsGrid);
+        //    qsGrid = new QS_Grid(projectConnectionService, backendService);
+        //    hl.add(qsGrid);
+        //    CallbackHandler callbackHandler = new CallbackHandler();
+        //    qsGrid.createDialog(callbackHandler, projectId);
+        //    qsGrid.showDialog(true);
         });
 
         updateGrid();
@@ -135,6 +151,27 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
                     },
                     Key.KEY_I, KeyModifier.ALT);
         }
+    }
+
+    private Component getCASA_Grid() {
+
+        VerticalLayout vl = new VerticalLayout();
+        configureCASAGrid();
+        vl.add(missingShowHidebtn);
+        vl.setAlignItems(Alignment.END);
+        vl.add(missingGrid);
+        vl.setSizeFull();
+        vl.setHeightFull();
+        return vl;
+    }
+
+    private void configureCASAGrid() {
+
+        List<CasaTerm> allCLTVInflowData = projectConnectionService.getAllCASATerms(tableName, dbUrl, dbUser, dbPassword);
+
+
+
+
     }
 
     @Override
@@ -507,7 +544,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
             } else {
                 modifiedCLTVInflow.add(cltvInflow);
             }
-            qsBtn.setEnabled(true);
+            saveButton.setEnabled(true);
         } else {
             Notification.show("Please do not enter Missing value", 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
         }
