@@ -13,6 +13,7 @@ import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.gridpro.GridPro;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -47,7 +48,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
     private Grid<CLTVInflow> grid;
     //private GridPro<CLTVInflow> missingGrid = new GridPro<>(CLTVInflow.class);
     private Grid<CLTVInflow> missingGrid = new Grid(CLTVInflow.class);
-    private GridPro<CasaTerm> casaGrid = new GridPro<>(CasaTerm.class);
+    private Grid<CasaTerm> casaGrid = new Grid(CasaTerm.class);
 
     //private GridPro<CLTVInflow> missingGrid = new GridPro<>(CLTVInflow.class);
     Button saveButton = new Button(Constants.SAVE);
@@ -68,6 +69,8 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         this.projectConnectionService = projectConnectionService;
 
         saveButton.setEnabled(false);
+        missingShowHidebtn.setVisible(false);
+        allEntriesShowHidebtn.setVisible(false);
 
         addClassName("list-view");
         setSizeFull();
@@ -112,9 +115,37 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         tabSheet.setHeightFull();
         tabSheet.addThemeVariants(TabSheetVariant.MATERIAL_BORDERED);
 
+        tabSheet.addSelectedChangeListener(event -> {
+         //   System.out.println("Tab: " + event.getSelectedTab().toString());
+            switch(event.getSelectedTab().toString()){
+                case "Tab{Missing Entries}":
+                    missingShowHidebtn.setVisible(true);
+                    casaShowHidebtn.setVisible(false);
+                    allEntriesShowHidebtn.setVisible(false);
+                    break;
+
+                case "Tab{All Entries}":
+                    missingShowHidebtn.setVisible(false);
+                    casaShowHidebtn.setVisible(false);
+                    allEntriesShowHidebtn.setVisible(true);
+                    break;
+
+                case "Tab{CASA Entries}":
+                    missingShowHidebtn.setVisible(false);
+                    casaShowHidebtn.setVisible(true);
+                    allEntriesShowHidebtn.setVisible(false);
+                    break;
+
+            }
+
+        });
+
+
+
         HorizontalLayout hl = new HorizontalLayout();
         // hl.add(saveButton,databaseDetail);
-        hl.add(saveButton);
+        hl.add(saveButton,missingShowHidebtn,casaShowHidebtn,allEntriesShowHidebtn);
+
         hl.setAlignItems(Alignment.BASELINE);
         add(hl, parameterGrid, tabSheet );
 
@@ -150,11 +181,17 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         }
     }
 
+    private Span createBadge(int value) {
+        Span badge = new Span(String.valueOf(value));
+        badge.getElement().getThemeList().add("badge small contrast");
+        badge.getStyle().set("margin-inline-start", "var(--lumo-space-xs)");
+        return badge;
+    }
+
     private Component getCASA_Grid() {
 
         VerticalLayout vl = new VerticalLayout();
         configureCASAGrid();
-        //vl.add(casaShowHidebtn);
         vl.setAlignItems(Alignment.END);
         vl.add(casaGrid);
         vl.setSizeFull();
@@ -230,25 +267,6 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         missingGrid.setItems(missingList);
     }
 
-    private void configureSaveBtn() {
-
-        saveButton.addClickListener(e -> {
-            if (modifiedCLTVInflow != null && !modifiedCLTVInflow.isEmpty()) {
-                String result = projectConnectionService.updateListOfCLTVInflow(modifiedCLTVInflow, tableName, dbUrl, dbUser, dbPassword);
-                if (result.equals(Constants.OK)){
-                    Notification.show(modifiedCLTVInflow.size()+" Uploaded successfully",2000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-                    modifiedCLTVInflow.clear();
-                } else {
-                    Notification.show( "Error during upload: "+ result,3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
-                }
-                updateMissingGrid();
-                updateGrid();
-            } else {
-                Notification.show( "Not any changes",3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
-            }
-        });
-    }
-
     private Component getCLTV_InflowGrid() {
 
         VerticalLayout content = new VerticalLayout();
@@ -257,7 +275,6 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         //content.setFlexGrow(2,crud);
         crud.setToolbarVisible(false);
         crud.setSizeFull();
- //       content.add(allEntriesShowHidebtn);
         content.setAlignItems(Alignment.END);
         content.add(crud);
         content.setHeightFull();
@@ -267,7 +284,6 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
     private Component getMissingCLTV_InflowGrid() {
         VerticalLayout vl = new VerticalLayout();
         configureMissingGrid();
-   //     vl.add(missingShowHidebtn);
         vl.setAlignItems(Alignment.END);
         vl.add(missingGrid);
         vl.setSizeFull();
