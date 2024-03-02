@@ -14,6 +14,8 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.gridpro.GridPro;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -21,6 +23,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.component.tabs.TabSheetVariant;
 import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
 import de.dbuss.tefcontrol.components.QS_Callback;
 import de.dbuss.tefcontrol.components.QS_Grid;
@@ -62,6 +65,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
     private Button casaShowHidebtn = new Button("Show/Hide Columns");
     private Button allEntriesShowHidebtn = new Button("Show/Hide Columns");
     private int projectId;
+    List<String> listOfCLTVCategoryName;
 
     private Boolean isVisible = false;
     Grid<ProjectParameter> parameterGrid = new Grid<>(ProjectParameter.class, false);
@@ -380,7 +384,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
                 .distinct()
                 .collect(Collectors.toList());
 
-        List<String> listOfCLTVCategoryName = allCLTVInflowData.stream()
+        listOfCLTVCategoryName = allCLTVInflowData.stream()
                 .map(CLTVInflow::getCltvCategoryName)
                 .filter(value ->  value != null && !value.isEmpty() && !isMissing(value))
                 .distinct()
@@ -546,11 +550,13 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         GenericDataProvider dataProvider = new GenericDataProvider(allCasaData, "ContractFeature_id");
         casaGrid.setDataProvider(dataProvider);
 
-        List<String> listOfCLTVCategoryName = allCasaData.stream()
+        /*List<String> listOfCLTVCategoryName = allCasaData.stream()
                 .map(CasaTerm::getCltvCategoryName)
                 .filter(value ->  value != null && !value.isEmpty() && !isMissing(value))
                 .distinct()
                 .collect(Collectors.toList());
+         */
+
 
         casaGrid.addClassNames("casa-grid");
         casaGrid.setSizeFull();
@@ -570,7 +576,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
 
 
         casaGrid.addComponentColumn(CasaTerm -> {
-            if (isMissing(CasaTerm.getCltvCategoryName())) {
+
                 ComboBox<String> comboBoxCategory = new ComboBox<>();
                 comboBoxCategory.setPlaceholder("select or enter value...");
                 if (listOfCLTVCategoryName != null && !listOfCLTVCategoryName.isEmpty()) {
@@ -592,10 +598,18 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
                 });
 
                 return comboBoxCategory;
-            } else {
-                return new Text(getValidValue(CasaTerm.getCltvCategoryName()));
-            }
+
         }).setHeader("CLTV_Category_Name").setFlexGrow(0).setWidth("300px").setResizable(true);
+
+
+        casaGrid.addColumn(
+                new ComponentRenderer<>(Button::new, (button, casaTerm) -> {
+                    button.addThemeVariants(ButtonVariant.LUMO_ICON,
+                            ButtonVariant.LUMO_SUCCESS,
+                            ButtonVariant.LUMO_TERTIARY);
+                    button.addClickListener(e -> System.out.println("Save: " + casaTerm.getContractFeatureId().toString() + " with Category: " + casaTerm.getCltvCategoryName()));
+                    button.setIcon(new Icon(VaadinIcon.CARET_SQUARE_RIGHT_O));
+                })).setHeader("get entry");
 
 
         casaGrid.getColumns().forEach(col -> col.setAutoWidth(true));

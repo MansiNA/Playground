@@ -773,48 +773,38 @@ public class ProjectConnectionService {
 
                 jdbcTemplate.setDataSource(ds);
 
-                listOfTermData = jdbcTemplate.query(
+/*                listOfTermData = jdbcTemplate.query(
                         sqlQuery,
                         new BeanPropertyRowMapper(CasaTerm.class));
 
                 System.out.println("CASA_TERMS eingelesen");
+*/
 
-
-
-            /*
             // Create a RowMapper to map the query result to a CLTVInflow object
-            RowMapper<CLTVInflow> rowMapper = (rs, rowNum) -> {
-                CLTVInflow cltvInflow = new CLTVInflow();
-                cltvInflow.setContractFeatureId(rs.getLong("ContractFeature_id"));
-                cltvInflow.setAttributeClassesId(rs.getLong("AttributeClasses_ID"));
-                cltvInflow.setCfTypeClassName(rs.getString("CF_TYPE_CLASS_NAME"));
-                cltvInflow.setAttributeClassesName(rs.getString("AttributeClasses_NAME"));
-                cltvInflow.setContractFeatureSubCategoryName(rs.getString("ContractFeatureSubCategory_Name"));
-                cltvInflow.setContractFeatureName(rs.getString("ContractFeature_Name"));
-                cltvInflow.setCfTypeName(rs.getString("CF_TYPE_NAME"));
-                cltvInflow.setCfDurationInMonth(rs.getString("CF_Duration_in_Month"));
-                cltvInflow.setConnectType(rs.getString("Connect_Type"));
-                cltvInflow.setCltvCategoryName(rs.getString("CLTV_Category_Name"));
-                cltvInflow.setControllingBrandingDetailed(rs.getString("Controlling_Branding_Detailed"));
-                cltvInflow.setControllingBranding(rs.getString("Controlling_Branding"));
-                cltvInflow.setUser(rs.getString("User"));
-                cltvInflow.setCltvChargeName(rs.getString("CLTV_Charge_Name"));
+            RowMapper<CasaTerm> rowMapper = (rs, rowNum) -> {
+                CasaTerm casaTerm = new CasaTerm();
+                casaTerm.setContractFeatureId(rs.getLong("CONTRACTFEATURE_ID"));
+                casaTerm.setAttributeClassesId(rs.getLong("ATTRIBUTECLASSES_ID"));
+                casaTerm.setAttributeClassesName(rs.getString("ATTRIBUTECLASSES_NAME"));
+                casaTerm.setConnectType(rs.getString("CONNECT_TYPE"));
+                casaTerm.setCfTypeClassName(rs.getString("CF_TYPE_CLASS_NAME"));
+                casaTerm.setTermName(rs.getString("TERM_NAME"));
 
-                return cltvInflow;
+                return casaTerm;
             };
 
-            List<CLTVInflow> fetchedData = jdbcTemplate.query(sqlQuery, rowMapper);
+            List<CasaTerm> fetchedData = jdbcTemplate.query(sqlQuery, rowMapper);
 
             return fetchedData;
 
-             */
+
         } catch (Exception ex) {
             ex.printStackTrace();
             errorMessage = handleDatabaseError(ex);
             return Collections.emptyList();
         }
 
-        return listOfTermData;
+       // return listOfTermData;
     }
 
     public List<CLTVInflow> getAllCLTVInflow(String tableName, String dbUrl, String dbUser, String dbPassword) {
