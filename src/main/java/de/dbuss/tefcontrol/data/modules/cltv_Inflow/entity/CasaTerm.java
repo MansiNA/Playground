@@ -17,23 +17,18 @@ public class CasaTerm {
     @Column(name = "AttributeClasses_ID")
     private Long attributeClassesId;
 
-    @Column(name = "CF_TYPE_CLASS_NAME")
-    private String cfTypeClassName;
-
     @Column(name = "AttributeClasses_NAME")
     private String attributeClassesName;
 
-    @Column(name = "ContractFeatureSubCategory_Name")
-    private String contractFeatureSubCategoryName;
-
-    @Column(name = "ContractFeature_Name")
-    private String contractFeatureName;
-
-    @Column(name = "CF_TYPE_NAME")
-    private String cfTypeName;
-
     @Column(name = "Connect_Type")
     private String connectType;
+
+    @Column(name = "CF_TYPE_CLASS_NAME")
+    private String cfTypeClassName;
+
+    @Column(name = "Term_Name")
+    private String termName;
+
 
     @Column(name = "CLTV_Category_Name")
     private String cltvCategoryName;

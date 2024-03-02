@@ -30,10 +30,8 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.CannotGetJdbcConnectionException;
 
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.PreparedStatementCreator;
-import org.springframework.jdbc.core.ResultSetExtractor;
-import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.*;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Service;
@@ -759,12 +757,29 @@ public class ProjectConnectionService {
     }
 
     public List<CasaTerm> getAllCASATerms(String tableName, String dbUrl, String dbUser, String dbPassword) {
-        try {
+        List<CasaTerm> listOfTermData;
 
-            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
-            jdbcTemplate = new JdbcTemplate(dataSource);
+            DriverManagerDataSource ds = new DriverManagerDataSource();
+            ds.setUrl("jdbc:oracle:thin:@37.120.189.200:1521:xe");
+            ds.setUsername("SYSTEM");
+            ds.setPassword("Michael123");
 
-            String sqlQuery = "SELECT * FROM " +tableName;
+            String sqlQuery = "SELECT * FROM ekp.CASA_TERMS" ;
+
+            System.out.println("Abfrage CASA_TERMS: ");
+            System.out.println(sqlQuery);
+
+            try {
+
+                jdbcTemplate.setDataSource(ds);
+
+                listOfTermData = jdbcTemplate.query(
+                        sqlQuery,
+                        new BeanPropertyRowMapper(CasaTerm.class));
+
+                System.out.println("CASA_TERMS eingelesen");
+
+
 
             /*
             // Create a RowMapper to map the query result to a CLTVInflow object
@@ -799,7 +814,7 @@ public class ProjectConnectionService {
             return Collections.emptyList();
         }
 
-        return null;
+        return listOfTermData;
     }
 
     public List<CLTVInflow> getAllCLTVInflow(String tableName, String dbUrl, String dbUser, String dbPassword) {

@@ -53,6 +53,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
     //private GridPro<CLTVInflow> missingGrid = new GridPro<>(CLTVInflow.class);
     Button saveButton = new Button(Constants.SAVE);
     private List<CLTVInflow> modifiedCLTVInflow = new ArrayList<>();
+    private List<CasaTerm> modifiedCasa = new ArrayList<>();
     private String tableName;
     private String dbUrl;
     private String dbUser;
@@ -168,6 +169,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
 
         updateGrid();
         updateMissingGrid();
+        updateCasaGrid();
 
         parameterGrid.setVisible(false);
 
@@ -199,14 +201,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         return vl;
     }
 
-    private void configureCASAGrid() {
 
-        List<CasaTerm> allCLTVInflowData = projectConnectionService.getAllCASATerms(tableName, dbUrl, dbUser, dbPassword);
-
-
-
-
-    }
 
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
@@ -253,6 +248,13 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         GenericDataProvider dataProvider = new GenericDataProvider(allCLTVInflowData, "ContractFeature_id");
       //  grid.setItems(allCLTVInflowData);
         grid.setDataProvider(dataProvider);
+    }
+
+    private void updateCasaGrid() {
+
+        List<CasaTerm> allCasaData = projectConnectionService.getAllCASATerms(tableName, dbUrl, dbUser, dbPassword);
+        GenericDataProvider dataProvider = new GenericDataProvider(allCasaData, "ContractFeature_id");
+        casaGrid.setDataProvider(dataProvider);
     }
 
     private void updateMissingGrid() {
@@ -537,6 +539,196 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         columnToggleContextMenu.addColumnToggleItem("User", userColumn);
 
     }
+
+    private void configureCASAGrid() {
+
+        List<CasaTerm> allCasaData = projectConnectionService.getAllCASATerms(tableName, dbUrl, dbUser, dbPassword);
+        GenericDataProvider dataProvider = new GenericDataProvider(allCasaData, "ContractFeature_id");
+        casaGrid.setDataProvider(dataProvider);
+
+        List<String> listOfCLTVCategoryName = allCasaData.stream()
+                .map(CasaTerm::getCltvCategoryName)
+                .filter(value ->  value != null && !value.isEmpty() && !isMissing(value))
+                .distinct()
+                .collect(Collectors.toList());
+
+        casaGrid.addClassNames("casa-grid");
+        casaGrid.setSizeFull();
+        casaGrid.setHeightFull();
+
+        //casaGrid.setColumns("contractFeatureId", "attributeClassesId", "cfTypeClassName", "attributeClassesName", "contractFeatureSubCategoryName","contractFeatureName","cfTypeName","cfDurationInMonth","connectType", "user");
+        casaGrid.setColumns("contractFeatureId", "attributeClassesId", "attributeClassesName", "connectType", "cfTypeClassName", "termName");
+
+
+
+        Grid.Column contractFeatureIdColumn = casaGrid.getColumnByKey("contractFeatureId").setHeader("ContractFeature_id").setFlexGrow(0).setResizable(true);
+        Grid.Column attributeClassesIdColumn = casaGrid.getColumnByKey("attributeClassesId").setHeader("AttributeClasses_ID").setFlexGrow(0).setResizable(true);
+        casaGrid.getColumnByKey("attributeClassesName").setHeader("AttributeClasses_NAME").setFlexGrow(0).setResizable(true);
+        casaGrid.getColumnByKey("connectType").setHeader("Connect_Type").setFlexGrow(0).setResizable(true);
+        casaGrid.getColumnByKey("cfTypeClassName").setHeader("CF_TYPE_CLASS_NAME").setFlexGrow(0).setResizable(true);
+        casaGrid.getColumnByKey("termName").setHeader("Termname").setFlexGrow(0).setResizable(true);
+
+
+        casaGrid.addComponentColumn(CasaTerm -> {
+            if (isMissing(CasaTerm.getCltvCategoryName())) {
+                ComboBox<String> comboBoxCategory = new ComboBox<>();
+                comboBoxCategory.setPlaceholder("select or enter value...");
+                if (listOfCLTVCategoryName != null && !listOfCLTVCategoryName.isEmpty()) {
+                    comboBoxCategory.setItems(listOfCLTVCategoryName);
+                }
+                comboBoxCategory.setAllowCustomValue(true);
+                comboBoxCategory.addCustomValueSetListener(e -> {
+                    String customValue = e.getDetail();
+                    listOfCLTVCategoryName.add(customValue);
+                    comboBoxCategory.setItems(listOfCLTVCategoryName);
+                    comboBoxCategory.setValue(customValue);
+                    CasaTerm.setCltvCategoryName(customValue);
+                    saveModifiedCasa(CasaTerm, customValue);
+                });
+                comboBoxCategory.addValueChangeListener(event -> {
+                    String selectedValue = event.getValue();
+                    CasaTerm.setCltvCategoryName(selectedValue);
+                    saveModifiedCasa(CasaTerm, selectedValue);
+                });
+
+                return comboBoxCategory;
+            } else {
+                return new Text(getValidValue(CasaTerm.getCltvCategoryName()));
+            }
+        }).setHeader("CLTV_Category_Name").setFlexGrow(0).setWidth("300px").setResizable(true);
+
+
+        casaGrid.getColumns().forEach(col -> col.setAutoWidth(true));
+        casaGrid.setSelectionMode(Grid.SelectionMode.NONE);
+
+/*
+        // missingGrid.getColumnByKey("controllingBrandingDetailed").setHeader("Controlling_Branding_Detailed").setFlexGrow(0).setResizable(true);
+        missingGrid.addComponentColumn(cltvInflow -> {
+            if (isMissing(cltvInflow.getControllingBrandingDetailed())) {
+                ComboBox<String> comboBoxBrandingDetailed = new ComboBox<>();
+                comboBoxBrandingDetailed.setPlaceholder("select or enter value...");
+                if (listOfControllingBrandingDetailed != null && !listOfControllingBrandingDetailed.isEmpty()) {
+                    comboBoxBrandingDetailed.setItems(listOfControllingBrandingDetailed);
+                }
+                comboBoxBrandingDetailed.setAllowCustomValue(true);
+                comboBoxBrandingDetailed.addCustomValueSetListener(e -> {
+                    String customValue = e.getDetail();
+                    listOfControllingBrandingDetailed.add(customValue);
+                    comboBoxBrandingDetailed.setItems(listOfControllingBrandingDetailed);
+                    comboBoxBrandingDetailed.setValue(customValue);
+                    cltvInflow.setControllingBrandingDetailed(customValue);
+                    saveModifiedCLTVInflow(cltvInflow, customValue);
+                });
+                comboBoxBrandingDetailed.addValueChangeListener(event -> {
+                    String selectedValue = event.getValue();
+                    cltvInflow.setControllingBrandingDetailed(selectedValue);
+                    saveModifiedCLTVInflow(cltvInflow, selectedValue);
+                });
+
+                return comboBoxBrandingDetailed;
+            } else {
+                return new Text(getValidValue(cltvInflow.getControllingBrandingDetailed()));
+            }
+        }).setHeader("Controlling_Branding_Detailed").setFlexGrow(0).setWidth("300px").setResizable(true);
+
+        // missingGrid.getColumnByKey("controllingBranding").setHeader("Controlling_Branding").setFlexGrow(0).setResizable(true);
+        missingGrid.addComponentColumn(cltvInflow -> {
+            if (isMissing(cltvInflow.getControllingBranding())) {
+                ComboBox<String> comboBoxBranding = new ComboBox<>();
+                comboBoxBranding.setPlaceholder("select or enter value...");
+                if (listOfControllingBranding != null && !listOfControllingBranding.isEmpty()) {
+                    comboBoxBranding.setItems(listOfControllingBranding);
+                }
+                comboBoxBranding.setAllowCustomValue(true);
+                comboBoxBranding.addCustomValueSetListener(e -> {
+                    String customValue = e.getDetail();
+                    listOfControllingBranding.add(customValue);
+                    comboBoxBranding.setItems(listOfControllingBranding);
+                    comboBoxBranding.setValue(customValue);
+                    cltvInflow.setControllingBranding(customValue);
+                    saveModifiedCLTVInflow(cltvInflow, customValue);
+                });
+                comboBoxBranding.addValueChangeListener(event -> {
+                    String selectedValue = event.getValue();
+                    cltvInflow.setControllingBranding(selectedValue);
+                    saveModifiedCLTVInflow(cltvInflow, selectedValue);
+                });
+                return comboBoxBranding;
+            } else {
+                return new Text(getValidValue(cltvInflow.getControllingBranding()));
+            }
+        }).setHeader("Controlling_Branding").setFlexGrow(0).setWidth("300px").setResizable(true);
+
+        Grid.Column userColumn = missingGrid.getColumnByKey("user").setHeader("User").setFlexGrow(0).setResizable(true);
+        // missingGrid.getColumnByKey("cltvChargeName").setHeader("CLTV_Charge_Name").setFlexGrow(0).setResizable(true);
+        missingGrid.addComponentColumn(cltvInflow -> {
+            if (isMissing(cltvInflow.getCltvChargeName())) {
+                ComboBox<String> comboBoxChargeName = new ComboBox<>();
+                comboBoxChargeName.setPlaceholder("select or enter value...");
+                if (listOfCLTVChargeName != null && !listOfCLTVChargeName.isEmpty()) {
+                    comboBoxChargeName.setItems(listOfCLTVChargeName);
+                }
+                comboBoxChargeName.setAllowCustomValue(true);
+                comboBoxChargeName.addCustomValueSetListener(e -> {
+                    String customValue = e.getDetail();
+                    listOfCLTVChargeName.add(customValue);
+                    comboBoxChargeName.setItems(listOfCLTVChargeName);
+                    comboBoxChargeName.setValue(customValue);
+                    cltvInflow.setCltvChargeName(customValue);
+                    saveModifiedCLTVInflow(cltvInflow, customValue);
+                });
+                comboBoxChargeName.addValueChangeListener(event -> {
+                    String selectedValue = event.getValue();
+                    cltvInflow.setCltvChargeName(selectedValue);
+                    saveModifiedCLTVInflow(cltvInflow, selectedValue);
+                });
+
+                return comboBoxChargeName;
+            } else {
+                return new Text(getValidValue(cltvInflow.getCltvChargeName()));
+            }
+        }).setHeader("CLTV_Charge_Name").setFlexGrow(0).setWidth("300px").setResizable(true);
+
+        missingGrid.getColumns().forEach(col -> col.setAutoWidth(true));
+        missingGrid.setSelectionMode(Grid.SelectionMode.NONE);
+        //    missingGrid.setEditOnClick(true);
+
+        // default hide
+        contractFeatureIdColumn.setVisible(false);
+        attributeClassesIdColumn.setVisible(false);
+
+        missingShowHidebtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+        ColumnToggleContextMenu columnToggleContextMenu = new ColumnToggleContextMenu(missingShowHidebtn);
+        columnToggleContextMenu.addColumnToggleItem("ContractFeature_id", contractFeatureIdColumn);
+        columnToggleContextMenu.addColumnToggleItem("AttributeClasses_ID", attributeClassesIdColumn);
+        columnToggleContextMenu.addColumnToggleItem("CF_Duration_in_Month", cfDurationInMonthColumn);
+        columnToggleContextMenu.addColumnToggleItem("User", userColumn);
+
+
+
+
+
+ */
+
+
+
+    }
+
+
+    private void saveModifiedCasa(CasaTerm cltvInflow, String selectedValue) {
+        if(!isMissing(selectedValue)) {
+            if(modifiedCasa.contains(cltvInflow)){
+                modifiedCasa.remove(cltvInflow);
+                modifiedCasa.add(cltvInflow);
+            } else {
+                modifiedCasa.add(cltvInflow);
+            }
+            saveButton.setEnabled(true);
+        } else {
+            Notification.show("Please do not enter Missing value", 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+        }
+    }
+
     private boolean isMissing(String value) {
         // return value == null || value.trim().isEmpty() || "missing".equals(value);
         return "missing".equals(value);
