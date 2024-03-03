@@ -201,7 +201,8 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver,
             gridAgentJobs.setItems(listOfAgent);
 
             if (listOfAgent.isEmpty() && !projectConnectionService.getErrorMessage().isEmpty()) {
-                Notification.show("Agent not found: " + projectConnectionService.getErrorMessage(), 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                //Notification.show("Agent not found: " + projectConnectionService.getErrorMessage(), 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                System.out.println("No Agent-Jobs found for project " + projects.get().getId());
             }
         }
        // projects.ifPresent(value -> gridAgentJobs.setItems(agentJobsService.findbyJobName(value.getAgent_Jobs())));
