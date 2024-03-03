@@ -49,7 +49,9 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
     private final ProjectConnectionService projectConnectionService;
     private Crud<CLTVInflow> crud;
     private Grid<CLTVInflow> grid;
-    //private GridPro<CLTVInflow> missingGrid = new GridPro<>(CLTVInflow.class);
+
+    List<CLTVInflow> allCLTVInflowData;
+
     private Grid<CLTVInflow> missingGrid = new Grid(CLTVInflow.class);
     private Grid<CasaTerm> casaGrid = new Grid(CasaTerm.class);
 
@@ -58,9 +60,20 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
     private List<CLTVInflow> modifiedCLTVInflow = new ArrayList<>();
     private List<CasaTerm> modifiedCasa = new ArrayList<>();
     private String tableName;
+    private String casaTableName;
+    private String casaDbUrl;
+
+    private String casaDbUser;
+
+    private String casaDbPassword;
     private String dbUrl;
     private String dbUser;
     private String dbPassword;
+    String missing_keyword= "nicht definiert";
+    private String dbUrlOracle;
+    private String dbUserOracle;
+    private String dbPasswordOracle;
+
     private Button missingShowHidebtn = new Button("Show/Hide Columns");
     private Button casaShowHidebtn = new Button("Show/Hide Columns");
     private Button allEntriesShowHidebtn = new Button("Show/Hide Columns");
@@ -101,11 +114,21 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
                     dbPassword = projectParameter.getValue();
                 }else if (Constants.TABLE.equals(projectParameter.getName())) {
                     tableName = projectParameter.getValue();
-                }
+                }else if (Constants.CASA_TABLE.equals(projectParameter.getName())) {
+                    casaTableName = projectParameter.getValue();
+                }else if (Constants.CASA_DB_URL.equals(projectParameter.getName())) {
+                    casaDbUrl = projectParameter.getValue();
+                }else if (Constants.CASA_DB_USER.equals(projectParameter.getName())) {
+                    casaDbUser = projectParameter.getValue();
+                }else if (Constants.CASA_DB_PASSWORD.equals(projectParameter.getName())) {
+                    casaDbPassword = projectParameter.getValue();
+        }
           //  }
         }
 
         dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
+
+
      //   Text databaseDetail = new Text("Connected to: "+ dbServer+ ", Database: " + dbName+ ", Table: " + tableName);
         setProjectParameterGrid(filteredProjectParameters);
         //Componente QS-Grid:
@@ -173,6 +196,9 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
 
         updateGrid();
         updateMissingGrid();
+
+        allCLTVInflowData = projectConnectionService.getAllCLTVInflow(tableName, dbUrl, dbUser, dbPassword);
+
         updateCasaGrid();
 
         parameterGrid.setVisible(false);
@@ -248,7 +274,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
     }
     private void updateGrid() {
 
-        List<CLTVInflow> allCLTVInflowData = projectConnectionService.getAllCLTVInflow(tableName, dbUrl, dbUser, dbPassword);
+        allCLTVInflowData = projectConnectionService.getAllCLTVInflow(tableName, dbUrl, dbUser, dbPassword);
         GenericDataProvider dataProvider = new GenericDataProvider(allCLTVInflowData, "ContractFeature_id");
       //  grid.setItems(allCLTVInflowData);
         grid.setDataProvider(dataProvider);
@@ -256,19 +282,47 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
 
     private void updateCasaGrid() {
 
-        List<CasaTerm> allCasaData = projectConnectionService.getAllCASATerms(tableName, dbUrl, dbUser, dbPassword);
+        List<CasaTerm> allCasaData = projectConnectionService.getAllCASATerms(casaTableName, casaDbUrl, casaDbUser, casaDbPassword);
+
+        List<CasaTerm> existingEntries=new ArrayList<>();
+
+        if(allCLTVInflowData!=null) {
+
+            for (CasaTerm employee : allCasaData) {
+                for (CLTVInflow secondEmployee : allCLTVInflowData) {
+                    if (employee.getContractFeatureId().equals(secondEmployee.getContractFeatureId())) {
+                        System.out.println("Bereits vorhanden: " + employee.getContractFeatureId() + ", CF-ID: " + employee.getContractFeatureId());
+                        existingEntries.add(employee);
+                        break;
+                    }
+                }
+            }
+        }
+        else {
+            System.out.println("allCLTVInflowData is null!!");
+        }
+
+        allCasaData.removeAll(existingEntries);
+
+
+
+
+
+
         GenericDataProvider dataProvider = new GenericDataProvider(allCasaData, "ContractFeature_id");
         casaGrid.setDataProvider(dataProvider);
     }
 
     private void updateMissingGrid() {
 
+
+
         List<CLTVInflow> allCLTVInflowData = projectConnectionService.getAllCLTVInflow(tableName, dbUrl, dbUser, dbPassword);
         List<CLTVInflow> missingList = allCLTVInflowData.stream()
-                .filter(item -> "missing".equals(item.getCltvCategoryName()) ||
-                        "missing".equals(item.getControllingBrandingDetailed()) ||
-                        "missing".equals(item.getControllingBranding()) ||
-                        "missing".equals(item.getCltvChargeName()))
+                .filter(item -> missing_keyword.equals(item.getCltvCategoryName()) ||
+                        missing_keyword.equals(item.getControllingBrandingDetailed()) ||
+                        missing_keyword.equals(item.getControllingBranding()) ||
+                        missing_keyword.equals(item.getCltvChargeName()))
                 .collect(Collectors.toList());
         missingGrid.setItems(missingList);
     }
@@ -306,42 +360,35 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         // if setcolumn then filter not display
         // grid.setColumns("contractFeatureId", "attributeClassesId", "cfTypeClassName", "attributeClassesName", "contractFeatureSubCategoryName","contractFeatureName","cfTypeName","cfDurationInMonth","connectType", "cltvCategoryName","controllingBrandingDetailed", "controllingBranding", "user", "cltvChargeName");
 
-        Grid.Column contractFeatureIdColumn = grid.getColumnByKey("contractFeatureId").setHeader("ContractFeature_id").setFlexGrow(0).setResizable(true);
+        Grid.Column contractFeatureIdColumn = grid.getColumnByKey("contractFeatureId").setHeader("CF_ID").setFlexGrow(0).setResizable(true);
+        Grid.Column contractFeatureNameColumn = grid.getColumnByKey("contractFeatureName").setHeader("CF_Name").setFlexGrow(0).setResizable(true);
+        Grid.Column cfTypeNameColumn = grid.getColumnByKey("cfTypeName").setHeader("CF_TYPE_NAME").setFlexGrow(0).setResizable(true);
+        Grid.Column contractFeatureSubCategoryNameColumn = grid.getColumnByKey("contractFeatureSubCategoryName").setHeader("CF_SubCategory_Name").setFlexGrow(0).setResizable(true);
+        Grid.Column cfTypeClassNameColumn = grid.getColumnByKey("cfTypeClassName").setHeader("CF_TYPE_CLASS_NAME").setFlexGrow(0).setResizable(true);
         Grid.Column attributeClassesIdColumn = grid.getColumnByKey("attributeClassesId").setHeader("AttributeClasses_ID").setFlexGrow(0).setResizable(true);
-        grid.getColumnByKey("cfTypeClassName").setHeader("CF_TYPE_CLASS_NAME").setFlexGrow(0).setResizable(true);
-        grid.getColumnByKey("attributeClassesName").setHeader("AttributeClasses_NAME").setFlexGrow(0).setResizable(true);
-        grid.getColumnByKey("contractFeatureSubCategoryName").setHeader("ContractFeatureSubCategory_Name").setFlexGrow(0).setResizable(true);
-        grid.getColumnByKey("contractFeatureName").setHeader("ContractFeature_Name").setFlexGrow(0).setResizable(true);
-        grid.getColumnByKey("cfTypeName").setHeader("CF_TYPE_NAME").setFlexGrow(0).setResizable(true);
+        Grid.Column attributeClassesNameColumn = grid.getColumnByKey("attributeClassesName").setHeader("AttributeClasses_NAME").setFlexGrow(0).setResizable(true);
         Grid.Column cfDurationInMonthColumn = grid.getColumnByKey("cfDurationInMonth").setHeader("CF_Duration_in_Month").setFlexGrow(0).setResizable(true);
-        grid.getColumnByKey("connectType").setHeader("Connect_Type").setFlexGrow(0).setResizable(true);
+        Grid.Column connectTypeColumn = grid.getColumnByKey("connectType").setHeader("Connect_Type").setFlexGrow(0).setResizable(true);
         grid.getColumnByKey("cltvCategoryName").setHeader("CLTV_Category_Name").setFlexGrow(0).setResizable(true);
         grid.getColumnByKey("controllingBrandingDetailed").setHeader("Controlling_Branding_Detailed").setFlexGrow(0).setResizable(true);
         grid.getColumnByKey("controllingBranding").setHeader("Controlling_Branding").setFlexGrow(0).setResizable(true);
-        Grid.Column userColumn = grid.getColumnByKey("user").setHeader("User").setFlexGrow(0).setResizable(true);
         grid.getColumnByKey("cltvChargeName").setHeader("CLTV_Charge_Name").setFlexGrow(0).setResizable(true);
+        Grid.Column userColumn = grid.getColumnByKey("user").setHeader("User").setFlexGrow(0).setResizable(true);
 
         grid.getColumns().forEach(col -> col.setAutoWidth(true));
         grid.removeColumn(grid.getColumnByKey(EDIT_COLUMN));
         grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         grid.addThemeVariants(GridVariant.LUMO_COMPACT);
 
+
         // set column order
         List<Grid.Column<CLTVInflow>> columnOrder = Arrays.asList(
-                contractFeatureIdColumn,
-                attributeClassesIdColumn,
-                grid.getColumnByKey("cfTypeClassName"),
-                grid.getColumnByKey("attributeClassesName"),
-                grid.getColumnByKey("contractFeatureSubCategoryName"),
-                grid.getColumnByKey("contractFeatureName"),
-                grid.getColumnByKey("cfTypeName"),
-                cfDurationInMonthColumn,
-                grid.getColumnByKey("connectType"),
+                contractFeatureIdColumn,contractFeatureNameColumn,cfTypeNameColumn,contractFeatureSubCategoryNameColumn,cfTypeClassNameColumn,attributeClassesIdColumn,attributeClassesNameColumn,cfDurationInMonthColumn,connectTypeColumn,
                 grid.getColumnByKey("cltvCategoryName"),
                 grid.getColumnByKey("controllingBrandingDetailed"),
                 grid.getColumnByKey("controllingBranding"),
-                userColumn,
-                grid.getColumnByKey("cltvChargeName")
+                grid.getColumnByKey("cltvChargeName"),
+                userColumn
         );
 
         grid.setColumnOrder(columnOrder);
@@ -349,12 +396,20 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         // default hide
         contractFeatureIdColumn.setVisible(false);
         attributeClassesIdColumn.setVisible(false);
+        attributeClassesNameColumn.setVisible(false);
+        cfDurationInMonthColumn.setVisible(false);
+        userColumn.setVisible(false);
+        connectTypeColumn.setVisible(false);
 
         allEntriesShowHidebtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
         ColumnToggleContextMenu columnToggleContextMenu = new ColumnToggleContextMenu(allEntriesShowHidebtn);
         columnToggleContextMenu.addColumnToggleItem("ContractFeature_id", contractFeatureIdColumn);
         columnToggleContextMenu.addColumnToggleItem("AttributeClasses_ID", attributeClassesIdColumn);
+        columnToggleContextMenu.addColumnToggleItem("AttributeClasses_Name", attributeClassesNameColumn);
+
+
         columnToggleContextMenu.addColumnToggleItem("CF_Duration_in_Month", cfDurationInMonthColumn);
+        columnToggleContextMenu.addColumnToggleItem("Connect Type", connectTypeColumn);
         columnToggleContextMenu.addColumnToggleItem("User", userColumn);
 
     }
@@ -400,17 +455,18 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         missingGrid.setSizeFull();
         missingGrid.setHeightFull();
 
-        missingGrid.setColumns("contractFeatureId", "attributeClassesId", "cfTypeClassName", "attributeClassesName", "contractFeatureSubCategoryName","contractFeatureName","cfTypeName","cfDurationInMonth","connectType", "user");
+        missingGrid.setColumns("contractFeatureId", "contractFeatureName","cfTypeName", "contractFeatureSubCategoryName", "cfTypeClassName", "attributeClassesId", "attributeClassesName","cfDurationInMonth","connectType", "user");
 
-        Grid.Column contractFeatureIdColumn = missingGrid.getColumnByKey("contractFeatureId").setHeader("ContractFeature_id").setFlexGrow(0).setResizable(true);
+        Grid.Column contractFeatureIdColumn = missingGrid.getColumnByKey("contractFeatureId").setHeader("CF_ID").setFlexGrow(0).setResizable(true);
+        Grid.Column contractFeatureNameColumn = missingGrid.getColumnByKey("contractFeatureName").setHeader("CF_Name").setFlexGrow(0).setResizable(true);
         Grid.Column attributeClassesIdColumn = missingGrid.getColumnByKey("attributeClassesId").setHeader("AttributeClasses_ID").setFlexGrow(0).setResizable(true);
-        missingGrid.getColumnByKey("cfTypeClassName").setHeader("CF_TYPE_CLASS_NAME").setFlexGrow(0).setResizable(true);
-        missingGrid.getColumnByKey("attributeClassesName").setHeader("AttributeClasses_NAME").setFlexGrow(0).setResizable(true);
-        missingGrid.getColumnByKey("contractFeatureSubCategoryName").setHeader("ContractFeatureSubCategory_Name").setFlexGrow(0).setResizable(true);
-        missingGrid.getColumnByKey("contractFeatureName").setHeader("ContractFeature_Name").setFlexGrow(0).setResizable(true);
-        missingGrid.getColumnByKey("cfTypeName").setHeader("CF_TYPE_NAME").setFlexGrow(0).setResizable(true);
+        Grid.Column cfTypeClassNameColumn = missingGrid.getColumnByKey("cfTypeClassName").setHeader("CF_TYPE_CLASS_NAME").setFlexGrow(0).setResizable(true);
+        Grid.Column attributeClassesNameColumn = missingGrid.getColumnByKey("attributeClassesName").setHeader("AttributeClasses_NAME").setFlexGrow(0).setResizable(true);
+        Grid.Column contractFeatureSubCategoryNameColumn = missingGrid.getColumnByKey("contractFeatureSubCategoryName").setHeader("CF_SubCategory_Name").setFlexGrow(0).setResizable(true);
+        Grid.Column cfTypeNameColumn = missingGrid.getColumnByKey("cfTypeName").setHeader("CF_TYPE_NAME").setFlexGrow(0).setResizable(true);
         Grid.Column cfDurationInMonthColumn = missingGrid.getColumnByKey("cfDurationInMonth").setHeader("CF_Duration_in_Month").setFlexGrow(0).setResizable(true);
-        missingGrid.getColumnByKey("connectType").setHeader("Connect_Type").setFlexGrow(0).setResizable(true);
+        Grid.Column connectTypeColumn = missingGrid.getColumnByKey("connectType").setHeader("Connect_Type").setFlexGrow(0).setResizable(true);
+
         // missingGrid.getColumnByKey("cltvCategoryName").setHeader("CLTV_Category_Name").setFlexGrow(0).setResizable(true);
         missingGrid.addComponentColumn(cltvInflow -> {
             if (isMissing(cltvInflow.getCltvCategoryName())) {
@@ -532,13 +588,27 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
     //    missingGrid.setEditOnClick(true);
 
         // default hide
-        contractFeatureIdColumn.setVisible(false);
+      //  contractFeatureIdColumn.setVisible(false);
         attributeClassesIdColumn.setVisible(false);
+      //  cfTypeClassNameColumn.setVisible(false);
+      //  attributeClassesNameColumn.setVisible(false);
+        cfDurationInMonthColumn.setVisible(false);
+//        contractFeatureSubCategoryNameColumn.setVisible(false);
+//        contractFeatureNameColumn.setVisible(false);
+        cfTypeNameColumn.setVisible(false);
+        connectTypeColumn.setVisible(false);
+        userColumn.setVisible(false);
 
         missingShowHidebtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
         ColumnToggleContextMenu columnToggleContextMenu = new ColumnToggleContextMenu(missingShowHidebtn);
-        columnToggleContextMenu.addColumnToggleItem("ContractFeature_id", contractFeatureIdColumn);
+        columnToggleContextMenu.addColumnToggleItem("CF_ID", contractFeatureIdColumn);
         columnToggleContextMenu.addColumnToggleItem("AttributeClasses_ID", attributeClassesIdColumn);
+        columnToggleContextMenu.addColumnToggleItem("AttributeClasses_Name", attributeClassesNameColumn);
+        columnToggleContextMenu.addColumnToggleItem("CF_SubCategory_Name", contractFeatureSubCategoryNameColumn);
+        columnToggleContextMenu.addColumnToggleItem("CF_Name", contractFeatureNameColumn);
+        columnToggleContextMenu.addColumnToggleItem("CF_Type_Name", cfTypeNameColumn);
+        columnToggleContextMenu.addColumnToggleItem("Connect_Type", connectTypeColumn);
+        columnToggleContextMenu.addColumnToggleItem("CF_Type_Class_Name", cfTypeClassNameColumn);
         columnToggleContextMenu.addColumnToggleItem("CF_Duration_in_Month", cfDurationInMonthColumn);
         columnToggleContextMenu.addColumnToggleItem("User", userColumn);
 
@@ -546,7 +616,25 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
 
     private void configureCASAGrid() {
 
-        List<CasaTerm> allCasaData = projectConnectionService.getAllCASATerms(tableName, dbUrl, dbUser, dbPassword);
+        List<CasaTerm> allCasaData = projectConnectionService.getAllCASATerms(casaTableName, casaDbUrl, casaDbUser, casaDbPassword);
+
+        if(allCLTVInflowData!=null) {
+
+            for (CasaTerm employee : allCasaData) {
+                for (CLTVInflow secondEmployee : allCLTVInflowData) {
+                    if (employee.getContractFeatureId() == secondEmployee.getContractFeatureId()) {
+                        System.out.println("Bereits vorhanden: " + employee.getContractFeatureId() + ", CF-ID: " + employee.getContractFeatureId());
+                        break;
+                    }
+                }
+            }
+        }
+        else {
+            System.out.println("allCLTVInflowData is null!!");
+        }
+
+
+
         GenericDataProvider dataProvider = new GenericDataProvider(allCasaData, "ContractFeature_id");
         casaGrid.setDataProvider(dataProvider);
 
@@ -608,7 +696,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
                             ButtonVariant.LUMO_SUCCESS,
                             ButtonVariant.LUMO_TERTIARY);
                     button.addClickListener(e -> System.out.println("Save: " + casaTerm.getContractFeatureId().toString() + " with Category: " + casaTerm.getCltvCategoryName()));
-                    button.setIcon(new Icon(VaadinIcon.CARET_SQUARE_RIGHT_O));
+                    button.setIcon(new Icon(VaadinIcon.CLOUD_DOWNLOAD_O));
                 })).setHeader("get entry");
 
 
@@ -745,7 +833,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
 
     private boolean isMissing(String value) {
         // return value == null || value.trim().isEmpty() || "missing".equals(value);
-        return "missing".equals(value);
+        return missing_keyword.equals(value);
     }
 
     private String getValidValue (String value) {

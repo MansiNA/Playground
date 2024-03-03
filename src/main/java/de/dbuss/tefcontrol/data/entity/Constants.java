@@ -15,6 +15,12 @@ public class Constants {
     public static final String DB_PASSWORD = "DB_Password";
     public static final String DB_JOBS = "DBJobs";
     public static final String TABLE = "Table";
+
+    public static final String CASA_TABLE = "CASA_Table";
+    public static final String CASA_DB_URL = "CASA_DB_URL";
+    public static final String CASA_DB_USER = "CASA_DB_User";
+    public static final String CASA_DB_PASSWORD = "CASA_DB_Password";
+
     public static  final String ZEILE = "zeile";
     public static final String Default_Mapping = "Default-Mapping";
     public static  final String INFO = "INFO";

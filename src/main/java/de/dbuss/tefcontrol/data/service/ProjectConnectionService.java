@@ -760,18 +760,19 @@ public class ProjectConnectionService {
         List<CasaTerm> listOfTermData;
 
             DriverManagerDataSource ds = new DriverManagerDataSource();
-            ds.setUrl("jdbc:oracle:thin:@37.120.189.200:1521:xe");
-            ds.setUsername("SYSTEM");
-            ds.setPassword("Michael123");
+            ds.setUrl(dbUrl);
+            ds.setUsername(dbUser);
+            ds.setPassword(dbPassword);
 
-            String sqlQuery = "SELECT * FROM ekp.CASA_TERMS" ;
+            String sqlQuery = "SELECT * FROM " + tableName ;
 
-            System.out.println("Abfrage CASA_TERMS: ");
             System.out.println(sqlQuery);
 
             try {
 
-                jdbcTemplate.setDataSource(ds);
+
+                jdbcTemplate = new JdbcTemplate(ds);
+              //  jdbcTemplate.setDataSource(ds);
 
 /*                listOfTermData = jdbcTemplate.query(
                         sqlQuery,
