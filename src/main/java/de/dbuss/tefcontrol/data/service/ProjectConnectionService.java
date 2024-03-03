@@ -597,7 +597,7 @@ public class ProjectConnectionService {
                     String [] errorMessage = e.getMessage().split(";");
                     return errorMessage[errorMessage.length - 1];
                 }
-                return "Database error: " + e.getMessage();
+                return "Database error in handleDatabaseError: " + e.getMessage();
             }
         } else {
             e.printStackTrace();
