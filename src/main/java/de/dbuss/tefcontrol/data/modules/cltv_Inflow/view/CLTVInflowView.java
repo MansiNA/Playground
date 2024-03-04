@@ -79,6 +79,9 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
     private Button allEntriesShowHidebtn = new Button("Show/Hide Columns");
     private int projectId;
     List<String> listOfCLTVCategoryName;
+    //List<String> listOfControllingBrandingDetailed;
+    List<String> listOfControllingBranding;
+    List<String> listOfCLTVChargeName;
 
     private Boolean isVisible = false;
     Grid<ProjectParameter> parameterGrid = new Grid<>(ProjectParameter.class, false);
@@ -320,7 +323,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         List<CLTVInflow> allCLTVInflowData = projectConnectionService.getAllCLTVInflow(tableName, dbUrl, dbUser, dbPassword);
         List<CLTVInflow> missingList = allCLTVInflowData.stream()
                 .filter(item -> missing_keyword.equals(item.getCltvCategoryName()) ||
-                        missing_keyword.equals(item.getControllingBrandingDetailed()) ||
+             //           missing_keyword.equals(item.getControllingBrandingDetailed()) ||
                         missing_keyword.equals(item.getControllingBranding()) ||
                         missing_keyword.equals(item.getCltvChargeName()))
                 .collect(Collectors.toList());
@@ -370,7 +373,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         Grid.Column cfDurationInMonthColumn = grid.getColumnByKey("cfDurationInMonth").setHeader("CF_Duration_in_Month").setFlexGrow(0).setResizable(true);
         Grid.Column connectTypeColumn = grid.getColumnByKey("connectType").setHeader("Connect_Type").setFlexGrow(0).setResizable(true);
         grid.getColumnByKey("cltvCategoryName").setHeader("CLTV_Category_Name").setFlexGrow(0).setResizable(true);
-        grid.getColumnByKey("controllingBrandingDetailed").setHeader("Controlling_Branding_Detailed").setFlexGrow(0).setResizable(true);
+      //  grid.getColumnByKey("controllingBrandingDetailed").setHeader("Controlling_Branding_Detailed").setFlexGrow(0).setResizable(true);
         grid.getColumnByKey("controllingBranding").setHeader("Controlling_Branding").setFlexGrow(0).setResizable(true);
         grid.getColumnByKey("cltvChargeName").setHeader("CLTV_Charge_Name").setFlexGrow(0).setResizable(true);
         Grid.Column userColumn = grid.getColumnByKey("user").setHeader("User").setFlexGrow(0).setResizable(true);
@@ -385,7 +388,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         List<Grid.Column<CLTVInflow>> columnOrder = Arrays.asList(
                 contractFeatureIdColumn,contractFeatureNameColumn,cfTypeNameColumn,contractFeatureSubCategoryNameColumn,cfTypeClassNameColumn,attributeClassesIdColumn,attributeClassesNameColumn,cfDurationInMonthColumn,connectTypeColumn,
                 grid.getColumnByKey("cltvCategoryName"),
-                grid.getColumnByKey("controllingBrandingDetailed"),
+        //        grid.getColumnByKey("controllingBrandingDetailed"),
                 grid.getColumnByKey("controllingBranding"),
                 grid.getColumnByKey("cltvChargeName"),
                 userColumn
@@ -427,13 +430,13 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         List<CLTVInflow> allCLTVInflowData = projectConnectionService.getAllCLTVInflow(tableName, dbUrl, dbUser, dbPassword);
 
      //   String missing = "missing";
-        List<String> listOfControllingBrandingDetailed = allCLTVInflowData.stream()
+    /*    listOfControllingBrandingDetailed = allCLTVInflowData.stream()
                 .map(CLTVInflow::getControllingBrandingDetailed)
                 .filter(value -> value != null && !value.isEmpty() && !isMissing(value))
                 .distinct()
                 .collect(Collectors.toList());
-
-        List<String> listOfControllingBranding = allCLTVInflowData.stream()
+*/
+        listOfControllingBranding = allCLTVInflowData.stream()
                 .map(CLTVInflow::getControllingBranding)
                 .filter(value -> value != null && !value.isEmpty() && !isMissing(value))
                 .distinct()
@@ -445,7 +448,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
                 .distinct()
                 .collect(Collectors.toList());
 
-        List<String> listOfCLTVChargeName = allCLTVInflowData.stream()
+        listOfCLTVChargeName = allCLTVInflowData.stream()
                 .map(CLTVInflow::getCltvChargeName)
                 .filter(value ->  value != null && !value.isEmpty() && !isMissing(value))
                 .distinct()
@@ -456,6 +459,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         missingGrid.setHeightFull();
 
         missingGrid.setColumns("contractFeatureId", "contractFeatureName","cfTypeName", "contractFeatureSubCategoryName", "cfTypeClassName", "attributeClassesId", "attributeClassesName","cfDurationInMonth","connectType", "user");
+
 
         Grid.Column contractFeatureIdColumn = missingGrid.getColumnByKey("contractFeatureId").setHeader("CF_ID").setFlexGrow(0).setResizable(true);
         Grid.Column contractFeatureNameColumn = missingGrid.getColumnByKey("contractFeatureName").setHeader("CF_Name").setFlexGrow(0).setResizable(true);
@@ -497,7 +501,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         }).setHeader("CLTV_Category_Name").setFlexGrow(0).setWidth("300px").setResizable(true);
 
         // missingGrid.getColumnByKey("controllingBrandingDetailed").setHeader("Controlling_Branding_Detailed").setFlexGrow(0).setResizable(true);
-        missingGrid.addComponentColumn(cltvInflow -> {
+ /*       missingGrid.addComponentColumn(cltvInflow -> {
             if (isMissing(cltvInflow.getControllingBrandingDetailed())) {
                 ComboBox<String> comboBoxBrandingDetailed = new ComboBox<>();
                 comboBoxBrandingDetailed.setPlaceholder("select or enter value...");
@@ -523,7 +527,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
             } else {
                 return new Text(getValidValue(cltvInflow.getControllingBrandingDetailed()));
             }
-        }).setHeader("Controlling_Branding_Detailed").setFlexGrow(0).setWidth("300px").setResizable(true);
+        }).setHeader("Controlling_Branding_Detailed").setFlexGrow(0).setWidth("300px").setResizable(true);*/
 
         // missingGrid.getColumnByKey("controllingBranding").setHeader("Controlling_Branding").setFlexGrow(0).setResizable(true);
         missingGrid.addComponentColumn(cltvInflow -> {
@@ -688,6 +692,63 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
                 return comboBoxCategory;
 
         }).setHeader("CLTV_Category_Name").setFlexGrow(0).setWidth("300px").setResizable(true);
+
+        casaGrid.addComponentColumn(CasaTerm -> {
+
+            ComboBox<String> comboBoxControllingBranding = new ComboBox<>();
+            comboBoxControllingBranding.setPlaceholder("select or enter value...");
+            if (listOfControllingBranding != null && !listOfControllingBranding.isEmpty()) {
+                comboBoxControllingBranding.setItems(listOfControllingBranding);
+            }
+            comboBoxControllingBranding.setAllowCustomValue(true);
+            comboBoxControllingBranding.addCustomValueSetListener(e -> {
+                String customValue = e.getDetail();
+                listOfControllingBranding.add(customValue);
+                comboBoxControllingBranding.setItems(listOfControllingBranding);
+                comboBoxControllingBranding.setValue(customValue);
+                CasaTerm.setCltvCategoryName(customValue);
+                saveModifiedCasa(CasaTerm, customValue);
+            });
+            comboBoxControllingBranding.addValueChangeListener(event -> {
+                String selectedValue = event.getValue();
+                CasaTerm.setControllingBranding(selectedValue);
+                saveModifiedCasa(CasaTerm, selectedValue);
+            });
+
+            return comboBoxControllingBranding;
+
+        }).setHeader("ControllingBranding").setFlexGrow(0).setWidth("300px").setResizable(true);
+
+
+        casaGrid.addComponentColumn(CasaTerm -> {
+
+            ComboBox<String> comboBoxCLTVChargeName = new ComboBox<>();
+            comboBoxCLTVChargeName.setPlaceholder("select or enter value...");
+            if (listOfCLTVChargeName != null && !listOfCLTVChargeName.isEmpty()) {
+                comboBoxCLTVChargeName.setItems(listOfCLTVChargeName);
+            }
+            comboBoxCLTVChargeName.setAllowCustomValue(true);
+            comboBoxCLTVChargeName.addCustomValueSetListener(e -> {
+                String customValue = e.getDetail();
+                listOfCLTVChargeName.add(customValue);
+                comboBoxCLTVChargeName.setItems(listOfCLTVChargeName);
+                comboBoxCLTVChargeName.setValue(customValue);
+                CasaTerm.setCltvChargeName(customValue);
+                saveModifiedCasa(CasaTerm, customValue);
+            });
+            comboBoxCLTVChargeName.addValueChangeListener(event -> {
+                String selectedValue = event.getValue();
+                CasaTerm.setControllingBranding(selectedValue);
+                saveModifiedCasa(CasaTerm, selectedValue);
+            });
+
+            return comboBoxCLTVChargeName;
+
+        }).setHeader("CLTV_Charge_Name").setFlexGrow(0).setWidth("300px").setResizable(true);
+
+
+
+
 
 
         casaGrid.addColumn(

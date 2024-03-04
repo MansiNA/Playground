@@ -44,8 +44,8 @@ public class CLTVInflow {
     @Column(name = "CLTV_Category_Name")
     private String cltvCategoryName;
 
-    @Column(name = "Controlling_Branding_Detailed")
-    private String controllingBrandingDetailed;
+  //  @Column(name = "Controlling_Branding_Detailed")
+  //  private String controllingBrandingDetailed;
 
     @Column(name = "Controlling_Branding")
     private String controllingBranding;

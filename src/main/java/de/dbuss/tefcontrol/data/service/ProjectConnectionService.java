@@ -829,7 +829,7 @@ public class ProjectConnectionService {
                 cltvInflow.setCfDurationInMonth(rs.getString("CF_Duration_in_Month"));
                 cltvInflow.setConnectType(rs.getString("Connect_Type"));
                 cltvInflow.setCltvCategoryName(rs.getString("CLTV_Category_Name"));
-                cltvInflow.setControllingBrandingDetailed(rs.getString("Controlling_Branding_Detailed"));
+       //         cltvInflow.setControllingBrandingDetailed(rs.getString("Controlling_Branding_Detailed"));
                 cltvInflow.setControllingBranding(rs.getString("Controlling_Branding"));
                 cltvInflow.setUser(rs.getString("User"));
                 cltvInflow.setCltvChargeName(rs.getString("CLTV_Charge_Name"));
@@ -855,15 +855,15 @@ public class ProjectConnectionService {
             jdbcTemplate = new JdbcTemplate(dataSource);
 
             // Assuming that you have a unique identifier to match the records to update, e.g., contractFeatureId
-            String sql = "UPDATE " + tableName + " SET CLTV_Category_Name = ?, Controlling_Branding_Detailed = ?, " +
-                    "Controlling_Branding = ?, CLTV_Charge_Name = ? WHERE ContractFeature_id = ?";
+//            String sql = "UPDATE " + tableName + " SET CLTV_Category_Name = ?, Controlling_Branding_Detailed = ?, Controlling_Branding = ?, CLTV_Charge_Name = ? WHERE ContractFeature_id = ?";
+            String sql = "UPDATE " + tableName + " SET CLTV_Category_Name = ?, Controlling_Branding = ?, CLTV_Charge_Name = ? WHERE ContractFeature_id = ?";
 
             jdbcTemplate.batchUpdate(sql, modifiedCLTVInflow, modifiedCLTVInflow.size(), (ps, cltvInflow) -> {
                 ps.setString(1, cltvInflow.getCltvCategoryName());
-                ps.setString(2, cltvInflow.getControllingBrandingDetailed());
-                ps.setString(3, cltvInflow.getControllingBranding());
-                ps.setString(4, cltvInflow.getCltvChargeName());
-                ps.setLong(5, cltvInflow.getContractFeatureId());
+//                ps.setString(2, cltvInflow.getControllingBrandingDetailed());
+                ps.setString(2, cltvInflow.getControllingBranding());
+                ps.setString(3, cltvInflow.getCltvChargeName());
+                ps.setLong(4, cltvInflow.getContractFeatureId());
             });
 
             return Constants.OK;
