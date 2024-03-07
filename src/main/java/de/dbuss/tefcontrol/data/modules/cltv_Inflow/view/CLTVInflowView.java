@@ -300,7 +300,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
                 }
             }
             if (allCasaData.size() == 0) {
-                Notification.show( projectConnectionService.getErrorMessage(),3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                Notification.show( projectConnectionService.getErrorCause(),5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
             }
         }
         else {
