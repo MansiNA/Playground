@@ -726,7 +726,7 @@ public class ProjectConnectionService {
             };
 
             List<String> fetchedData = jdbcTemplate.query(sqlQuery, rowMapper);
-
+            errorMessage = "";
             return fetchedData;
         } catch (Exception ex) {
             ex.printStackTrace();
