@@ -289,11 +289,11 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         List<CasaTerm> existingEntries=new ArrayList<>();
 
         if(allCLTVInflowData!=null) {
-
+            System.out.println("Count All CASA-Entries:" + allCasaData.size());
             for (CasaTerm employee : allCasaData) {
                 for (CLTVInflow secondEmployee : allCLTVInflowData) {
                     if (employee.getContractFeatureId().equals(secondEmployee.getContractFeatureId())) {
-                        System.out.println("Bereits vorhanden: " + employee.getContractFeatureId() + ", CF-ID: " + employee.getContractFeatureId());
+                       // System.out.println("Bereits vorhanden: " + employee.getContractFeatureId() + ", CF-ID: " + employee.getContractFeatureId());
                         existingEntries.add(employee);
                         break;
                     }
@@ -309,10 +309,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
 
         allCasaData.removeAll(existingEntries);
 
-
-
-
-
+        System.out.println("Count CASA-Entries:" + allCasaData.size());
 
         GenericDataProvider dataProvider = new GenericDataProvider(allCasaData, "ContractFeature_id");
         casaGrid.setDataProvider(dataProvider);
