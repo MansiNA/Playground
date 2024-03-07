@@ -49,6 +49,9 @@ public class ProjectConnectionService {
     @Getter
     private String errorMessage = "";
 
+    @Getter
+    private String errorCause = "";
+
     @Value("${spring.datasource.url}")
     private String dbUrl;
 
@@ -593,6 +596,7 @@ public class ProjectConnectionService {
                 return "Error: Table does not exist or SQL syntax error.";
             } else {
                 e.printStackTrace();
+                errorCause = e.getCause().getMessage();
                 if(e.getMessage().contains(";")) {
                     String [] errorMessage = e.getMessage().split(";");
                     return errorMessage[errorMessage.length - 1];
@@ -726,7 +730,7 @@ public class ProjectConnectionService {
             };
 
             List<String> fetchedData = jdbcTemplate.query(sqlQuery, rowMapper);
-
+            errorMessage = "";
             return fetchedData;
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -795,7 +799,7 @@ public class ProjectConnectionService {
             };
 
             List<CasaTerm> fetchedData = jdbcTemplate.query(sqlQuery, rowMapper);
-
+            errorMessage = "";
             return fetchedData;
 
 

@@ -182,7 +182,6 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
 
         saveButton.addClickListener(e ->{
 
-
             if (modifiedCLTVInflow != null && !modifiedCLTVInflow.isEmpty()) {
                 String resultString = projectConnectionService.updateListOfCLTVInflow(modifiedCLTVInflow, tableName, dbUrl, dbUser, dbPassword);
                 if (resultString.equals(Constants.OK)) {
@@ -299,6 +298,9 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
                         break;
                     }
                 }
+            }
+            if (allCasaData.size() == 0) {
+                Notification.show( projectConnectionService.getErrorCause(),5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
             }
         }
         else {
