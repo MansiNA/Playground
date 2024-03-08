@@ -25,6 +25,7 @@ import com.vaadin.flow.component.tabs.TabSheetVariant;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
+import de.dbuss.tefcontrol.components.LogView;
 import de.dbuss.tefcontrol.components.QS_Callback;
 import de.dbuss.tefcontrol.components.QS_Grid;
 import de.dbuss.tefcontrol.data.entity.Constants;
@@ -82,7 +83,8 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
     //List<String> listOfControllingBrandingDetailed;
     List<String> listOfControllingBranding;
     List<String> listOfCLTVChargeName;
-
+    private LogView logView;
+    private Boolean isLogsVisible = false;
     private Boolean isVisible = false;
     Grid<ProjectParameter> parameterGrid = new Grid<>(ProjectParameter.class, false);
 
@@ -92,6 +94,8 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         saveButton.setEnabled(false);
         missingShowHidebtn.setVisible(false);
         allEntriesShowHidebtn.setVisible(false);
+        logView = new LogView();
+        logView.logMessage(Constants.INFO, "Starting CLTVInflowView");
 
         addClassName("list-view");
         setSizeFull();
@@ -181,15 +185,16 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         add(hl, parameterGrid, tabSheet );
 
         saveButton.addClickListener(e ->{
-
             if (modifiedCLTVInflow != null && !modifiedCLTVInflow.isEmpty()) {
                 String resultString = projectConnectionService.updateListOfCLTVInflow(modifiedCLTVInflow, tableName, dbUrl, dbUser, dbPassword);
                 if (resultString.equals(Constants.OK)) {
+                    logView.logMessage(Constants.INFO, "saveButton.addClickListener for update modified CLTVInflow data");
                     Notification.show(modifiedCLTVInflow.size() + " Uploaded successfully", 2000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
                     modifiedCLTVInflow.clear();
                     updateGrid();
                     updateMissingGrid();
                 } else {
+                    logView.logMessage(Constants.ERROR, "Error while updating modified CLTVInflow data");
                     Notification.show("Error during upload: " + resultString, 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
                 }
             }
@@ -204,15 +209,26 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         updateCasaGrid();
 
         parameterGrid.setVisible(false);
+        logView.setVisible(false);
+        add(logView);
 
         if(MainLayout.isAdmin) {
+
             UI.getCurrent().addShortcutListener(
                     () -> {
                         isVisible = !isVisible;
                         parameterGrid.setVisible(isVisible);
                     },
                     Key.KEY_I, KeyModifier.ALT);
+
+            UI.getCurrent().addShortcutListener(
+                    () -> {
+                        isLogsVisible = !isLogsVisible;
+                        logView.setVisible(isLogsVisible);
+                    },
+                    Key.KEY_V, KeyModifier.ALT);
         }
+        logView.logMessage(Constants.INFO, "Ending CLTVInflowView");
     }
 
     private Span createBadge(int value) {
@@ -223,13 +239,14 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
     }
 
     private Component getCASA_Grid() {
-
+        logView.logMessage(Constants.INFO, "Staring getCASA_Grid for get CASA Grid");
         VerticalLayout vl = new VerticalLayout();
         configureCASAGrid();
         vl.setAlignItems(Alignment.END);
         vl.add(casaGrid);
         vl.setSizeFull();
         vl.setHeightFull();
+        logView.logMessage(Constants.INFO, "Ending getCASA_Grid for get CASA Grid");
         return vl;
     }
 
@@ -237,10 +254,13 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
 
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
+        logView.logMessage(Constants.INFO, "Starting beforeEnter() for update");
         RouteParameters parameters = event.getRouteParameters();
         projectId = Integer.parseInt(parameters.get("project_Id").orElse(null));
+        logView.logMessage(Constants.INFO, "Ending beforeEnter() for update");
     }
     private void setProjectParameterGrid(List<ProjectParameter> listOfProjectParameters) {
+        logView.logMessage(Constants.INFO, "Starting setProjectParameterGrid() for set database detail in Grid");
         parameterGrid = new Grid<>(ProjectParameter.class, false);
         parameterGrid.addColumn(ProjectParameter::getName).setHeader("Name").setAutoWidth(true).setResizable(true);
         parameterGrid.addColumn(ProjectParameter::getValue).setHeader("Value").setAutoWidth(true).setResizable(true);
@@ -250,6 +270,8 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         parameterGrid.addThemeVariants(GridVariant.LUMO_COMPACT);
         parameterGrid.setHeight("200px");
         parameterGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+        logView.logMessage(Constants.INFO, "Ending setProjectParameterGrid() for set database detail in Grid");
+
     }
 
     public class CallbackHandler implements QS_Callback {
@@ -257,6 +279,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         @Override
         public void onComplete(String result) {
             if(!result.equals("Cancel")) {
+                logView.logMessage(Constants.INFO, "Starting CallbackHandler onComplete for update grid");
                 if (modifiedCLTVInflow != null && !modifiedCLTVInflow.isEmpty()) {
                     String resultString = projectConnectionService.updateListOfCLTVInflow(modifiedCLTVInflow, tableName, dbUrl, dbUser, dbPassword);
                     if (resultString.equals(Constants.OK)){
@@ -271,19 +294,20 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
                     Notification.show( "Not any changes",3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
                 }
             }
-
+            logView.logMessage(Constants.INFO, "Ending CallbackHandler onComplete for update grid");
         }
     }
     private void updateGrid() {
-
+        logView.logMessage(Constants.INFO, "Starting updateGrid for update allCLTVInflow grid");
         allCLTVInflowData = projectConnectionService.getAllCLTVInflow(tableName, dbUrl, dbUser, dbPassword);
         GenericDataProvider dataProvider = new GenericDataProvider(allCLTVInflowData, "ContractFeature_id");
       //  grid.setItems(allCLTVInflowData);
         grid.setDataProvider(dataProvider);
+        logView.logMessage(Constants.INFO, "Ending updateGrid for update allCLTVInflow grid");
     }
 
     private void updateCasaGrid() {
-
+        logView.logMessage(Constants.INFO, "Starting updateCasaGrid for update allCasaData grid");
         List<CasaTerm> allCasaData = projectConnectionService.getAllCASATerms(casaTableName, casaDbUrl, casaDbUser, casaDbPassword);
 
         List<CasaTerm> existingEntries=new ArrayList<>();
@@ -291,8 +315,10 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         if(allCLTVInflowData!=null) {
 
             for (CasaTerm employee : allCasaData) {
+                String employeeKey = employee.getContractFeatureId()+"_"+employee.getAttributeClassesId()+"_"+employee.getConnectType();
                 for (CLTVInflow secondEmployee : allCLTVInflowData) {
-                    if (employee.getContractFeatureId().equals(secondEmployee.getContractFeatureId())) {
+                    String secondEmployeeKey = secondEmployee.getContractFeatureId()+"_"+secondEmployee.getAttributeClassesId()+"_"+secondEmployee.getConnectType();
+                    if (employeeKey.equals(secondEmployeeKey)) {
                         System.out.println("Bereits vorhanden: " + employee.getContractFeatureId() + ", CF-ID: " + employee.getContractFeatureId());
                         existingEntries.add(employee);
                         break;
@@ -307,21 +333,17 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
             System.out.println("allCLTVInflowData is null!!");
         }
 
+        System.out.println(allCasaData.size() + "..."+ allCLTVInflowData.size() +"..."+existingEntries.size());
         allCasaData.removeAll(existingEntries);
-
-
-
-
-
+        System.out.println(allCasaData.size());
 
         GenericDataProvider dataProvider = new GenericDataProvider(allCasaData, "ContractFeature_id");
         casaGrid.setDataProvider(dataProvider);
+        logView.logMessage(Constants.INFO, "Ending updateCasaGrid for update allCasaData grid");
     }
 
     private void updateMissingGrid() {
-
-
-
+        logView.logMessage(Constants.INFO, "Starting updateMissingGrid for update allCLTVInflowData missing grid");
         List<CLTVInflow> allCLTVInflowData = projectConnectionService.getAllCLTVInflow(tableName, dbUrl, dbUser, dbPassword);
         List<CLTVInflow> missingList = allCLTVInflowData.stream()
                 .filter(item -> missing_keyword.equals(item.getCltvCategoryName()) ||
@@ -330,10 +352,11 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
                         missing_keyword.equals(item.getCltvChargeName()))
                 .collect(Collectors.toList());
         missingGrid.setItems(missingList);
+        logView.logMessage(Constants.INFO, "Ending updateMissingGrid for update allCLTVInflowData missing grid");
     }
 
     private Component getCLTV_InflowGrid() {
-
+        logView.logMessage(Constants.INFO, "Starting getCLTV_InflowGrid for get CLTVInflow grid");
         VerticalLayout content = new VerticalLayout();
         crud = new Crud<>(CLTVInflow.class, createEditor());
         configureGrid();
@@ -343,21 +366,24 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         content.setAlignItems(Alignment.END);
         content.add(crud);
         content.setHeightFull();
+        logView.logMessage(Constants.INFO, "Ending getCLTV_InflowGrid for get CLTVInflow grid");
         return content;
     }
 
     private Component getMissingCLTV_InflowGrid() {
+        logView.logMessage(Constants.INFO, "Starting getMissingCLTV_InflowGrid for get missing CLTVInflow grid");
         VerticalLayout vl = new VerticalLayout();
         configureMissingGrid();
         vl.setAlignItems(Alignment.END);
         vl.add(missingGrid);
         vl.setSizeFull();
         vl.setHeightFull();
+        logView.logMessage(Constants.INFO, "Ending getMissingCLTV_InflowGrid for get missing CLTVInflow grid");
         return vl;
     }
 
     private void configureGrid() {
-
+        logView.logMessage(Constants.INFO, "Starting configureGrid() for configure CLTVInflow grid");
         String EDIT_COLUMN = "vaadin-crud-edit-column";
         grid = crud.getGrid();
         grid.setSizeFull();
@@ -416,11 +442,11 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         columnToggleContextMenu.addColumnToggleItem("CF_Duration_in_Month", cfDurationInMonthColumn);
         columnToggleContextMenu.addColumnToggleItem("Connect Type", connectTypeColumn);
         columnToggleContextMenu.addColumnToggleItem("User", userColumn);
-
+        logView.logMessage(Constants.INFO, "Ending configureGrid() for configure CLTVInflow grid");
     }
 
     private CrudEditor<CLTVInflow> createEditor() {
-
+        logView.logMessage(Constants.INFO, "Starting createEditor() for CrudEditor");
     //    TextField cF_TYPE_CLASS_NAME = new TextField("CF_TYPE_CLASS_NAME");
         FormLayout editForm = new FormLayout();
         Binder<CLTVInflow> binder = new Binder<>(CLTVInflow.class);
@@ -429,6 +455,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
     }
 
     private void configureMissingGrid() {
+        logView.logMessage(Constants.INFO, "Starting configureMissingGrid() for configure missing grid");
         List<CLTVInflow> allCLTVInflowData = projectConnectionService.getAllCLTVInflow(tableName, dbUrl, dbUser, dbPassword);
 
      //   String missing = "missing";
@@ -617,11 +644,11 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         columnToggleContextMenu.addColumnToggleItem("CF_Type_Class_Name", cfTypeClassNameColumn);
         columnToggleContextMenu.addColumnToggleItem("CF_Duration_in_Month", cfDurationInMonthColumn);
         columnToggleContextMenu.addColumnToggleItem("User", userColumn);
-
+        logView.logMessage(Constants.INFO, "Ending configureMissingGrid() for configure missing grid");
     }
 
     private void configureCASAGrid() {
-
+        logView.logMessage(Constants.INFO, "Starting configureCASAGrid() for configure CASA grid");
         List<CasaTerm> allCasaData = projectConnectionService.getAllCASATerms(casaTableName, casaDbUrl, casaDbUser, casaDbPassword);
 
         if(allCLTVInflowData!=null) {
@@ -758,7 +785,10 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
                     button.addThemeVariants(ButtonVariant.LUMO_ICON,
                             ButtonVariant.LUMO_SUCCESS,
                             ButtonVariant.LUMO_TERTIARY);
-                    button.addClickListener(e -> System.out.println("Save: " + casaTerm.getContractFeatureId().toString() + " with Category: " + casaTerm.getCltvCategoryName()));
+                    button.addClickListener(e -> {
+                        System.out.println("Save: " + casaTerm.getContractFeatureId().toString() + " with Category: " + casaTerm.getCltvCategoryName());
+                        projectConnectionService.saveCASAToTargetTable(casaTerm, tableName, dbUrl, dbUser, dbPassword);
+                    });
                     button.setIcon(new Icon(VaadinIcon.CLOUD_DOWNLOAD_O));
                 })).setHeader("get entry");
 
@@ -876,11 +906,12 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
  */
 
 
-
+        logView.logMessage(Constants.INFO, "Ending configureCASAGrid() for configure CASA grid");
     }
 
 
     private void saveModifiedCasa(CasaTerm cltvInflow, String selectedValue) {
+        logView.logMessage(Constants.INFO, "Starting saveModifiedCasa() for save modified case");
         if(!isMissing(selectedValue)) {
             if(modifiedCasa.contains(cltvInflow)){
                 modifiedCasa.remove(cltvInflow);
@@ -892,6 +923,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         } else {
             Notification.show("Please do not enter Missing value", 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
         }
+        logView.logMessage(Constants.INFO, "Ending saveModifiedCasa() for save modified case");
     }
 
     private boolean isMissing(String value) {
@@ -907,6 +939,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
     }
 
     private void saveModifiedCLTVInflow(CLTVInflow cltvInflow, String selectedValue) {
+        logView.logMessage(Constants.INFO, "Starting saveModifiedCLTVInflow() for save modified CLTVInflow");
         if(!isMissing(selectedValue)) {
             if(modifiedCLTVInflow.contains(cltvInflow)){
                 modifiedCLTVInflow.remove(cltvInflow);
@@ -918,6 +951,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         } else {
             Notification.show("Please do not enter Missing value", 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
         }
+        logView.logMessage(Constants.INFO, "Ending saveModifiedCLTVInflow() for save modified CLTVInflow");
     }
     private static class ColumnToggleContextMenu extends ContextMenu {
         public ColumnToggleContextMenu(Component target) {
