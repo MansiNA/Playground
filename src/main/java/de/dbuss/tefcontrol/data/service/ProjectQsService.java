@@ -68,6 +68,8 @@ public class ProjectQsService {
                     String errormessage = projectConnectionService.handleDatabaseError(e);
                     projectQSEntity.setResult(errormessage);
                   //  Notification.show( "Error during execute " + errormessage,5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                }  finally {
+                    projectConnectionService.connectionClose();
                 }
             }
         }

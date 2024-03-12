@@ -174,8 +174,6 @@ public class HWMappingView extends VerticalLayout {
                 notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
             } else {
 
-                DataSource dataSource = projectConnectionService.getDataSource(selectedDbName);
-
                 try {
                     // Perform fetch operations using the selected data source
 
@@ -199,8 +197,6 @@ public class HWMappingView extends VerticalLayout {
         uploadButton.addClickListener(clickEvent -> {
             log.info("executing uploadButton.addClickListener for Save data in DB");
             List<CLTV_HW_Measures>allItems = getDataProviderAllItems();
-
-            DataSource dataSource = projectConnectionService.getDataSource(selectedDbName);
 
             Notification notification = Notification.show(allItems.size() + " Rows Uploaded start",2000, Notification.Position.MIDDLE);
             notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);

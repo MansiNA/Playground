@@ -283,6 +283,8 @@ public class QS_Grid extends Composite<Div> {
                 String errormessage = handleDatabaseError(e);
                 System.out.println("error changed......."+projectQS.getName());
                 projectQS.setResult(errormessage);
+            } finally {
+                projectConnectionService.connectionClose();
             }
         }
 
@@ -291,6 +293,8 @@ public class QS_Grid extends Composite<Div> {
     private void getListOfProjectQsWithResult() {
         String tableName = "project_qs";
         listOfProjectQs = getProjectQSList(tableName);
+
+        jdbcTemplate = projectConnectionService.getJdbcDefaultConnection();
 
         String sql = "select pp.name, pp.value from project_parameter pp, projects p\n" +
                 "  where pp.namespace=p.page_url\n" +
@@ -317,7 +321,7 @@ public class QS_Grid extends Composite<Div> {
             }
         }
         dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
-
+        projectConnectionService.connectionClose();
     }
 
     public  void setListOfProjectQs(List<ProjectQSEntity> listOfProjectQs) {
@@ -354,6 +358,8 @@ public class QS_Grid extends Composite<Div> {
             ex.printStackTrace();
             String errorMessage = handleDatabaseError(ex);
             return Collections.emptyList();
+        } finally {
+            projectConnectionService.connectionClose();
         }
     }
     public List<ProjectQSEntity> getResultExecuteSQL(String dbUrl, String dbUser, String dbPassword, List<ProjectQSEntity> listOfProjectQs) {
@@ -384,6 +390,8 @@ public class QS_Grid extends Composite<Div> {
                     String errormessage = handleDatabaseError(e);
                     projectQSEntity.setResult(errormessage);
                     //  Notification.show( "Error during execute " + errormessage,5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                }finally {
+                    projectConnectionService.connectionClose();
                 }
             }
         }
@@ -663,6 +671,8 @@ public class QS_Grid extends Composite<Div> {
             String errormessage = projectConnectionService.handleDatabaseError(e);
             Notification.show(errormessage, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
             return;
+        } finally {
+            projectConnectionService.connectionClose();
         }
 
     }
