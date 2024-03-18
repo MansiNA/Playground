@@ -2,6 +2,7 @@ package de.dbuss.tefcontrol.data.service;
 
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
+import com.zaxxer.hikari.HikariDataSource;
 import de.dbuss.tefcontrol.data.entity.*;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.B2pOutlookSub;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.OutlookMGSR;
@@ -28,9 +29,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Primary;
 import org.springframework.dao.DataAccessException;
+import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.jdbc.CannotGetJdbcConnectionException;
 
 import org.springframework.jdbc.core.*;
+import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -38,6 +41,7 @@ import org.springframework.stereotype.Service;
 
 import javax.sql.DataSource;
 import java.sql.*;
+import java.sql.Date;
 import java.util.*;
 
 @Slf4j
@@ -141,17 +145,24 @@ public class ProjectConnectionService {
         return jdbcTemplate;
     }
 
-    public void connectionClose() {
+    public void connectionClose(JdbcTemplate jdbcTemplate) {
         Connection connection = null;
+        DataSource dataSource = null;
         try {
             // Retrieve the connection from the DataSource
             connection = jdbcTemplate.getDataSource().getConnection();
+            dataSource = jdbcTemplate.getDataSource();
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
             if (connection != null) {
                 try {
                     connection.close();
+
+                    if (dataSource instanceof HikariDataSource) {
+                        ((HikariDataSource) dataSource).close();
+                    }
+
                 } catch (SQLException e) {
 
                     e.printStackTrace();
@@ -179,7 +190,7 @@ public class ProjectConnectionService {
         };
 
         List<CLTV_HW_Measures> fetchedData = jdbcTemplate.query(sqlQuery, rowMapper);
-        connectionClose();
+        connectionClose(jdbcTemplate);
         return fetchedData;
     }
 
@@ -211,7 +222,7 @@ public class ProjectConnectionService {
             errorMessage = handleDatabaseError(ex);
             return Collections.emptyList();
         } finally {
-            connectionClose();
+            connectionClose(jdbcTemplate);
         }
 
     }
@@ -242,7 +253,7 @@ public class ProjectConnectionService {
             e.printStackTrace();
             return handleDatabaseError(e);
         } finally {
-            connectionClose();
+            connectionClose(jdbcTemplate);
         }
     }
 
@@ -274,7 +285,7 @@ public class ProjectConnectionService {
             e.printStackTrace();
             return handleDatabaseError(e);
         } finally {
-            connectionClose();
+            connectionClose(jdbcTemplate);
         }
     }
 
@@ -314,7 +325,7 @@ public class ProjectConnectionService {
             handleDatabaseError(e);
             return Collections.emptyList();
         } finally {
-            connectionClose();
+            connectionClose(jdbcTemplate);
         }
     }
 
@@ -353,7 +364,7 @@ public class ProjectConnectionService {
             e.printStackTrace();
             return handleDatabaseError(e);
         } finally {
-            connectionClose();
+            connectionClose(jdbcTemplate);
         }
     }
 
@@ -390,7 +401,7 @@ public class ProjectConnectionService {
             e.printStackTrace();
             return handleDatabaseError(e);
         } finally {
-            connectionClose();
+            connectionClose(jdbcTemplate);
         }
     }
 
@@ -400,7 +411,7 @@ public class ProjectConnectionService {
 
             DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
             jdbcTemplate = new JdbcTemplate(dataSource);
-          
+
             String sqlDelete = "DELETE FROM " + tableName;
 
             jdbcTemplate.update(sqlDelete);
@@ -426,7 +437,7 @@ public class ProjectConnectionService {
             e.printStackTrace();
             return handleDatabaseError(e);
         } finally {
-            connectionClose();
+            connectionClose(jdbcTemplate);
         }
     }
 
@@ -471,7 +482,7 @@ public class ProjectConnectionService {
             //e.printStackTrace();
             return "ERROR: " + e.getMessage();
         } finally {
-            connectionClose();
+            connectionClose(jdbcTemplate);
         }
 
     }
@@ -500,7 +511,7 @@ public class ProjectConnectionService {
            // e.printStackTrace();
             return "ERROR: " + e.getMessage();
         }  finally {
-            connectionClose();
+            connectionClose(jdbcTemplate);
         }
 
     }
@@ -519,7 +530,7 @@ public class ProjectConnectionService {
                 ps.setString(3, entity.getRunrate());
                 ps.setString(4, entity.getScenario());
                 //  ps.setDate(3, new java.sql.Date(2023,01,01));
-                java.sql.Date sqlDate = (entity.getDate() != null) ? new java.sql.Date(entity.getDate().getTime()) : null;
+                Date sqlDate = (entity.getDate() != null) ? new Date(entity.getDate().getTime()) : null;
                 ps.setDate(5, sqlDate);
                 //  ps.setDate(5, new java.sql.Date(entity.getDate().getTime() ));
                 //ps.setDouble (6, entity.getWert());
@@ -536,8 +547,6 @@ public class ProjectConnectionService {
         } catch (Exception e) {
             e.printStackTrace();
             return handleDatabaseError(e);
-        }  finally {
-            connectionClose();
         }
 
     }
@@ -552,7 +561,7 @@ public class ProjectConnectionService {
             e.printStackTrace();
             errorMessage = handleDatabaseError(e);
         }  finally {
-            connectionClose();
+            connectionClose(jdbcTemplate);
         }
     }
     public String saveKPIPlan(List<Tech_KPIView.KPI_Plan> data, String tableName, int upload_id) {
@@ -562,10 +571,10 @@ public class ProjectConnectionService {
 
             jdbcTemplate.batchUpdate(sql, data, data.size(), (ps, entity) -> {
 
-                java.sql.Date versionDate = null;
+                Date versionDate = null;
                 if(entity.getVersionDate() != null)
                 {
-                    versionDate = new java.sql.Date(entity.getVersionDate().getTime());
+                    versionDate = new Date(entity.getVersionDate().getTime());
                 }
                 ps.setInt(1,entity.getRow());
                 ps.setString(2, entity.getNT_ID());
@@ -584,8 +593,6 @@ public class ProjectConnectionService {
         } catch (Exception e) {
             e.printStackTrace();
             return handleDatabaseError(e);
-        }  finally {
-            connectionClose();
         }
     }
 
@@ -598,7 +605,7 @@ public class ProjectConnectionService {
             e.printStackTrace();
             errorMessage = handleDatabaseError(e);
         }  finally {
-            connectionClose();
+            connectionClose(jdbcTemplate);
         }
     }
     public String saveKPIActuals(List<Tech_KPIView.KPI_Actuals> data, String tableName, int upload_id) {
@@ -634,8 +641,6 @@ public class ProjectConnectionService {
             return Constants.OK;
         } catch (Exception e) {
             return handleDatabaseError(e);
-        }  finally {
-            connectionClose();
         }
     }
 
@@ -643,9 +648,9 @@ public class ProjectConnectionService {
 
         if (e instanceof DataAccessException) {
             Throwable rootCause = getRootCause(e);
-            if (rootCause instanceof org.springframework.jdbc.CannotGetJdbcConnectionException) {
+            if (rootCause instanceof CannotGetJdbcConnectionException) {
                 return "Error: Cannot connect to the database. Check database configuration.";
-            } else if (rootCause instanceof org.springframework.jdbc.BadSqlGrammarException) {
+            } else if (rootCause instanceof BadSqlGrammarException) {
                 return "Error: Table does not exist or SQL syntax error.";
             } else {
                 e.printStackTrace();
@@ -694,7 +699,7 @@ public class ProjectConnectionService {
             errorMessage = handleDatabaseError(e);
             return Collections.emptyList();
         } finally {
-            connectionClose();
+            connectionClose(jdbcTemplate);
         }
     }
 
@@ -732,7 +737,7 @@ public class ProjectConnectionService {
             errorMessage = handleDatabaseError(ex);
             return Collections.emptyList();
         } finally {
-            connectionClose();
+            connectionClose(jdbcTemplate);
         }
 
     }
@@ -772,7 +777,7 @@ public class ProjectConnectionService {
             e.printStackTrace();
             return handleDatabaseError(e);
         } finally {
-            connectionClose();
+            connectionClose(jdbcTemplate);
         }
 
     }
@@ -796,7 +801,7 @@ public class ProjectConnectionService {
             errorMessage = handleDatabaseError(ex);
             return Collections.emptyList();
         } finally {
-            connectionClose();
+            connectionClose(jdbcTemplate);
         }
 
     }
@@ -819,7 +824,7 @@ public class ProjectConnectionService {
             e.printStackTrace();
             return handleDatabaseError(e);
         } finally {
-            connectionClose();
+            connectionClose(jdbcTemplate);
         }
     }
 
@@ -871,7 +876,7 @@ public class ProjectConnectionService {
             errorMessage = handleDatabaseError(ex);
             return Collections.emptyList();
         } finally {
-            connectionClose();
+            connectionClose(jdbcTemplate);
         }
 
         // return listOfTermData;
@@ -914,7 +919,7 @@ public class ProjectConnectionService {
             errorMessage = handleDatabaseError(ex);
             return Collections.emptyList();
         } finally {
-            connectionClose();
+            connectionClose(jdbcTemplate);
         }
     }
 
@@ -942,7 +947,7 @@ public class ProjectConnectionService {
             e.printStackTrace();
             return handleDatabaseError(e);
         } finally {
-            connectionClose();
+            connectionClose(jdbcTemplate);
         }
     }
 
@@ -992,7 +997,7 @@ public class ProjectConnectionService {
             e.printStackTrace();
             return handleDatabaseError(e);
         } finally {
-            connectionClose();
+            connectionClose(jdbcTemplate);
         }
 
     }
@@ -1037,7 +1042,7 @@ public class ProjectConnectionService {
             e.printStackTrace();
             return handleDatabaseError(e);
         } finally {
-            connectionClose();
+            connectionClose(jdbcTemplate);
         }
     }
 
@@ -1080,7 +1085,7 @@ public class ProjectConnectionService {
             e.printStackTrace();
             return handleDatabaseError(e);
         } finally {
-            connectionClose();
+            connectionClose(jdbcTemplate);
         }
     }
 
@@ -1117,7 +1122,7 @@ public class ProjectConnectionService {
             e.printStackTrace();
             return handleDatabaseError(e);
         } finally {
-            connectionClose();
+            connectionClose(jdbcTemplate);
         }
     }
 
@@ -1154,7 +1159,7 @@ public class ProjectConnectionService {
             e.printStackTrace();
             return handleDatabaseError(e);
         } finally {
-            connectionClose();
+            connectionClose(jdbcTemplate);
         }
     }
 
@@ -1191,7 +1196,7 @@ public class ProjectConnectionService {
             e.printStackTrace();
             return handleDatabaseError(e);
         } finally {
-            connectionClose();
+            connectionClose(jdbcTemplate);
         }
     }
 
@@ -1227,7 +1232,7 @@ public class ProjectConnectionService {
             e.printStackTrace();
             return handleDatabaseError(e);
         } finally {
-            connectionClose();
+            connectionClose(jdbcTemplate);
         }
     }
 
@@ -1305,7 +1310,7 @@ public class ProjectConnectionService {
 
             }
         }
-        connectionClose();
+        connectionClose(jdbcTemplate);
         return result;
     }
 
@@ -1335,7 +1340,7 @@ public class ProjectConnectionService {
             errorMessage = handleDatabaseError(ex);
             return Collections.emptyList();
         } finally {
-            connectionClose();
+            connectionClose(jdbcTemplate);
         }
     }
 
@@ -1378,7 +1383,7 @@ public class ProjectConnectionService {
             System.out.println(errorMessage);
             return Collections.emptyList();
         } finally {
-            connectionClose();
+            connectionClose(jdbcTemplate);
         }
         return Collections.emptyList();
     }
@@ -1415,8 +1420,6 @@ public class ProjectConnectionService {
         } catch (Exception e) {
             e.printStackTrace();
             return handleDatabaseError(e);
-        } finally {
-            connectionClose();
         }
     }
 
@@ -1454,7 +1457,7 @@ public class ProjectConnectionService {
             e.printStackTrace();
             return handleDatabaseError(e);
         } finally {
-            connectionClose();
+            connectionClose(jdbcTemplate);
         }
     }
 
@@ -1588,7 +1591,7 @@ public class ProjectConnectionService {
             //e.printStackTrace();
             return -1;
         } finally {
-            connectionClose();
+            connectionClose(jdbcTemplate);
         }
     }
 
@@ -1648,8 +1651,11 @@ public class ProjectConnectionService {
  */
 
     public List<String> getCobiAdminQFCPlanOutlook(String dbUrl, String dbUser, String dbPassword, String sql) {
+        DataSource dataSource = null;
+        Connection connection = null;
         try {
-            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+             dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            connection = dataSource.getConnection();
             jdbcTemplate = new JdbcTemplate(dataSource);
 // Execute SQL query and retrieve the result as a list of maps
             List<Map<String, Object>> result = jdbcTemplate.queryForList(sql);
@@ -1659,12 +1665,13 @@ public class ProjectConnectionService {
                     resultList.add(entry.getValue().toString());
                 }
             }
+            dataSource.getConnection().close();
             return resultList;
         } catch (Exception e) {
             e.printStackTrace();
             return Collections.emptyList();
         } finally {
-            connectionClose();
+            connectionClose(jdbcTemplate);
         }
     }
     public String saveCobiAdminCurrentPeriods(CurrentPeriods data, String dbUrl, String dbUser, String dbPassword, String targetTable) {
@@ -1682,7 +1689,7 @@ public class ProjectConnectionService {
             e.printStackTrace();
             return handleDatabaseError(e);
         } finally {
-            connectionClose();
+            connectionClose(jdbcTemplate);
         }
     }
 
@@ -1702,7 +1709,7 @@ public class ProjectConnectionService {
             e.printStackTrace();
             return handleDatabaseError(e);
         } finally {
-            connectionClose();
+            connectionClose(jdbcTemplate);
         }
     }
 
@@ -1729,7 +1736,7 @@ public class ProjectConnectionService {
             e.printStackTrace();
             return handleDatabaseError(e);
         } finally {
-            connectionClose();
+            connectionClose(jdbcTemplate);
         }
     }
 
@@ -1752,7 +1759,7 @@ public class ProjectConnectionService {
             e.printStackTrace();
             return handleDatabaseError(e);
         } finally {
-            connectionClose();
+            connectionClose(jdbcTemplate);
         }
     }
 
@@ -1769,7 +1776,7 @@ public class ProjectConnectionService {
             e.printStackTrace();
             return handleDatabaseError(e);
         } finally {
-            connectionClose();
+            connectionClose(jdbcTemplate);
         }
     }
 
@@ -1803,7 +1810,7 @@ public class ProjectConnectionService {
             errorMessage = handleDatabaseError(ex);
             return Collections.emptyList();
         } finally {
-            connectionClose();
+            connectionClose(jdbcTemplate);
         }
 
     }
@@ -1833,7 +1840,7 @@ public class ProjectConnectionService {
             errorMessage = handleDatabaseError(ex);
             return Collections.emptyList();
         } finally {
-            connectionClose();
+            connectionClose(jdbcTemplate);
         }
 
     }
@@ -1861,7 +1868,7 @@ public class ProjectConnectionService {
             e.printStackTrace();
             return handleDatabaseError(e);
         } finally {
-            connectionClose();
+            connectionClose(jdbcTemplate);
         }
     }
 
@@ -1901,7 +1908,7 @@ public class ProjectConnectionService {
             e.printStackTrace();
             return handleDatabaseError(e);
         } finally {
-            connectionClose();
+            connectionClose(jdbcTemplate);
         }
     }
 
@@ -1919,7 +1926,7 @@ public class ProjectConnectionService {
             e.printStackTrace();
             return handleDatabaseError(e);
         } finally {
-            connectionClose();
+            connectionClose(jdbcTemplate);
         }
     }
 
@@ -1948,7 +1955,7 @@ public class ProjectConnectionService {
             errorMessage = handleDatabaseError(ex);
             return Collections.emptyList();
         } finally {
-            connectionClose();
+            connectionClose(jdbcTemplate);
         }
 
     }
@@ -1975,7 +1982,7 @@ public class ProjectConnectionService {
             e.printStackTrace();
             return handleDatabaseError(e);
         } finally {
-            connectionClose();
+            connectionClose(jdbcTemplate);
         }
     }
 
@@ -2155,7 +2162,7 @@ public class ProjectConnectionService {
            // e.printStackTrace();
             return "ERROR: " + e.getMessage();
         } finally {
-            connectionClose();
+            connectionClose(jdbcTemplate);
         }
 
 
@@ -2184,9 +2191,12 @@ public class ProjectConnectionService {
                 // e.printStackTrace();
                 return "ERROR: " + e.getMessage();
             } finally {
-                connectionClose();
+                connectionClose(jdbcTemplate);
             }
 
 
+        }
+        public JdbcTemplate getTemplate() {
+            return  jdbcTemplate;
         }
 }

@@ -353,7 +353,7 @@ public class PFGProductMappingView extends VerticalLayout implements BeforeEnter
             System.out.println("Exception: " + e.getMessage());
             return e.getMessage();
         } finally {
-            projectConnectionService.connectionClose();
+            projectConnectionService.connectionClose(template);
         }
 
         return Constants.OK;

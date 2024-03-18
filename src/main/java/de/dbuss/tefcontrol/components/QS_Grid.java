@@ -249,6 +249,9 @@ public class QS_Grid extends Composite<Div> {
         }
         grid.getDataProvider().refreshAll();
         System.out.println("running changed.......");
+        DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+        jdbcTemplate = new JdbcTemplate(dataSource);
+
         for (ProjectQSEntity projectQS:projectSqls) {
             System.out.println("Ausführen SQL: " + projectQS.getSql() );
             try {
@@ -261,8 +264,6 @@ public class QS_Grid extends Composite<Div> {
                     sql = sql.replace("UPLOAD_ID", uploadId + "");
                     projectQS.setSql(sql);
                 }
-                DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
-                jdbcTemplate = new JdbcTemplate(dataSource);
 
                 ListenableFuture<ProjectQSEntity> future = backendService.getQsResult(jdbcTemplate, projectQS, rowsMap);
                 future.addCallback(
@@ -276,18 +277,17 @@ public class QS_Grid extends Composite<Div> {
                             decreaseThreadCount();
                             projectQS.setResult("Error in SQL");
                             updateUi(ui, "Task failed: " + failureException.getMessage());
+                        //    projectConnectionService.connectionClose(jdbcTemplate);
                         }
 
                 );
+
             } catch (Exception e){
                 String errormessage = handleDatabaseError(e);
                 System.out.println("error changed......."+projectQS.getName());
                 projectQS.setResult(errormessage);
-            } finally {
-                projectConnectionService.connectionClose();
             }
         }
-
     }
 
     private void getListOfProjectQsWithResult() {
@@ -321,7 +321,7 @@ public class QS_Grid extends Composite<Div> {
             }
         }
         dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
-        projectConnectionService.connectionClose();
+        projectConnectionService.connectionClose(jdbcTemplate);
     }
 
     public  void setListOfProjectQs(List<ProjectQSEntity> listOfProjectQs) {
@@ -359,7 +359,7 @@ public class QS_Grid extends Composite<Div> {
             String errorMessage = handleDatabaseError(ex);
             return Collections.emptyList();
         } finally {
-            projectConnectionService.connectionClose();
+            projectConnectionService.connectionClose(jdbcTemplate);
         }
     }
     public List<ProjectQSEntity> getResultExecuteSQL(String dbUrl, String dbUser, String dbPassword, List<ProjectQSEntity> listOfProjectQs) {
@@ -391,7 +391,7 @@ public class QS_Grid extends Composite<Div> {
                     projectQSEntity.setResult(errormessage);
                     //  Notification.show( "Error during execute " + errormessage,5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
                 }finally {
-                    projectConnectionService.connectionClose();
+                    projectConnectionService.connectionClose(jdbcTemplate);
                 }
             }
         }
@@ -536,6 +536,7 @@ public class QS_Grid extends Composite<Div> {
                 boolean allCorrect = listOfProjectQs.stream()
                         .allMatch(projectQs -> Constants.OK.equals(projectQs.getResult()));
                 okButton.setEnabled(allCorrect);
+                projectConnectionService.connectionClose(jdbcTemplate);
             }
 
         });
@@ -573,7 +574,7 @@ public class QS_Grid extends Composite<Div> {
                     "  ROLLBACK;\n" +
                     "END";
             DataSource dataSource = projectConnectionService.getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+            jdbcTemplate = new JdbcTemplate(dataSource);
             //  jdbcTemplate.execute(sql);
             System.out.println("Execute SQL: " + sql);
             String sqlResult = jdbcTemplate.queryForObject(sql, String.class);
@@ -672,7 +673,7 @@ public class QS_Grid extends Composite<Div> {
             Notification.show(errormessage, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
             return;
         } finally {
-            projectConnectionService.connectionClose();
+            projectConnectionService.connectionClose(jdbcTemplate);
         }
 
     }
