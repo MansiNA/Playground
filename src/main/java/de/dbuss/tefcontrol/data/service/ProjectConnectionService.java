@@ -1996,18 +1996,19 @@ public class ProjectConnectionService {
 
             try {
 
-                String sqlInsert = "INSERT INTO "+ tableName +" ([Upload_ID],Line_Number,[Month],[Segment],[ProfitCenter],[PL_LINE],[Scenario],[Type_of_Data],[Amount] ) VALUES (?, ?, ?, ?, ?, ?, ?,?,?)";
+                String sqlInsert = "INSERT INTO "+ tableName +" ([Upload_ID],Line_Number,[Month],Block,[Segment],[ProfitCenter],[PL_LINE],[Scenario],[Type_of_Data],[Amount] ) VALUES (?, ?, ?, ?, ?, ?, ?,?,?,?)";
 
                 jdbcTemplate.batchUpdate(sqlInsert, data, data.size(), (ps, entity) -> {
                     ps.setInt(1, upload_id);
                     ps.setInt(2, entity.getRow());
                     ps.setInt(3, entity.getMonth());
-                    ps.setString(4, entity.getSegment());
-                    ps.setString(5, entity.getProfitCenter());
-                    ps.setString(6, entity.getPl_Line());
-                    ps.setString(7, entity.getScenario());
-                    ps.setString(8, entity.getTypeOfData());
-                    ps.setDouble(9, entity.getAmount());
+                    ps.setString(4, entity.getBlock());
+                    ps.setString(5, entity.getSegment());
+                    ps.setString(6, entity.getProfitCenter());
+                    ps.setString(7, entity.getPl_Line());
+                    ps.setString(8, entity.getScenario());
+                    ps.setString(9, entity.getTypeOfData());
+                    ps.setDouble(10, entity.getAmount());
 
                 });
                 return Constants.OK;
