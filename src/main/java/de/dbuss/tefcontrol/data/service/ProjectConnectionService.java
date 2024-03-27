@@ -877,7 +877,54 @@ public class ProjectConnectionService {
         }
     }
 
+    public String saveCASAToTargetTable(CasaTerm data, String tableName, String dbUrl, String dbUser, String dbPassword) {
+        try {
+            jdbcTemplate = getJdbcConnection(dbUrl, dbUser, dbPassword);
 
+            // Check if the record exists
+            String sqlSelect = "SELECT COUNT(*) FROM " + tableName +
+                    " WHERE ContractFeature_id = ? AND AttributeClasses_ID = ? AND Connect_Type = ?";
+            int count = jdbcTemplate.queryForObject(sqlSelect, Integer.class,
+                    data.getContractFeatureId(), data.getAttributeClassesId(), data.getConnectType());
+
+            if (count > 0) {
+                // Record exists, perform update
+                String sqlUpdate = "UPDATE " + tableName +
+                        " SET CF_TYPE_CLASS_NAME = ?, AttributeClasses_NAME = ?, " +
+                        "ContractFeatureSubCategory_Name = ?, ContractFeature_Name = ?, " +
+                        "CF_TYPE_NAME = ?, CF_Duration_in_Month = ?, " +
+                        "CLTV_Category_Name = ?, Controlling_Branding = ?, CLTV_Charge_Name = ?, User = ? " +
+                        "WHERE ContractFeature_id = ? AND AttributeClasses_ID = ? AND Connect_Type = ?";
+
+                jdbcTemplate.update(sqlUpdate, data.getCfTypeClassName(), data.getAttributeClassesName(),
+                        "", "",
+                        "", "",
+                        data.getCltvCategoryName(), "",
+                        data.getCltvChargeName(), "",
+                        data.getContractFeatureId(), data.getAttributeClassesId(), data.getConnectType());
+            } else {
+                // Record does not exist, perform insert
+                String sqlInsert = "INSERT INTO " + tableName +
+                        " (ContractFeature_id, AttributeClasses_ID, CF_TYPE_CLASS_NAME, " +
+                        "AttributeClasses_NAME, ContractFeatureSubCategory_Name, ContractFeature_Name, " +
+                        "CF_TYPE_NAME, CF_Duration_in_Month, Connect_Type, CLTV_Category_Name, " +
+                        "Controlling_Branding, CLTV_Charge_Name, [User]) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+                jdbcTemplate.update(sqlInsert, data.getContractFeatureId(), data.getAttributeClassesId(),
+                        data.getCfTypeClassName(), data.getAttributeClassesName(), "",
+                        "", "", "",
+                        data.getConnectType(), data.getCltvCategoryName(), "",
+                        data.getCltvChargeName(), "");
+            }
+
+            return Constants.OK;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return handleDatabaseError(e);
+        }
+
+    }
     public String saveOutlookMGSR(List<OutlookMGSR> data, String tableName, String dbUrl, String dbUser, String dbPassword, int upload_id) {
 
         try {
