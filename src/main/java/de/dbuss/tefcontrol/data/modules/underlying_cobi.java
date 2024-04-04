@@ -465,7 +465,7 @@ public class underlying_cobi extends VerticalLayout implements BeforeEnterObserv
                         String ColumnName="Month";
                         try {
                             //kPI_Fact.setCC_KPI(checkCellString(sheetName, cell, RowNumber,ColumnName));
-                            Fact.setMonth(defaultUtils.getCellNumeric(cell));
+                            Fact.setMonth(defaultUtils.getCellString(cell));
                         }
                         catch(Exception e)
                         {
@@ -665,7 +665,7 @@ public class underlying_cobi extends VerticalLayout implements BeforeEnterObserv
     public class underlyingFact {
 
         private int row;
-        private int month ;
+        private String month ;
 
         private String block = "";
         private String segment = "";
@@ -683,11 +683,11 @@ public class underlying_cobi extends VerticalLayout implements BeforeEnterObserv
             this.row = row;
         }
 
-        public int getMonth() {
+        public String getMonth() {
             return month;
         }
 
-        public void setMonth(int month) {
+        public void setMonth(String month) {
             this.month = month;
         }
 
