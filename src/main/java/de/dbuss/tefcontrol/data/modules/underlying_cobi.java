@@ -400,6 +400,21 @@ public class underlying_cobi extends VerticalLayout implements BeforeEnterObserv
 
                     if(cell.getColumnIndex()==0)
                     {
+                        String ColumnName="Block";
+                        try {
+                            Fact.setBlock(defaultUtils.getCellString(cell));
+                        }
+                        catch(Exception e)
+                        {
+                            article=new Article();
+                            article.setText("Sheet: " + sheetName + ": Error: Zeile " + RowNumber.toString() + ", Spalte " + ColumnName + ": " + e.getMessage());
+                            textArea.add(article);
+                            errors_Fact++;
+                        }
+                    }
+
+                    if(cell.getColumnIndex()==1)
+                    {
                         String ColumnName="Segment";
                         try {
                             Fact.setSegment(defaultUtils.getCellString(cell));
@@ -413,7 +428,7 @@ public class underlying_cobi extends VerticalLayout implements BeforeEnterObserv
                         }
                     }
 
-                    if(cell.getColumnIndex()==1)
+                    if(cell.getColumnIndex()==2)
                     {
                         String ColumnName="ProfitCenter";
                         try {
@@ -429,7 +444,7 @@ public class underlying_cobi extends VerticalLayout implements BeforeEnterObserv
 
                         }
                     }
-                    if(cell.getColumnIndex()==2)
+                    if(cell.getColumnIndex()==3)
                     {
                         String ColumnName="PL_LINE";
                         try {
@@ -445,12 +460,12 @@ public class underlying_cobi extends VerticalLayout implements BeforeEnterObserv
                         }
                     }
 
-                    if(cell.getColumnIndex()==3)
+                    if(cell.getColumnIndex()==4)
                     {
                         String ColumnName="Month";
                         try {
                             //kPI_Fact.setCC_KPI(checkCellString(sheetName, cell, RowNumber,ColumnName));
-                            Fact.setMonth(defaultUtils.getCellNumeric(cell));
+                            Fact.setMonth(defaultUtils.getCellString(cell));
                         }
                         catch(Exception e)
                         {
@@ -462,7 +477,7 @@ public class underlying_cobi extends VerticalLayout implements BeforeEnterObserv
                         }
                     }
 
-                    if(cell.getColumnIndex()==4)
+                    if(cell.getColumnIndex()==5)
                     {
                         String ColumnName="Scenario";
                         try {
@@ -479,7 +494,7 @@ public class underlying_cobi extends VerticalLayout implements BeforeEnterObserv
                         }
                     }
 
-                    if(cell.getColumnIndex()==5)
+                    if(cell.getColumnIndex()==6)
                     {
                         String ColumnName="TypeofData";
                         try {
@@ -497,7 +512,7 @@ public class underlying_cobi extends VerticalLayout implements BeforeEnterObserv
                     }
 
 
-                    if(cell.getColumnIndex()==6)
+                    if(cell.getColumnIndex()==7)
                     {
                         String ColumnName="Amount";
                         try {
@@ -650,7 +665,9 @@ public class underlying_cobi extends VerticalLayout implements BeforeEnterObserv
     public class underlyingFact {
 
         private int row;
-        private int month ;
+        private String month ;
+
+        private String block = "";
         private String segment = "";
         private String profitCenter = "";
         private String pl_Line = "";
@@ -666,14 +683,21 @@ public class underlying_cobi extends VerticalLayout implements BeforeEnterObserv
             this.row = row;
         }
 
-        public int getMonth() {
+        public String getMonth() {
             return month;
         }
 
-        public void setMonth(int month) {
+        public void setMonth(String month) {
             this.month = month;
         }
 
+        public String getBlock() {
+            return block;
+        }
+
+        public void setBlock(String block) {
+            this.block = block;
+        }
         public String getSegment() {
             return segment;
         }
