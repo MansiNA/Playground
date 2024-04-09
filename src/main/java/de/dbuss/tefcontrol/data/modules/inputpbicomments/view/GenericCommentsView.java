@@ -399,7 +399,7 @@ public class GenericCommentsView extends VerticalLayout implements BeforeEnterOb
             }
             ui.access(() -> {
                 progressBar.setVisible(false);
-
+                projectConnectionService.connectionClose(projectConnectionService.getTemplate());
                 if (returnStatus.toString().equals(Constants.OK))
                 {
                     logView.logMessage(Constants.INFO, "Saved file data in database");

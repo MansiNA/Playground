@@ -46,6 +46,7 @@ public class ProjectQsService {
     }
 
     public List<ProjectQSEntity> executeSQL(String dbUrl, String dbUser, String dbPassword, List<ProjectQSEntity> listOfProjectQs) {
+        JdbcTemplate jdbcTemplate = null;
         for (ProjectQSEntity projectQSEntity : listOfProjectQs) {
             String sql = projectQSEntity.getSql();
 
@@ -53,7 +54,7 @@ public class ProjectQsService {
                 try {
 
                     DataSource dataSource = projectConnectionService.getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
-                    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+                    jdbcTemplate = new JdbcTemplate(dataSource);
                     List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql);
 
                     if (rows.isEmpty()) {
@@ -68,6 +69,8 @@ public class ProjectQsService {
                     String errormessage = projectConnectionService.handleDatabaseError(e);
                     projectQSEntity.setResult(errormessage);
                   //  Notification.show( "Error during execute " + errormessage,5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                }  finally {
+                    projectConnectionService.connectionClose(jdbcTemplate);
                 }
             }
         }

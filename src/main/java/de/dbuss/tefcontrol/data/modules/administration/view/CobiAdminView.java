@@ -2,6 +2,7 @@ package de.dbuss.tefcontrol.data.modules.administration.view;
 
 
 import com.vaadin.flow.component.*;
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
@@ -29,8 +30,10 @@ import jakarta.annotation.security.RolesAllowed;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
+import java.awt.*;
 import java.time.YearMonth;
 import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.vaadin.flow.component.button.ButtonVariant.LUMO_TERTIARY_INLINE;
@@ -350,7 +353,7 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
         periods.add(currentPeriods);
 
         System.out.println("Execute SQL for sqlAktCurrentPeriods: " + sqlAktCurrentPeriods);
-
+        projectConnectionService.getJdbcConnection(dbUrl, dbUser, dbPassword);
         List<String> aktCurrentPeriods = projectConnectionService.getCobiAdminQFCPlanOutlook(dbUrl, dbUser, dbPassword, sqlAktCurrentPeriods);
         System.out.println(aktCurrentPeriods + " aktCurrentPeriods..........");
 
@@ -419,7 +422,7 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
         System.out.println("execute SQL for sqlAktCurrentScenario:s " + sqlAktCurrentScenarios);
 
         List<String> aktCurrentScenarios = projectConnectionService.getCobiAdminQFCPlanOutlook(dbUrl, dbUser, dbPassword, sqlAktCurrentScenarios);
-
+        projectConnectionService.connectionClose(projectConnectionService.getTemplate());
         System.out.println(aktCurrentScenarios + " aktCurrentScenarios..........");
         List<CurrentScenarios> scenarios = new ArrayList<>();
         currentScenarios = new CurrentScenarios();

@@ -25,8 +25,6 @@ public class ProjectsService {
     public ProjectsService(ProjectsRepository repository) {
         this.repository = repository;
         this.projectsList = repository.findAll();
-
-
     }
 
     public Optional<Projects> get(Long id) {

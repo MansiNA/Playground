@@ -567,7 +567,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
             ui.access(() -> {
 
                 progressBarActuals.setVisible(false);
-
+               // projectConnectionService.connectionClose(projectConnectionService.getTemplate());
                 if (returnStatus.toString().equals(Constants.OK))
                 {
                     logView.logMessage(Constants.INFO, "Saved file data in database");
@@ -606,7 +606,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
                 int batchSize = 1000; // Die Anzahl der Zeilen, die auf einmal verarbeitet werden sollen
 
            //     projectConnectionService.deleteTableData(dbUrl, dbUser, dbPassword, factTableName);
-                projectConnectionService.getJdbcConnection(dbUrl, dbUser, dbPassword);
+             //   projectConnectionService.getJdbcConnection(dbUrl, dbUser, dbPassword);
 
                 for (int i = 0; i < totalRows; i += batchSize) {
 
@@ -670,7 +670,7 @@ public class Tech_KPIView extends VerticalLayout implements BeforeEnterObserver 
             }
             ui.access(() -> {
                 progressBarFact.setVisible(false);
-
+                projectConnectionService.connectionClose(projectConnectionService.getTemplate());
                 if (returnStatus.toString().equals(Constants.OK))
                 {
                     logView.logMessage(Constants.INFO, "Saved file data in database");
