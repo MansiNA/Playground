@@ -60,7 +60,7 @@ public class QS_Grid extends Composite<Div> {
     public QS_Grid(ProjectConnectionService projectConnectionService, BackendService backendService) {
         this.projectConnectionService = projectConnectionService;
         this.backendService = backendService;
-        this.jdbcTemplate = projectConnectionService.getJdbcDefaultConnection();
+       // this.jdbcTemplate = projectConnectionService.getJdbcDefaultConnection();
     }
 
     public void createDialog(QS_Callback callback, int projectId) {
@@ -292,9 +292,8 @@ public class QS_Grid extends Composite<Div> {
 
     private void getListOfProjectQsWithResult() {
         String tableName = "project_qs";
-        listOfProjectQs = getProjectQSList(tableName);
-
         jdbcTemplate = projectConnectionService.getJdbcDefaultConnection();
+        listOfProjectQs = getProjectQSList(tableName);
 
         String sql = "select pp.name, pp.value from project_parameter pp, projects p\n" +
                 "  where pp.namespace=p.page_url\n" +
@@ -334,7 +333,6 @@ public class QS_Grid extends Composite<Div> {
     }
     public List<ProjectQSEntity> getProjectQSList(String tableName) {
         try {
-            jdbcTemplate = projectConnectionService.getJdbcDefaultConnection();
             String sqlQuery = "SELECT * FROM " + tableName + " WHERE [project_id] =" + projectId;
 
             // Create a RowMapper to map the query result to a ProjectQSEntity object
@@ -358,8 +356,6 @@ public class QS_Grid extends Composite<Div> {
             ex.printStackTrace();
             String errorMessage = handleDatabaseError(ex);
             return Collections.emptyList();
-        } finally {
-            projectConnectionService.connectionClose(jdbcTemplate);
         }
     }
     public List<ProjectQSEntity> getResultExecuteSQL(String dbUrl, String dbUser, String dbPassword, List<ProjectQSEntity> listOfProjectQs) {

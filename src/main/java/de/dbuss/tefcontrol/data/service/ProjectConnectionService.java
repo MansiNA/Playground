@@ -1651,13 +1651,11 @@ public class ProjectConnectionService {
  */
 
     public List<String> getCobiAdminQFCPlanOutlook(String dbUrl, String dbUser, String dbPassword, String sql) {
-        DataSource dataSource = null;
-        Connection connection = null;
         try {
-             dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
-            connection = dataSource.getConnection();
-            jdbcTemplate = new JdbcTemplate(dataSource);
-// Execute SQL query and retrieve the result as a list of maps
+            //    dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            //   connection = dataSource.getConnection();
+            //   jdbcTemplate = new JdbcTemplate(dataSource);
+            // Execute SQL query and retrieve the result as a list of maps
             List<Map<String, Object>> result = jdbcTemplate.queryForList(sql);
             List<String> resultList = new ArrayList<>();
             for (Map<String, Object> row : result) {
@@ -1665,13 +1663,13 @@ public class ProjectConnectionService {
                     resultList.add(entry.getValue().toString());
                 }
             }
-            dataSource.getConnection().close();
+            //  dataSource.getConnection().close();
             return resultList;
         } catch (Exception e) {
             e.printStackTrace();
             return Collections.emptyList();
         } finally {
-            connectionClose(jdbcTemplate);
+            //  connectionClose(jdbcTemplate);
         }
     }
     public String saveCobiAdminCurrentPeriods(CurrentPeriods data, String dbUrl, String dbUser, String dbPassword, String targetTable) {
