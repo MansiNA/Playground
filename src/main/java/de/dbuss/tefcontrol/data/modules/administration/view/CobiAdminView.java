@@ -422,7 +422,7 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
         System.out.println("execute SQL for sqlAktCurrentScenario:s " + sqlAktCurrentScenarios);
 
         List<String> aktCurrentScenarios = projectConnectionService.getCobiAdminQFCPlanOutlook(dbUrl, dbUser, dbPassword, sqlAktCurrentScenarios);
-
+        projectConnectionService.connectionClose(projectConnectionService.getTemplate());
         System.out.println(aktCurrentScenarios + " aktCurrentScenarios..........");
         List<CurrentScenarios> scenarios = new ArrayList<>();
         currentScenarios = new CurrentScenarios();
