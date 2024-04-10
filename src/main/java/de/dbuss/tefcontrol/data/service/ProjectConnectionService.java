@@ -2175,7 +2175,7 @@ public class ProjectConnectionService {
                 jdbcTemplate.batchUpdate(sqlInsert, data, data.size(), (ps, entity) -> {
                     ps.setInt(1, upload_id);
                     ps.setInt(2, entity.getRow());
-                    ps.setString(3, entity.getMonth());
+                    ps.setInt(3, entity.getMonth());
                     ps.setString(4, entity.getBlock());
                     ps.setString(5, entity.getSegment());
                     ps.setString(6, entity.getProfitCenter());
