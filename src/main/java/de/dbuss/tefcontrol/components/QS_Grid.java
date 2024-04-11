@@ -615,6 +615,8 @@ public class QS_Grid extends Composite<Div> {
                     System.out.println("SQL executed: " + sql1);
 
                     try {
+                        DataSource ret_dataSource = projectConnectionService.getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+                        jdbcTemplate = new JdbcTemplate(ret_dataSource);
                         jdbcTemplate.execute(sql1);
                     }
                     catch (Exception e)
