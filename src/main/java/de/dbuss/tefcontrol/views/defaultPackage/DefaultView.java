@@ -20,6 +20,8 @@ import com.vaadin.flow.component.grid.contextmenu.GridContextMenu;
 import com.vaadin.flow.component.grid.contextmenu.GridMenuItem;
 
 import com.vaadin.flow.component.html.*;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.BoxSizing;
@@ -38,7 +40,10 @@ import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MultiFileMemoryBuffer;
 import com.vaadin.flow.data.binder.Binder;
 
+import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.NativeButtonRenderer;
+import com.vaadin.flow.data.renderer.Renderer;
+import com.vaadin.flow.function.SerializableBiConsumer;
 import com.vaadin.flow.router.*;
 import com.vaadin.flow.server.StreamResource;
 import com.wontlost.ckeditor.Config;
@@ -98,6 +103,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver,
     private Grid<AgentJobs> gridAgentJobs;
     private Label lastRefreshLabel;
     private Label countdownLabel;
+    private Dialog historyDlg;
     private Instant startTime;
     private ScheduledExecutorService executor;
     //private Select<String> select;
@@ -128,10 +134,13 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver,
         exportButton = new Button("Export");
         //executeButton.setEnabled(false);
 
+        historyDlg = new Dialog();
+
         ui= UI.getCurrent();
 
         HorizontalLayout vl = new HorizontalLayout();
         vl.add(getTabsheet());
+        vl.add(initHistoryDlg());
 
         vl.setHeightFull();
         vl.setSizeFull();
@@ -146,6 +155,16 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver,
        // add(info, vl);
         add(vl);
     }
+
+    private Component initHistoryDlg() {
+        VerticalLayout dialogLayout = createDialogLayout();
+        Button cancelButton = new Button("close", e -> historyDlg.close());
+        dialogLayout.add(cancelButton);
+        historyDlg.add(detailGrid);
+        historyDlg.add(dialogLayout);
+        return historyDlg;
+    }
+
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
         RouteParameters parameters = event.getRouteParameters();
@@ -164,7 +183,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver,
         updateAttachmentGrid(listOfProjectAttachments);
         updateAgentJobGrid();
         setSelectedSql();
-        detailGrid.setVisible(false);
+        //detailGrid.setVisible(false);
     }
     @Override
     public void beforeLeave(BeforeLeaveEvent beforeLeaveEvent) {
@@ -220,6 +239,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver,
         tabSheet.setSizeFull();
         tabSheet.setHeightFull();
         log.info("Ending getTabsheet() for Tabsheet");
+
         return tabSheet;
     }
 
@@ -228,18 +248,22 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver,
         configureAgentJobGrid();
 
         VerticalLayout content = new VerticalLayout(gridAgentJobs);
-        gridAgentJobs.setHeight("250px");
+        gridAgentJobs.setHeight("500px");
         content.setSizeFull();
        // content.setHeight("250px");
 
         content.add(getAgentJobToolbar());
 
+
+
         detailGrid = new Grid<>(JobDetails.class, false);
         detailGrid.addColumn(JobDetails::getRun_date).setHeader("Run_Date").setResizable(true);
         detailGrid.addColumn(JobDetails::getRun_time).setHeader("Run_Time").setResizable(true);
         detailGrid.addColumn(JobDetails::getMessage).setHeader("Message").setResizable(true);
-        detailGrid.setVisible(false);
-       // content.remove(detailGrid);
+
+
+
+        /*
         gridAgentJobs.addSelectionListener(event -> {
             Optional<AgentJobs> selectedItems = event.getFirstSelectedItem();
             if (selectedItems.isPresent()) {
@@ -252,7 +276,10 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver,
                // content.add(getJobDetailsGrid(selectedJob));
             }
         });
-        content.add(detailGrid);
+
+         */
+
+        //content.add(detailGrid);
         log.info("Ending getAgentJobTab() for DB-jobs tab");
         return content;
 
@@ -1003,14 +1030,55 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver,
 
     private void configureAgentJobGrid() {
         log.info("Starting configureAgentJobGrid() for DB-jobs tab");
-        gridAgentJobs = new Grid<>(AgentJobs.class);
-        gridAgentJobs.addClassNames("PFG-AgentJobs");
+        gridAgentJobs = new Grid<>(AgentJobs.class,false);
+        gridAgentJobs.addClassNames("AgentJobs");
         //gridAttachments.setSizeFull();
-        gridAgentJobs.setColumns("name", "job_activity", "duration_Min", "jobStartDate", "jobStopDate", "jobNextRunDate", "result" );
-
         //select JobName, JobEnabled,JobDescription, JobActivity, DurationMin, JobStartDate, JobLastExecutedStep, JobExecutedStepDate, JobStopDate, JobNextRunDate, Result from job_status
+       // gridAgentJobs.setColumns("name", "job_activity", "duration_Min", "jobStartDate", "jobStopDate", "jobNextRunDate", "result" );
+
+        gridAgentJobs.addColumn(AgentJobs::getName).setHeader("Job-Name");
+
+        gridAgentJobs.addColumn(createStatusComponentRenderer()).setHeader("Status")
+                .setAutoWidth(true);
 
         gridAgentJobs.addColumn(
+                new ComponentRenderer<>(Button::new, (button, item) -> {
+                    button.setText("start");
+
+                    boolean isAvailable = "Succeeded".equals(item.getResult());
+                    if (isAvailable) {
+                        button.setEnabled(true);
+                    }
+                    else
+                    {
+                        button.setEnabled(false);
+                    }
+
+                    button.addThemeVariants(ButtonVariant.LUMO_SUCCESS);
+                    button.addClickListener(e -> {
+                        log.info("executing NativeButtonRenderer for Run and clickedItem in gridAgentJobs grid "+item.getName());
+                        try {
+                            startJob(item.getName());
+
+                        } catch (InterruptedException ex) {
+                            throw new RuntimeException(ex);
+                        }
+                    });
+                    button.setIcon(new Icon(VaadinIcon.AUTOMATION));
+                })).setHeader("Manage");
+
+        gridAgentJobs.addColumn(
+                new NativeButtonRenderer<>("history",
+                        clickedItem -> {
+                            log.info("executing NativeButtonRenderer for Log and clickedItem in gridAgentJobs grid "+clickedItem.getName());
+                            //show_log(clickedItem);
+                            show_dialog(clickedItem);
+                        })
+        );
+
+
+
+/*        gridAgentJobs.addColumn(
                 new NativeButtonRenderer<>("Run",
                         clickedItem -> {
                             log.info("executing NativeButtonRenderer for Run and clickedItem in gridAgentJobs grid "+clickedItem.getName());
@@ -1022,10 +1090,85 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver,
                             }
                         })
         );
+        */
+        gridAgentJobs.addColumn(AgentJobs::getDuration_Min).setHeader("Laufzeit (Min.)");
+        gridAgentJobs.addColumn(AgentJobs::getJobStartDate).setHeader("Start");
+        gridAgentJobs.addColumn(AgentJobs::getJobStopDate).setHeader("Ende");
+
         gridAgentJobs.getColumns().forEach(col -> col.setAutoWidth(true));
         gridAgentJobs.setItems(getAgentJobs());
+
+        gridAgentJobs.setItemDetailsRenderer(createJobDetailsRenderer());
+
         log.info("Ending configureAgentJobGrid() for DB-jobs tab");
     }
+
+    private static ComponentRenderer<JobDetailsFormLayout, AgentJobs> createJobDetailsRenderer() {
+        return new ComponentRenderer<>(JobDetailsFormLayout::new,
+                JobDetailsFormLayout::setJob);
+    }
+
+    private static class JobDetailsFormLayout extends FormLayout {
+        private final TextField jobnameField = new TextField("Jobname");
+        private final TextField descriptionField = new TextField("Description");
+
+        public JobDetailsFormLayout() {
+            Stream.of(jobnameField, descriptionField).forEach(field -> {
+                field.setReadOnly(true);
+                add(field);
+            });
+
+//            setResponsiveSteps(new ResponsiveStep("0", 3));
+//            setColspan(jobnameField, 3);
+//            setColspan(descriptionField, 3);
+
+        }
+
+        public void setJob(AgentJobs job) {
+
+            jobnameField.setValue(job.getName());;
+            descriptionField.setValue(job.getJobDescription());
+        }
+    }
+
+    private void show_dialog(AgentJobs clickedItem) {
+            AgentJobs selectedJob = clickedItem;
+
+            historyDlg.setHeaderTitle("Show History of Job " + selectedJob.getName());
+        String agent_db = projects.get().getAgent_db();
+        List<JobDetails> listOfDetails = projectConnectionService.getJobDetails(selectedJob.getJob_id(), agent_db);
+        detailGrid.setItems(listOfDetails);
+
+
+        //detailGrid.setVisible(true);
+
+            historyDlg.open();
+
+    }
+
+    private void show_log(AgentJobs job) {
+            AgentJobs selectedJob = job;
+            String agent_db = projects.get().getAgent_db();
+            List<JobDetails> listOfDetails = projectConnectionService.getJobDetails(selectedJob.getJob_id(), agent_db);
+            detailGrid.setItems(listOfDetails);
+            detailGrid.setVisible(true);
+
+            // content.add(getJobDetailsGrid(selectedJob));
+
+    }
+
+    private static ComponentRenderer<Span, AgentJobs> createStatusComponentRenderer() {
+        return new ComponentRenderer<>(Span::new, statusComponentUpdater);
+    }
+
+    private static final SerializableBiConsumer<Span, AgentJobs> statusComponentUpdater = (
+            span, job) -> {
+        boolean isAvailable = "Succeeded".equals(job.getResult());
+        String theme = String.format("badge %s",
+                isAvailable ? "success" : "error");
+        span.getElement().setAttribute("theme", theme);
+        span.setText(job.getResult());
+    };
 
     private void startJob(String jobName) throws InterruptedException {
         log.info("Starting startJob() for DB-jobs tab");
