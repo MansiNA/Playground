@@ -1036,7 +1036,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver,
         //select JobName, JobEnabled,JobDescription, JobActivity, DurationMin, JobStartDate, JobLastExecutedStep, JobExecutedStepDate, JobStopDate, JobNextRunDate, Result from job_status
        // gridAgentJobs.setColumns("name", "job_activity", "duration_Min", "jobStartDate", "jobStopDate", "jobNextRunDate", "result" );
 
-        gridAgentJobs.addColumn(AgentJobs::getName).setHeader("Job-Name");
+        gridAgentJobs.addColumn(AgentJobs::getName).setHeader("Job-Name").setAutoWidth(true);
 
         gridAgentJobs.addColumn(createStatusComponentRenderer()).setHeader("Status")
                 .setAutoWidth(true);
@@ -1074,7 +1074,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver,
                             //show_log(clickedItem);
                             show_dialog(clickedItem);
                         })
-        );
+        ).setWidth(("80px"));
 
 
 
@@ -1091,11 +1091,11 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver,
                         })
         );
         */
-        gridAgentJobs.addColumn(AgentJobs::getDuration_Min).setHeader("Laufzeit (Min.)");
-        gridAgentJobs.addColumn(AgentJobs::getJobStartDate).setHeader("Start");
-        gridAgentJobs.addColumn(AgentJobs::getJobStopDate).setHeader("Ende");
+        gridAgentJobs.addColumn(AgentJobs::getDuration_Min).setHeader("Laufzeit (Min.)").setWidth("300 px");
+       // gridAgentJobs.addColumn(AgentJobs::getJobStartDate).setHeader("Start");
+       // gridAgentJobs.addColumn(AgentJobs::getJobStopDate).setHeader("Ende");
 
-        gridAgentJobs.getColumns().forEach(col -> col.setAutoWidth(true));
+      //  gridAgentJobs.getColumns().forEach(col -> col.setAutoWidth(true));
         gridAgentJobs.setItems(getAgentJobs());
 
         gridAgentJobs.setItemDetailsRenderer(createJobDetailsRenderer());
@@ -1109,24 +1109,26 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver,
     }
 
     private static class JobDetailsFormLayout extends FormLayout {
-        private final TextField jobnameField = new TextField("Jobname");
-        private final TextField descriptionField = new TextField("Description");
+        private final TextField jobstartField = new TextField("Last start date");
+        private final TextField jobendField = new TextField("Last end date");
+        private final TextArea descriptionField = new TextArea("Description");
 
         public JobDetailsFormLayout() {
-            Stream.of(jobnameField, descriptionField).forEach(field -> {
+            Stream.of(jobstartField,jobendField, descriptionField).forEach(field -> {
                 field.setReadOnly(true);
                 add(field);
             });
 
 //            setResponsiveSteps(new ResponsiveStep("0", 3));
 //            setColspan(jobnameField, 3);
-//            setColspan(descriptionField, 3);
+            setColspan(descriptionField, 3);
 
         }
 
         public void setJob(AgentJobs job) {
 
-            jobnameField.setValue(job.getName());;
+            jobstartField.setValue(job.getJobStartDate());;
+            jobendField.setValue(job.getJobStopDate());;
             descriptionField.setValue(job.getJobDescription());
         }
     }

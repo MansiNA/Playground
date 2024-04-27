@@ -32,9 +32,21 @@ public class AgentJobs {
 
     private String jobExecutedStepDate;
 
+    public String getJobStopDate() {
+        if (jobStopDate == null)
+        {
+            return "unbekannt";
+        }
+        else {
+            return jobStopDate;
+        }
+    };
+
     private String jobStopDate;
     private String jobNextRunDate;
     private String result;
     private String job_id;
+
+
 
 }
