@@ -1320,13 +1320,23 @@ public class ProjectConnectionService {
             DataSource dataSource = getDataSource(agent_db);
             jdbcTemplate = new JdbcTemplate(dataSource);
 
-            String sqlQuery = "select run_date, run_time, message from msdb.dbo.sysjobhistory AS jh where job_id='"+job_id+"' order by run_date desc, run_time desc";
+            //String sqlQuery = "select run_date, run_time, message from msdb.dbo.sysjobhistory AS jh where job_id='"+job_id+"' order by run_date desc, run_time desc";
+
+            String sqlQuery = "SELECT sh.step_id, sh.step_name AS StepName,  shp.LastRunStartDateTime, DATEADD(SECOND, shp.LastRunDurationSeconds, shp.LastRunStartDateTime) AS LastRunFinishDateTime, shp.LastRunDurationSeconds," +
+                    "sh.message FROM msdb.dbo.sysjobs sj  INNER JOIN msdb.dbo.sysjobhistory sh ON sj.job_id = sh.job_id  CROSS APPLY (SELECT DATETIMEFROMPARTS(sh.run_date / 10000,  sh.run_date % 10000 / 100,  sh.run_date % 100,  sh.run_time / 10000," +
+                    "sh.run_time % 10000 / 100, sh.run_time % 100, 0 ) AS LastRunStartDateTime,  (sh.run_duration / 10000) * 3600 + ((sh.run_duration % 10000) / 100) * 60 + (sh.run_duration % 100) AS LastRunDurationSeconds) AS shp  where sj.job_id='"+job_id+"' order by shp.LastRunStartDateTime desc";
+
 
             // Create a RowMapper to map the query result to a CLTVInflow object
             RowMapper<JobDetails> rowMapper = (rs, rowNum) -> {
                 JobDetails jobDetails = new JobDetails();
-                jobDetails.setRun_date(rs.getInt("run_date"));
-                jobDetails.setRun_time(rs.getString("run_time"));
+                //jobDetails.setRun_date(rs.getInt("run_date"));
+                //jobDetails.setRun_time(rs.getString("run_time"));
+                jobDetails.setStep_id(rs.getInt("step_id"));
+                jobDetails.setStepName(rs.getString("StepName"));
+                jobDetails.setLastRunStartDateTime(rs.getString("LastRunStartDateTime"));
+                jobDetails.setLastRunFinishDateTime(rs.getString("LastRunFinishDateTime"));
+                jobDetails.setLastRunDurationSeconds(rs.getInt("LastRunDurationSeconds"));
                 jobDetails.setMessage(rs.getString("message"));
 
                 return jobDetails;

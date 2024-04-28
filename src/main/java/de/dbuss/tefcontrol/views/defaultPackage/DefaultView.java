@@ -253,39 +253,27 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver,
         log.info("Starting getAgentJobTab() for DB-jobs tab");
         configureAgentJobGrid();
 
-        VerticalLayout content = new VerticalLayout(gridAgentJobs);
-        gridAgentJobs.setHeight("500px");
-        content.setSizeFull();
-       // content.setHeight("250px");
-
+        //VerticalLayout content = new VerticalLayout(gridAgentJobs);
+        VerticalLayout content = new VerticalLayout();
+        content.setWidthFull();
+        content.setHeightFull();
+        gridAgentJobs.setMinHeight("600px");
+        gridAgentJobs.setMaxHeight("800px");
+        content.add(gridAgentJobs);
         content.add(getAgentJobToolbar());
 
 
 
         detailGrid = new Grid<>(JobDetails.class, false);
-        detailGrid.addColumn(JobDetails::getRun_date).setHeader("Run_Date").setResizable(true);
-        detailGrid.addColumn(JobDetails::getRun_time).setHeader("Run_Time").setResizable(true);
-        detailGrid.addColumn(JobDetails::getMessage).setHeader("Message").setResizable(true);
+      //  detailGrid.addColumn(JobDetails::getRun_date).setHeader("Run_Date").setResizable(true);
+      //  detailGrid.addColumn(JobDetails::getRun_time).setHeader("Run_Time").setResizable(true);
+        detailGrid.addColumn(JobDetails::getStep_id).setHeader("Step ID").setResizable(true).setWidth("80px");
+        detailGrid.addColumn(JobDetails::getStepName).setHeader("Step Name").setResizable(true).setAutoWidth(true);
+        detailGrid.addColumn(JobDetails::getLastRunStartDateTime).setHeader("Start").setResizable(true).setWidth("190px");
+   //     detailGrid.addColumn(JobDetails::getLastRunFinishDateTime).setHeader("Finish").setResizable(true).setWidth("190px");
+        detailGrid.addColumn(JobDetails::getLastRunDurationSeconds).setHeader("Duration").setResizable(true).setWidth("90px");
+        detailGrid.addColumn(JobDetails::getMessage).setHeader("Message").setResizable(true).setAutoWidth(true);
 
-
-
-        /*
-        gridAgentJobs.addSelectionListener(event -> {
-            Optional<AgentJobs> selectedItems = event.getFirstSelectedItem();
-            if (selectedItems.isPresent()) {
-                AgentJobs selectedJob = selectedItems.get();
-                String agent_db = projects.get().getAgent_db();
-                List<JobDetails> listOfDetails = projectConnectionService.getJobDetails(selectedJob.getJob_id(), agent_db);
-                detailGrid.setItems(listOfDetails);
-                detailGrid.setVisible(true);
-
-               // content.add(getJobDetailsGrid(selectedJob));
-            }
-        });
-
-         */
-
-        //content.add(detailGrid);
         log.info("Ending getAgentJobTab() for DB-jobs tab");
         return content;
 
@@ -1037,15 +1025,14 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver,
     private void configureAgentJobGrid() {
         log.info("Starting configureAgentJobGrid() for DB-jobs tab");
         gridAgentJobs = new Grid<>(AgentJobs.class,false);
-        gridAgentJobs.addClassNames("AgentJobs");
+        //gridAgentJobs.addClassNames("AgentJobs");
         //gridAttachments.setSizeFull();
         //select JobName, JobEnabled,JobDescription, JobActivity, DurationMin, JobStartDate, JobLastExecutedStep, JobExecutedStepDate, JobStopDate, JobNextRunDate, Result from job_status
        // gridAgentJobs.setColumns("name", "job_activity", "duration_Min", "jobStartDate", "jobStopDate", "jobNextRunDate", "result" );
+        gridAgentJobs.setWidth("1100px");
+        gridAgentJobs.addColumn(AgentJobs::getName).setHeader("Job-Name").setResizable(true).setAutoWidth(true);
 
-        gridAgentJobs.addColumn(AgentJobs::getName).setHeader("Job-Name").setAutoWidth(true);
-
-        gridAgentJobs.addColumn(createStatusComponentRenderer()).setHeader("Status")
-                .setAutoWidth(true);
+        gridAgentJobs.addColumn(createStatusComponentRenderer()).setHeader("Status").setResizable(true).setWidth("150px");
 
         gridAgentJobs.addColumn(
                 new ComponentRenderer<>(Button::new, (button, item) -> {
@@ -1070,7 +1057,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver,
                         }
                     });
                     button.setIcon(new Icon(VaadinIcon.AUTOMATION));
-                })).setHeader("Manage");
+                })).setResizable(true).setHeader("Manage");
 
         gridAgentJobs.addColumn(
                 new NativeButtonRenderer<>("history",
@@ -1079,7 +1066,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver,
                             //show_log(clickedItem);
                             show_dialog(clickedItem);
                         })
-        ).setWidth(("80px"));
+        ).setHeader("History").setResizable(true).setWidth(("100px"));
 
 
 
@@ -1096,7 +1083,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver,
                         })
         );
         */
-        gridAgentJobs.addColumn(AgentJobs::getDuration_Min).setHeader("Laufzeit (Min.)").setWidth("300 px");
+        gridAgentJobs.addColumn(AgentJobs::getDuration_Min).setHeader("Runtime (Min.)").setResizable(true).setWidth("80px");
        // gridAgentJobs.addColumn(AgentJobs::getJobStartDate).setHeader("Start");
        // gridAgentJobs.addColumn(AgentJobs::getJobStopDate).setHeader("Ende");
 
