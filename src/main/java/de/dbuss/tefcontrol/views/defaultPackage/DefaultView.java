@@ -135,8 +135,10 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver,
         //executeButton.setEnabled(false);
 
         historyDlg = new Dialog();
-        historyDlg.setWidth("800px");
-        historyDlg.setHeight("600px");
+        historyDlg.setWidth("1600px");
+        historyDlg.setHeight("800px");
+
+
         historyDlg.setDraggable(true);
         historyDlg.setResizable(true);
 
@@ -273,6 +275,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver,
    //     detailGrid.addColumn(JobDetails::getLastRunFinishDateTime).setHeader("Finish").setResizable(true).setWidth("190px");
         detailGrid.addColumn(JobDetails::getLastRunDurationSeconds).setHeader("Duration").setResizable(true).setWidth("90px");
         detailGrid.addColumn(JobDetails::getMessage).setHeader("Message").setResizable(true).setAutoWidth(true);
+
 
         log.info("Ending getAgentJobTab() for DB-jobs tab");
         return content;
@@ -1029,7 +1032,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver,
         //gridAttachments.setSizeFull();
         //select JobName, JobEnabled,JobDescription, JobActivity, DurationMin, JobStartDate, JobLastExecutedStep, JobExecutedStepDate, JobStopDate, JobNextRunDate, Result from job_status
        // gridAgentJobs.setColumns("name", "job_activity", "duration_Min", "jobStartDate", "jobStopDate", "jobNextRunDate", "result" );
-        gridAgentJobs.setWidth("1100px");
+        gridAgentJobs.setWidth("1000px");
         gridAgentJobs.addColumn(AgentJobs::getName).setHeader("Job-Name").setResizable(true).setAutoWidth(true);
 
         gridAgentJobs.addColumn(createStatusComponentRenderer()).setHeader("Status").setResizable(true).setWidth("150px");
@@ -1060,7 +1063,7 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver,
                 })).setResizable(true).setHeader("Manage");
 
         gridAgentJobs.addColumn(
-                new NativeButtonRenderer<>("history",
+                new NativeButtonRenderer<>("show history",
                         clickedItem -> {
                             log.info("executing NativeButtonRenderer for Log and clickedItem in gridAgentJobs grid "+clickedItem.getName());
                             //show_log(clickedItem);
@@ -1132,7 +1135,9 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver,
         String agent_db = projects.get().getAgent_db();
         List<JobDetails> listOfDetails = projectConnectionService.getJobDetails(selectedJob.getJob_id(), agent_db);
         detailGrid.setItems(listOfDetails);
-
+        //detailGrid.setWidth("1150px");
+        detailGrid.setWidthFull();
+        detailGrid.setHeight("600px");
 
         //detailGrid.setVisible(true);
 
