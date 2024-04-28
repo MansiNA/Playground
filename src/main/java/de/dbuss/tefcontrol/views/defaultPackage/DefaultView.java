@@ -135,6 +135,10 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver,
         //executeButton.setEnabled(false);
 
         historyDlg = new Dialog();
+        historyDlg.setWidth("800px");
+        historyDlg.setHeight("600px");
+        historyDlg.setDraggable(true);
+        historyDlg.setResizable(true);
 
         ui= UI.getCurrent();
 
@@ -157,13 +161,15 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver,
     }
 
     private Component initHistoryDlg() {
-        VerticalLayout dialogLayout = createDialogLayout();
+        VerticalLayout historyDialogLayout = new VerticalLayout();
         Button cancelButton = new Button("close", e -> historyDlg.close());
-        dialogLayout.add(cancelButton);
+        historyDialogLayout.add(cancelButton);
         historyDlg.add(detailGrid);
-        historyDlg.add(dialogLayout);
+        historyDlg.add(historyDialogLayout);
         return historyDlg;
     }
+
+
 
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
