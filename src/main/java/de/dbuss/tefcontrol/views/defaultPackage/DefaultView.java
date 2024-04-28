@@ -1051,13 +1051,12 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver,
                 new ComponentRenderer<>(Button::new, (button, item) -> {
                     button.setText("start");
 
-                    boolean isAvailable = "Succeeded".equals(item.getResult());
-                    if (isAvailable) {
-                        button.setEnabled(true);
+                    if ("ongoing".equals(item.getResult())) {
+                        button.setEnabled(false);
                     }
                     else
                     {
-                        button.setEnabled(false);
+                        button.setEnabled(true);
                     }
 
                     button.addThemeVariants(ButtonVariant.LUMO_SUCCESS);
