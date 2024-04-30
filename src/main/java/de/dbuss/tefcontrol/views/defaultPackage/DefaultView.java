@@ -190,7 +190,10 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver,
         updateDescription();
         updateAttachmentGrid(listOfProjectAttachments);
         updateAgentJobGrid();
-        setSelectedSql();
+        if(MainLayout.isAdmin) {
+            setSelectedSql();
+        }
+
         //detailGrid.setVisible(false);
     }
     @Override
@@ -242,7 +245,11 @@ public class DefaultView extends VerticalLayout  implements BeforeEnterObserver,
         tabSheet.add("Description", getProjectsDescription());
         tabSheet.add("Attachments", getProjectAttachements());
         tabSheet.add("DB-Jobs", getAgentJobTab());
-        tabSheet.add("SQL-Query", getProjectSQL());
+
+        if (MainLayout.isAdmin) {
+            tabSheet.add("SQL-Query", getProjectSQL());
+        }
+
 
         tabSheet.setSizeFull();
         tabSheet.setHeightFull();
