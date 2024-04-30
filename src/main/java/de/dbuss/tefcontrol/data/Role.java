@@ -1,5 +1,5 @@
 package de.dbuss.tefcontrol.data;
 
 public enum Role {
-    USER, ADMIN, MAPPING, KPI, OUTLOOK, FLIP, CLTV;
+    USER, ADMIN, MAPPING, KPI, OUTLOOK, FLIP, CLTV, CONSYS;
 }
