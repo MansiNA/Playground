@@ -104,4 +104,9 @@ public class Constants {
     public static final String UnderlyingCobi = "UnderlyingCobi";
 
     public static final String SOURCETABLE = "SourceTable";
+
+
+    // This constant is used for B2B_MapSalesChannel module
+    public static final String ADJUSTMENTREFX = "adjustment_refx";
+
 }

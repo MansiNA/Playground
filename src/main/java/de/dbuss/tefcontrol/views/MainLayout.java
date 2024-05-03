@@ -24,6 +24,8 @@ import com.vaadin.flow.theme.lumo.LumoUtility;
 import de.dbuss.tefcontrol.data.entity.Constants;
 import de.dbuss.tefcontrol.data.entity.Projects;
 import de.dbuss.tefcontrol.data.entity.User;
+import de.dbuss.tefcontrol.data.modules.adjustmentrefx.entity.AdjustmentsREFX;
+import de.dbuss.tefcontrol.data.modules.adjustmentrefx.view.AdjustmentsREFXView;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.view.B2POutlookFINView;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.view.B2POutlookSUBView;
 import de.dbuss.tefcontrol.data.modules.b2bmapsaleschannel.view.B2BMapSalesChannelView;
@@ -103,9 +105,6 @@ public class MainLayout extends AppLayout {
 
         logInfo.info("start logs using file...###################");
         logService.addLogMessage(LogService.INFO, "Starting application in MainLayout");
-      //  logService.addLogMessage(LogService.ERROR, ".....Starting application in MainLayout");
-      //  logService.addLogMessage(LogService.WARN, "Starting application in MainLayout......");
-
 
         // Add mappings for URLs and view classes
         urlToViewMap.put(Constants.PFG_PRODUCT_MAPPING, PFGProductMappingView.class);
@@ -128,7 +127,7 @@ public class MainLayout extends AppLayout {
         urlToViewMap.put(Constants.Strategic_KPI, Strategic_KPIView.class);
         urlToViewMap.put(Constants.DimLineTapete, ImportDimLineTapete.class);
         urlToViewMap.put(Constants.UnderlyingCobi, underlying_cobi.class);
-
+        urlToViewMap.put(Constants.ADJUSTMENTREFX, AdjustmentsREFXView.class);
 
         setPrimarySection(Section.DRAWER);
         addDrawerContent();

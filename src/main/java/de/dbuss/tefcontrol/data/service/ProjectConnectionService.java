@@ -4,6 +4,7 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.zaxxer.hikari.HikariDataSource;
 import de.dbuss.tefcontrol.data.entity.*;
+import de.dbuss.tefcontrol.data.modules.adjustmentrefx.entity.AdjustmentsREFX;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.B2pOutlookSub;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.OutlookMGSR;
 import de.dbuss.tefcontrol.data.modules.b2bmapsaleschannel.entity.MapSalesChannel;
@@ -2208,4 +2209,46 @@ public class ProjectConnectionService {
         public JdbcTemplate getTemplate() {
             return  jdbcTemplate;
         }
+
+    public String saveAdjustmentsREFX(List<AdjustmentsREFX> data, String tableName, String dbUrl, String dbUser, String dbPassword, int uploadId) {
+        try {
+
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
+            String sqlDelete = "DELETE FROM " + tableName;
+            jdbcTemplate.update(sqlDelete);
+
+            String sqlInsert = "INSERT INTO " + tableName + " (ID, Scenario, Date, Adjustment_Type, Authorization_Group, Company_Code, Asset_Class, Vendor, Profit_Center, [Lease Payments], [Lease Liability], Interest, [ROU Capex], [ROU Depreciation], Comment) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+
+            jdbcTemplate.batchUpdate(sqlInsert, data, data.size(), (ps, entity) -> {
+                ps.setString(1, entity.getId());
+                ps.setString(2, entity.getScenario());
+                ps.setDate(3, Date.valueOf(entity.getDate()));
+                ps.setString(4, entity.getAdjustmentType());
+                ps.setString(5, entity.getAuthorizationGroup());
+                ps.setString(6, entity.getCompanyCode());
+                ps.setString(7, entity.getAssetClass());
+                ps.setString(8, entity.getVendor());
+                ps.setString(9, entity.getProfitCenter());
+                ps.setString(10, entity.getLeasePayments());
+                ps.setString(11, entity.getLeaseLiability());
+                ps.setString(12, entity.getInterest());
+                ps.setString(13, entity.getRouCapex());
+                ps.setString(14, entity.getRouDepreciation());
+                ps.setString(15, entity.getComment());
+             //   ps.setDate(16, entity.getLoadDate());
+             //   ps.setInt(16, uploadId);
+            });
+
+            return Constants.OK;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return handleDatabaseError(e);
+        } finally {
+            connectionClose(jdbcTemplate);
+        }
+    }
 }
