@@ -483,7 +483,7 @@ public class ProjectConnectionService {
             //e.printStackTrace();
             return "ERROR: " + e.getMessage();
         } finally {
-            connectionClose(jdbcTemplate);
+          //  connectionClose(jdbcTemplate);
         }
 
     }
