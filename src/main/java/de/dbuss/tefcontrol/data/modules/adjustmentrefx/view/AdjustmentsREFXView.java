@@ -8,6 +8,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.crud.BinderCrudEditor;
 import com.vaadin.flow.component.crud.Crud;
 import com.vaadin.flow.component.crud.CrudEditor;
+import com.vaadin.flow.component.crud.CrudVariant;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
@@ -284,6 +285,7 @@ public class AdjustmentsREFXView extends VerticalLayout implements BeforeEnterOb
         parameterGrid.addThemeVariants(GridVariant.LUMO_COMPACT);
         parameterGrid.setHeight("200px");
         parameterGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+        parameterGrid.setThemeName("dense");
         logView.logMessage(Constants.INFO, "Ending setProjectParameterGrid() for set database detail in Grid");
     }
 
@@ -379,8 +381,9 @@ public class AdjustmentsREFXView extends VerticalLayout implements BeforeEnterOb
         crud = new Crud<>(AdjustmentsREFX.class, createAdjustmentsREFXEditor());
         crud.setToolbarVisible(false);
         crud.setHeightFull();
-        crud.setSizeFull();
+        crud.setThemeName("dense");
         setupAdjustmentsREFXGrid();
+        crud.addThemeVariants(CrudVariant.NO_BORDER);
         content.add(crud);
         logView.logMessage(Constants.INFO, "Ending getAdjustmentsREFXGrid() for get AdjustmentsREFX Grid");
         return content;
@@ -461,6 +464,10 @@ public class AdjustmentsREFXView extends VerticalLayout implements BeforeEnterOb
 
         // Set theme variants
         grid.addThemeVariants(GridVariant.LUMO_COMPACT);
+        grid.addThemeVariants(GridVariant.LUMO_WRAP_CELL_CONTENT);
+        grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+
+        grid.setThemeName("dense");
 
         logView.logMessage(Constants.INFO, "Ending setupAdjustmentsREFXGrid() for setup AdjustmentsREFX Grid");
     }
