@@ -2219,7 +2219,7 @@ public class ProjectConnectionService {
             String sqlDelete = "DELETE FROM " + tableName;
             jdbcTemplate.update(sqlDelete);
 
-            String sqlInsert = "INSERT INTO " + tableName + " (ID, Scenario, Date, Adjustment_Type, Authorization_Group, Company_Code, Asset_Class, Vendor, Profit_Center, [Lease Payments], [Lease Liability], Interest, [ROU Capex], [ROU Depreciation], Comment) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            String sqlInsert = "INSERT INTO " + tableName + " (ID, Scenario, Date, Adjustment_Type, Authorization_Group, Company_Code, Asset_Class, Vendor, Profit_Center, [Lease Payments], [Lease Liability], Interest, [ROU Capex], [ROU Depreciation], Comment, Upload_ID) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
 
             jdbcTemplate.batchUpdate(sqlInsert, data, data.size(), (ps, entity) -> {
@@ -2239,7 +2239,7 @@ public class ProjectConnectionService {
                 ps.setString(14, entity.getRouDepreciation());
                 ps.setString(15, entity.getComment());
              //   ps.setDate(16, entity.getLoadDate());
-             //   ps.setInt(16, uploadId);
+                ps.setInt(16, uploadId);
             });
 
             return Constants.OK;
