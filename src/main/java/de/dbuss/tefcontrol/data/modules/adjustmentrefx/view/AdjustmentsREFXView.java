@@ -421,7 +421,7 @@ public class AdjustmentsREFXView extends VerticalLayout implements BeforeEnterOb
 
         grid = crud.getGrid();
 
-        grid.getColumnByKey(ID).setHeader("ID").setWidth("120px").setFlexGrow(0).setResizable(true);
+     //   grid.getColumnByKey(ID).setHeader("ID").setWidth("120px").setFlexGrow(0).setResizable(true);
         grid.getColumnByKey(SCENARIO).setHeader("Scenario").setWidth("60px").setFlexGrow(0).setResizable(true);
         grid.getColumnByKey(DATE).setHeader("Date").setWidth("80px").setFlexGrow(0).setResizable(true);
         grid.getColumnByKey(ADJUSTMENT_TYPE).setHeader("Adjustment Type").setWidth("80px").setFlexGrow(0).setResizable(true);
@@ -445,7 +445,7 @@ public class AdjustmentsREFXView extends VerticalLayout implements BeforeEnterOb
 
         // Reorder the columns
         grid.setColumnOrder(
-                grid.getColumnByKey(ID),
+           //     grid.getColumnByKey(ID),
                 grid.getColumnByKey(SCENARIO),
                 grid.getColumnByKey(DATE),
                 grid.getColumnByKey(ADJUSTMENT_TYPE),

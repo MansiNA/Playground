@@ -2219,27 +2219,25 @@ public class ProjectConnectionService {
             String sqlDelete = "DELETE FROM " + tableName;
             jdbcTemplate.update(sqlDelete);
 
-            String sqlInsert = "INSERT INTO " + tableName + " (ID, Scenario, Date, Adjustment_Type, Authorization_Group, Company_Code, Asset_Class, Vendor, Profit_Center, [Lease Payments], [Lease Liability], Interest, [ROU Capex], [ROU Depreciation], Comment, Upload_ID) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            String sqlInsert = "INSERT INTO " + tableName + " (Scenario, Date, Adjustment_Type, Authorization_Group, Company_Code, Asset_Class, Vendor, Profit_Center, [Lease Payments], [Lease Liability], Interest, [ROU Capex], [ROU Depreciation], Comment, Upload_ID) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
 
             jdbcTemplate.batchUpdate(sqlInsert, data, data.size(), (ps, entity) -> {
-                ps.setString(1, entity.getId());
-                ps.setString(2, entity.getScenario());
-                ps.setDate(3, Date.valueOf(entity.getDate()));
-                ps.setString(4, entity.getAdjustmentType());
-                ps.setString(5, entity.getAuthorizationGroup());
-                ps.setString(6, entity.getCompanyCode());
-                ps.setString(7, entity.getAssetClass());
-                ps.setString(8, entity.getVendor());
-                ps.setString(9, entity.getProfitCenter());
-                ps.setString(10, entity.getLeasePayments());
-                ps.setString(11, entity.getLeaseLiability());
-                ps.setString(12, entity.getInterest());
-                ps.setString(13, entity.getRouCapex());
-                ps.setString(14, entity.getRouDepreciation());
-                ps.setString(15, entity.getComment());
-             //   ps.setDate(16, entity.getLoadDate());
-                ps.setInt(16, uploadId);
+                ps.setString(1, entity.getScenario());
+                ps.setDate(2, Date.valueOf(entity.getDate()));
+                ps.setString(3, entity.getAdjustmentType());
+                ps.setString(4, entity.getAuthorizationGroup());
+                ps.setString(5, entity.getCompanyCode());
+                ps.setString(6, entity.getAssetClass());
+                ps.setString(7, entity.getVendor());
+                ps.setString(8, entity.getProfitCenter());
+                ps.setString(9, entity.getLeasePayments());
+                ps.setString(10, entity.getLeaseLiability());
+                ps.setString(11, entity.getInterest());
+                ps.setString(12, entity.getRouCapex());
+                ps.setString(13, entity.getRouDepreciation());
+                ps.setString(14, entity.getComment());
+                ps.setInt(15, uploadId);
             });
 
             return Constants.OK;
