@@ -2216,8 +2216,8 @@ public class ProjectConnectionService {
             DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
             jdbcTemplate = new JdbcTemplate(dataSource);
 
-            String sqlDelete = "DELETE FROM " + tableName;
-            jdbcTemplate.update(sqlDelete);
+         //   String sqlDelete = "DELETE FROM " + tableName;
+         //   jdbcTemplate.update(sqlDelete);
 
             String sqlInsert = "INSERT INTO " + tableName + " (Scenario, Date, Adjustment_Type, Authorization_Group, Company_Code, Asset_Class, Vendor, Profit_Center, [Lease Payments], [Lease Liability], Interest, [ROU Capex], [ROU Depreciation], Comment, Upload_ID) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
