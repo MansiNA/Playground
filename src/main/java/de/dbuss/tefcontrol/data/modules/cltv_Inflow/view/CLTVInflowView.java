@@ -147,7 +147,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         //qsGrid = new QS_Grid(projectConnectionService, backendService);
 
         TabSheet tabSheet = new TabSheet();
-        tabSheet.add("CASA Entries", getCASA_Grid());
+        tabSheet.add("CASA Import", getCASA_Grid());
         tabSheet.add("Missing Entries", getMissingCLTV_InflowGrid());
         tabSheet.add("All Entries",getCLTV_InflowGrid());
 
@@ -313,18 +313,19 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
 
     private void updateCasaGrid() {
         logView.logMessage(Constants.INFO, "Starting updateCasaGrid for update allCasaData grid");
+        System.out.println("Update Casa-GRID");
         List<CasaTerm> allCasaData = projectConnectionService.getAllCASATerms(casaTableName, casaDbUrl, casaDbUser, casaDbPassword);
 
         List<CasaTerm> existingEntries=new ArrayList<>();
 
         if(allCLTVInflowData!=null) {
-            System.out.println("Count All CASA-Entries:" + allCasaData.size());
+            System.out.println("Count All CASA-Entries: " + allCasaData.size());
             for (CasaTerm employee : allCasaData) {
                 String employeeKey = employee.getContractFeatureId()+"_"+employee.getAttributeClassesId()+"_"+employee.getConnectType();
                 for (CLTVInflow secondEmployee : allCLTVInflowData) {
                     String secondEmployeeKey = secondEmployee.getContractFeatureId()+"_"+secondEmployee.getAttributeClassesId()+"_"+secondEmployee.getConnectType();
                     if (employeeKey.equals(secondEmployeeKey)) {
-                        System.out.println("Bereits vorhanden: " + employee.getContractFeatureId() + ", CF-ID: " + employee.getContractFeatureId());
+                        System.out.println("Key bereits vorhanden: " + employeeKey);
                         existingEntries.add(employee);
                         break;
                     }
@@ -417,6 +418,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         grid.removeColumn(grid.getColumnByKey(EDIT_COLUMN));
         grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         grid.addThemeVariants(GridVariant.LUMO_COMPACT);
+        grid.setThemeName("dense");
 
 
         // set column order
@@ -625,6 +627,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
 
         missingGrid.getColumns().forEach(col -> col.setAutoWidth(true));
         missingGrid.setSelectionMode(Grid.SelectionMode.NONE);
+        missingGrid.setThemeName("dense");
     //    missingGrid.setEditOnClick(true);
 
         // default hide
@@ -662,8 +665,8 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
 
             for (CasaTerm employee : allCasaData) {
                 for (CLTVInflow secondEmployee : allCLTVInflowData) {
-                    if (employee.getContractFeatureId() == secondEmployee.getContractFeatureId()) {
-                        System.out.println("Bereits vorhanden: " + employee.getContractFeatureId() + ", CF-ID: " + employee.getContractFeatureId());
+                    if (employee.getContractFeatureId() == secondEmployee.getContractFeatureId() && employee.getAttributeClassesId() == secondEmployee.getAttributeClassesId() && employee.getConnectType() == secondEmployee.getConnectType()   ) {
+                        System.out.println("Bereits vorhanden: CF-ID: " + employee.getContractFeatureId() + ", AttributeClasses-ID: " + employee.getAttributeClassesId()  + ", Connect-Type: " + employee.getConnectType()  );
                         break;
                     }
                 }
@@ -710,7 +713,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         casaGrid.addComponentColumn(CasaTerm -> {
 
                 ComboBox<String> comboBoxCategory = new ComboBox<>();
-                comboBoxCategory.setPlaceholder("select or enter value...");
+                comboBoxCategory.setPlaceholder("select CLTV_Category");
                 if (listOfCLTVCategoryName != null && !listOfCLTVCategoryName.isEmpty()) {
                     comboBoxCategory.setItems(listOfCLTVCategoryName);
                 }
@@ -731,12 +734,12 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
 
                 return comboBoxCategory;
 
-        }).setHeader("CLTV_Category_Name").setFlexGrow(0).setWidth("300px").setResizable(true);
+        }).setHeader("CLTV_Category_Name").setFlexGrow(0).setWidth("450px").setResizable(true);
 
         casaGrid.addComponentColumn(CasaTerm -> {
 
             ComboBox<String> comboBoxControllingBranding = new ComboBox<>();
-            comboBoxControllingBranding.setPlaceholder("select or enter value...");
+            comboBoxControllingBranding.setPlaceholder("select Branding");
             if (listOfControllingBranding != null && !listOfControllingBranding.isEmpty()) {
                 comboBoxControllingBranding.setItems(listOfControllingBranding);
             }
@@ -757,13 +760,13 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
 
             return comboBoxControllingBranding;
 
-        }).setHeader("ControllingBranding").setFlexGrow(0).setWidth("300px").setResizable(true);
+        }).setHeader("ControllingBranding").setFlexGrow(0).setWidth("500px").setResizable(true);
 
 
         casaGrid.addComponentColumn(CasaTerm -> {
 
             ComboBox<String> comboBoxCLTVChargeName = new ComboBox<>();
-            comboBoxCLTVChargeName.setPlaceholder("select or enter value...");
+            comboBoxCLTVChargeName.setPlaceholder("select Charge Name");
             if (listOfCLTVChargeName != null && !listOfCLTVChargeName.isEmpty()) {
                 comboBoxCLTVChargeName.setItems(listOfCLTVChargeName);
             }
@@ -778,13 +781,13 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
             });
             comboBoxCLTVChargeName.addValueChangeListener(event -> {
                 String selectedValue = event.getValue();
-                CasaTerm.setControllingBranding(selectedValue);
+                CasaTerm.setCltvChargeName(selectedValue);
                 saveModifiedCasa(CasaTerm, selectedValue);
             });
 
             return comboBoxCLTVChargeName;
 
-        }).setHeader("CLTV_Charge_Name").setFlexGrow(0).setWidth("300px").setResizable(true);
+        }).setHeader("CLTV_Charge_Name").setFlexGrow(0).setWidth("500px").setResizable(true);
 
 
 
@@ -797,10 +800,16 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
                             ButtonVariant.LUMO_SUCCESS,
                             ButtonVariant.LUMO_TERTIARY);
                     button.addClickListener(e -> {
-                        System.out.println("Save: " + casaTerm.getContractFeatureId().toString() + " with Category: " + casaTerm.getCltvCategoryName());
+                        System.out.println("Save: " + casaTerm.getContractFeatureId().toString() + " with Category: " + casaTerm.getCltvCategoryName() + "Branding: " + casaTerm.getControllingBranding() + " ChargeName: " + casaTerm.getCltvChargeName() ) ;
                         projectConnectionService.saveCASAToTargetTable(casaTerm, tableName, dbUrl, dbUser, dbPassword);
+
+                        updateGrid(); //First update Grid for check existing entries.
+                        updateCasaGrid();
+
+
                     });
                     button.setIcon(new Icon(VaadinIcon.CLOUD_DOWNLOAD_O));
+
                 })).setHeader("get entry");
 
 
@@ -930,7 +939,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
             } else {
                 modifiedCasa.add(cltvInflow);
             }
-            saveButton.setEnabled(true);
+           // saveButton.setEnabled(true);
         } else {
             Notification.show("Please do not enter Missing value", 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
         }

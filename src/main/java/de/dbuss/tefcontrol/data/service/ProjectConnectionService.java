@@ -963,7 +963,8 @@ public class ProjectConnectionService {
                     data.getContractFeatureId(), data.getAttributeClassesId(), data.getConnectType());
 
             if (count > 0) {
-                // Record exists, perform update
+                // Record exists, show error, because this row should not displayd id casa grid!
+                /*
                 String sqlUpdate = "UPDATE " + tableName +
                         " SET CF_TYPE_CLASS_NAME = ?, AttributeClasses_NAME = ?, " +
                         "ContractFeatureSubCategory_Name = ?, ContractFeature_Name = ?, " +
@@ -971,12 +972,16 @@ public class ProjectConnectionService {
                         "CLTV_Category_Name = ?, Controlling_Branding = ?, CLTV_Charge_Name = ?, User = ? " +
                         "WHERE ContractFeature_id = ? AND AttributeClasses_ID = ? AND Connect_Type = ?";
 
+                System.out.println("Update-Statement:" + sqlUpdate);
+
                 jdbcTemplate.update(sqlUpdate, data.getCfTypeClassName(), data.getAttributeClassesName(),
                         "", "",
                         "", "",
                         data.getCltvCategoryName(), "",
                         data.getCltvChargeName(), "",
                         data.getContractFeatureId(), data.getAttributeClassesId(), data.getConnectType());
+
+                 */
             } else {
                 // Record does not exist, perform insert
                 String sqlInsert = "INSERT INTO " + tableName +
@@ -986,11 +991,23 @@ public class ProjectConnectionService {
                         "Controlling_Branding, CLTV_Charge_Name, [User]) " +
                         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
+                System.out.println("Insert-Statement:" + sqlInsert);
+
+                System.out.println("Values:");
+                System.out.println("ContractFeatureId: " + data.getContractFeatureId());
+                System.out.println("AttributeClassesId: " + data.getAttributeClassesId());
+                System.out.println("CfTypeClassName: " + data.getCfTypeClassName());
+                System.out.println("AttributeClassesName: " + data.getAttributeClassesName());
+                System.out.println("ConnectType: " + data.getConnectType());
+                System.out.println("CltvCategoryName: " + data.getCltvCategoryName());
+                System.out.println("ControllingBranding: " + data.getControllingBranding());
+                System.out.println("CltvChargeName: " + data.getCltvChargeName());
+
                 jdbcTemplate.update(sqlInsert, data.getContractFeatureId(), data.getAttributeClassesId(),
                         data.getCfTypeClassName(), data.getAttributeClassesName(), "",
                         "", "", "",
-                        data.getConnectType(), data.getCltvCategoryName(), "",
-                        data.getCltvChargeName(), "");
+                        data.getConnectType(), data.getCltvCategoryName(), data.getControllingBranding(),
+                        data.getCltvChargeName(), "PIT");
             }
 
             return Constants.OK;

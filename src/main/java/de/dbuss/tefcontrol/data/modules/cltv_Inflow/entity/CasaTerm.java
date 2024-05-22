@@ -35,6 +35,7 @@ public class CasaTerm {
 
     @Column(name = "Controlling_Branding")
     private String controllingBranding;
+
     @Column(name = "CLTV_Charge_Name")
     private String cltvChargeName;
 }
