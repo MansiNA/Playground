@@ -684,6 +684,10 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         casaGrid.addClassNames("casa-grid");
         casaGrid.setSizeFull();
         casaGrid.setHeightFull();
+        casaGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+        casaGrid.addThemeVariants(GridVariant.LUMO_COMPACT);
+        casaGrid.setThemeName("dense");
+
 
         //casaGrid.setColumns("contractFeatureId", "attributeClassesId", "cfTypeClassName", "attributeClassesName", "contractFeatureSubCategoryName","contractFeatureName","cfTypeName","cfDurationInMonth","connectType", "user");
         casaGrid.setColumns("contractFeatureId", "attributeClassesId", "attributeClassesName", "connectType", "cfTypeClassName", "termName");

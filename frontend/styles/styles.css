@@ -1,0 +1,44 @@
+.warning {
+    background-color: lightgoldenrodyellow;
+}
+
+.error {
+    animation-name: animation_blink_5s;
+    animation-timing-function: ease-in;
+    animation-duration: 2s;
+    animation-iteration-count: 2.5;
+    animation-fill-mode: both;
+}
+
+@keyframes animation_blink_5s {
+    0% {
+        background-color: white;
+    }
+    50% {
+        background-color: lightcoral;
+    }
+    100% {
+        background-color: white;
+    }
+}
+
+:host([theme~="dense"]) [part~="cell"] {
+    min-height: var(--lumo-size-xxs);
+}
+:host([theme~="dense"]) {
+    font-size: var(--lumo-font-size-xxs);
+}
+:host([theme~="dense"]) [part~="cell"] ::slotted(vaadin-grid-cell-content) {
+    padding: 1px var(--lumo-space-s);
+}
+:host([theme~="dense"]:not([theme~="no-row-borders"]))
+[part="row"][first]
+[part~="cell"]:not([part~="details-cell"]) {
+    border-top: 0;
+    min-height: calc(var(--lumo-size-xxs) - var(--_lumo-grid-border-width));
+}
+
+
+:host([readonly]) [part='input-field'] {
+    border: 5px solid var(--lumo-contrast-30pct);
+}
