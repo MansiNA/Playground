@@ -5,6 +5,7 @@ import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.KeyModifier;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.crud.BinderCrudEditor;
 import com.vaadin.flow.component.crud.Crud;
 import com.vaadin.flow.component.crud.CrudEditor;
@@ -84,7 +85,7 @@ public class AdjustmentsREFXView extends VerticalLayout implements BeforeEnterOb
     private List<ProjectAttachmentsDTO> listOfProjectAttachments;
     private QS_Grid qsGrid;
     private Button qsBtn;
-    private Button uploadBtn;
+   // private Button uploadBtn;
     private String fileName;
     private int upload_id;
     ListenableFuture<String> future;
@@ -105,10 +106,13 @@ public class AdjustmentsREFXView extends VerticalLayout implements BeforeEnterOb
         logView = new LogView();
         logView.logMessage(Constants.INFO, "Starting AdjustmentsREFX");
 
-        uploadBtn = new Button("Upload");
-        uploadBtn.setEnabled(false);
+        //uploadBtn = new Button("Upload");
+        //uploadBtn.setEnabled(false);
 
         qsBtn = new Button("QS and Start Job");
+
+        qsBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_SUCCESS);
+
         qsBtn.setEnabled(false);
 
         List<ProjectParameter> listOfProjectParameters = projectParameterService.findAll();
@@ -236,19 +240,20 @@ public class AdjustmentsREFXView extends VerticalLayout implements BeforeEnterOb
         content.setSizeFull();
         content.setHeightFull();
 
-        HorizontalLayout hl=new HorizontalLayout(singleFileUpload,uploadBtn, qsBtn, qsGrid);
+        HorizontalLayout hl=new HorizontalLayout(singleFileUpload, qsBtn, qsGrid);
         content.add(hl);
         content.add(getAdjustmentsREFXGrid());
 
-        uploadBtn.addClickListener(e ->{
-            logView.logMessage(Constants.INFO, "Uploading in uploadBtn.addClickListener");
-            save2db();
-            qsBtn.setEnabled(true);
-        });
+      //  uploadBtn.addClickListener(e ->{
+      //      logView.logMessage(Constants.INFO, "Uploading in uploadBtn.addClickListener");
+      //      //save2db();
+      //      qsBtn.setEnabled(true);
+      //  });
 
         qsBtn.addClickListener(e ->{
             logView.logMessage(Constants.INFO, "executing sqls in qsBtn.addClickListener");
             //   if (qsGrid.projectId != projectId) {
+            save2db();
             hl.remove(qsGrid);
             qsGrid = new QS_Grid(projectConnectionService, backendService);
             hl.add(qsGrid);
@@ -489,8 +494,8 @@ public class AdjustmentsREFXView extends VerticalLayout implements BeforeEnterOb
             GenericDataProvider dataAdjustmentsREFXProvider = new GenericDataProvider(listOfAdjustmentsREFX);
             grid.setDataProvider(dataAdjustmentsREFXProvider);
             singleFileUpload.clearFileList();
-            uploadBtn.setEnabled(true);
-            qsBtn.setEnabled(false);
+            //uploadBtn.setEnabled(true);
+            qsBtn.setEnabled(true);
         });
         logView.logMessage(Constants.INFO, "Ending setupUploader() for setup file uploader");
     }
