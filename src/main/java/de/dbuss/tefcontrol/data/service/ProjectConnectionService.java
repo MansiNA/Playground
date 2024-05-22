@@ -964,6 +964,9 @@ public class ProjectConnectionService {
 
             if (count > 0) {
                 // Record exists, show error, because this row should not displayd id casa grid!
+
+                return "Record already exists in Mapping!";
+
                 /*
                 String sqlUpdate = "UPDATE " + tableName +
                         " SET CF_TYPE_CLASS_NAME = ?, AttributeClasses_NAME = ?, " +

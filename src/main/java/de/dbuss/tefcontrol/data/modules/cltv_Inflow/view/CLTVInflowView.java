@@ -76,9 +76,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
     private String dbUser;
     private String dbPassword;
     String missing_keyword= "nicht definiert";
-    private String dbUrlOracle;
-    private String dbUserOracle;
-    private String dbPasswordOracle;
+
 
     private Button missingShowHidebtn = new Button("Show/Hide Columns");
     private Button casaShowHidebtn = new Button("Show/Hide Columns");
@@ -99,6 +97,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         saveButton.setEnabled(false);
         missingShowHidebtn.setVisible(false);
         allEntriesShowHidebtn.setVisible(false);
+        casaShowHidebtn.setVisible(true);
         logView = new LogView();
         logView.logMessage(Constants.INFO, "Starting CLTVInflowView");
 
@@ -170,7 +169,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
                     allEntriesShowHidebtn.setVisible(true);
                     break;
 
-                case "Tab{CASA Entries}":
+                case "Tab{CASA Import}":
                     missingShowHidebtn.setVisible(false);
                     casaShowHidebtn.setVisible(true);
                     allEntriesShowHidebtn.setVisible(false);
@@ -339,10 +338,10 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
             System.out.println("allCLTVInflowData is null!!");
         }
 
-        System.out.println(allCasaData.size() + "..."+ allCLTVInflowData.size() +"..."+existingEntries.size());
+     //   System.out.println(allCasaData.size() + "..."+ allCLTVInflowData.size() +"..."+existingEntries.size());
         allCasaData.removeAll(existingEntries);
 
-        System.out.println("Count CASA-Entries:" + allCasaData.size());
+        System.out.println("Count CASA-Entries after remove existing entries: " + allCasaData.size());
 
 
         GenericDataProvider dataProvider = new GenericDataProvider(allCasaData, "ContractFeature_id");
@@ -419,6 +418,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         grid.addThemeVariants(GridVariant.LUMO_COMPACT);
         grid.setThemeName("dense");
+        grid.setSelectionMode(Grid.SelectionMode.SINGLE);
 
 
         // set column order
@@ -434,12 +434,17 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         grid.setColumnOrder(columnOrder);
 
         // default hide
-        contractFeatureIdColumn.setVisible(false);
-        attributeClassesIdColumn.setVisible(false);
+      //  contractFeatureIdColumn.setVisible(false);
+      //  attributeClassesIdColumn.setVisible(false);
+        contractFeatureNameColumn.setVisible(false);
+        contractFeatureSubCategoryNameColumn.setVisible(false);
+        cfTypeClassNameColumn.setVisible(false);
+        cfTypeNameColumn.setVisible(false);
         attributeClassesNameColumn.setVisible(false);
         cfDurationInMonthColumn.setVisible(false);
         userColumn.setVisible(false);
-        connectTypeColumn.setVisible(false);
+      //  connectTypeColumn.setVisible(false);
+
 
         allEntriesShowHidebtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
         ColumnToggleContextMenu columnToggleContextMenu = new ColumnToggleContextMenu(allEntriesShowHidebtn);
@@ -496,7 +501,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         missingGrid.setSizeFull();
         missingGrid.setHeightFull();
 
-        missingGrid.setColumns("contractFeatureId", "contractFeatureName","cfTypeName", "contractFeatureSubCategoryName", "cfTypeClassName", "attributeClassesId", "attributeClassesName","cfDurationInMonth","connectType", "user");
+        missingGrid.setColumns("contractFeatureId", "contractFeatureName","cfTypeName", "contractFeatureSubCategoryName", "cfTypeClassName", "attributeClassesId", "attributeClassesName","cfDurationInMonth","connectType");
 
 
         Grid.Column contractFeatureIdColumn = missingGrid.getColumnByKey("contractFeatureId").setHeader("CF_ID").setFlexGrow(0).setResizable(true);
@@ -595,7 +600,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
             }
         }).setHeader("Controlling_Branding").setFlexGrow(0).setWidth("300px").setResizable(true);
 
-        Grid.Column userColumn = missingGrid.getColumnByKey("user").setHeader("User").setFlexGrow(0).setResizable(true);
+        //Grid.Column userColumn = missingGrid.getColumnByKey("user").setHeader("User").setFlexGrow(0).setResizable(true);
         // missingGrid.getColumnByKey("cltvChargeName").setHeader("CLTV_Charge_Name").setFlexGrow(0).setResizable(true);
         missingGrid.addComponentColumn(cltvInflow -> {
             if (isMissing(cltvInflow.getCltvChargeName())) {
@@ -631,16 +636,20 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
     //    missingGrid.setEditOnClick(true);
 
         // default hide
+        contractFeatureNameColumn.setVisible(false);
+        contractFeatureSubCategoryNameColumn.setVisible(false);
+        cfTypeClassNameColumn.setVisible(false);
+        attributeClassesNameColumn.setVisible(false);
       //  contractFeatureIdColumn.setVisible(false);
-        attributeClassesIdColumn.setVisible(false);
+      //  attributeClassesIdColumn.setVisible(false);
       //  cfTypeClassNameColumn.setVisible(false);
       //  attributeClassesNameColumn.setVisible(false);
         cfDurationInMonthColumn.setVisible(false);
 //        contractFeatureSubCategoryNameColumn.setVisible(false);
 //        contractFeatureNameColumn.setVisible(false);
         cfTypeNameColumn.setVisible(false);
-        connectTypeColumn.setVisible(false);
-        userColumn.setVisible(false);
+        //connectTypeColumn.setVisible(false);
+        //userColumn.setVisible(false);
 
         missingShowHidebtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
         ColumnToggleContextMenu columnToggleContextMenu = new ColumnToggleContextMenu(missingShowHidebtn);
@@ -653,14 +662,18 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         columnToggleContextMenu.addColumnToggleItem("Connect_Type", connectTypeColumn);
         columnToggleContextMenu.addColumnToggleItem("CF_Type_Class_Name", cfTypeClassNameColumn);
         columnToggleContextMenu.addColumnToggleItem("CF_Duration_in_Month", cfDurationInMonthColumn);
-        columnToggleContextMenu.addColumnToggleItem("User", userColumn);
+     //   columnToggleContextMenu.addColumnToggleItem("User", userColumn);
         logView.logMessage(Constants.INFO, "Ending configureMissingGrid() for configure missing grid");
     }
 
     private void configureCASAGrid() {
         logView.logMessage(Constants.INFO, "Starting configureCASAGrid() for configure CASA grid");
+
+        System.out.println("ConfigureCASA-Grid:");
+
         List<CasaTerm> allCasaData = projectConnectionService.getAllCASATerms(casaTableName, casaDbUrl, casaDbUser, casaDbPassword);
 
+        /*
         if(allCLTVInflowData!=null) {
 
             for (CasaTerm employee : allCasaData) {
@@ -675,6 +688,8 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         else {
             System.out.println("allCLTVInflowData is null!!");
         }
+
+         */
 
 
 
@@ -790,18 +805,19 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         }).setHeader("CLTV_Charge_Name").setFlexGrow(0).setWidth("500px").setResizable(true);
 
 
-
-
-
-
         casaGrid.addColumn(
                 new ComponentRenderer<>(Button::new, (button, casaTerm) -> {
                     button.addThemeVariants(ButtonVariant.LUMO_ICON,
                             ButtonVariant.LUMO_SUCCESS,
                             ButtonVariant.LUMO_TERTIARY);
                     button.addClickListener(e -> {
-                        System.out.println("Save: " + casaTerm.getContractFeatureId().toString() + " with Category: " + casaTerm.getCltvCategoryName() + "Branding: " + casaTerm.getControllingBranding() + " ChargeName: " + casaTerm.getCltvChargeName() ) ;
-                        projectConnectionService.saveCASAToTargetTable(casaTerm, tableName, dbUrl, dbUser, dbPassword);
+                                System.out.println("Save: " + casaTerm.getContractFeatureId().toString() + " with Category: " + casaTerm.getCltvCategoryName() + "Branding: " + casaTerm.getControllingBranding() + " ChargeName: " + casaTerm.getCltvChargeName());
+                                String ret = projectConnectionService.saveCASAToTargetTable(casaTerm, tableName, dbUrl, dbUser, dbPassword);
+
+                                if (ret != Constants.OK)
+                            {
+                                Notification.show(ret, 6000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                            }
 
                         updateGrid(); //First update Grid for check existing entries.
                         updateCasaGrid();
@@ -814,7 +830,18 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
 
 
         casaGrid.getColumns().forEach(col -> col.setAutoWidth(true));
-        casaGrid.setSelectionMode(Grid.SelectionMode.NONE);
+        casaGrid.setSelectionMode(Grid.SelectionMode.SINGLE);
+
+        contractFeatureIdColumn.setVisible(false);
+        attributeClassesIdColumn.setVisible(false);
+
+        casaShowHidebtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+        ColumnToggleContextMenu columnToggleContextMenu = new ColumnToggleContextMenu(casaShowHidebtn);
+        columnToggleContextMenu.addColumnToggleItem("CF_ID", contractFeatureIdColumn);
+        columnToggleContextMenu.addColumnToggleItem("AttributeClasses_ID", attributeClassesIdColumn);
+
+
+
 
 /*
         // missingGrid.getColumnByKey("controllingBrandingDetailed").setHeader("Controlling_Branding_Detailed").setFlexGrow(0).setResizable(true);
