@@ -9,6 +9,7 @@ import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.crud.BinderCrudEditor;
 import com.vaadin.flow.component.crud.Crud;
 import com.vaadin.flow.component.crud.CrudEditor;
+import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
@@ -45,6 +46,10 @@ import java.util.stream.Collectors;
 
 @PageTitle("CLTV Inflow-Mapping")
 @Route(value = "CLTV_Inflow/:project_Id", layout = MainLayout.class)
+@CssImport(
+        themeFor = "vaadin-grid",
+        value = "./styles/styles.css"
+)
 @RolesAllowed({"MAPPING", "ADMIN"})
 public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserver {
     private final ProjectConnectionService projectConnectionService;
