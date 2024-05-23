@@ -829,7 +829,7 @@ public class ProjectConnectionService {
         }
     }
 
-    public List<CasaTerm> getAllCASATerms(String tableName, String dbUrl, String dbUser, String dbPassword) {
+    public List<CasaTerm> getAllCASATerms(String sqlQuery, String dbUrl, String dbUser, String dbPassword) {
         List<CasaTerm> listOfTermData;
 
         DriverManagerDataSource ds = new DriverManagerDataSource();
@@ -837,7 +837,7 @@ public class ProjectConnectionService {
         ds.setUsername(dbUser);
         ds.setPassword(dbPassword);
 
-        String sqlQuery = "SELECT * FROM " + tableName;
+       // String sqlQuery = "SELECT * FROM " + tableName;
 
         System.out.println(sqlQuery);
 
@@ -942,6 +942,31 @@ public class ProjectConnectionService {
                 ps.setString(3, cltvInflow.getCltvChargeName());
                 ps.setLong(4, cltvInflow.getContractFeatureId());
             });
+
+            return Constants.OK;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return handleDatabaseError(e);
+        } finally {
+            connectionClose(jdbcTemplate);
+        }
+    }
+
+    public String updateCLTVInflow(CLTVInflow cltvInflow, String tableName, String dbUrl, String dbUser, String dbPassword) {
+        try {
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
+            String sql = "UPDATE " + tableName + " SET CLTV_Category_Name = ?, Controlling_Branding = ?, CLTV_Charge_Name = ? WHERE ContractFeature_id = ? AND AttributeClasses_id = ? AND Connect_Type = ?";
+
+            jdbcTemplate.update(sql,
+                    cltvInflow.getCltvCategoryName(),
+                    cltvInflow.getControllingBranding(),
+                    cltvInflow.getCltvChargeName(),
+                    cltvInflow.getContractFeatureId(),
+                    cltvInflow.getAttributeClassesId(),
+                    cltvInflow.getConnectType()
+            );
 
             return Constants.OK;
         } catch (Exception e) {

@@ -62,7 +62,6 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
     private Grid<CasaTerm> casaGrid = new Grid(CasaTerm.class);
 
     //private GridPro<CLTVInflow> missingGrid = new GridPro<>(CLTVInflow.class);
-    Button saveButton = new Button(Constants.SAVE);
     private List<CLTVInflow> modifiedCLTVInflow = new ArrayList<>();
     private List<CasaTerm> modifiedCasa = new ArrayList<>();
     private String tableName;
@@ -72,6 +71,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
     private String casaDbUser;
 
     private String casaDbPassword;
+    private String casaQuery;
     private String dbUrl;
     private String dbUser;
     private String dbPassword;
@@ -94,7 +94,6 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
     public CLTVInflowView(ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, BackendService backendService) {
         this.projectConnectionService = projectConnectionService;
 
-        saveButton.setEnabled(false);
         missingShowHidebtn.setVisible(false);
         allEntriesShowHidebtn.setVisible(false);
         casaShowHidebtn.setVisible(true);
@@ -114,27 +113,29 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         String dbName = null;
 
         for (ProjectParameter projectParameter : filteredProjectParameters) {
-          //  if(projectParameter.getNamespace().equals(Constants.CLTV_INFLOW)) {
-                if (Constants.DB_SERVER.equals(projectParameter.getName())) {
-                    dbServer = projectParameter.getValue();
-                } else if (Constants.DB_NAME.equals(projectParameter.getName())) {
-                    dbName = projectParameter.getValue();
-                } else if (Constants.DB_USER.equals(projectParameter.getName())) {
-                    dbUser = projectParameter.getValue();
-                } else if (Constants.DB_PASSWORD.equals(projectParameter.getName())) {
-                    dbPassword = projectParameter.getValue();
-                }else if (Constants.TABLE.equals(projectParameter.getName())) {
-                    tableName = projectParameter.getValue();
-                }else if (Constants.CASA_TABLE.equals(projectParameter.getName())) {
-                    casaTableName = projectParameter.getValue();
-                }else if (Constants.CASA_DB_URL.equals(projectParameter.getName())) {
-                    casaDbUrl = projectParameter.getValue();
-                }else if (Constants.CASA_DB_USER.equals(projectParameter.getName())) {
-                    casaDbUser = projectParameter.getValue();
-                }else if (Constants.CASA_DB_PASSWORD.equals(projectParameter.getName())) {
-                    casaDbPassword = projectParameter.getValue();
-        }
-          //  }
+            //  if(projectParameter.getNamespace().equals(Constants.CLTV_INFLOW)) {
+            if (Constants.DB_SERVER.equals(projectParameter.getName())) {
+                dbServer = projectParameter.getValue();
+            } else if (Constants.DB_NAME.equals(projectParameter.getName())) {
+                dbName = projectParameter.getValue();
+            } else if (Constants.DB_USER.equals(projectParameter.getName())) {
+                dbUser = projectParameter.getValue();
+            } else if (Constants.DB_PASSWORD.equals(projectParameter.getName())) {
+                dbPassword = projectParameter.getValue();
+            } else if (Constants.TABLE.equals(projectParameter.getName())) {
+                tableName = projectParameter.getValue();
+            } else if (Constants.CASA_TABLE.equals(projectParameter.getName())) {
+                casaTableName = projectParameter.getValue();
+            } else if (Constants.CASA_DB_URL.equals(projectParameter.getName())) {
+                casaDbUrl = projectParameter.getValue();
+            } else if (Constants.CASA_DB_USER.equals(projectParameter.getName())) {
+                casaDbUser = projectParameter.getValue();
+            } else if (Constants.CASA_DB_PASSWORD.equals(projectParameter.getName())) {
+                casaDbPassword = projectParameter.getValue();
+            } else if (Constants.CASA_QUERY.equals(projectParameter.getName())) {
+                casaQuery = projectParameter.getValue();
+            }
+            //  }
         }
 
         dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
@@ -183,27 +184,10 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
 
         HorizontalLayout hl = new HorizontalLayout();
         // hl.add(saveButton,databaseDetail);
-        hl.add(saveButton,missingShowHidebtn,casaShowHidebtn,allEntriesShowHidebtn);
+        hl.add(missingShowHidebtn,casaShowHidebtn,allEntriesShowHidebtn);
 
         hl.setAlignItems(Alignment.BASELINE);
         add(hl, parameterGrid, tabSheet );
-
-        saveButton.addClickListener(e ->{
-            if (modifiedCLTVInflow != null && !modifiedCLTVInflow.isEmpty()) {
-                String resultString = projectConnectionService.updateListOfCLTVInflow(modifiedCLTVInflow, tableName, dbUrl, dbUser, dbPassword);
-                if (resultString.equals(Constants.OK)) {
-                    logView.logMessage(Constants.INFO, "saveButton.addClickListener for update modified CLTVInflow data");
-                    Notification.show(modifiedCLTVInflow.size() + " Uploaded successfully", 2000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-                    modifiedCLTVInflow.clear();
-                    updateGrid();
-                    updateMissingGrid();
-                } else {
-                    logView.logMessage(Constants.ERROR, "Error while updating modified CLTVInflow data");
-                    Notification.show("Error during upload: " + resultString, 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
-                }
-            }
-            saveButton.setEnabled(false);
-        });
 
         updateGrid();
         updateMissingGrid();
@@ -313,7 +297,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
     private void updateCasaGrid() {
         logView.logMessage(Constants.INFO, "Starting updateCasaGrid for update allCasaData grid");
         System.out.println("Update Casa-GRID");
-        List<CasaTerm> allCasaData = projectConnectionService.getAllCASATerms(casaTableName, casaDbUrl, casaDbUser, casaDbPassword);
+        List<CasaTerm> allCasaData = projectConnectionService.getAllCASATerms(casaQuery, casaDbUrl, casaDbUser, casaDbPassword);
 
         List<CasaTerm> existingEntries=new ArrayList<>();
 
@@ -529,12 +513,10 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
                     comboBoxCategory.setItems(listOfCLTVCategoryName);
                     comboBoxCategory.setValue(customValue);
                     cltvInflow.setCltvCategoryName(customValue);
-                    saveModifiedCLTVInflow(cltvInflow, customValue);
                 });
                 comboBoxCategory.addValueChangeListener(event -> {
                     String selectedValue = event.getValue();
                     cltvInflow.setCltvCategoryName(selectedValue);
-                    saveModifiedCLTVInflow(cltvInflow, selectedValue);
                 });
 
                 return comboBoxCategory;
@@ -587,12 +569,10 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
                     comboBoxBranding.setItems(listOfControllingBranding);
                     comboBoxBranding.setValue(customValue);
                     cltvInflow.setControllingBranding(customValue);
-                    saveModifiedCLTVInflow(cltvInflow, customValue);
                 });
                 comboBoxBranding.addValueChangeListener(event -> {
                     String selectedValue = event.getValue();
                     cltvInflow.setControllingBranding(selectedValue);
-                    saveModifiedCLTVInflow(cltvInflow, selectedValue);
                 });
                 return comboBoxBranding;
             } else {
@@ -616,12 +596,10 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
                     comboBoxChargeName.setItems(listOfCLTVChargeName);
                     comboBoxChargeName.setValue(customValue);
                     cltvInflow.setCltvChargeName(customValue);
-                    saveModifiedCLTVInflow(cltvInflow, customValue);
                 });
                 comboBoxChargeName.addValueChangeListener(event -> {
                     String selectedValue = event.getValue();
                     cltvInflow.setCltvChargeName(selectedValue);
-                    saveModifiedCLTVInflow(cltvInflow, selectedValue);
                 });
 
                 return comboBoxChargeName;
@@ -629,6 +607,24 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
                 return new Text(getValidValue(cltvInflow.getCltvChargeName()));
             }
         }).setHeader("CLTV_Charge_Name").setFlexGrow(0).setWidth("300px").setResizable(true);
+
+        // Add a column with a save button
+        missingGrid.addComponentColumn(cltvInflow -> {
+            Button saveButton = new Button("Save", click -> {
+                String resultString = projectConnectionService.updateCLTVInflow(cltvInflow, tableName, dbUrl, dbUser, dbPassword);
+                if (resultString.equals(Constants.OK)) {
+                    logView.logMessage(Constants.INFO, "saveButton.addClickListener for update modified CLTVInflow data");
+                    Notification.show(modifiedCLTVInflow.size() + " Uploaded successfully", 2000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                    modifiedCLTVInflow.clear();
+                    updateGrid();
+                    updateMissingGrid();
+                } else {
+                    logView.logMessage(Constants.ERROR, "Error while updating modified CLTVInflow data");
+                    Notification.show("Error during upload: " + resultString, 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                }
+            });
+            return saveButton;
+        }).setHeader("").setFlexGrow(0).setWidth("100px").setResizable(true);
 
         missingGrid.getColumns().forEach(col -> col.setAutoWidth(true));
         missingGrid.setSelectionMode(Grid.SelectionMode.NONE);
@@ -671,7 +667,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
 
         System.out.println("ConfigureCASA-Grid:");
 
-        List<CasaTerm> allCasaData = projectConnectionService.getAllCASATerms(casaTableName, casaDbUrl, casaDbUser, casaDbPassword);
+        List<CasaTerm> allCasaData = projectConnectionService.getAllCASATerms(casaQuery, casaDbUrl, casaDbUser, casaDbPassword);
 
         /*
         if(allCLTVInflowData!=null) {
@@ -994,7 +990,6 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
             } else {
                 modifiedCLTVInflow.add(cltvInflow);
             }
-            saveButton.setEnabled(true);
         } else {
             Notification.show("Please do not enter Missing value", 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
         }

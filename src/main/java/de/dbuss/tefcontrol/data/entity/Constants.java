@@ -20,6 +20,7 @@ public class Constants {
     public static final String CASA_DB_URL = "CASA_DB_URL";
     public static final String CASA_DB_USER = "CASA_DB_User";
     public static final String CASA_DB_PASSWORD = "CASA_DB_Password";
+    public static final String CASA_QUERY= "CASA_Query";
 
     public static  final String ZEILE = "zeile";
     public static final String Default_Mapping = "Default-Mapping";
