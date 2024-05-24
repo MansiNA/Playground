@@ -13,6 +13,7 @@ import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.grid.editor.Editor;
 import com.vaadin.flow.component.gridpro.GridPro;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
@@ -23,14 +24,18 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.component.tabs.TabSheetVariant;
+import com.vaadin.flow.component.textfield.TextArea;
+import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
 import de.dbuss.tefcontrol.components.LogView;
 import de.dbuss.tefcontrol.components.QS_Callback;
 import de.dbuss.tefcontrol.components.QS_Grid;
+import de.dbuss.tefcontrol.data.dto.ProjectAttachmentsDTO;
 import de.dbuss.tefcontrol.data.entity.Constants;
 import de.dbuss.tefcontrol.data.entity.ProjectParameter;
+import de.dbuss.tefcontrol.data.entity.User;
 import de.dbuss.tefcontrol.data.modules.cltv_Inflow.entity.CLTVInflow;
 import de.dbuss.tefcontrol.data.modules.cltv_Inflow.entity.CasaTerm;
 import de.dbuss.tefcontrol.data.service.BackendService;
@@ -391,10 +396,10 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         Grid.Column attributeClassesNameColumn = grid.getColumnByKey("attributeClassesName").setHeader("AttributeClasses_NAME").setFlexGrow(0).setResizable(true);
         Grid.Column cfDurationInMonthColumn = grid.getColumnByKey("cfDurationInMonth").setHeader("CF_Duration_in_Month").setFlexGrow(0).setResizable(true);
         Grid.Column connectTypeColumn = grid.getColumnByKey("connectType").setHeader("Connect_Type").setFlexGrow(0).setResizable(true);
-        grid.getColumnByKey("cltvCategoryName").setHeader("CLTV_Category_Name").setFlexGrow(0).setResizable(true);
+        Grid.Column cltvCategoryNameColumn = grid.getColumnByKey("cltvCategoryName").setHeader("CLTV_Category_Name").setFlexGrow(0).setResizable(true);
       //  grid.getColumnByKey("controllingBrandingDetailed").setHeader("Controlling_Branding_Detailed").setFlexGrow(0).setResizable(true);
-        grid.getColumnByKey("controllingBranding").setHeader("Controlling_Branding").setFlexGrow(0).setResizable(true);
-        grid.getColumnByKey("cltvChargeName").setHeader("CLTV_Charge_Name").setFlexGrow(0).setResizable(true);
+        Grid.Column controllingBrandingColumn = grid.getColumnByKey("controllingBranding").setHeader("Controlling_Branding").setFlexGrow(0).setResizable(true);
+        Grid.Column cltvChargeNameColumn = grid.getColumnByKey("cltvChargeName").setHeader("CLTV_Charge_Name").setFlexGrow(0).setResizable(true);
         Grid.Column userColumn = grid.getColumnByKey("user").setHeader("User").setFlexGrow(0).setResizable(true);
 
         grid.getColumns().forEach(col -> col.setAutoWidth(true));
@@ -408,10 +413,10 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         // set column order
         List<Grid.Column<CLTVInflow>> columnOrder = Arrays.asList(
                 contractFeatureIdColumn,contractFeatureNameColumn,cfTypeNameColumn,contractFeatureSubCategoryNameColumn,cfTypeClassNameColumn,attributeClassesIdColumn,attributeClassesNameColumn,cfDurationInMonthColumn,connectTypeColumn,
-                grid.getColumnByKey("cltvCategoryName"),
+                cltvCategoryNameColumn,
         //        grid.getColumnByKey("controllingBrandingDetailed"),
-                grid.getColumnByKey("controllingBranding"),
-                grid.getColumnByKey("cltvChargeName"),
+                controllingBrandingColumn,
+                cltvChargeNameColumn,
                 userColumn
         );
 
@@ -429,13 +434,33 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         userColumn.setVisible(false);
       //  connectTypeColumn.setVisible(false);
 
+        grid.addItemDoubleClickListener(event -> {
+            crud.edit(event.getItem(), Crud.EditMode.EXISTING_ITEM);
+            crud.getDeleteButton().getElement().getStyle().set("display", "none");
+            crud.setToolbarVisible(false);
+         //   crud.getGrid().getElement().getStyle().set("display", "none");
+            crud.getNewButton().getElement().getStyle().set("display", "none");
+        });
+        crud.addSaveListener(event -> {
+            logView.logMessage(Constants.INFO, "executing crud.addSaveListener for save editedAttachment in Attachment grid");
+            CLTVInflow editedCltvInflow = event.getItem();
+            String resultString = projectConnectionService.updateCLTVInflow(editedCltvInflow, tableName, dbUrl, dbUser, dbPassword);
+            if (resultString.equals(Constants.OK)) {
+                logView.logMessage(Constants.INFO, "update modified CLTVInflow data");
+                Notification.show(" Update successfully", 2000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                modifiedCLTVInflow.clear();
+                updateGrid();
+            } else {
+                logView.logMessage(Constants.ERROR, "Error while updating modified CLTVInflow data");
+                Notification.show("Error during upload: " + resultString, 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+            }
+        });
 
         allEntriesShowHidebtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
         ColumnToggleContextMenu columnToggleContextMenu = new ColumnToggleContextMenu(allEntriesShowHidebtn);
         columnToggleContextMenu.addColumnToggleItem("ContractFeature_id", contractFeatureIdColumn);
         columnToggleContextMenu.addColumnToggleItem("AttributeClasses_ID", attributeClassesIdColumn);
         columnToggleContextMenu.addColumnToggleItem("AttributeClasses_Name", attributeClassesNameColumn);
-
 
         columnToggleContextMenu.addColumnToggleItem("CF_Duration_in_Month", cfDurationInMonthColumn);
         columnToggleContextMenu.addColumnToggleItem("Connect Type", connectTypeColumn);
@@ -445,12 +470,21 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
 
     private CrudEditor<CLTVInflow> createEditor() {
         logView.logMessage(Constants.INFO, "Starting createEditor() for CrudEditor");
-    //    TextField cF_TYPE_CLASS_NAME = new TextField("CF_TYPE_CLASS_NAME");
-        FormLayout editForm = new FormLayout();
+        TextField cltvCategoryNameField = new TextField("CLTV_Category_Name");
+        TextArea controllingBrandingField = new TextArea("Controlling_Branding");
+        TextArea cltvChargeNameField = new TextArea("CLTV_Charge_Name");
+        FormLayout editForm = new FormLayout(cltvCategoryNameField, controllingBrandingField, cltvChargeNameField);
         Binder<CLTVInflow> binder = new Binder<>(CLTVInflow.class);
-     //   binder.forField(cF_TYPE_CLASS_NAME).asRequired().bind(CLTVInflow::getCfTypeClassName, CLTVInflow::setCfTypeClassName);
+        binder.forField(cltvCategoryNameField).asRequired().bind(CLTVInflow::getCltvCategoryName,
+                CLTVInflow::setCltvCategoryName);
+        binder.forField(controllingBrandingField).asRequired().bind(CLTVInflow::getControllingBranding,
+                CLTVInflow::setControllingBranding);
+        binder.forField(cltvChargeNameField).asRequired().bind(CLTVInflow::getCltvChargeName,
+                CLTVInflow::setCltvChargeName);
+
         return new BinderCrudEditor<>(binder, editForm);
     }
+
 
     private void configureMissingGrid() {
         logView.logMessage(Constants.INFO, "Starting configureMissingGrid() for configure missing grid");
