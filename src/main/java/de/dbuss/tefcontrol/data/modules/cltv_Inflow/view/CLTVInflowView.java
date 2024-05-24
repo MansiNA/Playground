@@ -24,6 +24,8 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.component.tabs.TabSheetVariant;
+import com.vaadin.flow.component.textfield.IntegerField;
+import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
@@ -470,16 +472,34 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
 
     private CrudEditor<CLTVInflow> createEditor() {
         logView.logMessage(Constants.INFO, "Starting createEditor() for CrudEditor");
+        TextField contractFeature_idField = new TextField("ContractFeature_id");
+        contractFeature_idField.setReadOnly(true);
+        TextField attributeClasses_IDField = new TextField("AttributeClasses_ID");
+        attributeClasses_IDField.setReadOnly(true);
+        TextField connect_TypeField = new TextField("Connect_Type");
+        connect_TypeField.setReadOnly(true);
         TextField cltvCategoryNameField = new TextField("CLTV_Category_Name");
-        TextArea controllingBrandingField = new TextArea("Controlling_Branding");
-        TextArea cltvChargeNameField = new TextArea("CLTV_Charge_Name");
-        FormLayout editForm = new FormLayout(cltvCategoryNameField, controllingBrandingField, cltvChargeNameField);
+        TextField controllingBrandingField = new TextField("Controlling_Branding");
+        TextField cltvChargeNameField = new TextField("CLTV_Charge_Name");
+
+        FormLayout editForm = new FormLayout(contractFeature_idField, attributeClasses_IDField, connect_TypeField, cltvCategoryNameField, controllingBrandingField, cltvChargeNameField);
+
         Binder<CLTVInflow> binder = new Binder<>(CLTVInflow.class);
-        binder.forField(cltvCategoryNameField).asRequired().bind(CLTVInflow::getCltvCategoryName,
+        binder.forField(contractFeature_idField)
+                .asRequired()
+                .bind(cltvInflow -> String.valueOf(cltvInflow.getContractFeatureId()),
+                        (cltvInflow, value) -> cltvInflow.setContractFeatureId(Long.parseLong(value)));
+        binder.forField(attributeClasses_IDField)
+                .asRequired()
+                .bind(cltvInflow -> String.valueOf(cltvInflow.getAttributeClassesId()),
+                        (cltvInflow, value) -> cltvInflow.setAttributeClassesId(Long.parseLong(value)));
+        binder.forField(connect_TypeField).asRequired().bind(CLTVInflow::getConnectType,
+                CLTVInflow::setConnectType);
+        binder.forField(cltvCategoryNameField).bind(CLTVInflow::getCltvCategoryName,
                 CLTVInflow::setCltvCategoryName);
-        binder.forField(controllingBrandingField).asRequired().bind(CLTVInflow::getControllingBranding,
+        binder.forField(controllingBrandingField).bind(CLTVInflow::getControllingBranding,
                 CLTVInflow::setControllingBranding);
-        binder.forField(cltvChargeNameField).asRequired().bind(CLTVInflow::getCltvChargeName,
+        binder.forField(cltvChargeNameField).bind(CLTVInflow::getCltvChargeName,
                 CLTVInflow::setCltvChargeName);
 
         return new BinderCrudEditor<>(binder, editForm);
