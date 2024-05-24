@@ -452,6 +452,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
                 Notification.show(" Update successfully", 2000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
                 modifiedCLTVInflow.clear();
                 updateGrid();
+                updateMissingGrid();
             } else {
                 logView.logMessage(Constants.ERROR, "Error while updating modified CLTVInflow data");
                 Notification.show("Error during upload: " + resultString, 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
