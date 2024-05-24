@@ -46,6 +46,7 @@ import de.dbuss.tefcontrol.data.service.ProjectParameterService;
 import de.dbuss.tefcontrol.dataprovider.GenericDataProvider;
 import de.dbuss.tefcontrol.views.MainLayout;
 import jakarta.annotation.security.RolesAllowed;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
 
 
 import java.util.*;
@@ -83,6 +84,8 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
     private String dbUser;
     private String dbPassword;
     String missing_keyword= "nicht definiert";
+
+    Grid.Column cltvCategoryNameColumn;
 
 
     private Button missingShowHidebtn = new Button("Show/Hide Columns");
@@ -292,10 +295,34 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
             logView.logMessage(Constants.INFO, "Ending CallbackHandler onComplete for update grid");
         }
     }
+
     private void updateGrid() {
         logView.logMessage(Constants.INFO, "Starting updateGrid for update allCLTVInflow grid");
         allCLTVInflowData = projectConnectionService.getAllCLTVInflow(tableName, dbUrl, dbUser, dbPassword);
         GenericDataProvider dataProvider = new GenericDataProvider(allCLTVInflowData, "ContractFeature_id");
+
+
+        if (cltvCategoryNameColumn != null)
+        {
+        dataProvider.addDataProviderListener(changeEvent -> {
+
+
+
+            long regularCount = allCLTVInflowData.stream()
+                    .filter(person -> "nicht definiert".equals(person.getCltvCategoryName()))
+                    .count();
+            long premiumCount = allCLTVInflowData.stream()
+                    .filter(person -> "nicht definiert".equals(person.getCltvChargeName()))
+                    .count();
+
+            cltvCategoryNameColumn.setFooter("Count-Missing: " + regularCount);
+
+
+
+        });
+
+        }
+
       //  grid.setItems(allCLTVInflowData);
         grid.setDataProvider(dataProvider);
         logView.logMessage(Constants.INFO, "Ending updateGrid for update allCLTVInflow grid");
@@ -386,6 +413,9 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         grid = crud.getGrid();
         grid.setSizeFull();
         grid.setHeightFull();
+
+        updateGrid();
+
         // if setcolumn then filter not display
         // grid.setColumns("contractFeatureId", "attributeClassesId", "cfTypeClassName", "attributeClassesName", "contractFeatureSubCategoryName","contractFeatureName","cfTypeName","cfDurationInMonth","connectType", "cltvCategoryName","controllingBrandingDetailed", "controllingBranding", "user", "cltvChargeName");
 
@@ -398,7 +428,8 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         Grid.Column attributeClassesNameColumn = grid.getColumnByKey("attributeClassesName").setHeader("AttributeClasses_NAME").setFlexGrow(0).setResizable(true);
         Grid.Column cfDurationInMonthColumn = grid.getColumnByKey("cfDurationInMonth").setHeader("CF_Duration_in_Month").setFlexGrow(0).setResizable(true);
         Grid.Column connectTypeColumn = grid.getColumnByKey("connectType").setHeader("Connect_Type").setFlexGrow(0).setResizable(true);
-        Grid.Column cltvCategoryNameColumn = grid.getColumnByKey("cltvCategoryName").setHeader("CLTV_Category_Name").setFlexGrow(0).setResizable(true);
+        //Grid.Column cltvCategoryNameColumn = grid.getColumnByKey("cltvCategoryName").setHeader("CLTV_Category_Name").setFlexGrow(0).setResizable(true);
+        cltvCategoryNameColumn = grid.getColumnByKey("cltvCategoryName").setHeader("CLTV_Category").setFlexGrow(0).setResizable(true);
       //  grid.getColumnByKey("controllingBrandingDetailed").setHeader("Controlling_Branding_Detailed").setFlexGrow(0).setResizable(true);
         Grid.Column controllingBrandingColumn = grid.getColumnByKey("controllingBranding").setHeader("Controlling_Branding").setFlexGrow(0).setResizable(true);
         Grid.Column cltvChargeNameColumn = grid.getColumnByKey("cltvChargeName").setHeader("CLTV_Charge_Name").setFlexGrow(0).setResizable(true);
@@ -410,6 +441,8 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         grid.addThemeVariants(GridVariant.LUMO_COMPACT);
         grid.setThemeName("dense");
         grid.setSelectionMode(Grid.SelectionMode.SINGLE);
+
+
 
 
         // set column order
@@ -470,6 +503,9 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         columnToggleContextMenu.addColumnToggleItem("User", userColumn);
         logView.logMessage(Constants.INFO, "Ending configureGrid() for configure CLTVInflow grid");
     }
+
+
+
 
     private CrudEditor<CLTVInflow> createEditor() {
         logView.logMessage(Constants.INFO, "Starting createEditor() for CrudEditor");
