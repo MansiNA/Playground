@@ -839,7 +839,7 @@ public class ProjectConnectionService {
 
        // String sqlQuery = "SELECT * FROM " + tableName;
 
-        System.out.println(sqlQuery);
+        System.out.println("Casa-Query: " + sqlQuery);
 
         try {
 
