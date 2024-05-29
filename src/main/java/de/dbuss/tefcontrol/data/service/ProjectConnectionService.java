@@ -2301,9 +2301,6 @@ public class ProjectConnectionService {
             DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
             jdbcTemplate = new JdbcTemplate(dataSource);
 
-            String sqlDelete = "DELETE FROM " + tableName;
-            jdbcTemplate.update(sqlDelete);
-
             String sqlInsert = "INSERT INTO " + tableName + " (Zeile, HUB_MOVEMENT_TYPE_DETAIL_ID, HUB_MOVEMENT_TYPE_DETAIL_NAME, FLOW_L1_ID, FLOW_L1_NAME, FLOW_L2_ID, FLOW_L2_NAME, FLOW_L3_ID, FLOW_L3_NAME, HUB_FLOW_ID, HUB_FLOW_NAME, SORT_HUB_FLOW_ID, SORT_HUB_FLOW_NAME, Upload_ID) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
             jdbcTemplate.batchUpdate(sqlInsert, data, data.size(), (ps, entity) -> {
