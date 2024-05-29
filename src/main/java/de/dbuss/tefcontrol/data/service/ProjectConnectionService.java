@@ -4,6 +4,7 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.zaxxer.hikari.HikariDataSource;
 import de.dbuss.tefcontrol.data.entity.*;
+import de.dbuss.tefcontrol.data.modules.HUBFlowMapping.entity.HUBFlowMapping;
 import de.dbuss.tefcontrol.data.modules.adjustmentrefx.entity.AdjustmentsREFX;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.B2pOutlookSub;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.OutlookMGSR;
@@ -2283,6 +2284,43 @@ public class ProjectConnectionService {
                 ps.setString(13, entity.getRouDepreciation());
                 ps.setString(14, entity.getComment());
                 ps.setInt(15, uploadId);
+            });
+
+            return Constants.OK;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return handleDatabaseError(e);
+        } finally {
+            connectionClose(jdbcTemplate);
+        }
+    }
+
+    public String saveHUBFlowMapping(List<HUBFlowMapping> data, String tableName, String dbUrl, String dbUser, String dbPassword, int uploadId) {
+        try {
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
+            String sqlDelete = "DELETE FROM " + tableName;
+            jdbcTemplate.update(sqlDelete);
+
+            String sqlInsert = "INSERT INTO " + tableName + " (Zeile, HUB_MOVEMENT_TYPE_DETAIL_ID, HUB_MOVEMENT_TYPE_DETAIL_NAME, FLOW_L1_ID, FLOW_L1_NAME, FLOW_L2_ID, FLOW_L2_NAME, FLOW_L3_ID, FLOW_L3_NAME, HUB_FLOW_ID, HUB_FLOW_NAME, SORT_HUB_FLOW_ID, SORT_HUB_FLOW_NAME, Upload_ID) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+            jdbcTemplate.batchUpdate(sqlInsert, data, data.size(), (ps, entity) -> {
+                ps.setInt(1, entity.getZeile());
+                ps.setInt(2, entity.getHubMovementTypeDetailId());
+                ps.setString(3, entity.getHubMovementTypeDetailName());
+                ps.setInt(4, entity.getFlowL1Id());
+                ps.setString(5, entity.getFlowL1Name());
+                ps.setInt(6, entity.getFlowL2Id());
+                ps.setString(7, entity.getFlowL2Name());
+                ps.setInt(8, entity.getFlowL3Id());
+                ps.setString(9, entity.getFlowL3Name());
+                ps.setInt(10, entity.getHubFlowId());
+                ps.setString(11, entity.getHubFlowName());
+                ps.setInt(12, entity.getSortHubFlowId());
+                ps.setInt(13, entity.getSortHubFlowName());
+                ps.setInt(14, uploadId);
             });
 
             return Constants.OK;

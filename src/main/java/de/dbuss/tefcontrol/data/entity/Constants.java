@@ -110,4 +110,9 @@ public class Constants {
     // This constant is used for B2B_MapSalesChannel module
     public static final String ADJUSTMENTREFX = "adjustment_refx";
 
+
+    // This constant is used for HUB_Flow_Mapping module
+    public static final String HUB_FLOW_MAPPING = "HUB_Flow_Mapping";
+
+
 }

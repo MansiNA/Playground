@@ -24,6 +24,7 @@ import com.vaadin.flow.theme.lumo.LumoUtility;
 import de.dbuss.tefcontrol.data.entity.Constants;
 import de.dbuss.tefcontrol.data.entity.Projects;
 import de.dbuss.tefcontrol.data.entity.User;
+import de.dbuss.tefcontrol.data.modules.HUBFlowMapping.view.HUBFlowMappingView;
 import de.dbuss.tefcontrol.data.modules.adjustmentrefx.entity.AdjustmentsREFX;
 import de.dbuss.tefcontrol.data.modules.adjustmentrefx.view.AdjustmentsREFXView;
 import de.dbuss.tefcontrol.data.modules.b2pOutlook.view.B2POutlookFINView;
@@ -128,6 +129,7 @@ public class MainLayout extends AppLayout {
         urlToViewMap.put(Constants.DimLineTapete, ImportDimLineTapete.class);
         urlToViewMap.put(Constants.UnderlyingCobi, underlying_cobi.class);
         urlToViewMap.put(Constants.ADJUSTMENTREFX, AdjustmentsREFXView.class);
+        urlToViewMap.put(Constants.HUB_FLOW_MAPPING, HUBFlowMappingView.class);
 
         setPrimarySection(Section.DRAWER);
         addDrawerContent();
