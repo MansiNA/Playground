@@ -825,12 +825,12 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
 
 
 
-        Grid.Column contractFeatureIdColumn = casaGrid.getColumnByKey("contractFeatureId").setHeader("ContractFeature_id").setFlexGrow(0).setResizable(true);
-        Grid.Column attributeClassesIdColumn = casaGrid.getColumnByKey("attributeClassesId").setHeader("AttributeClasses_ID").setFlexGrow(0).setResizable(true);
-        casaGrid.getColumnByKey("attributeClassesName").setHeader("AttributeClasses_NAME").setFlexGrow(0).setResizable(true);
-        casaGrid.getColumnByKey("connectType").setHeader("Connect_Type").setFlexGrow(0).setResizable(true);
-        casaGrid.getColumnByKey("cfTypeClassName").setHeader("CF_TYPE_CLASS_NAME").setFlexGrow(0).setResizable(true);
-        casaGrid.getColumnByKey("termName").setHeader("Termname").setFlexGrow(0).setResizable(true);
+        Grid.Column contractFeatureIdColumn = casaGrid.getColumnByKey("contractFeatureId").setHeader("ContractFeature_id").setFlexGrow(0).setSortable(true).setResizable(true);
+        Grid.Column attributeClassesIdColumn = casaGrid.getColumnByKey("attributeClassesId").setHeader("AttributeClasses_ID").setFlexGrow(0).setSortable(true).setResizable(true);
+        casaGrid.getColumnByKey("attributeClassesName").setHeader("AttributeClasses_NAME").setFlexGrow(0).setSortable(true).setResizable(true);
+        casaGrid.getColumnByKey("connectType").setHeader("Connect_Type").setFlexGrow(0).setSortable(true).setResizable(true);
+        casaGrid.getColumnByKey("cfTypeClassName").setHeader("CF_TYPE_CLASS_NAME").setFlexGrow(0).setSortable(true).setResizable(true);
+        casaGrid.getColumnByKey("termName").setHeader("Termname").setFlexGrow(0).setSortable(true).setResizable(true);
 
 
         casaGrid.addComponentColumn(CasaTerm -> {
@@ -857,7 +857,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
 
                 return comboBoxCategory;
 
-        }).setHeader("CLTV_Category_Name").setFlexGrow(0).setWidth("450px").setResizable(true);
+        }).setHeader("CLTV_Category_Name").setFlexGrow(0).setSortable(true).setWidth("450px").setResizable(true);
 
         casaGrid.addComponentColumn(CasaTerm -> {
 
@@ -883,7 +883,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
 
             return comboBoxControllingBranding;
 
-        }).setHeader("ControllingBranding").setFlexGrow(0).setWidth("500px").setResizable(true);
+        }).setHeader("ControllingBranding").setFlexGrow(0).setSortable(true).setWidth("500px").setResizable(true);
 
 
         casaGrid.addComponentColumn(CasaTerm -> {
@@ -910,7 +910,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
 
             return comboBoxCLTVChargeName;
 
-        }).setHeader("CLTV_Charge_Name").setFlexGrow(0).setWidth("500px").setResizable(true);
+        }).setHeader("CLTV_Charge_Name").setFlexGrow(0).setSortable(true).setWidth("500px").setResizable(true);
 
 
         casaGrid.addColumn(
