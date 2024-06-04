@@ -18,19 +18,19 @@ public class AdjustmentsREFX {
 
     private String scenario;
 
-    private String date;
+    private Date date;
 
     private String adjustmentType;
 
     private String authorizationGroup;
 
-    private String companyCode;
+    private long companyCode;
 
-    private String assetClass;
+    private long assetClass;
 
     private String vendor;
 
-    private String profitCenter;
+    private long profitCenter;
 
     private String leasePayments;
 

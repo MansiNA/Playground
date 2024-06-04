@@ -2270,13 +2270,13 @@ public class ProjectConnectionService {
 
             jdbcTemplate.batchUpdate(sqlInsert, data, data.size(), (ps, entity) -> {
                 ps.setString(1, entity.getScenario());
-                ps.setDate(2, Date.valueOf(entity.getDate()));
+                ps.setDate(2, (entity.getDate()));
                 ps.setString(3, entity.getAdjustmentType());
                 ps.setString(4, entity.getAuthorizationGroup());
-                ps.setString(5, entity.getCompanyCode());
-                ps.setString(6, entity.getAssetClass());
+                ps.setLong(5, entity.getCompanyCode());
+                ps.setLong(6, entity.getAssetClass());
                 ps.setString(7, entity.getVendor());
-                ps.setString(8, entity.getProfitCenter());
+                ps.setLong(8, entity.getProfitCenter());
                 ps.setString(9, entity.getLeasePayments());
                 ps.setString(10, entity.getLeaseLiability());
                 ps.setString(11, entity.getInterest());

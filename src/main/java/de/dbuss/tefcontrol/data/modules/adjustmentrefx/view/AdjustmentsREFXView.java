@@ -36,7 +36,9 @@ import de.dbuss.tefcontrol.dataprovider.GenericDataProvider;
 import de.dbuss.tefcontrol.security.AuthenticatedUser;
 import de.dbuss.tefcontrol.views.MainLayout;
 import jakarta.annotation.security.RolesAllowed;
+import org.apache.poi.ss.format.CellFormatType;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -49,6 +51,7 @@ import org.springframework.util.concurrent.ListenableFuture;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.sql.Date;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -524,7 +527,7 @@ public class AdjustmentsREFXView extends VerticalLayout implements BeforeEnterOb
 
             XSSFWorkbook my_xls_workbook = new XSSFWorkbook(fileData);
 
-            String sheetName = "Exported Data";
+            String sheetName =   "Upload Delta Lease Payment 24"; //"Exported Data";
             System.out.println("SheetNr: " + sheetNr + " Name: " + sheetName);
             XSSFSheet sheet = my_xls_workbook.getSheet(sheetName);
             listOfAdjustmentsREFX = parseSheet(sheet, AdjustmentsREFX.class);
@@ -582,6 +585,11 @@ public class AdjustmentsREFXView extends VerticalLayout implements BeforeEnterOb
                             } else if (field.getType() == double.class || field.getType() == Double.class) {
                                 field.set(entity, (double) cell.getNumericCellValue());
 
+                            } else if (field.getType() == Date.class) {
+                                if (cell.getCellType() == Cell.CELL_TYPE_NUMERIC && DateUtil.isCellDateFormatted(cell)) {
+                                    java.util.Date dateValue = cell.getDateCellValue();
+                                    field.set(entity, new java.sql.Date(dateValue.getTime()));
+                                }
                             } else if (field.getType() == String.class) {
 
                                 if (cell.getCellType() == Cell.CELL_TYPE_FORMULA) {

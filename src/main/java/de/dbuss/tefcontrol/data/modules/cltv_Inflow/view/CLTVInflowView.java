@@ -599,15 +599,15 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         missingGrid.setColumns("contractFeatureId", "contractFeatureName","cfTypeName", "contractFeatureSubCategoryName", "cfTypeClassName", "attributeClassesId", "attributeClassesName","cfDurationInMonth","connectType");
 
 
-        Grid.Column contractFeatureIdColumn = missingGrid.getColumnByKey("contractFeatureId").setHeader("CF_ID").setFlexGrow(0).setResizable(true);
-        Grid.Column contractFeatureNameColumn = missingGrid.getColumnByKey("contractFeatureName").setHeader("CF_Name").setFlexGrow(0).setResizable(true);
-        Grid.Column attributeClassesIdColumn = missingGrid.getColumnByKey("attributeClassesId").setHeader("AttributeClasses_ID").setFlexGrow(0).setResizable(true);
-        Grid.Column cfTypeClassNameColumn = missingGrid.getColumnByKey("cfTypeClassName").setHeader("CF_TYPE_CLASS_NAME").setFlexGrow(0).setResizable(true);
-        Grid.Column attributeClassesNameColumn = missingGrid.getColumnByKey("attributeClassesName").setHeader("AttributeClasses_NAME").setFlexGrow(0).setResizable(true);
-        Grid.Column contractFeatureSubCategoryNameColumn = missingGrid.getColumnByKey("contractFeatureSubCategoryName").setHeader("CF_SubCategory_Name").setFlexGrow(0).setResizable(true);
-        Grid.Column cfTypeNameColumn = missingGrid.getColumnByKey("cfTypeName").setHeader("CF_TYPE_NAME").setFlexGrow(0).setResizable(true);
-        Grid.Column cfDurationInMonthColumn = missingGrid.getColumnByKey("cfDurationInMonth").setHeader("CF_Duration_in_Month").setFlexGrow(0).setResizable(true);
-        Grid.Column connectTypeColumn = missingGrid.getColumnByKey("connectType").setHeader("Connect_Type").setFlexGrow(0).setResizable(true);
+        Grid.Column contractFeatureIdColumn = missingGrid.getColumnByKey("contractFeatureId").setHeader("CF_ID").setFlexGrow(0).setSortable(true).setResizable(true);
+        Grid.Column contractFeatureNameColumn = missingGrid.getColumnByKey("contractFeatureName").setHeader("CF_Name").setFlexGrow(0).setSortable(true).setResizable(true);
+        Grid.Column attributeClassesIdColumn = missingGrid.getColumnByKey("attributeClassesId").setHeader("AttributeClasses_ID").setFlexGrow(0).setSortable(true).setResizable(true);
+        Grid.Column cfTypeClassNameColumn = missingGrid.getColumnByKey("cfTypeClassName").setHeader("CF_TYPE_CLASS_NAME").setFlexGrow(0).setSortable(true).setResizable(true);
+        Grid.Column attributeClassesNameColumn = missingGrid.getColumnByKey("attributeClassesName").setHeader("AttributeClasses_NAME").setFlexGrow(0).setSortable(true).setResizable(true);
+        Grid.Column contractFeatureSubCategoryNameColumn = missingGrid.getColumnByKey("contractFeatureSubCategoryName").setHeader("CF_SubCategory_Name").setFlexGrow(0).setSortable(true).setResizable(true);
+        Grid.Column cfTypeNameColumn = missingGrid.getColumnByKey("cfTypeName").setHeader("CF_TYPE_NAME").setFlexGrow(0).setSortable(true).setResizable(true);
+        Grid.Column cfDurationInMonthColumn = missingGrid.getColumnByKey("cfDurationInMonth").setHeader("CF_Duration_in_Month").setFlexGrow(0).setSortable(true).setResizable(true);
+        Grid.Column connectTypeColumn = missingGrid.getColumnByKey("connectType").setHeader("Connect_Type").setFlexGrow(0).setSortable(true).setResizable(true);
 
         // missingGrid.getColumnByKey("cltvCategoryName").setHeader("CLTV_Category_Name").setFlexGrow(0).setResizable(true);
         missingGrid.addComponentColumn(cltvInflow -> {
@@ -634,7 +634,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
             } else {
                 return new Text(getValidValue(cltvInflow.getCltvCategoryName()));
             }
-        }).setHeader("CLTV_Category_Name").setFlexGrow(0).setWidth("300px").setResizable(true);
+        }).setHeader("CLTV_Category_Name").setFlexGrow(0).setSortable(true).setWidth("300px").setResizable(true);
 
         // missingGrid.getColumnByKey("controllingBrandingDetailed").setHeader("Controlling_Branding_Detailed").setFlexGrow(0).setResizable(true);
  /*       missingGrid.addComponentColumn(cltvInflow -> {
@@ -689,7 +689,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
             } else {
                 return new Text(getValidValue(cltvInflow.getControllingBranding()));
             }
-        }).setHeader("Controlling_Branding").setFlexGrow(0).setWidth("300px").setResizable(true);
+        }).setHeader("Controlling_Branding").setFlexGrow(0).setSortable(true).setWidth("300px").setResizable(true);
 
         //Grid.Column userColumn = missingGrid.getColumnByKey("user").setHeader("User").setFlexGrow(0).setResizable(true);
         // missingGrid.getColumnByKey("cltvChargeName").setHeader("CLTV_Charge_Name").setFlexGrow(0).setResizable(true);
@@ -717,7 +717,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
             } else {
                 return new Text(getValidValue(cltvInflow.getCltvChargeName()));
             }
-        }).setHeader("CLTV_Charge_Name").setFlexGrow(0).setWidth("300px").setResizable(true);
+        }).setHeader("CLTV_Charge_Name").setFlexGrow(0).setSortable(true).setWidth("300px").setResizable(true);
 
         // Add a column with a save button
         missingGrid.addComponentColumn(cltvInflow -> {
