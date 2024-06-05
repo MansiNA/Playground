@@ -31,18 +31,19 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
+import de.dbuss.tefcontrol.components.DefaultUtils;
 import de.dbuss.tefcontrol.components.LogView;
 import de.dbuss.tefcontrol.components.QS_Callback;
 import de.dbuss.tefcontrol.components.QS_Grid;
 import de.dbuss.tefcontrol.data.dto.ProjectAttachmentsDTO;
 import de.dbuss.tefcontrol.data.entity.Constants;
 import de.dbuss.tefcontrol.data.entity.ProjectParameter;
+import de.dbuss.tefcontrol.data.entity.Projects;
 import de.dbuss.tefcontrol.data.entity.User;
+import de.dbuss.tefcontrol.data.modules.adjustmentrefx.view.AdjustmentsREFXView;
 import de.dbuss.tefcontrol.data.modules.cltv_Inflow.entity.CLTVInflow;
 import de.dbuss.tefcontrol.data.modules.cltv_Inflow.entity.CasaTerm;
-import de.dbuss.tefcontrol.data.service.BackendService;
-import de.dbuss.tefcontrol.data.service.ProjectConnectionService;
-import de.dbuss.tefcontrol.data.service.ProjectParameterService;
+import de.dbuss.tefcontrol.data.service.*;
 import de.dbuss.tefcontrol.dataprovider.GenericDataProvider;
 import de.dbuss.tefcontrol.views.MainLayout;
 import jakarta.annotation.security.RolesAllowed;
@@ -61,6 +62,8 @@ import java.util.stream.Collectors;
 @RolesAllowed({"MAPPING", "ADMIN"})
 public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserver {
     private final ProjectConnectionService projectConnectionService;
+    private final ProjectsService projectsService;
+    private final ProjectAttachmentsService projectAttachmentsService;
     private Crud<CLTVInflow> crud;
     private Grid<CLTVInflow> grid;
 
@@ -102,9 +105,14 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
     private Boolean isLogsVisible = false;
     private Boolean isVisible = false;
     Grid<ProjectParameter> parameterGrid = new Grid<>(ProjectParameter.class, false);
+    private Optional<Projects> projects;
+    private DefaultUtils defaultUtils;
+    private List<ProjectAttachmentsDTO> listOfProjectAttachments;
 
-    public CLTVInflowView(ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, BackendService backendService) {
+    public CLTVInflowView(ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, BackendService backendService, ProjectsService projectsService, ProjectAttachmentsService projectAttachmentsService) {
         this.projectConnectionService = projectConnectionService;
+        this.projectAttachmentsService = projectAttachmentsService;
+        this.projectsService = projectsService;
 
         missingShowHidebtn.setVisible(false);
         allEntriesShowHidebtn.setVisible(true);
@@ -155,22 +163,100 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
 
      //   Text databaseDetail = new Text("Connected to: "+ dbServer+ ", Database: " + dbName+ ", Table: " + tableName);
         setProjectParameterGrid(filteredProjectParameters);
+        defaultUtils = new DefaultUtils(projectsService, projectAttachmentsService);
         //Componente QS-Grid:
         //qsGrid = new QS_Grid(projectConnectionService, backendService);
+
+        add(getTabsheet(),parameterGrid);
+
+        parameterGrid.setVisible(false);
+        logView.setVisible(false);
+        add(logView);
+
+        if(MainLayout.isAdmin) {
+
+            UI.getCurrent().addShortcutListener(
+                    () -> {
+                        isVisible = !isVisible;
+                        parameterGrid.setVisible(isVisible);
+                    },
+                    Key.KEY_I, KeyModifier.ALT);
+
+            UI.getCurrent().addShortcutListener(
+                    () -> {
+                        isLogsVisible = !isLogsVisible;
+                        logView.setVisible(isLogsVisible);
+                    },
+                    Key.KEY_V, KeyModifier.ALT);
+        }
+        logView.logMessage(Constants.INFO, "Ending CLTVInflowView");
+    }
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+        logView.logMessage(Constants.INFO, "Starting beforeEnter() for update");
+        RouteParameters parameters = event.getRouteParameters();
+        projectId = Integer.parseInt(parameters.get("project_Id").orElse(null));
+
+        projects = projectsService.findById(projectId);
+
+        projects.ifPresent(value -> listOfProjectAttachments = projectsService.getProjectAttachmentsWithoutFileContent(value));
+
+        updateDescription();
+        updateAttachmentGrid(listOfProjectAttachments);
+        logView.logMessage(Constants.INFO, "Ending beforeEnter() for update");
+    }
+
+    private TabSheet getTabsheet() {
+        logView.logMessage(Constants.INFO, "Starting getTabsheet() for Tabs");
+        //log.info("Starting getTabsheet() for Tabsheet");
+        TabSheet tabSheet = new TabSheet();
+
+        tabSheet.add("Mapping", getMappingTab());
+        tabSheet.add("Description", getDescriptionTab());
+        tabSheet.add("Attachments", getAttachmentTab());
+
+        tabSheet.setSizeFull();
+        tabSheet.setHeightFull();
+        //log.info("Ending getTabsheet() for Tabsheet");
+        logView.logMessage(Constants.INFO, "Ending getTabsheet() for Tabs");
+        return tabSheet;
+    }
+
+    private Component getAttachmentTab() {
+        logView.logMessage(Constants.INFO, "Set Attachment in getAttachmentTab()");
+        return defaultUtils.getProjectAttachements();
+    }
+
+    private Component getDescriptionTab() {
+        logView.logMessage(Constants.INFO, "Set Description in getDescriptionTab()");
+        return defaultUtils.getProjectDescription();
+    }
+    private void updateDescription() {
+        logView.logMessage(Constants.INFO, "Update Attachment in updateDescription()");
+        defaultUtils.setProjectId(projectId);
+        defaultUtils.setDescription();
+    }
+    private void updateAttachmentGrid(List<ProjectAttachmentsDTO> projectAttachmentsDTOS) {
+        logView.logMessage(Constants.INFO, "Update Description in updateAttachmentGrid()");
+        defaultUtils.setProjectId(projectId);
+        defaultUtils.setAttachmentGridItems(projectAttachmentsDTOS);
+    }
+    private Component getMappingTab() {
+        logView.logMessage(Constants.INFO, "Sarting getUpladTab() for set upload data");
+        VerticalLayout content = new VerticalLayout();
 
         TabSheet tabSheet = new TabSheet();
         tabSheet.add("Inflow-Mapping",getCLTV_InflowGrid());
         tabSheet.add("Missing CLTV Entries", getMissingCLTV_InflowGrid());
         tabSheet.add("Missing CASA Entries", getCASA_Grid());
 
-
-
         tabSheet.setSizeFull();
         tabSheet.setHeightFull();
         tabSheet.addThemeVariants(TabSheetVariant.MATERIAL_BORDERED);
 
         tabSheet.addSelectedChangeListener(event -> {
-         //   System.out.println("Tab: " + event.getSelectedTab().toString());
+            //   System.out.println("Tab: " + event.getSelectedTab().toString());
             switch(event.getSelectedTab().toString()){
                 case "Tab{Missing CLTV Entries}":
                     missingShowHidebtn.setVisible(true);
@@ -202,37 +288,19 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         hl.add(missingShowHidebtn,casaShowHidebtn,allEntriesShowHidebtn);
 
         hl.setAlignItems(Alignment.BASELINE);
-        add(hl, parameterGrid, tabSheet );
-
+        content.add(hl, parameterGrid, tabSheet );
+        content.setHeightFull();
+        content.setWidthFull();
         updateGrid();
         updateMissingGrid();
 
-   //     allCLTVInflowData = projectConnectionService.getAllCLTVInflow(tableName, dbUrl, dbUser, dbPassword);
+        //     allCLTVInflowData = projectConnectionService.getAllCLTVInflow(tableName, dbUrl, dbUser, dbPassword);
 
-    //    updateCasaGrid();
+        //    updateCasaGrid();
 
-        parameterGrid.setVisible(false);
-        logView.setVisible(false);
-        add(logView);
-
-        if(MainLayout.isAdmin) {
-
-            UI.getCurrent().addShortcutListener(
-                    () -> {
-                        isVisible = !isVisible;
-                        parameterGrid.setVisible(isVisible);
-                    },
-                    Key.KEY_I, KeyModifier.ALT);
-
-            UI.getCurrent().addShortcutListener(
-                    () -> {
-                        isLogsVisible = !isLogsVisible;
-                        logView.setVisible(isLogsVisible);
-                    },
-                    Key.KEY_V, KeyModifier.ALT);
-        }
-        logView.logMessage(Constants.INFO, "Ending CLTVInflowView");
+        return content;
     }
+
 
     private Span createBadge(int value) {
         Span badge = new Span(String.valueOf(value));
@@ -253,15 +321,6 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         return vl;
     }
 
-
-
-    @Override
-    public void beforeEnter(BeforeEnterEvent event) {
-        logView.logMessage(Constants.INFO, "Starting beforeEnter() for update");
-        RouteParameters parameters = event.getRouteParameters();
-        projectId = Integer.parseInt(parameters.get("project_Id").orElse(null));
-        logView.logMessage(Constants.INFO, "Ending beforeEnter() for update");
-    }
     private void setProjectParameterGrid(List<ProjectParameter> listOfProjectParameters) {
         logView.logMessage(Constants.INFO, "Starting setProjectParameterGrid() for set database detail in Grid");
         parameterGrid = new Grid<>(ProjectParameter.class, false);
@@ -304,7 +363,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
     private void updateGrid() {
         logView.logMessage(Constants.INFO, "Starting updateGrid for update allCLTVInflow grid");
         allCLTVInflowData = projectConnectionService.getAllCLTVInflow(tableName, dbUrl, dbUser, dbPassword);
-        GenericDataProvider dataProvider = new GenericDataProvider(allCLTVInflowData, "ContractFeature_id");
+        GenericDataProvider dataProvider = new GenericDataProvider(allCLTVInflowData);
 
 
         if (cltvCategoryNameColumn != null && controllingBrandingColumn != null && cltvChargeNameColumn != null) {
@@ -422,6 +481,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
     private void configureGrid() {
         logView.logMessage(Constants.INFO, "Starting configureGrid() for configure CLTVInflow grid");
         String EDIT_COLUMN = "vaadin-crud-edit-column";
+        String ID = "id";
         grid = crud.getGrid();
         grid.setSizeFull();
         grid.setHeightFull();
@@ -449,6 +509,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
 
         grid.getColumns().forEach(col -> col.setAutoWidth(true));
         grid.removeColumn(grid.getColumnByKey(EDIT_COLUMN));
+        grid.removeColumn(grid.getColumnByKey(ID));
         grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         grid.addThemeVariants(GridVariant.LUMO_COMPACT);
         grid.setThemeName("dense");
