@@ -307,31 +307,29 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         GenericDataProvider dataProvider = new GenericDataProvider(allCLTVInflowData, "ContractFeature_id");
 
 
-        if (cltvCategoryNameColumn != null &&  controllingBrandingColumn != null && cltvChargeNameColumn != null)
-        {
-        dataProvider.addDataProviderListener(changeEvent -> {
+        if (cltvCategoryNameColumn != null && controllingBrandingColumn != null && cltvChargeNameColumn != null) {
+            dataProvider.addDataProviderListener(changeEvent -> {
 
 
-
-            long categoryCount = allCLTVInflowData.stream()
-                    .filter(person -> "nicht definiert".equals(person.getCltvCategoryName()))
-                    .count();
-
-
-            long brandingCount = allCLTVInflowData.stream()
-                    .filter(person -> "nicht definiert".equals(person.getControllingBranding()))
-                    .count();
-
-            long chargeNameCount = allCLTVInflowData.stream()
-                    .filter(person -> "nicht definiert".equals(person.getCltvChargeName()))
-                    .count();
-
-            cltvCategoryNameColumn.setFooter("Count-Missing: " + categoryCount);
-            controllingBrandingColumn.setFooter("Count-Missing: " + brandingCount);
-            cltvChargeNameColumn.setFooter("Count-Missing: " + chargeNameCount);
+                long categoryCount = allCLTVInflowData.stream()
+                        .filter(person -> "nicht definiert".equals(person.getCltvCategoryName()))
+                        .count();
 
 
-        });
+                long brandingCount = allCLTVInflowData.stream()
+                        .filter(person -> "nicht definiert".equals(person.getControllingBranding()))
+                        .count();
+
+                long chargeNameCount = allCLTVInflowData.stream()
+                        .filter(person -> "nicht definiert".equals(person.getCltvChargeName()))
+                        .count();
+
+                cltvCategoryNameColumn.setFooter("Count-Missing: " + categoryCount);
+                controllingBrandingColumn.setFooter("Count-Missing: " + brandingCount);
+                cltvChargeNameColumn.setFooter("Count-Missing: " + chargeNameCount);
+
+
+            });
 
         }
 
@@ -339,6 +337,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         grid.setDataProvider(dataProvider);
         logView.logMessage(Constants.INFO, "Ending updateGrid for update allCLTVInflow grid");
     }
+
 
     private void updateCasaGrid() {
         logView.logMessage(Constants.INFO, "Starting updateCasaGrid for update allCasaData grid");
@@ -374,8 +373,9 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         System.out.println("Count CASA-Entries after remove existing entries: " + allCasaData.size());
 
 
-        GenericDataProvider dataProvider = new GenericDataProvider(allCasaData, "ContractFeature_id");
-        casaGrid.setDataProvider(dataProvider);
+       // GenericDataProvider dataProvider = new GenericDataProvider(allCasaData, "ContractFeature_id");
+       // casaGrid.setDataProvider(dataProvider);
+        casaGrid.setItems(allCasaData);
         logView.logMessage(Constants.INFO, "Ending updateCasaGrid for update allCasaData grid");
     }
 
