@@ -45,4 +45,25 @@ public class AdjustmentsREFX {
     private String comment;
 
     private Date loadDate;
+
+
+    public String getLeasePayments() {
+        return "Null".equalsIgnoreCase(leasePayments) ? null : leasePayments;
+    }
+
+    public String getLeaseLiability() {
+        return "Null".equalsIgnoreCase(leaseLiability) ? null : leaseLiability;
+    }
+
+    public String getInterest() {
+        return "Null".equalsIgnoreCase(interest) ? null : interest;
+    }
+
+    public String getRouCapex() {
+        return "Null".equalsIgnoreCase(rouCapex) ? null : rouCapex;
+    }
+
+    public String getRouDepreciation() {
+        return "Null".equalsIgnoreCase(rouDepreciation) ? null : rouDepreciation;
+    }
 }
