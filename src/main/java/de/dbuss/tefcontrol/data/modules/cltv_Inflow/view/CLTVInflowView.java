@@ -786,7 +786,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
                 String resultString = projectConnectionService.updateCLTVInflow(cltvInflow, tableName, dbUrl, dbUser, dbPassword);
                 if (resultString.equals(Constants.OK)) {
                     logView.logMessage(Constants.INFO, "saveButton.addClickListener for update modified CLTVInflow data");
-                    Notification.show(modifiedCLTVInflow.size() + " Uploaded successfully", 2000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                    Notification.show("Uploaded successfully", 2000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
                     modifiedCLTVInflow.clear();
                     updateGrid();
                     updateMissingGrid();

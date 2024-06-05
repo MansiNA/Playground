@@ -1,9 +1,6 @@
 package de.dbuss.tefcontrol.data.modules.cltv_Inflow.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -55,5 +52,14 @@ public class CLTVInflow {
 
     @Column(name = "User")
     private String user;
+
+    @Transient
+    private String id;
+
+    @PostLoad
+    public void setIdFromFields() {
+        // Concatenate values of contractFeatureId, attributeClassesId, and connectType
+        this.id = contractFeatureId + "_" + attributeClassesId + "_" + connectType;
+    }
 
 }

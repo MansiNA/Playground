@@ -24,6 +24,7 @@ import de.dbuss.tefcontrol.data.modules.underlying_cobi;
 import de.dbuss.tefcontrol.data.modules.userimport.ImportDimLineTapete;
 import de.dbuss.tefcontrol.data.repository.ProjectConnectionRepository;
 import de.dbuss.tefcontrol.data.modules.kpi.Tech_KPIView;
+import de.dbuss.tefcontrol.views.MainLayout;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -909,7 +910,7 @@ public class ProjectConnectionService {
                 cltvInflow.setControllingBranding(rs.getString("Controlling_Branding"));
                 cltvInflow.setUser(rs.getString("User"));
                 cltvInflow.setCltvChargeName(rs.getString("CLTV_Charge_Name"));
-
+                cltvInflow.setIdFromFields();
                 return cltvInflow;
             };
 
@@ -958,12 +959,13 @@ public class ProjectConnectionService {
             DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
             jdbcTemplate = new JdbcTemplate(dataSource);
 
-            String sql = "UPDATE " + tableName + " SET CLTV_Category_Name = ?, Controlling_Branding = ?, CLTV_Charge_Name = ? WHERE ContractFeature_id = ? AND AttributeClasses_id = ? AND Connect_Type = ?";
+            String sql = "UPDATE " + tableName + " SET CLTV_Category_Name = ?, Controlling_Branding = ?, CLTV_Charge_Name = ?, [User] = ? WHERE ContractFeature_id = ? AND AttributeClasses_id = ? AND Connect_Type = ?";
 
             jdbcTemplate.update(sql,
                     cltvInflow.getCltvCategoryName(),
                     cltvInflow.getControllingBranding(),
                     cltvInflow.getCltvChargeName(),
+                    MainLayout.userName,
                     cltvInflow.getContractFeatureId(),
                     cltvInflow.getAttributeClassesId(),
                     cltvInflow.getConnectType()
@@ -1036,7 +1038,7 @@ public class ProjectConnectionService {
                         data.getCfTypeClassName(), data.getAttributeClassesName(), "",
                         "", "", "",
                         data.getConnectType(), data.getCltvCategoryName(), data.getControllingBranding(),
-                        data.getCltvChargeName(), "PIT");
+                        data.getCltvChargeName(), MainLayout.userName);
             }
 
             return Constants.OK;
