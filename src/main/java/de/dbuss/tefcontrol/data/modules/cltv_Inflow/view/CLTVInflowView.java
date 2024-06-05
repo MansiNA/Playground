@@ -15,6 +15,7 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.editor.Editor;
 import com.vaadin.flow.component.gridpro.GridPro;
+import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -29,17 +30,17 @@ import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.data.provider.DataProvider;
+import com.vaadin.flow.data.provider.Query;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
+import com.vaadin.flow.server.StreamResource;
 import de.dbuss.tefcontrol.components.DefaultUtils;
 import de.dbuss.tefcontrol.components.LogView;
 import de.dbuss.tefcontrol.components.QS_Callback;
 import de.dbuss.tefcontrol.components.QS_Grid;
 import de.dbuss.tefcontrol.data.dto.ProjectAttachmentsDTO;
-import de.dbuss.tefcontrol.data.entity.Constants;
-import de.dbuss.tefcontrol.data.entity.ProjectParameter;
-import de.dbuss.tefcontrol.data.entity.Projects;
-import de.dbuss.tefcontrol.data.entity.User;
+import de.dbuss.tefcontrol.data.entity.*;
 import de.dbuss.tefcontrol.data.modules.adjustmentrefx.view.AdjustmentsREFXView;
 import de.dbuss.tefcontrol.data.modules.cltv_Inflow.entity.CLTVInflow;
 import de.dbuss.tefcontrol.data.modules.cltv_Inflow.entity.CasaTerm;
@@ -48,8 +49,17 @@ import de.dbuss.tefcontrol.dataprovider.GenericDataProvider;
 import de.dbuss.tefcontrol.views.MainLayout;
 import jakarta.annotation.security.RolesAllowed;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -96,6 +106,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
     private Button missingShowHidebtn = new Button("Show/Hide Columns");
     private Button casaShowHidebtn = new Button("Show/Hide Columns");
     private Button allEntriesShowHidebtn = new Button("Show/Hide Columns");
+    private Button exportButton = new Button("Export");
     private int projectId;
     List<String> listOfCLTVCategoryName;
     //List<String> listOfControllingBrandingDetailed;
@@ -454,6 +465,8 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
     private Component getCLTV_InflowGrid() {
         logView.logMessage(Constants.INFO, "Starting getCLTV_InflowGrid for get CLTVInflow grid");
         VerticalLayout content = new VerticalLayout();
+        content.add(exportButton);
+        setUpExportButton();
         crud = new Crud<>(CLTVInflow.class, createEditor());
         configureGrid();
         //content.setFlexGrow(2,crud);
@@ -1140,6 +1153,94 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
             Notification.show("Please do not enter Missing value", 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
         }
         logView.logMessage(Constants.INFO, "Ending saveModifiedCasa() for save modified case");
+    }
+
+    private void setUpExportButton() {
+        logView.logMessage(Constants.INFO, "Starting setUpExportButton() prepare excel file for export");
+
+        exportButton.addThemeVariants(ButtonVariant.LUMO_SMALL);
+        exportButton.addThemeVariants(ButtonVariant.LUMO_SUCCESS);
+        exportButton.addClickListener(clickEvent -> {
+            System.out.println("export..click.....");
+            Notification.show("Exportiere Daten ");
+            try {
+                List<CLTVInflow> listOfCLTVInflow = getDataProviderAllItems();
+                generateExcelFile(listOfCLTVInflow);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        logView.logMessage(Constants.INFO, "Ending setUpExportButton() prepare excel file for export");
+    }
+    private List<CLTVInflow> getDataProviderAllItems() {
+        logView.logMessage(Constants.INFO,"Starting getDataProviderAllItems for grid dataprovider list");
+        DataProvider<CLTVInflow, Void> existDataProvider = (DataProvider<CLTVInflow, Void>) grid.getDataProvider();
+        List<CLTVInflow> listOfCLTVInflow = existDataProvider.fetch(new Query<>()).collect(Collectors.toList());
+        logView.logMessage(Constants.INFO,"Ending getDataProviderAllItems for grid dataprovider list");
+        return listOfCLTVInflow;
+    }
+    public void generateExcelFile(List<CLTVInflow> cltvInflowData) throws IOException {
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("CLTV Inflow Data");
+
+        // Create a header row
+        Row headerRow = sheet.createRow(0);
+        String[] columns = {"ContractFeature_id", "AttributeClasses_ID", "CF_TYPE_CLASS_NAME", "AttributeClasses_NAME",
+                "ContractFeatureSubCategory_Name", "ContractFeature_Name", "CF_TYPE_NAME", "CF_Duration_in_Month",
+                "Connect_Type", "CLTV_Category_Name", "Controlling_Branding", "CLTV_Charge_Name"};
+
+        for (int i = 0; i < columns.length; i++) {
+            Cell cell = headerRow.createCell(i);
+            cell.setCellValue(columns[i]);
+        }
+
+        // Create rows for each CLTVInflow object
+        int rowNum = 1;
+        for (CLTVInflow inflow : cltvInflowData) {
+            Row row = sheet.createRow(rowNum++);
+
+            row.createCell(0).setCellValue(inflow.getContractFeatureId());
+            row.createCell(1).setCellValue(inflow.getAttributeClassesId());
+            row.createCell(2).setCellValue(inflow.getCfTypeClassName());
+            row.createCell(3).setCellValue(inflow.getAttributeClassesName());
+            row.createCell(4).setCellValue(inflow.getContractFeatureSubCategoryName());
+            row.createCell(5).setCellValue(inflow.getContractFeatureName());
+            row.createCell(6).setCellValue(inflow.getCfTypeName());
+            row.createCell(7).setCellValue(inflow.getCfDurationInMonth());
+            row.createCell(8).setCellValue(inflow.getConnectType());
+            row.createCell(9).setCellValue(inflow.getCltvCategoryName());
+            row.createCell(10).setCellValue(inflow.getControllingBranding());
+            row.createCell(11).setCellValue(inflow.getCltvChargeName());
+          //  row.createCell(12).setCellValue(inflow.getUser());
+          //  row.createCell(13).setCellValue(inflow.getId());
+        }
+
+        // Resize all columns to fit the content size
+        for (int i = 0; i < columns.length; i++) {
+            sheet.autoSizeColumn(i);
+        }
+
+
+
+        String fileName = "Inflow_Mapping.xlsx";
+        StreamResource streamResource = new StreamResource(fileName, () -> {
+            try {
+                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                workbook.write(outputStream);
+                byte[] dataBytes = outputStream.toByteArray();
+                return new ByteArrayInputStream(dataBytes);
+            } catch (IOException e) {
+                e.printStackTrace();
+                return null;
+            }
+        });
+
+        Anchor anchor = new Anchor(streamResource, "");
+        anchor.getElement().setAttribute("download", true);
+        anchor.getElement().getStyle().set("display", "none");
+        add(anchor);
+        UI.getCurrent().getPage().executeJs("arguments[0].click()", anchor);
     }
 
     private boolean isMissing(String value) {
