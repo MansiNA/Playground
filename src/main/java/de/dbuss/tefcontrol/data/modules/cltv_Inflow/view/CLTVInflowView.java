@@ -106,7 +106,8 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
     private Button missingShowHidebtn = new Button("Show/Hide Columns");
     private Button casaShowHidebtn = new Button("Show/Hide Columns");
     private Button allEntriesShowHidebtn = new Button("Show/Hide Columns");
-    private Button exportButton = new Button("Export");
+    private Button inflowExportButton = new Button("Export");
+    private Button casaExportButton = new Button("Export");
     private int projectId;
     List<String> listOfCLTVCategoryName;
     //List<String> listOfControllingBrandingDetailed;
@@ -125,6 +126,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         this.projectAttachmentsService = projectAttachmentsService;
         this.projectsService = projectsService;
 
+        casaExportButton.setVisible(false);
         missingShowHidebtn.setVisible(false);
         allEntriesShowHidebtn.setVisible(true);
         casaShowHidebtn.setVisible(false);
@@ -273,18 +275,24 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
                     missingShowHidebtn.setVisible(true);
                     casaShowHidebtn.setVisible(false);
                     allEntriesShowHidebtn.setVisible(false);
+                    inflowExportButton.setVisible(false);
+                    casaExportButton.setVisible(false);
                     break;
 
                 case "Tab{Inflow-Mapping}":
                     missingShowHidebtn.setVisible(false);
                     casaShowHidebtn.setVisible(false);
                     allEntriesShowHidebtn.setVisible(true);
+                    inflowExportButton.setVisible(true);
+                    casaExportButton.setVisible(false);
                     break;
 
                 case "Tab{Missing CASA Entries}":
                     missingShowHidebtn.setVisible(false);
                     casaShowHidebtn.setVisible(true);
                     allEntriesShowHidebtn.setVisible(false);
+                    inflowExportButton.setVisible(false);
+                    casaExportButton.setVisible(true);
                     updateCasaGrid();
                     break;
 
@@ -296,7 +304,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
 
         HorizontalLayout hl = new HorizontalLayout();
         // hl.add(saveButton,databaseDetail);
-        hl.add(missingShowHidebtn,casaShowHidebtn,allEntriesShowHidebtn);
+        hl.add(missingShowHidebtn,casaShowHidebtn,allEntriesShowHidebtn, inflowExportButton, casaExportButton);
 
         hl.setAlignItems(Alignment.BASELINE);
         content.add(hl, parameterGrid, tabSheet );
@@ -324,6 +332,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         logView.logMessage(Constants.INFO, "Staring getCASA_Grid for get CASA Grid");
         VerticalLayout vl = new VerticalLayout();
         configureCASAGrid();
+        setUpCASAExportButton();
         vl.setAlignItems(Alignment.END);
         vl.add(casaGrid);
         vl.setSizeFull();
@@ -465,8 +474,8 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
     private Component getCLTV_InflowGrid() {
         logView.logMessage(Constants.INFO, "Starting getCLTV_InflowGrid for get CLTVInflow grid");
         VerticalLayout content = new VerticalLayout();
-        content.add(exportButton);
-        setUpExportButton();
+       // content.add(exportButton);
+        setUpInflowExportButton();
         crud = new Crud<>(CLTVInflow.class, createEditor());
         configureGrid();
         //content.setFlexGrow(2,crud);
@@ -1155,17 +1164,17 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         logView.logMessage(Constants.INFO, "Ending saveModifiedCasa() for save modified case");
     }
 
-    private void setUpExportButton() {
+    private void setUpInflowExportButton() {
         logView.logMessage(Constants.INFO, "Starting setUpExportButton() prepare excel file for export");
 
-        exportButton.addThemeVariants(ButtonVariant.LUMO_SMALL);
-        exportButton.addThemeVariants(ButtonVariant.LUMO_SUCCESS);
-        exportButton.addClickListener(clickEvent -> {
+        inflowExportButton.addThemeVariants(ButtonVariant.LUMO_SMALL);
+        inflowExportButton.addThemeVariants(ButtonVariant.LUMO_SUCCESS);
+        inflowExportButton.addClickListener(clickEvent -> {
             System.out.println("export..click.....");
-            Notification.show("Exportiere Daten ");
+            Notification.show("Exportiere Inflow Daten ");
             try {
-                List<CLTVInflow> listOfCLTVInflow = getDataProviderAllItems();
-                generateExcelFile(listOfCLTVInflow);
+                List<CLTVInflow> listOfCLTVInflow = getInflowDataProviderAllItems();
+                generateInflowExcelFile(listOfCLTVInflow);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -1173,14 +1182,42 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
 
         logView.logMessage(Constants.INFO, "Ending setUpExportButton() prepare excel file for export");
     }
-    private List<CLTVInflow> getDataProviderAllItems() {
+
+    private void setUpCASAExportButton() {
+        logView.logMessage(Constants.INFO, "Starting setUpExportButton() prepare excel file for export");
+
+        casaExportButton.addThemeVariants(ButtonVariant.LUMO_SMALL);
+        casaExportButton.addThemeVariants(ButtonVariant.LUMO_SUCCESS);
+        casaExportButton.addClickListener(clickEvent -> {
+            System.out.println("export..click.....");
+            Notification.show("Exportiere CASA Daten ");
+            try {
+                List<CasaTerm> listOfCASAEntries = getCASADataProviderAllItems();
+                generateExcelFile(listOfCASAEntries);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        logView.logMessage(Constants.INFO, "Ending setUpExportButton() prepare excel file for export");
+    }
+    private List<CLTVInflow> getInflowDataProviderAllItems() {
         logView.logMessage(Constants.INFO,"Starting getDataProviderAllItems for grid dataprovider list");
         DataProvider<CLTVInflow, Void> existDataProvider = (DataProvider<CLTVInflow, Void>) grid.getDataProvider();
         List<CLTVInflow> listOfCLTVInflow = existDataProvider.fetch(new Query<>()).collect(Collectors.toList());
         logView.logMessage(Constants.INFO,"Ending getDataProviderAllItems for grid dataprovider list");
         return listOfCLTVInflow;
     }
-    public void generateExcelFile(List<CLTVInflow> cltvInflowData) throws IOException {
+
+    private List<CasaTerm> getCASADataProviderAllItems() {
+        logView.logMessage(Constants.INFO,"Starting getDataProviderAllItems for grid dataprovider list");
+        DataProvider<CasaTerm, Void> existDataProvider = (DataProvider<CasaTerm, Void>) casaGrid.getDataProvider();
+        List<CasaTerm> listOfCASAEntries = existDataProvider.fetch(new Query<>()).collect(Collectors.toList());
+        logView.logMessage(Constants.INFO,"Ending getDataProviderAllItems for grid dataprovider list");
+        return listOfCASAEntries;
+    }
+
+    public void generateInflowExcelFile(List<CLTVInflow> cltvInflowData) throws IOException {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("CLTV Inflow Data");
 
@@ -1212,6 +1249,65 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
             row.createCell(9).setCellValue(inflow.getCltvCategoryName());
             row.createCell(10).setCellValue(inflow.getControllingBranding());
             row.createCell(11).setCellValue(inflow.getCltvChargeName());
+            //  row.createCell(12).setCellValue(inflow.getUser());
+            //  row.createCell(13).setCellValue(inflow.getId());
+        }
+
+        // Resize all columns to fit the content size
+        for (int i = 0; i < columns.length; i++) {
+            sheet.autoSizeColumn(i);
+        }
+
+
+
+        String fileName = "Inflow_Mapping.xlsx";
+        StreamResource streamResource = new StreamResource(fileName, () -> {
+            try {
+                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                workbook.write(outputStream);
+                byte[] dataBytes = outputStream.toByteArray();
+                return new ByteArrayInputStream(dataBytes);
+            } catch (IOException e) {
+                e.printStackTrace();
+                return null;
+            }
+        });
+
+        Anchor inflowanchor = new Anchor(streamResource, "");
+        inflowanchor.getElement().setAttribute("download", true);
+        inflowanchor.getElement().getStyle().set("display", "none");
+        add(inflowanchor);
+        UI.getCurrent().getPage().executeJs("arguments[0].click()", inflowanchor);
+    }
+
+    public void generateExcelFile(List<CasaTerm> casaData) throws IOException {
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("CASA Term");
+
+        // Create a header row
+        Row headerRow = sheet.createRow(0);
+        String[] columns = {"ContractFeature_id", "AttributeClasses_ID", "AttributeClasses_NAME", "Connect_Type", "CF_TYPE_CLASS_NAME", "Term_Name",
+                 "CLTV_Category_Name", "Controlling_Branding", "CLTV_Charge_Name"};
+
+        for (int i = 0; i < columns.length; i++) {
+            Cell cell = headerRow.createCell(i);
+            cell.setCellValue(columns[i]);
+        }
+
+        // Create rows for each CLTVInflow object
+        int rowNum = 1;
+        for (CasaTerm casa : casaData) {
+            Row row = sheet.createRow(rowNum++);
+
+            row.createCell(0).setCellValue(casa.getContractFeatureId());
+            row.createCell(1).setCellValue(casa.getAttributeClassesId());
+            row.createCell(2).setCellValue(casa.getAttributeClassesName());
+            row.createCell(3).setCellValue(casa.getConnectType());
+            row.createCell(4).setCellValue(casa.getCfTypeClassName());
+            row.createCell(5).setCellValue(casa.getTermName());
+            row.createCell(6).setCellValue(casa.getCltvCategoryName());
+            row.createCell(7).setCellValue(casa.getControllingBranding());
+            row.createCell(8).setCellValue(casa.getCltvChargeName());
           //  row.createCell(12).setCellValue(inflow.getUser());
           //  row.createCell(13).setCellValue(inflow.getId());
         }
@@ -1223,7 +1319,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
 
 
 
-        String fileName = "Inflow_Mapping.xlsx";
+        String fileName = "CASA.xlsx";
         StreamResource streamResource = new StreamResource(fileName, () -> {
             try {
                 ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
