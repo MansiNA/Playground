@@ -954,6 +954,46 @@ public class ProjectConnectionService {
         }
     }
 
+    public String updateListOfCASATerm(List<CasaTerm> casaData, String tableName, String dbUrl, String dbUser, String dbPassword) {
+        try {
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
+            String checkSql = "SELECT COUNT(*) FROM " + tableName +
+                    " WHERE ContractFeature_id = ? AND AttributeClasses_ID = ? AND Connect_Type = ?";
+
+            String insertSql = "INSERT INTO " + tableName +
+                    " (ContractFeature_id, AttributeClasses_ID, AttributeClasses_NAME, " +
+                    "Connect_Type, CF_TYPE_CLASS_NAME, CLTV_Category_Name, " +
+                    "Controlling_Branding, CLTV_Charge_Name) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+
+            for (CasaTerm casaTerm : casaData) {
+                Integer count = jdbcTemplate.queryForObject(checkSql, new Object[] {
+                        casaTerm.getContractFeatureId(),
+                        casaTerm.getAttributeClassesId(),
+                        casaTerm.getConnectType()
+                }, Integer.class);
+
+                if (count == null || count == 0) {
+                    jdbcTemplate.update(insertSql, casaTerm.getContractFeatureId(), casaTerm.getAttributeClassesId(),
+                            casaTerm.getAttributeClassesName(), casaTerm.getConnectType(),
+                            casaTerm.getCfTypeClassName(), casaTerm.getCltvCategoryName(),
+                            casaTerm.getControllingBranding(), casaTerm.getCltvChargeName());
+                } else {
+                    System.out.println("Record already exists in Mapping!");
+                }
+            }
+
+            return Constants.OK;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return handleDatabaseError(e);
+        } finally {
+            connectionClose(jdbcTemplate);
+        }
+    }
+
     public String updateCLTVInflow(CLTVInflow cltvInflow, String tableName, String dbUrl, String dbUser, String dbPassword) {
         try {
             DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);

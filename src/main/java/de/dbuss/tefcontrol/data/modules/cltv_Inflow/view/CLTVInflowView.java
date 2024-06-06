@@ -9,6 +9,7 @@ import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.crud.BinderCrudEditor;
 import com.vaadin.flow.component.crud.Crud;
 import com.vaadin.flow.component.crud.CrudEditor;
+import com.vaadin.flow.component.crud.CrudVariant;
 import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
@@ -16,6 +17,8 @@ import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.editor.Editor;
 import com.vaadin.flow.component.gridpro.GridPro;
 import com.vaadin.flow.component.html.Anchor;
+import com.vaadin.flow.component.html.Article;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -29,6 +32,8 @@ import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.component.upload.Upload;
+import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.provider.DataProvider;
 import com.vaadin.flow.data.provider.Query;
@@ -41,6 +46,7 @@ import de.dbuss.tefcontrol.components.QS_Callback;
 import de.dbuss.tefcontrol.components.QS_Grid;
 import de.dbuss.tefcontrol.data.dto.ProjectAttachmentsDTO;
 import de.dbuss.tefcontrol.data.entity.*;
+import de.dbuss.tefcontrol.data.modules.adjustmentrefx.entity.AdjustmentsREFX;
 import de.dbuss.tefcontrol.data.modules.adjustmentrefx.view.AdjustmentsREFXView;
 import de.dbuss.tefcontrol.data.modules.cltv_Inflow.entity.CLTVInflow;
 import de.dbuss.tefcontrol.data.modules.cltv_Inflow.entity.CasaTerm;
@@ -49,17 +55,15 @@ import de.dbuss.tefcontrol.dataprovider.GenericDataProvider;
 import de.dbuss.tefcontrol.views.MainLayout;
 import jakarta.annotation.security.RolesAllowed;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
+import java.lang.reflect.Field;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -77,14 +81,17 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
     private Crud<CLTVInflow> crud;
     private Grid<CLTVInflow> grid;
 
-    List<CLTVInflow> allCLTVInflowData;
+    private Crud<CasaTerm> uploadCASACrud;
+    private Grid<CasaTerm> uploadCASAGrid;
 
+    List<CLTVInflow> allCLTVInflowData;
     private Grid<CLTVInflow> missingGrid = new Grid(CLTVInflow.class);
     private Grid<CasaTerm> casaGrid = new Grid(CasaTerm.class);
 
     //private GridPro<CLTVInflow> missingGrid = new GridPro<>(CLTVInflow.class);
     private List<CLTVInflow> modifiedCLTVInflow = new ArrayList<>();
     private List<CasaTerm> modifiedCasa = new ArrayList<>();
+    private List<CasaTerm> listOfUploadCASA = new ArrayList<>();
     private String tableName;
     private String casaTableName;
     private String casaDbUrl;
@@ -108,6 +115,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
     private Button allEntriesShowHidebtn = new Button("Show/Hide Columns");
     private Button inflowExportButton = new Button("Export");
     private Button casaExportButton = new Button("Export");
+    private Button casaUploadButton = new Button("Upload");
     private int projectId;
     List<String> listOfCLTVCategoryName;
     //List<String> listOfControllingBrandingDetailed;
@@ -120,6 +128,12 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
     private Optional<Projects> projects;
     private DefaultUtils defaultUtils;
     private List<ProjectAttachmentsDTO> listOfProjectAttachments;
+    private MemoryBuffer memoryBuffer = new MemoryBuffer();
+    private Upload singleFileUpload = new Upload(memoryBuffer);
+    private String fileName;
+    private long contentLength = 0;
+    private String mimeType = "";
+    private Div textArea = new Div();
 
     public CLTVInflowView(ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, BackendService backendService, ProjectsService projectsService, ProjectAttachmentsService projectAttachmentsService) {
         this.projectConnectionService = projectConnectionService;
@@ -130,6 +144,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         missingShowHidebtn.setVisible(false);
         allEntriesShowHidebtn.setVisible(true);
         casaShowHidebtn.setVisible(false);
+        casaUploadButton.setVisible(false);
         logView = new LogView();
         logView.logMessage(Constants.INFO, "Starting CLTVInflowView");
 
@@ -263,6 +278,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         tabSheet.add("Inflow-Mapping",getCLTV_InflowGrid());
         tabSheet.add("Missing CLTV Entries", getMissingCLTV_InflowGrid());
         tabSheet.add("Missing CASA Entries", getCASA_Grid());
+        tabSheet.add("Upload CASA Mapping", getUploadCASAMapping());
 
         tabSheet.setSizeFull();
         tabSheet.setHeightFull();
@@ -277,6 +293,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
                     allEntriesShowHidebtn.setVisible(false);
                     inflowExportButton.setVisible(false);
                     casaExportButton.setVisible(false);
+                    casaUploadButton.setVisible(false);
                     break;
 
                 case "Tab{Inflow-Mapping}":
@@ -285,6 +302,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
                     allEntriesShowHidebtn.setVisible(true);
                     inflowExportButton.setVisible(true);
                     casaExportButton.setVisible(false);
+                    casaUploadButton.setVisible(false);
                     break;
 
                 case "Tab{Missing CASA Entries}":
@@ -293,7 +311,16 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
                     allEntriesShowHidebtn.setVisible(false);
                     inflowExportButton.setVisible(false);
                     casaExportButton.setVisible(true);
+                    casaUploadButton.setVisible(false);
                     updateCasaGrid();
+                    break;
+                case "Tab{Upload CASA Mapping}":
+                    missingShowHidebtn.setVisible(false);
+                    casaShowHidebtn.setVisible(false);
+                    allEntriesShowHidebtn.setVisible(false);
+                    inflowExportButton.setVisible(false);
+                    casaExportButton.setVisible(false);
+                    casaUploadButton.setVisible(true);
                     break;
 
             }
@@ -304,7 +331,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
 
         HorizontalLayout hl = new HorizontalLayout();
         // hl.add(saveButton,databaseDetail);
-        hl.add(missingShowHidebtn,casaShowHidebtn,allEntriesShowHidebtn, inflowExportButton, casaExportButton);
+        hl.add(missingShowHidebtn,casaShowHidebtn,allEntriesShowHidebtn, inflowExportButton, casaExportButton, casaUploadButton);
 
         hl.setAlignItems(Alignment.BASELINE);
         content.add(hl, parameterGrid, tabSheet );
@@ -318,14 +345,6 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         //    updateCasaGrid();
 
         return content;
-    }
-
-
-    private Span createBadge(int value) {
-        Span badge = new Span(String.valueOf(value));
-        badge.getElement().getThemeList().add("badge small contrast");
-        badge.getStyle().set("margin-inline-start", "var(--lumo-space-xs)");
-        return badge;
     }
 
     private Component getCASA_Grid() {
@@ -1365,6 +1384,271 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         }
         logView.logMessage(Constants.INFO, "Ending saveModifiedCLTVInflow() for save modified CLTVInflow");
     }
+
+    private Component getUploadCASAMapping() {
+        logView.logMessage(Constants.INFO, "Sarting getUpladTab() for set upload data");
+        VerticalLayout content = new VerticalLayout();
+        content.setSizeFull();
+        content.setHeightFull();
+
+        setupUploader();
+
+        casaUploadButton.addClickListener(e -> {
+            String resultString = projectConnectionService.updateListOfCASATerm(listOfUploadCASA, tableName, dbUrl, dbUser, dbPassword);
+            if (resultString.equals(Constants.OK)) {
+                logView.logMessage(Constants.INFO, "casaUploadButton.addClickListener for update modified CLTVInflow data");
+                Notification.show(listOfUploadCASA.size() + "Uploaded successfully", 2000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+            } else {
+                logView.logMessage(Constants.ERROR, "Error while updating modified CLTVInflow data");
+                Notification.show("Error during upload: " + resultString, 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+            }
+        });
+
+        HorizontalLayout hl = new HorizontalLayout(singleFileUpload);
+        content.add(hl);
+        content.add(getUploadCasaTermGrid());
+        return content;
+    }
+
+    private Component getUploadCasaTermGrid() {
+        logView.logMessage(Constants.INFO, "Starting getCasaTermGrid() for CasaTerm Grid");
+        VerticalLayout content = new VerticalLayout();
+        content.setSizeFull();
+        content.setHeightFull();
+        uploadCASACrud = new Crud<>(CasaTerm.class, createUploadCasaTermEditor());
+        uploadCASACrud.setToolbarVisible(false);
+        uploadCASACrud.setHeightFull();
+        uploadCASACrud.setThemeName("dense");
+        setupUploadCasaTermGrid();
+        uploadCASACrud.addThemeVariants(CrudVariant.NO_BORDER);
+        content.add(uploadCASACrud);
+        logView.logMessage(Constants.INFO, "Ending getCasaTermGrid() for CasaTerm Grid");
+        return content;
+    }
+
+    private CrudEditor<CasaTerm> createUploadCasaTermEditor() {
+        logView.logMessage(Constants.INFO, "createCasaTermEditor() for create Editor");
+        FormLayout editForm = new FormLayout();
+        Binder<CasaTerm> binder = new Binder<>(CasaTerm.class);
+
+        return new BinderCrudEditor<>(binder, editForm);
+    }
+
+    private void setupUploadCasaTermGrid() {
+        logView.logMessage(Constants.INFO, "Starting setupCasaTermGrid() for CasaTerm Grid");
+
+        String CONTRACT_FEATURE_ID = "contractFeatureId";
+        String ATTRIBUTE_CLASSES_ID = "attributeClassesId";
+        String ATTRIBUTE_CLASSES_NAME = "attributeClassesName";
+        String CONNECT_TYPE = "connectType";
+        String CF_TYPE_CLASS_NAME = "cfTypeClassName";
+        String TERM_NAME = "termName";
+        String CLTV_CATEGORY_NAME = "cltvCategoryName";
+        String CONTROLLING_BRANDING = "controllingBranding";
+        String CLTV_CHARGE_NAME = "cltvChargeName";
+        String EDIT_COLUMN = "vaadin-crud-edit-column";
+
+        uploadCASAGrid = uploadCASACrud.getGrid();
+
+        uploadCASAGrid.getColumnByKey(CONTRACT_FEATURE_ID).setHeader("Contract Feature ID").setWidth("120px").setFlexGrow(0).setResizable(true);
+        uploadCASAGrid.getColumnByKey(ATTRIBUTE_CLASSES_ID).setHeader("Attribute Classes ID").setWidth("80px").setFlexGrow(0).setResizable(true);
+        uploadCASAGrid.getColumnByKey(ATTRIBUTE_CLASSES_NAME).setHeader("Attribute Classes Name").setWidth("120px").setFlexGrow(0).setResizable(true);
+        uploadCASAGrid.getColumnByKey(CONNECT_TYPE).setHeader("Connect Type").setWidth("80px").setFlexGrow(0).setResizable(true);
+        uploadCASAGrid.getColumnByKey(CF_TYPE_CLASS_NAME).setHeader("CF Type Class Name").setWidth("120px").setFlexGrow(0).setResizable(true);
+        uploadCASAGrid.getColumnByKey(TERM_NAME).setHeader("Term Name").setWidth("80px").setFlexGrow(0).setResizable(true);
+        uploadCASAGrid.getColumnByKey(CLTV_CATEGORY_NAME).setHeader("CLTV Category Name").setWidth("120px").setFlexGrow(0).setResizable(true);
+        uploadCASAGrid.getColumnByKey(CONTROLLING_BRANDING).setHeader("Controlling Branding").setWidth("120px").setFlexGrow(0).setResizable(true);
+        uploadCASAGrid.getColumnByKey(CLTV_CHARGE_NAME).setHeader("CLTV Charge Name").setWidth("120px").setFlexGrow(0).setResizable(true);
+
+        // Remove edit column if exists
+        if (uploadCASAGrid.getColumnByKey(EDIT_COLUMN) != null) {
+            uploadCASAGrid.removeColumn(uploadCASAGrid.getColumnByKey(EDIT_COLUMN));
+        }
+
+        // Automatically resize columns to fit content
+        uploadCASAGrid.getColumns().forEach(col -> col.setAutoWidth(true));
+
+        // Reorder the columns
+        uploadCASAGrid.setColumnOrder(
+                uploadCASAGrid.getColumnByKey(CONTRACT_FEATURE_ID),
+                uploadCASAGrid.getColumnByKey(ATTRIBUTE_CLASSES_ID),
+                uploadCASAGrid.getColumnByKey(ATTRIBUTE_CLASSES_NAME),
+                uploadCASAGrid.getColumnByKey(CONNECT_TYPE),
+                uploadCASAGrid.getColumnByKey(CF_TYPE_CLASS_NAME),
+                uploadCASAGrid.getColumnByKey(TERM_NAME),
+                uploadCASAGrid.getColumnByKey(CLTV_CATEGORY_NAME),
+                uploadCASAGrid.getColumnByKey(CONTROLLING_BRANDING),
+                uploadCASAGrid.getColumnByKey(CLTV_CHARGE_NAME)
+        );
+
+        // Set theme variants
+        uploadCASAGrid.addThemeVariants(GridVariant.LUMO_COMPACT);
+        uploadCASAGrid.addThemeVariants(GridVariant.LUMO_WRAP_CELL_CONTENT);
+        uploadCASAGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+
+        uploadCASAGrid.setThemeName("dense");
+
+        logView.logMessage(Constants.INFO, "Ending setupCasaTermGrid() for CasaTerm Grid");
+    }
+
+    private void setupUploader() {
+        logView.logMessage(Constants.INFO, "Starting setupUploader() for setup file uploader");
+        singleFileUpload.setWidth("600px");
+
+        singleFileUpload.addSucceededListener(event -> {
+            logView.logMessage(Constants.INFO, "FIle Upload in Fileuploader");
+            // Get information about the uploaded file
+            InputStream fileData = memoryBuffer.getInputStream();
+            fileName = event.getFileName();
+            contentLength = event.getContentLength();
+            mimeType = event.getMIMEType();
+
+            parseExcelFile(fileData,fileName);
+
+            GenericDataProvider uploadCASADataprovider = new GenericDataProvider(listOfUploadCASA);
+            uploadCASAGrid.setDataProvider(uploadCASADataprovider);
+            singleFileUpload.clearFileList();
+        });
+        logView.logMessage(Constants.INFO, "Ending setupUploader() for setup file uploader");
+    }
+
+    private void parseExcelFile(InputStream fileData, String fileName) {
+        logView.logMessage(Constants.INFO, "Starting parseExcelFile() for parse uploaded file");
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
+        Article article = new Article();
+
+        try {
+            if(fileName.isEmpty() || fileName.length()==0)
+            {
+                article=new Article();
+                article.setText(LocalDateTime.now().format(formatter) + ": Error: Keine Datei angegeben!");
+                textArea.add(article);
+            }
+
+            if(!mimeType.contains("openxmlformats-officedocument"))
+            {
+                article=new Article();
+                article.setText(LocalDateTime.now().format(formatter) + ": Error: ungültiges Dateiformat!");
+                textArea.add(article);
+            }
+            textArea.setText(LocalDateTime.now().format(formatter) + ": Info: Verarbeite Datei: " + fileName + " (" + contentLength + " Byte)");
+
+            XSSFWorkbook my_xls_workbook = new XSSFWorkbook(fileData);
+
+            String sheetName =   "CASA Term"; //"Exported Data";
+
+            XSSFSheet sheet = my_xls_workbook.getSheet(sheetName);
+            listOfUploadCASA = parseSheet(sheet, CasaTerm.class);
+
+            logView.logMessage(Constants.INFO, "Ending parseExcelFile() for parse uploaded file");
+        } catch (Exception e) {
+            logView.logMessage(Constants.ERROR, "Error while parse uploaded file");
+            e.printStackTrace();
+        }
+    }
+
+    public <T> List<T>  parseSheet(XSSFSheet sheet, Class<T> targetType) {
+        logView.logMessage(Constants.INFO, "### Start parseSheet() ###");
+        List<T> resultList = new ArrayList<>();
+        try {
+            // List<T> resultList = new ArrayList<>();
+            Iterator<Row> rowIterator = sheet.iterator();
+
+            int rowNumber=0;
+            Integer Error_count=0;
+            //System.out.println("Sheet: " + sheet.getSheetName() + " has " + sheet.getPhysicalNumberOfRows() + " rows ") ;
+            logView.logMessage(Constants.INFO, "Sheet: " + sheet.getSheetName() + " has " + sheet.getPhysicalNumberOfRows() + " rows ");
+
+            while (rowIterator.hasNext() ) {
+                Row row = rowIterator.next();
+                T entity = targetType.newInstance();
+                rowNumber++;
+
+                if (rowNumber == 1) {
+                    continue;
+                }
+                if (row.getCell(0) != null && row.getCell(0).toString().isEmpty()) {
+                    break;
+                }
+
+                Field[] fields = targetType.getDeclaredFields();
+                for (int index = 0; index < fields.length; index++) {
+                    // for (int index = 0; index <= 9; index++) {
+                    Cell cell = null;
+//                    if (index != 0) {
+//                        cell = row.getCell(index - 1);
+//                    } else {
+                    cell = row.getCell(index);
+//                    }
+                    if (cell != null && !cell.toString().isEmpty()) {
+                        Field field = fields[index];
+                        field.setAccessible(true);
+//                        if (index == 0) {
+//                            field.set(entity, rowNumber);
+//                        } else {
+                        if (field.getType() == int.class || field.getType() == Integer.class) {
+                            field.set(entity, (int) cell.getNumericCellValue());
+                        } else if (field.getType() == long.class || field.getType() == Long.class) {
+                            field.set(entity, (long) cell.getNumericCellValue());
+                        } else if (field.getType() == double.class || field.getType() == Double.class) {
+                            field.set(entity, (double) cell.getNumericCellValue());
+
+                        } else if (field.getType() == java.sql.Date.class) {
+                            if (cell.getCellType() == Cell.CELL_TYPE_NUMERIC && DateUtil.isCellDateFormatted(cell)) {
+                                java.util.Date dateValue = cell.getDateCellValue();
+                                field.set(entity, new java.sql.Date(dateValue.getTime()));
+                            }
+                        } else if (field.getType() == String.class) {
+
+                            if (cell.getCellType() == Cell.CELL_TYPE_FORMULA) {
+                                // System.out.println(cell.getCachedFormulaResultType() + "............" + sheet.getSheetName());
+                                if (cell.getCachedFormulaResultType() == Cell.CELL_TYPE_NUMERIC) {
+                                    // Formula result is numeric, get the numeric value
+                                    double numericValue = cell.getNumericCellValue();
+                                    String value = String.valueOf(numericValue);
+                                    field.set(entity, value);
+                                } else if (cell.getCachedFormulaResultType() == Cell.CELL_TYPE_STRING) {
+                                    // Formula result is string, get the string value
+                                    String value = cell.getRichStringCellValue().getString();
+                                    field.set(entity, value);
+                                } else {
+                                    // Handle other formula result types if needed
+                                }
+                            } else {
+                                // Handle regular string cell
+
+                                try {
+                                    field.set(entity, cell.getStringCellValue());
+                                }
+                                catch (Exception e) {
+                                    System.out.println("Field getType:" + field.getType());
+                                    System.out.println(e.getMessage());
+                                    int spalte = cell.getColumnIndex()+1;
+                                    System.out.println("Zelle " + rowNumber + " Spalte: " + spalte + " Wert " +  cell.toString() + " konnte nicht automatisch als String verarbeitet werden, wird versucht manuell als String zu konvertieren...");
+                                    Double value = cell.getNumericCellValue();
+                                    field.set(entity, String.valueOf(value));
+
+                                }
+
+                            }
+                        }
+                        //    }
+                    }
+                }
+                resultList.add(entity);
+            }
+            logView.logMessage(Constants.INFO, "Ending parseSheet() for parse sheet of file");
+            return resultList;
+        } catch (Exception e) {
+            logView.logMessage(Constants.ERROR, "Error while parse sheet of file");
+            e.printStackTrace();
+            Notification.show(sheet.getSheetName() +" sheet having a parsing problem", 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+            return resultList;
+        }
+
+    }
+
     private static class ColumnToggleContextMenu extends ContextMenu {
         public ColumnToggleContextMenu(Component target) {
             super(target);
@@ -1380,4 +1664,14 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
            // menuItem.setKeepOpen(true);
         }
     }
+
+
+    private Span createBadge(int value) {
+        Span badge = new Span(String.valueOf(value));
+        badge.getElement().getThemeList().add("badge small contrast");
+        badge.getStyle().set("margin-inline-start", "var(--lumo-space-xs)");
+        return badge;
+    }
+
+
 }
