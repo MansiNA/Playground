@@ -39,6 +39,7 @@ import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.PBIFlashFinancials
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.PBITechComments;
 import de.dbuss.tefcontrol.data.modules.administration.view.ReportAdminView;
 import de.dbuss.tefcontrol.data.modules.kpi.Strategic_KPIView;
+import de.dbuss.tefcontrol.data.modules.sqlexecution.view.SQLExecutionView;
 import de.dbuss.tefcontrol.data.modules.tarifmapping.view.TarifMappingView;
 import de.dbuss.tefcontrol.data.modules.kpi.Tech_KPIView;
 import de.dbuss.tefcontrol.data.modules.underlying_cobi;
@@ -53,8 +54,10 @@ import de.dbuss.tefcontrol.views.knowledgeBase.KnowledgeBaseView;
 import de.dbuss.tefcontrol.data.modules.pfgproductmapping.view.PFGProductMappingView;
 import java.io.ByteArrayInputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import de.dbuss.tefcontrol.views.login.LoginView;
 import lombok.extern.slf4j.Slf4j;
@@ -63,6 +66,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.vaadin.lineawesome.LineAwesomeIcon;
@@ -91,6 +95,7 @@ public class MainLayout extends AppLayout {
     private static final Logger logInfo = LoggerFactory.getLogger(MainLayout.class);
     public static String userName;
     public static boolean isAdmin;
+    public static List<String> userRoles;
     private LoginView loginView;
 
     @Value("${pit.value}")
@@ -130,11 +135,17 @@ public class MainLayout extends AppLayout {
         urlToViewMap.put(Constants.UnderlyingCobi, underlying_cobi.class);
         urlToViewMap.put(Constants.ADJUSTMENTREFX, AdjustmentsREFXView.class);
         urlToViewMap.put(Constants.HUB_FLOW_MAPPING, HUBFlowMappingView.class);
+        urlToViewMap.put(Constants.SQL_EXECUTION, SQLExecutionView.class);
 
         setPrimarySection(Section.DRAWER);
         addDrawerContent();
         addHeaderContent();
      //   createHeader();
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        userRoles = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toList());
         isAdmin = checkAdminRole();
         logService.addLogMessage(LogService.INFO, "Ending application in MainLayout");
     }

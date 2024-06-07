@@ -36,7 +36,6 @@ public class Constants {
     // This constant is used for CLTV_Inflow module
     public static final String CLTV_INFLOW = "CLTV_Inflow";
 
-
     // This constant is used for pbicomment module
     public static final String PBI_TECH_COMMENTS = "PBI_Tech_Comments";
     public static  final String XPEX = "xPEX";
@@ -114,5 +113,10 @@ public class Constants {
     // This constant is used for HUB_Flow_Mapping module
     public static final String HUB_FLOW_MAPPING = "HUB_Flow_Mapping";
 
+
+    // This constant is used for SQL_Execution module
+    public static final String SQL_EXECUTION = "SQL_Execution";
+    public static final String SQL_TABLE = "SQL_Table";
+    public static final String DB_URL = "DB_Url";
 
 }

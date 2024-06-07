@@ -18,6 +18,8 @@ import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.GenericCommentsVie
 import de.dbuss.tefcontrol.data.modules.kpi.Strategic_KPIView;
 import de.dbuss.tefcontrol.data.modules.pfgproductmapping.entity.CltvAllProduct;
 import de.dbuss.tefcontrol.data.modules.pfgproductmapping.entity.ProductHierarchie;
+import de.dbuss.tefcontrol.data.modules.sqlexecution.entity.Configuration;
+import de.dbuss.tefcontrol.data.modules.sqlexecution.entity.SqlDefinition;
 import de.dbuss.tefcontrol.data.modules.tarifmapping.entity.CLTVProduct;
 import de.dbuss.tefcontrol.data.modules.tarifmapping.entity.MissingCLTVProduct;
 import de.dbuss.tefcontrol.data.modules.underlying_cobi;
@@ -46,6 +48,7 @@ import javax.sql.DataSource;
 import java.sql.*;
 import java.sql.Date;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -69,6 +72,7 @@ public class ProjectConnectionService {
     private String dbPassword;
 
     HashMap<String, String> defaultConnectionParams;
+    private List<SqlDefinition> sqlDefinitionList;
 
     public ProjectConnectionService(ProjectConnectionRepository repository) {
         this.repository = repository;
@@ -2371,4 +2375,126 @@ public class ProjectConnectionService {
             connectionClose(jdbcTemplate);
         }
     }
+
+    public List<Configuration> getConfigurationFromEKPMonitor(String dbUrl, String dbUser, String dbPassword, String tableName) {
+        try {
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
+            String sqlQuery = "SELECT * FROM " + tableName;
+
+            // Create a RowMapper to map the query result to a Configuration object
+            RowMapper<Configuration> rowMapper = (rs, rowNum) -> {
+                Configuration configuration = new Configuration();
+                configuration.setId(rs.getLong("ID"));
+                configuration.setName(rs.getString("NAME"));
+                configuration.setUserName(rs.getString("USER_NAME"));
+                configuration.setPassword(Configuration.decodePassword(rs.getString("PASSWORD")));
+                configuration.setDb_Url(rs.getString("DB_URL"));
+                return configuration;
+            };
+
+            List<Configuration> fetchedData = jdbcTemplate.query(sqlQuery, rowMapper);
+            return fetchedData;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            handleDatabaseError(ex);
+            return Collections.emptyList();
+        } finally {
+            connectionClose(jdbcTemplate);
+        }
+    }
+
+    public List<SqlDefinition> getSqlDefinitions(String dbUrl, String dbUser, String dbPassword, String tableName) {
+        try {
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
+            String sqlQuery = "SELECT * FROM " + tableName;
+
+            // Create a RowMapper to map the query result to a SqlDefinition object
+            RowMapper<SqlDefinition> rowMapper = (rs, rowNum) -> {
+                SqlDefinition sqlDefinition = new SqlDefinition();
+                sqlDefinition.setId(rs.getLong("ID"));
+                sqlDefinition.setPid(rs.getLong("PID"));
+                sqlDefinition.setSql(rs.getString("SQL"));
+                sqlDefinition.setBeschreibung(rs.getString("BESCHREIBUNG"));
+                sqlDefinition.setName(rs.getString("NAME"));
+                sqlDefinition.setAccessRoles(rs.getString("ACCESS_ROLES"));
+                return sqlDefinition;
+            };
+
+            sqlDefinitionList = jdbcTemplate.query(sqlQuery, rowMapper);
+            return sqlDefinitionList;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            handleDatabaseError(ex);
+            return Collections.emptyList();
+        } finally {
+            connectionClose(jdbcTemplate);
+        }
+    }
+
+    public List<SqlDefinition> getRootProjects() {
+
+        List<SqlDefinition> rootProjects = sqlDefinitionList
+                .stream()
+
+                .filter(projects -> {
+                    System.out.println("before accessRoles: " + projects.getAccessRoles());
+                    return hasAccess(projects.getAccessRoles());
+                })
+                .filter(sqlDef -> {
+                    System.out.println("pid: " + sqlDef.getPid());
+                    System.out.println("accessRoles: " + sqlDef.getAccessRoles());
+                    return sqlDef.getPid() == null;
+                })
+
+                .collect(Collectors.toList());
+
+        // Log the names of root projects
+        rootProjects.forEach(project -> System.out.println("Root Project: " + project.getName()));
+
+        return rootProjects;
+    }
+
+    public List<SqlDefinition> getChildProjects(SqlDefinition parent) {
+
+        List<SqlDefinition> childProjects = sqlDefinitionList
+                .stream()
+
+                .filter(projects -> {
+                    System.out.println("child accessRoles: " + projects.getAccessRoles());
+                    return hasAccess(projects.getAccessRoles());
+                })
+                .filter(sqlDef -> {
+                    System.out.println("Child Project - ID: " + sqlDef.getId() + ", PID: " + sqlDef.getPid());
+                    return Objects.equals(sqlDef.getPid(), parent.getId());
+                })
+                .collect(Collectors.toList());
+
+        // Log the names of child projects
+        childProjects.forEach(project -> System.out.println("Child Project of " + parent.getName() + ": " + project.getName()));
+
+        return childProjects;
+    }
+
+    private boolean hasAccess(String projectRoles) {
+        System.out.println("before project role"+projectRoles);
+        if (projectRoles != null) {
+            System.out.println("project role"+projectRoles);
+            String[] roleList = projectRoles.split(",");
+            // here noted rolelist have ADMIN, USER like that
+            // here noted userRoles have ROLE_ADMIN, ROLE_USER like that
+            for (String role : roleList) {
+                for (String userRole : MainLayout.userRoles) {
+                    if (userRole.contains(role)){
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
 }
