@@ -144,7 +144,6 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         missingShowHidebtn.setVisible(false);
         allEntriesShowHidebtn.setVisible(true);
         casaShowHidebtn.setVisible(false);
-        casaUploadButton.setVisible(false);
         logView = new LogView();
         logView.logMessage(Constants.INFO, "Starting CLTVInflowView");
 
@@ -293,7 +292,6 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
                     allEntriesShowHidebtn.setVisible(false);
                     inflowExportButton.setVisible(false);
                     casaExportButton.setVisible(false);
-                    casaUploadButton.setVisible(false);
                     break;
 
                 case "Tab{Inflow-Mapping}":
@@ -302,7 +300,6 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
                     allEntriesShowHidebtn.setVisible(true);
                     inflowExportButton.setVisible(true);
                     casaExportButton.setVisible(false);
-                    casaUploadButton.setVisible(false);
                     break;
 
                 case "Tab{Missing CASA Entries}":
@@ -311,7 +308,6 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
                     allEntriesShowHidebtn.setVisible(false);
                     inflowExportButton.setVisible(false);
                     casaExportButton.setVisible(true);
-                    casaUploadButton.setVisible(false);
                     updateCasaGrid();
                     break;
                 case "Tab{Upload CASA Mapping}":
@@ -320,9 +316,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
                     allEntriesShowHidebtn.setVisible(false);
                     inflowExportButton.setVisible(false);
                     casaExportButton.setVisible(false);
-                    casaUploadButton.setVisible(true);
                     break;
-
             }
 
         });
@@ -331,7 +325,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
 
         HorizontalLayout hl = new HorizontalLayout();
         // hl.add(saveButton,databaseDetail);
-        hl.add(missingShowHidebtn,casaShowHidebtn,allEntriesShowHidebtn, inflowExportButton, casaExportButton, casaUploadButton);
+        hl.add(missingShowHidebtn,casaShowHidebtn,allEntriesShowHidebtn, inflowExportButton, casaExportButton);
 
         hl.setAlignItems(Alignment.BASELINE);
         content.add(hl, parameterGrid, tabSheet );
@@ -1404,7 +1398,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
             }
         });
 
-        HorizontalLayout hl = new HorizontalLayout(singleFileUpload);
+        HorizontalLayout hl = new HorizontalLayout(singleFileUpload, casaUploadButton);
         content.add(hl);
         content.add(getUploadCasaTermGrid());
         return content;
