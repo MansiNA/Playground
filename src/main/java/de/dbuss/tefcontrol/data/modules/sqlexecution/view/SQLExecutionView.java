@@ -233,9 +233,9 @@ public class SQLExecutionView extends VerticalLayout {
     private TreeGrid createTreeGrid() {
         treeGrid = new TreeGrid<>();
         sqlDefinitionList = projectConnectionService.getSqlDefinitions(dbUrl,dbUser,dbPassword, sqlTable);
-      //  treeGrid.setItems(sqlDefinitionService.getRootProjects(), sqlDefinitionService ::getChildProjects);
-       // treeGrid.setItems(getRootProjects(), this::getChildProjects);
-        treeGrid.setItems(projectConnectionService.getRootProjects(), projectConnectionService::getChildProjects);
+        treeGrid.setItems(getRootProjects(), this::getChildProjects);
+
+       // treeGrid.setItems(rootProjects, projectConnectionService::getChildProjects);
         treeGrid.addHierarchyColumn(SqlDefinition::getName);
         treeGrid.getColumns().forEach(col -> col.setAutoWidth(true));
 
@@ -293,7 +293,6 @@ public class SQLExecutionView extends VerticalLayout {
         SqlDefinition newSqlDefinition = new SqlDefinition();
 
         if(context.equals("New")){
-         //   List<SqlDefinition> sqlDefinitionList = sqlDefinitionService.getAllSqlDefinitions();
             newSqlDefinition.setId((long) (sqlDefinitionList.size() + 1));
             newSqlDefinition.setPid(sqlDefinition.getPid());
             dialog.add(editSqlDefination(newSqlDefinition, true)); // For adding new entry
@@ -320,7 +319,7 @@ public class SQLExecutionView extends VerticalLayout {
             } else {
                 saveSqlDefinition(sqlDefinition);
             }
-          //  sqlDefinitionService.getAllSqlDefinitions();
+            sqlDefinitionList = projectConnectionService.getSqlDefinitions(dbUrl,dbUser,dbPassword, sqlTable);
             treeGrid.setItems(getRootProjects(), this ::getChildProjects);
             //   rows = retrieveRows();
             // treeg.setItems(param_Liste);
@@ -353,7 +352,6 @@ public class SQLExecutionView extends VerticalLayout {
         pid.setWidthFull();
 
         MultiSelectComboBox<String> rolesComboBox = new MultiSelectComboBox<>("Roles");
-       // List<SqlDefinition> sqlDefinitionList = sqlDefinitionService.getAllSqlDefinitions();
         rolesComboBox.setWidthFull();
 
         // Collect unique access roles from all SqlDefinition items
@@ -415,9 +413,9 @@ public class SQLExecutionView extends VerticalLayout {
         });
 
         deleteButton.addClickListener(saveEvent -> {
-       //     sqlDefinitionService.deleteSqlDefinitionById(sqlDefinition.getId());
-        //    sqlDefinitionService.getAllSqlDefinitions();
-        //    treeGrid.setItems(sqlDefinitionService.getRootProjects(), sqlDefinitionService ::getChildProjects);
+            projectConnectionService.deleteSqlDefinitionById(dbUrl,dbUser,dbPassword, sqlTable, sqlDefinition.getId());
+            sqlDefinitionList = projectConnectionService.getSqlDefinitions(dbUrl,dbUser,dbPassword, sqlTable);
+            treeGrid.setItems(getRootProjects(), this ::getChildProjects);
             dialog.close(); // Close the confirmation dialog
         });
 
@@ -560,8 +558,7 @@ public class SQLExecutionView extends VerticalLayout {
         if (queryString != null) {
             try {
                 Configuration conf = comboBox.getValue();
-                String password = Configuration.decodePassword(conf.getPassword());
-                DataSource dataSource = getDataSourceUsingParameter(conf.getDb_Url(), conf.getUserName(), password);
+                DataSource dataSource = getDataSourceUsingParameter(conf.getDb_Url(), conf.getUserName(), conf.getPassword());
                 jdbcTemplate = new JdbcTemplate(dataSource);
                 rows = jdbcTemplate.queryForList(queryString);
                 connectionClose(jdbcTemplate);
@@ -576,7 +573,7 @@ public class SQLExecutionView extends VerticalLayout {
     }
 
     public void saveSqlDefinition(SqlDefinition sqlDefinition) {
-     //   sqlDefinitionService.saveSqlDefinition(sqlDefinition);
+        projectConnectionService.saveSqlDefinition(dbUrl,dbUser,dbPassword, sqlTable, sqlDefinition);
     }
 
     public List<LinkedHashMap<String,Object>> retrieveRows_old(String queryString) throws SQLException, IOException {
@@ -597,10 +594,10 @@ public class SQLExecutionView extends VerticalLayout {
                 conf = comboBox.getValue();
 
                 Class.forName("oracle.jdbc.driver.OracleDriver");
-                String password = Configuration.decodePassword(conf.getPassword());
+              //  String password = Configuration.decodePassword(conf.getPassword());
 
                 //    Connection conn=DriverManager.getConnection(url, user, password);
-                Connection conn = DriverManager.getConnection(conf.getDb_Url(), conf.getUserName(), password);
+                Connection conn = DriverManager.getConnection(conf.getDb_Url(), conf.getUserName(), conf.getPassword());
 
 
                 s = conn.prepareStatement(queryString);
@@ -732,9 +729,9 @@ public class SQLExecutionView extends VerticalLayout {
 
 
             Class.forName("oracle.jdbc.driver.OracleDriver");
-            String password = Configuration.decodePassword(conf.getPassword());
+          //  String password = Configuration.decodePassword(conf.getPassword());
             //    Connection conn=DriverManager.getConnection(url, user, password);
-            Connection conn=DriverManager.getConnection(conf.getDb_Url(), conf.getUserName(), password);
+            Connection conn=DriverManager.getConnection(conf.getDb_Url(), conf.getUserName(), conf.getPassword());
 
             //   DriverManager.registerDriver(new oracle.jdbc.driver.OracleDriver());
 
@@ -894,19 +891,13 @@ public class SQLExecutionView extends VerticalLayout {
         }
     }
 
+
     public List<SqlDefinition> getRootProjects() {
 
         List<SqlDefinition> rootProjects = sqlDefinitionList
                 .stream()
-                .filter(sqlDef -> {
-                    System.out.println("pid: " + sqlDef.getPid());
-                    System.out.println("accessRoles: " + sqlDef.getAccessRoles());
-                    return sqlDef.getPid() == null;
-                })
-                .filter(projects -> {
-                    System.out.println("accessRoles: " + projects.getAccessRoles());
-                    return hasAccess(projects.getAccessRoles());
-                })
+                .filter(sqlDef -> sqlDef.getPid() == 0)
+                .filter(projects -> hasAccess(projects.getAccessRoles()))
                 .collect(Collectors.toList());
 
         // Log the names of root projects
@@ -919,14 +910,8 @@ public class SQLExecutionView extends VerticalLayout {
 
         List<SqlDefinition> childProjects = sqlDefinitionList
                 .stream()
-                .filter(sqlDef -> {
-                    System.out.println("Child Project - ID: " + sqlDef.getId() + ", PID: " + sqlDef.getPid());
-                    return Objects.equals(sqlDef.getPid(), parent.getId());
-                })
-                .filter(projects -> {
-                    System.out.println("child accessRoles: " + projects.getAccessRoles());
-                    return hasAccess(projects.getAccessRoles());
-                })
+                .filter(sqlDef -> Objects.equals(sqlDef.getPid(), parent.getId()))
+                .filter(projects -> hasAccess(projects.getAccessRoles()))
                 .collect(Collectors.toList());
 
         // Log the names of child projects
@@ -936,9 +921,7 @@ public class SQLExecutionView extends VerticalLayout {
     }
 
     private boolean hasAccess(String projectRoles) {
-        System.out.println("before project role"+projectRoles);
         if (projectRoles != null) {
-            System.out.println("project role"+projectRoles);
             String[] roleList = projectRoles.split(",");
             // here noted rolelist have ADMIN, USER like that
             // here noted userRoles have ROLE_ADMIN, ROLE_USER like that

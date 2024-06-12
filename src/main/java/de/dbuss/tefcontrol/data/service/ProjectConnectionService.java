@@ -2424,8 +2424,8 @@ public class ProjectConnectionService {
                 return sqlDefinition;
             };
 
-            sqlDefinitionList = jdbcTemplate.query(sqlQuery, rowMapper);
-            return sqlDefinitionList;
+            List<SqlDefinition> fetchedData  = jdbcTemplate.query(sqlQuery, rowMapper);
+            return fetchedData;
         } catch (Exception ex) {
             ex.printStackTrace();
             handleDatabaseError(ex);
@@ -2435,66 +2435,82 @@ public class ProjectConnectionService {
         }
     }
 
-    public List<SqlDefinition> getRootProjects() {
 
-        List<SqlDefinition> rootProjects = sqlDefinitionList
-                .stream()
+    public void deleteSqlDefinitionById(String dbUrl, String dbUser, String dbPassword, String tableName, Long id) {
+        try {
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
 
-                .filter(projects -> {
-                    System.out.println("before accessRoles: " + projects.getAccessRoles());
-                    return hasAccess(projects.getAccessRoles());
-                })
-                .filter(sqlDef -> {
-                    System.out.println("pid: " + sqlDef.getPid());
-                    System.out.println("accessRoles: " + sqlDef.getAccessRoles());
-                    return sqlDef.getPid() == null;
-                })
+            String sqlQuery = "DELETE FROM " + tableName + " WHERE ID = ?";
 
-                .collect(Collectors.toList());
+            int rowsAffected = jdbcTemplate.update(sqlQuery, id);
 
-        // Log the names of root projects
-        rootProjects.forEach(project -> System.out.println("Root Project: " + project.getName()));
-
-        return rootProjects;
-    }
-
-    public List<SqlDefinition> getChildProjects(SqlDefinition parent) {
-
-        List<SqlDefinition> childProjects = sqlDefinitionList
-                .stream()
-
-                .filter(projects -> {
-                    System.out.println("child accessRoles: " + projects.getAccessRoles());
-                    return hasAccess(projects.getAccessRoles());
-                })
-                .filter(sqlDef -> {
-                    System.out.println("Child Project - ID: " + sqlDef.getId() + ", PID: " + sqlDef.getPid());
-                    return Objects.equals(sqlDef.getPid(), parent.getId());
-                })
-                .collect(Collectors.toList());
-
-        // Log the names of child projects
-        childProjects.forEach(project -> System.out.println("Child Project of " + parent.getName() + ": " + project.getName()));
-
-        return childProjects;
-    }
-
-    private boolean hasAccess(String projectRoles) {
-        System.out.println("before project role"+projectRoles);
-        if (projectRoles != null) {
-            System.out.println("project role"+projectRoles);
-            String[] roleList = projectRoles.split(",");
-            // here noted rolelist have ADMIN, USER like that
-            // here noted userRoles have ROLE_ADMIN, ROLE_USER like that
-            for (String role : roleList) {
-                for (String userRole : MainLayout.userRoles) {
-                    if (userRole.contains(role)){
-                        return true;
-                    }
-                }
-            }
+            System.out.println("Number of rows affected: " + rowsAffected);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            handleDatabaseError(ex);
+        } finally {
+            connectionClose(jdbcTemplate);
         }
-        return false;
+    }
+
+    public void saveSqlDefinition(String dbUrl, String dbUser, String dbPassword, String tableName, SqlDefinition sqlDefinition) {
+        try {
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
+            String sqlQuery;
+            Object[] params;
+
+            if (doesIdExist(dbUrl, dbUser, dbPassword, tableName, sqlDefinition.getId())) {
+                // Update existing record
+                sqlQuery = "UPDATE " + tableName + " SET PID = ?, SQL = ?, BESCHREIBUNG = ?, NAME = ?, ACCESS_ROLES = ? WHERE ID = ?";
+                params = new Object[]{
+                        sqlDefinition.getPid(),
+                        sqlDefinition.getSql(),
+                        sqlDefinition.getBeschreibung(),
+                        sqlDefinition.getName(),
+                        sqlDefinition.getAccessRoles(),
+                        sqlDefinition.getId()
+                };
+            } else {
+                // Insert new record
+                sqlQuery = "INSERT INTO " + tableName + " (ID, PID, SQL, BESCHREIBUNG, NAME, ACCESS_ROLES) VALUES (?, ?, ?, ?, ?, ?)";
+                params = new Object[]{
+                        sqlDefinition.getId(),
+                        sqlDefinition.getPid(),
+                        sqlDefinition.getSql(),
+                        sqlDefinition.getBeschreibung(),
+                        sqlDefinition.getName(),
+                        sqlDefinition.getAccessRoles()
+                };
+            }
+
+            int rowsAffected = jdbcTemplate.update(sqlQuery, params);
+
+            System.out.println("Number of rows affected: " + rowsAffected);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            handleDatabaseError(ex);
+        } finally {
+            connectionClose(jdbcTemplate);
+        }
+    }
+
+    public boolean doesIdExist(String dbUrl, String dbUser, String dbPassword, String tableName, Long id) {
+        try {
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
+            String sqlQuery = "SELECT COUNT(*) FROM " + tableName + " WHERE ID = ?";
+            int count = jdbcTemplate.queryForObject(sqlQuery, new Object[]{id}, Integer.class);
+
+            return count > 0;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            handleDatabaseError(ex);
+            return false;
+        }
     }
 
 }
