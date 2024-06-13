@@ -317,7 +317,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
                     allEntriesShowHidebtn.setVisible(false);
                     inflowExportButton.setVisible(false);
                     casaExportButton.setVisible(false);
-                    uploadCASAGrid.setItems(Collections.emptyList());
+                 //   uploadCASAGrid.setDataProvider(DataProvider.ofCollection(Collections.emptyList()));
                     break;
             }
 
