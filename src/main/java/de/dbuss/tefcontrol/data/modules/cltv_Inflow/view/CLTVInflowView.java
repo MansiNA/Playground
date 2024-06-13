@@ -308,6 +308,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
                     allEntriesShowHidebtn.setVisible(false);
                     inflowExportButton.setVisible(false);
                     casaExportButton.setVisible(true);
+                    casaGrid.setItems(Collections.emptyList());
                     updateCasaGrid();
                     break;
                 case "Tab{Upload CASA Mapping}":
@@ -316,6 +317,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
                     allEntriesShowHidebtn.setVisible(false);
                     inflowExportButton.setVisible(false);
                     casaExportButton.setVisible(false);
+                    uploadCASAGrid.setItems(Collections.emptyList());
                     break;
             }
 
@@ -625,15 +627,32 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
 
     private CrudEditor<CLTVInflow> createEditor() {
         logView.logMessage(Constants.INFO, "Starting createEditor() for CrudEditor");
+
+        allCLTVInflowData = projectConnectionService.getAllCLTVInflow(tableName, dbUrl, dbUser, dbPassword);
+        List<String> cltvCategoryNames = extractUniqueCltvCategoryNames(allCLTVInflowData);
+        List<String> controllingBrandingOptions = extractUniqueControllingBranding(allCLTVInflowData);
+        List<String> cltvChargeNames = extractUniqueCltvChargeNames(allCLTVInflowData);
+
         TextField contractFeature_idField = new TextField("ContractFeature_id");
         contractFeature_idField.setReadOnly(true);
         TextField attributeClasses_IDField = new TextField("AttributeClasses_ID");
         attributeClasses_IDField.setReadOnly(true);
         TextField connect_TypeField = new TextField("Connect_Type");
         connect_TypeField.setReadOnly(true);
-        TextField cltvCategoryNameField = new TextField("CLTV_Category_Name");
-        TextField controllingBrandingField = new TextField("Controlling_Branding");
-        TextField cltvChargeNameField = new TextField("CLTV_Charge_Name");
+
+        // Create ComboBox fields
+        ComboBox<String> cltvCategoryNameField = new ComboBox<>("CLTV_Category_Name");
+        ComboBox<String> controllingBrandingField = new ComboBox<>("Controlling_Branding");
+        ComboBox<String> cltvChargeNameField = new ComboBox<>("CLTV_Charge_Name");
+
+        // Populate ComboBox with items
+        cltvCategoryNameField.setItems(cltvCategoryNames);
+        controllingBrandingField.setItems(controllingBrandingOptions);
+        cltvChargeNameField.setItems(cltvChargeNames);
+
+        enableCustomValueSupport(cltvCategoryNameField, cltvCategoryNames);
+        enableCustomValueSupport(controllingBrandingField, controllingBrandingOptions);
+        enableCustomValueSupport(cltvChargeNameField, cltvChargeNames);
 
         FormLayout editForm = new FormLayout(contractFeature_idField, attributeClasses_IDField, connect_TypeField, cltvCategoryNameField, controllingBrandingField, cltvChargeNameField);
 
@@ -1667,5 +1686,37 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         return badge;
     }
 
+    public List<String> extractUniqueCltvCategoryNames(List<CLTVInflow> inflowData) {
+        return inflowData.stream()
+                .map(CLTVInflow::getCltvCategoryName)
+                .filter(value -> value != null && !value.trim().isEmpty())
+                .distinct()
+                .collect(Collectors.toList());
+    }
 
+    public List<String> extractUniqueControllingBranding(List<CLTVInflow> inflowData) {
+        return inflowData.stream()
+                .map(CLTVInflow::getControllingBranding)
+                .filter(value -> value != null && !value.trim().isEmpty())
+                .distinct()
+                .collect(Collectors.toList());
+    }
+
+    public List<String> extractUniqueCltvChargeNames(List<CLTVInflow> inflowData) {
+        return inflowData.stream()
+                .map(CLTVInflow::getCltvChargeName)
+                .filter(value -> value != null && !value.trim().isEmpty())
+                .distinct()
+                .collect(Collectors.toList());
+    }
+
+    private void enableCustomValueSupport(ComboBox<String> comboBox, List<String> items) {
+        comboBox.setAllowCustomValue(true);
+        comboBox.addCustomValueSetListener(event -> {
+            String customValue = event.getDetail();
+            items.add(customValue);
+            comboBox.setItems(items);
+            comboBox.setValue(customValue);
+        });
+    }
 }
