@@ -82,6 +82,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
     private Grid<CasaTerm> uploadCASAGrid;
 
     List<CLTVInflow> allCLTVInflowData;
+    List<CasaTerm> allCasaData = new ArrayList<>();
     private Grid<CLTVInflow> missingGrid = new Grid(CLTVInflow.class);
     private Grid<CasaTerm> casaGrid = new Grid(CasaTerm.class);
 
@@ -289,6 +290,11 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
                     allEntriesShowHidebtn.setVisible(false);
                     inflowExportButton.setVisible(false);
                     casaExportButton.setVisible(false);
+                    if (allCasaData != null) {
+                        System.out.println("clear--------------------------------------");
+                        allCasaData.clear();
+                    }
+
                     break;
 
                 case "Tab{Inflow-Mapping}":
@@ -297,6 +303,10 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
                     allEntriesShowHidebtn.setVisible(true);
                     inflowExportButton.setVisible(true);
                     casaExportButton.setVisible(false);
+                    if(allCasaData != null) {
+                        System.out.println("clear--------------------------------------");
+                        allCasaData.clear();
+                    }
                     break;
 
                 case "Tab{Missing CASA Entries}":
@@ -305,8 +315,26 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
                     allEntriesShowHidebtn.setVisible(false);
                     inflowExportButton.setVisible(false);
                     casaExportButton.setVisible(true);
-                    casaGrid.setItems(Collections.emptyList());
-                    updateCasaGrid();
+
+                    UI.getCurrent().access(() -> {
+                        try {
+                            if(allCasaData != null) {
+                                System.out.println("clear--------------------------------------");
+                                allCasaData.clear();
+                            }
+
+                            casaGrid.setItems(allCasaData);
+                            Thread.sleep(2000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+
+                        // Update the grid
+
+
+                        // Mark the access session as dirty
+                        UI.getCurrent().accessSynchronously(() -> updateCasaGrid());
+                    });
                     break;
                 case "Tab{Upload CASA Mapping}":
                     missingShowHidebtn.setVisible(false);
@@ -315,6 +343,10 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
                     inflowExportButton.setVisible(false);
                     casaExportButton.setVisible(false);
                     listOfUploadCASA.clear();
+                    if(allCasaData != null) {
+                        System.out.println("clear--------------------------------------");
+                        allCasaData.clear();
+                    }
                     break;
             }
 
@@ -433,7 +465,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
     private void updateCasaGrid() {
         logView.logMessage(Constants.INFO, "Starting updateCasaGrid for update allCasaData grid");
         System.out.println("Update Casa-GRID");
-        List<CasaTerm> allCasaData = projectConnectionService.getAllCASATerms(casaQuery, casaDbUrl, casaDbUser, casaDbPassword);
+        allCasaData = projectConnectionService.getAllCASATerms(casaQuery, casaDbUrl, casaDbUser, casaDbPassword);
         allCLTVInflowData = projectConnectionService.getAllCLTVInflow(tableName, dbUrl, dbUser, dbPassword);
         List<CasaTerm> existingEntries=new ArrayList<>();
 
