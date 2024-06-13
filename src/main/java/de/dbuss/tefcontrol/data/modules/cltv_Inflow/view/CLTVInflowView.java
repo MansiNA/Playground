@@ -6,10 +6,7 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.contextmenu.ContextMenu;
 import com.vaadin.flow.component.contextmenu.MenuItem;
-import com.vaadin.flow.component.crud.BinderCrudEditor;
-import com.vaadin.flow.component.crud.Crud;
-import com.vaadin.flow.component.crud.CrudEditor;
-import com.vaadin.flow.component.crud.CrudVariant;
+import com.vaadin.flow.component.crud.*;
 import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
@@ -317,7 +314,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
                     allEntriesShowHidebtn.setVisible(false);
                     inflowExportButton.setVisible(false);
                     casaExportButton.setVisible(false);
-                 //   uploadCASAGrid.setDataProvider(DataProvider.ofCollection(Collections.emptyList()));
+                    listOfUploadCASA.clear();
                     break;
             }
 
@@ -437,7 +434,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         logView.logMessage(Constants.INFO, "Starting updateCasaGrid for update allCasaData grid");
         System.out.println("Update Casa-GRID");
         List<CasaTerm> allCasaData = projectConnectionService.getAllCASATerms(casaQuery, casaDbUrl, casaDbUser, casaDbPassword);
-
+        allCLTVInflowData = projectConnectionService.getAllCLTVInflow(tableName, dbUrl, dbUser, dbPassword);
         List<CasaTerm> existingEntries=new ArrayList<>();
 
         if(allCLTVInflowData!=null) {
@@ -1034,13 +1031,14 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
                             ButtonVariant.LUMO_SUCCESS,
                             ButtonVariant.LUMO_TERTIARY);
                     button.addClickListener(e -> {
-                                System.out.println("Save: " + casaTerm.getContractFeatureId().toString() + " with Category: " + casaTerm.getCltvCategoryName() + "Branding: " + casaTerm.getControllingBranding() + " ChargeName: " + casaTerm.getCltvChargeName());
-                                String ret = projectConnectionService.saveCASAToTargetTable(casaTerm, tableName, dbUrl, dbUser, dbPassword);
+                        System.out.println("Save: " + casaTerm.getContractFeatureId().toString() + " with Category: " + casaTerm.getCltvCategoryName() + "Branding: " + casaTerm.getControllingBranding() + " ChargeName: " + casaTerm.getCltvChargeName());
+                        String ret = projectConnectionService.saveCASAToTargetTable(casaTerm, tableName, dbUrl, dbUser, dbPassword);
 
-                                if (ret != Constants.OK)
-                            {
-                                Notification.show(ret, 6000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
-                            }
+                        if (ret == Constants.OK) {
+                            Notification.show("Upload Successfully", 6000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                        } else {
+                            Notification.show(ret, 6000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                        }
 
                         updateGrid(); //First update Grid for check existing entries.
                         updateCasaGrid();
@@ -1049,7 +1047,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
                     });
                     button.setIcon(new Icon(VaadinIcon.CLOUD_DOWNLOAD_O));
 
-                })).setHeader("get entry");
+                })).setHeader("upload");
 
 
         casaGrid.getColumns().forEach(col -> col.setAutoWidth(true));
