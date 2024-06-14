@@ -2393,7 +2393,7 @@ public class ProjectConnectionService {
                 configuration.setDb_Url(rs.getString("DB_URL"));
                 return configuration;
             };
-
+            errorMessage = "";
             List<Configuration> fetchedData = jdbcTemplate.query(sqlQuery, rowMapper);
             return fetchedData;
         } catch (Exception ex) {
@@ -2423,7 +2423,7 @@ public class ProjectConnectionService {
                 sqlDefinition.setAccessRoles(rs.getString("ACCESS_ROLES"));
                 return sqlDefinition;
             };
-
+            errorMessage = "";
             List<SqlDefinition> fetchedData  = jdbcTemplate.query(sqlQuery, rowMapper);
             return fetchedData;
         } catch (Exception ex) {
@@ -2487,7 +2487,7 @@ public class ProjectConnectionService {
             }
 
             int rowsAffected = jdbcTemplate.update(sqlQuery, params);
-
+            errorMessage = "";
             System.out.println("Number of rows affected: " + rowsAffected);
         } catch (Exception ex) {
             ex.printStackTrace();

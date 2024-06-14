@@ -125,6 +125,9 @@ public class SQLExecutionView extends VerticalLayout {
         
         try {
             List<Configuration> configList = projectConnectionService.getConfigurationFromEKPMonitor(dbUrl, dbUser, dbPassword, configTable);
+            if(configList.isEmpty() &&  !projectConnectionService.getErrorMessage().isEmpty()) {
+                Notification.show("Error: " + projectConnectionService.getErrorMessage(), 5000, Notification.Position.MIDDLE);
+              }
             if (configList != null && !configList.isEmpty()) {
                 comboBox.setItems(configList);
                 comboBox.setItemLabelGenerator(Configuration::getName);
@@ -161,7 +164,6 @@ public class SQLExecutionView extends VerticalLayout {
         runButton.addClickListener(clickEvent -> {
             try {
                 show_grid(sqlTextField.getValue());
-                exportButton.setVisible(true);
                 runButton.setEnabled(false);
             } catch (SQLException ex) {
                 throw new RuntimeException(ex);
@@ -233,6 +235,9 @@ public class SQLExecutionView extends VerticalLayout {
     private TreeGrid createTreeGrid() {
         treeGrid = new TreeGrid<>();
         sqlDefinitionList = projectConnectionService.getSqlDefinitions(dbUrl,dbUser,dbPassword, sqlTable);
+        if (sqlDefinitionList.isEmpty() && !projectConnectionService.getErrorMessage().isEmpty()) {
+            Notification.show("Error: " + projectConnectionService.getErrorMessage(), 5000, Notification.Position.MIDDLE);
+        }
         treeGrid.setItems(getRootProjects(), this::getChildProjects);
 
        // treeGrid.setItems(rootProjects, projectConnectionService::getChildProjects);
@@ -320,6 +325,9 @@ public class SQLExecutionView extends VerticalLayout {
                 saveSqlDefinition(sqlDefinition);
             }
             sqlDefinitionList = projectConnectionService.getSqlDefinitions(dbUrl,dbUser,dbPassword, sqlTable);
+            if (sqlDefinitionList.isEmpty() && !projectConnectionService.getErrorMessage().isEmpty()) {
+                Notification.show("Error: " + projectConnectionService.getErrorMessage(), 5000, Notification.Position.MIDDLE);
+            }
             treeGrid.setItems(getRootProjects(), this ::getChildProjects);
             //   rows = retrieveRows();
             // treeg.setItems(param_Liste);
@@ -518,6 +526,7 @@ public class SQLExecutionView extends VerticalLayout {
         rows = retrieveRows(sql);
 
         if(!rows.isEmpty()){
+            exportButton.setVisible(true);
             grid2.setItems( rows); // rows is the result of retrieveRows
 
             // Add the columns based on the first row
@@ -558,11 +567,15 @@ public class SQLExecutionView extends VerticalLayout {
         if (queryString != null) {
             try {
                 Configuration conf = comboBox.getValue();
-                DataSource dataSource = getDataSourceUsingParameter(conf.getDb_Url(), conf.getUserName(), conf.getPassword());
-                jdbcTemplate = new JdbcTemplate(dataSource);
-                rows = jdbcTemplate.queryForList(queryString);
-                connectionClose(jdbcTemplate);
-                return rows;
+                if(conf != null) {
+                    DataSource dataSource = getDataSourceUsingParameter(conf.getDb_Url(), conf.getUserName(), conf.getPassword());
+                    jdbcTemplate = new JdbcTemplate(dataSource);
+                    rows = jdbcTemplate.queryForList(queryString);
+                    connectionClose(jdbcTemplate);
+                    return rows;
+                } else {
+                    Notification.show("connection cnfiguration does not exist! ", 5000, Notification.Position.MIDDLE);
+                }
             } catch (Exception e) {
                 e.printStackTrace();
                 Notification.show(e.getCause().getMessage(), 5000, Notification.Position.MIDDLE);
@@ -574,6 +587,9 @@ public class SQLExecutionView extends VerticalLayout {
 
     public void saveSqlDefinition(SqlDefinition sqlDefinition) {
         projectConnectionService.saveSqlDefinition(dbUrl,dbUser,dbPassword, sqlTable, sqlDefinition);
+        if (!projectConnectionService.getErrorMessage().isEmpty()) {
+            Notification.show("Error: " + projectConnectionService.getErrorMessage(), 5000, Notification.Position.MIDDLE);
+        }
     }
 
     public List<LinkedHashMap<String,Object>> retrieveRows_old(String queryString) throws SQLException, IOException {
