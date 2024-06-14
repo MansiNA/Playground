@@ -2389,7 +2389,8 @@ public class ProjectConnectionService {
                 configuration.setId(rs.getLong("ID"));
                 configuration.setName(rs.getString("NAME"));
                 configuration.setUserName(rs.getString("USER_NAME"));
-                configuration.setPassword(Configuration.decodePassword(rs.getString("PASSWORD")));
+                configuration.setPassword((rs.getString("PASSWORD")));
+               // configuration.setPassword(Configuration.decodePassword(rs.getString("PASSWORD")));
                 configuration.setDb_Url(rs.getString("DB_URL"));
                 return configuration;
             };

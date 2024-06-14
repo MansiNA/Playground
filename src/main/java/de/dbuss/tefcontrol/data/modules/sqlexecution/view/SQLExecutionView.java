@@ -106,8 +106,10 @@ public class SQLExecutionView extends VerticalLayout {
         String dbName = null;
 
         for (ProjectParameter projectParameter : filteredProjectParameters) {
-            if (Constants.DB_URL.equals(projectParameter.getName())) {
-                dbUrl = projectParameter.getValue();
+            if (Constants.DB_SERVER.equals(projectParameter.getName())) {
+                dbServer = projectParameter.getValue();
+            } else if (Constants.DB_NAME.equals(projectParameter.getName())) {
+                dbName = projectParameter.getValue();
             } else if (Constants.DB_USER.equals(projectParameter.getName())) {
                 dbUser = projectParameter.getValue();
             } else if (Constants.DB_PASSWORD.equals(projectParameter.getName())) {
@@ -119,7 +121,7 @@ public class SQLExecutionView extends VerticalLayout {
             }
         }
 
-     //   dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
+        dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
 
         comboBox = new ComboBox<>("Verbindung");
         
