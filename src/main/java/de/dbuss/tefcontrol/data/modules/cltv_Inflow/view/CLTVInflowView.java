@@ -290,11 +290,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
                     allEntriesShowHidebtn.setVisible(false);
                     inflowExportButton.setVisible(false);
                     casaExportButton.setVisible(false);
-                    if (allCasaData != null) {
-                        System.out.println("clear--------------------------------------");
-                        allCasaData.clear();
-                    }
-
+                    casaGrid.setVisible(false);
                     break;
 
                 case "Tab{Inflow-Mapping}":
@@ -303,10 +299,8 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
                     allEntriesShowHidebtn.setVisible(true);
                     inflowExportButton.setVisible(true);
                     casaExportButton.setVisible(false);
-                    if(allCasaData != null) {
-                        System.out.println("clear--------------------------------------");
-                        allCasaData.clear();
-                    }
+                    updateGrid();
+                    casaGrid.setVisible(false);
                     break;
 
                 case "Tab{Missing CASA Entries}":
@@ -315,11 +309,10 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
                     allEntriesShowHidebtn.setVisible(false);
                     inflowExportButton.setVisible(false);
                     casaExportButton.setVisible(true);
-
+                    casaGrid.setVisible(true);
                     UI.getCurrent().access(() -> {
                         try {
                             if(allCasaData != null) {
-                                System.out.println("clear--------------------------------------");
                                 allCasaData.clear();
                             }
 
@@ -330,10 +323,10 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
                         }
 
                         // Update the grid
-
+                        updateCasaGrid();
 
                         // Mark the access session as dirty
-                        UI.getCurrent().accessSynchronously(() -> updateCasaGrid());
+                      //  UI.getCurrent().accessSynchronously(() -> updateCasaGrid());
                     });
                     break;
                 case "Tab{Upload CASA Mapping}":
@@ -343,10 +336,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
                     inflowExportButton.setVisible(false);
                     casaExportButton.setVisible(false);
                     listOfUploadCASA.clear();
-                    if(allCasaData != null) {
-                        System.out.println("clear--------------------------------------");
-                        allCasaData.clear();
-                    }
+                    casaGrid.setVisible(false);
                     break;
             }
 
