@@ -1057,8 +1057,10 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
                         String ret = projectConnectionService.saveCASAToTargetTable(casaTerm, tableName, dbUrl, dbUser, dbPassword);
 
                         if (ret == Constants.OK) {
+                            logView.logMessage(Constants.INFO, "upload casaterm : contact_feature_id = " + casaTerm.getContractFeatureId().toString() +" attribute_id = " + casaTerm.getAttributeClassesId() + " connect_type = " + casaTerm.getConnectType());
                             Notification.show("Upload Successfully", 6000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
                         } else {
+                            logView.logMessage(Constants.ERROR, "upload error casaterm : contact_feature_id = " + casaTerm.getContractFeatureId());
                             Notification.show(ret, 6000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
                         }
 
