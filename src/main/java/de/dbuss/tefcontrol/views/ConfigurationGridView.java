@@ -47,8 +47,8 @@ import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@PageTitle("Configuration")
-@Route(value = "config", layout = MainLayout.class)
+@PageTitle("User Configuration")
+@Route(value = "userconfig", layout = MainLayout.class)
 @RolesAllowed({"ADMIN"})
 public class ConfigurationGridView extends VerticalLayout {
 
