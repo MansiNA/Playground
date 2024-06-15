@@ -1053,19 +1053,29 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
                             ButtonVariant.LUMO_SUCCESS,
                             ButtonVariant.LUMO_TERTIARY);
                     button.addClickListener(e -> {
-                        System.out.println("Save: " + casaTerm.getContractFeatureId().toString() + " with Category: " + casaTerm.getCltvCategoryName() + "Branding: " + casaTerm.getControllingBranding() + " ChargeName: " + casaTerm.getCltvChargeName());
-                        String ret = projectConnectionService.saveCASAToTargetTable(casaTerm, tableName, dbUrl, dbUser, dbPassword);
 
-                        if (ret == Constants.OK) {
-                            logView.logMessage(Constants.INFO, "upload casaterm : contact_feature_id = " + casaTerm.getContractFeatureId().toString() +" attribute_id = " + casaTerm.getAttributeClassesId() + " connect_type = " + casaTerm.getConnectType());
-                            Notification.show("Upload Successfully", 6000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-                        } else {
-                            logView.logMessage(Constants.ERROR, "upload error casaterm : contact_feature_id = " + casaTerm.getContractFeatureId());
-                            Notification.show(ret, 6000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                        if (casaTerm.getCltvChargeName() != null || casaTerm.getCltvCategoryName() != null || casaTerm.getControllingBranding() != null) {
+
+
+                            System.out.println("Save: " + casaTerm.getContractFeatureId().toString() + " with Category: " + casaTerm.getCltvCategoryName() + "Branding: " + casaTerm.getControllingBranding() + " ChargeName: " + casaTerm.getCltvChargeName());
+                            String ret = projectConnectionService.saveCASAToTargetTable(casaTerm, tableName, dbUrl, dbUser, dbPassword);
+
+                            if (ret == Constants.OK) {
+                                logView.logMessage(Constants.INFO, "upload casaterm : contact_feature_id = " + casaTerm.getContractFeatureId().toString() + " attribute_id = " + casaTerm.getAttributeClassesId() + " connect_type = " + casaTerm.getConnectType());
+                                Notification.show("Uploaded CF-ID " + casaTerm.getContractFeatureId()+ " successfully", 4000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                            } else {
+                                logView.logMessage(Constants.ERROR, "upload error casaterm : contact_feature_id = " + casaTerm.getContractFeatureId());
+                                Notification.show(ret, 6000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                            }
+                            updateGrid(); //First update Grid for check existing entries.
+                            updateCasaGrid();
+                        }
+                        else
+                        {
+                            Notification.show("Please map this entry first!", 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+
                         }
 
-                        updateGrid(); //First update Grid for check existing entries.
-                        updateCasaGrid();
 
 
                     });
