@@ -318,7 +318,7 @@ public class HUBFlowMappingView extends VerticalLayout implements BeforeEnterObs
             projectUpload.setUserName(user.getUsername());
         }
 
-        projectUpload.setModulName("AdjustmentsREFX");
+        projectUpload.setModulName("HUB_Flow_Mapping");
 
         logView.logMessage(Constants.INFO, "Get file upload id from database");
         projectConnectionService.getJdbcConnection(dbUrl, dbUser, dbPassword); // Set Connection to target DB
