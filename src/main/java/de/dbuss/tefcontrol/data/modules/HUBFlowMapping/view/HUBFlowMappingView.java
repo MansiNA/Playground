@@ -59,7 +59,7 @@ import java.util.stream.Collectors;
 
 @PageTitle("HUB Flow Mapping")
 @Route(value = "HUB_Flow_Mapping/:project_Id", layout = MainLayout.class)
-@RolesAllowed("ADMIN")
+@RolesAllowed({"ADMIN","FLIP","MAPPING"})
 public class HUBFlowMappingView extends VerticalLayout implements BeforeEnterObserver {
 
     private final ProjectConnectionService projectConnectionService;
@@ -327,6 +327,7 @@ public class HUBFlowMappingView extends VerticalLayout implements BeforeEnterObs
         projectUpload.setUploadId(upload_id);
 
         System.out.println("Upload_ID: " + upload_id);
+        logView.logMessage(Constants.INFO, "Upload_ID is: " +upload_id);
 
       /*  Map<String, Integer> uploadIdMap = projectConnectionService.getUploadIdMap();
         upload_id = uploadIdMap.values().stream()
@@ -336,17 +337,17 @@ public class HUBFlowMappingView extends VerticalLayout implements BeforeEnterObs
 
         System.out.println("Upload_ID for insert into " + tableName + " is " + upload_id);
 
-        Notification notification = Notification.show("start upload to " + tableName + " with upload_id: "+ upload_id ,2000, Notification.Position.MIDDLE);
+        Notification notification = Notification.show("start upload to " + tableName + " with upload_id: "+ upload_id ,5000, Notification.Position.BOTTOM_START);
         notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
 
         String result = projectConnectionService.saveHUBFlowMapping(listOfHUBFlowMapping, tableName, dbUrl, dbUser, dbPassword, upload_id);
         if (result.equals(Constants.OK)){
             logView.logMessage(Constants.INFO, "Saved file data in database");
-            notification = Notification.show(listOfHUBFlowMapping.size() + " HUB_FlowMapping Rows Uploaded successfully",5000, Notification.Position.MIDDLE);
+            notification = Notification.show(listOfHUBFlowMapping.size() + " HUB_FlowMapping Rows Uploaded successfully",4000, Notification.Position.BOTTOM_START);
             notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
         } else {
-            logView.logMessage(Constants.ERROR, "Error while saving file data in database");
-            notification = Notification.show("Error during HUB_FlowMapping upload: " + result ,5000, Notification.Position.MIDDLE);
+            logView.logMessage(Constants.ERROR, "Error while saving file data in database: " + result);
+            notification = Notification.show("Error during HUB_FlowMapping upload: " + result ,8000, Notification.Position.BOTTOM_START);
             notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
         }
         logView.logMessage(Constants.INFO, "Ending save2db() for saving file data in database");
@@ -373,7 +374,7 @@ public class HUBFlowMappingView extends VerticalLayout implements BeforeEnterObs
         logView.logMessage(Constants.INFO, "Starting updateUi()");
 
         ui.access(() -> {
-            Notification.show(result,6000, Notification.Position.MIDDLE);
+            Notification.show(result,6000, Notification.Position.BOTTOM_START);
         });
         logView.logMessage(Constants.INFO, "Ending updateUi()");
     }
