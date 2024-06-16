@@ -342,11 +342,11 @@ public class HUBFlowMappingView extends VerticalLayout implements BeforeEnterObs
         String result = projectConnectionService.saveHUBFlowMapping(listOfHUBFlowMapping, tableName, dbUrl, dbUser, dbPassword, upload_id);
         if (result.equals(Constants.OK)){
             logView.logMessage(Constants.INFO, "Saved file data in database");
-            notification = Notification.show(listOfHUBFlowMapping.size() + " AdjustmentsREFX Rows Uploaded successfully",5000, Notification.Position.MIDDLE);
+            notification = Notification.show(listOfHUBFlowMapping.size() + " HUB_FlowMapping Rows Uploaded successfully",5000, Notification.Position.MIDDLE);
             notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
         } else {
             logView.logMessage(Constants.ERROR, "Error while saving file data in database");
-            notification = Notification.show("Error during AdjustmentsREFX upload: " + result ,5000, Notification.Position.MIDDLE);
+            notification = Notification.show("Error during HUB_FlowMapping upload: " + result ,5000, Notification.Position.MIDDLE);
             notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
         }
         logView.logMessage(Constants.INFO, "Ending save2db() for saving file data in database");
