@@ -160,7 +160,7 @@ public class SQLExecutionView extends VerticalLayout {
         exportButton.addClickListener(clickEvent -> {
 
             Notification.show("Exportiere Daten" );
-            generateExcelFile(rows, exportPath + "query.xlsx");
+            generateExcelFile(rows, "query.xlsx");
         });
 
         runButton.addClickListener(clickEvent -> {
