@@ -76,7 +76,7 @@ public class GenericDataProvider<T> extends AbstractBackEndDataProvider<T, CrudF
             try {
                 Comparator<T> comparator = Comparator.comparing(
                         entity -> (Comparable) valueOf(sortClause.getKey(),
-                                entity));
+                                entity), Comparator.nullsFirst(Comparator.naturalOrder()));
 
                 if (sortClause.getValue() == SortDirection.DESCENDING) {
                     comparator = comparator.reversed();
