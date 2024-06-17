@@ -2376,7 +2376,7 @@ public class ProjectConnectionService {
         }
     }
 
-    public List<Configuration> getConfigurationFromEKPMonitor(String dbUrl, String dbUser, String dbPassword, String tableName) {
+    public List<Configuration> getSqlConnectionConfiguration(String dbUrl, String dbUser, String dbPassword, String tableName) {
         try {
             DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
             jdbcTemplate = new JdbcTemplate(dataSource);
@@ -2401,6 +2401,30 @@ public class ProjectConnectionService {
             ex.printStackTrace();
             handleDatabaseError(ex);
             return Collections.emptyList();
+        } finally {
+            connectionClose(jdbcTemplate);
+        }
+    }
+
+    public void saveSqlConnectionConfiguration(String dbUrl, String dbUser, String dbPassword, String tableName, Configuration configuration) {
+        try {
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
+            if (configuration.getId() == null || configuration.getId() == 0) {
+                // Perform insert
+                String sqlInsert = "INSERT INTO " + tableName + " (NAME, USER_NAME, PASSWORD, DB_URL) VALUES (?, ?, ?, ?)";
+                jdbcTemplate.update(sqlInsert, configuration.getName(), configuration.getUserName(), configuration.getPassword(), configuration.getDb_Url());
+                System.out.println("Inserted new configuration: " + configuration.getName());
+            } else {
+                // Perform update
+                String sqlUpdate = "UPDATE " + tableName + " SET NAME = ?, USER_NAME = ?, PASSWORD = ?, DB_URL = ? WHERE ID = ?";
+                jdbcTemplate.update(sqlUpdate, configuration.getName(), configuration.getUserName(), configuration.getPassword(), configuration.getDb_Url(), configuration.getId());
+                System.out.println("Updated configuration with ID: " + configuration.getId());
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            handleDatabaseError(ex);
         } finally {
             connectionClose(jdbcTemplate);
         }

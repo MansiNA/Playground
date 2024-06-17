@@ -39,6 +39,7 @@ import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.PBIFlashFinancials
 import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.PBITechComments;
 import de.dbuss.tefcontrol.data.modules.administration.view.ReportAdminView;
 import de.dbuss.tefcontrol.data.modules.kpi.Strategic_KPIView;
+import de.dbuss.tefcontrol.data.modules.sqlexecution.view.SQLConfigurationView;
 import de.dbuss.tefcontrol.data.modules.sqlexecution.view.SQLExecutionView;
 import de.dbuss.tefcontrol.data.modules.tarifmapping.view.TarifMappingView;
 import de.dbuss.tefcontrol.data.modules.kpi.Tech_KPIView;
@@ -136,6 +137,8 @@ public class MainLayout extends AppLayout {
         urlToViewMap.put(Constants.ADJUSTMENTREFX, AdjustmentsREFXView.class);
         urlToViewMap.put(Constants.HUB_FLOW_MAPPING, HUBFlowMappingView.class);
         urlToViewMap.put(Constants.SQL_EXECUTION, SQLExecutionView.class);
+        urlToViewMap.put(Constants.CONFIG, SQLConfigurationView.class);
+
 
         setPrimarySection(Section.DRAWER);
         addDrawerContent();

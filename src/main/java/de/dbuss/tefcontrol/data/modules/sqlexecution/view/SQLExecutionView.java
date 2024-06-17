@@ -126,7 +126,7 @@ public class SQLExecutionView extends VerticalLayout {
         comboBox = new ComboBox<>("Verbindung");
         
         try {
-            List<Configuration> configList = projectConnectionService.getConfigurationFromEKPMonitor(dbUrl, dbUser, dbPassword, configTable);
+            List<Configuration> configList = projectConnectionService.getSqlConnectionConfiguration(dbUrl, dbUser, dbPassword, configTable);
             if(configList.isEmpty() &&  !projectConnectionService.getErrorMessage().isEmpty()) {
                 Notification.show("Error: " + projectConnectionService.getErrorMessage(), 5000, Notification.Position.MIDDLE);
               }

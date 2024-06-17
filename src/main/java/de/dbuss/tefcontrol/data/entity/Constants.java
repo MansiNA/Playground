@@ -119,4 +119,6 @@ public class Constants {
     public static final String SQL_TABLE = "SQL_Table";
     public static final String DB_URL = "DB_Url";
 
+    // This constant is used for SQL_connection config module
+    public static final String CONFIG = "config";
 }
