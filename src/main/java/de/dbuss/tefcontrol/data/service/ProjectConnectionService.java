@@ -2389,8 +2389,8 @@ public class ProjectConnectionService {
                 configuration.setId(rs.getLong("ID"));
                 configuration.setName(rs.getString("NAME"));
                 configuration.setUserName(rs.getString("USER_NAME"));
-                configuration.setPassword((rs.getString("PASSWORD")));
-               // configuration.setPassword(Configuration.decodePassword(rs.getString("PASSWORD")));
+            //    configuration.setPassword((rs.getString("PASSWORD")));
+                configuration.setPassword(Configuration.decodePassword(rs.getString("PASSWORD")));
                 configuration.setDb_Url(rs.getString("DB_URL"));
                 return configuration;
             };
@@ -2414,12 +2414,14 @@ public class ProjectConnectionService {
             if (configuration.getId() == null || configuration.getId() == 0) {
                 // Perform insert
                 String sqlInsert = "INSERT INTO " + tableName + " (NAME, USER_NAME, PASSWORD, DB_URL) VALUES (?, ?, ?, ?)";
-                jdbcTemplate.update(sqlInsert, configuration.getName(), configuration.getUserName(), configuration.getPassword(), configuration.getDb_Url());
+                String password = Configuration.encodePassword(configuration.getPassword());
+                jdbcTemplate.update(sqlInsert, configuration.getName(), configuration.getUserName(), password, configuration.getDb_Url());
                 System.out.println("Inserted new configuration: " + configuration.getName());
             } else {
                 // Perform update
                 String sqlUpdate = "UPDATE " + tableName + " SET NAME = ?, USER_NAME = ?, PASSWORD = ?, DB_URL = ? WHERE ID = ?";
-                jdbcTemplate.update(sqlUpdate, configuration.getName(), configuration.getUserName(), configuration.getPassword(), configuration.getDb_Url(), configuration.getId());
+                String password = Configuration.encodePassword(configuration.getPassword());
+                jdbcTemplate.update(sqlUpdate, configuration.getName(), configuration.getUserName(), password, configuration.getDb_Url(), configuration.getId());
                 System.out.println("Updated configuration with ID: " + configuration.getId());
             }
         } catch (Exception ex) {
