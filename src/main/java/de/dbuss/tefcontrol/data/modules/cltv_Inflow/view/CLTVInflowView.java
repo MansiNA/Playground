@@ -106,7 +106,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
     Grid.Column cltvCategoryNameColumn;
     Grid.Column controllingBrandingColumn;
     Grid.Column cltvChargeNameColumn;
-
+    String rowCount;
 
     private Button missingShowHidebtn = new Button("Show/Hide Columns");
     private Button casaShowHidebtn = new Button("Show/Hide Columns");
@@ -418,8 +418,8 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
         logView.logMessage(Constants.INFO, "Starting updateGrid for update allCLTVInflow grid");
         allCLTVInflowData = projectConnectionService.getAllCLTVInflow(tableName, dbUrl, dbUser, dbPassword);
         GenericDataProvider dataProvider = new GenericDataProvider(allCLTVInflowData);
-
-
+     //   grid.getDataCommunicator().setPageSize(allCLTVInflowData.size());
+        grid.getDataCommunicator().setPageSize(500);
         if (cltvCategoryNameColumn != null && controllingBrandingColumn != null && cltvChargeNameColumn != null) {
             dataProvider.addDataProviderListener(changeEvent -> {
 
@@ -436,11 +436,12 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
                 long chargeNameCount = allCLTVInflowData.stream()
                         .filter(person -> "nicht definiert".equals(person.getCltvChargeName()))
                         .count();
-
+                long count = dataProvider.size(new Query<>(new CrudFilter()));
                 cltvCategoryNameColumn.setFooter("Count-Missing: " + categoryCount);
                 controllingBrandingColumn.setFooter("Count-Missing: " + brandingCount);
                 cltvChargeNameColumn.setFooter("Count-Missing: " + chargeNameCount);
 
+                System.out.println("Grid total row: "+count);
 
             });
 
@@ -448,6 +449,7 @@ public class CLTVInflowView extends VerticalLayout implements BeforeEnterObserve
 
       //  grid.setItems(allCLTVInflowData);
         grid.setDataProvider(dataProvider);
+
         logView.logMessage(Constants.INFO, "Ending updateGrid for update allCLTVInflow grid");
     }
 
