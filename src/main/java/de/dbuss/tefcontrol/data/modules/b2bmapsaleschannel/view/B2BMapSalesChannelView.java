@@ -266,6 +266,7 @@ public class B2BMapSalesChannelView extends VerticalLayout implements BeforeEnte
             } else {
                 notification = Notification.show("Error during upload: " + result, 15000, Notification.Position.MIDDLE);
                 notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+                logView.logMessage(Constants.ERROR, "Error during upload: " + result);
             }
 
             hl.remove(qsGrid);

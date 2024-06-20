@@ -1,8 +1,6 @@
 package de.dbuss.tefcontrol.data.modules.sqlexecution.view;
 
-import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.Text;
-import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.*;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -26,6 +24,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.StreamResource;
 import com.zaxxer.hikari.HikariDataSource;
+import de.dbuss.tefcontrol.components.LogView;
 import de.dbuss.tefcontrol.data.entity.Constants;
 import de.dbuss.tefcontrol.data.entity.ProjectParameter;
 import de.dbuss.tefcontrol.data.modules.sqlexecution.entity.Configuration;
@@ -85,6 +84,10 @@ public class SQLExecutionView extends VerticalLayout {
     private String configTable;
     private String sqlTable;
     private List<SqlDefinition> sqlDefinitionList;
+    Grid<ProjectParameter> parameterGrid = new Grid<>(ProjectParameter.class, false);
+    private LogView logView;
+    private Boolean isLogsVisible = false;
+    private Boolean isVisible = false;
 
     public SQLExecutionView(ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, @Value("${sqlcsv_exportPath}") String p_exportPath, JdbcTemplate jdbcTemplate) throws SQLException, IOException {
         //add(new H1("Table View"));
@@ -92,6 +95,9 @@ public class SQLExecutionView extends VerticalLayout {
         this.projectParameterService = projectParameterService;
         this.exportPath = p_exportPath;
         this.jdbcTemplate = jdbcTemplate;
+
+        logView = new LogView();
+        logView.logMessage(Constants.INFO, "Starting SQLExecutionView");
 
         System.out.println("Export Path: " + exportPath);
         exportButton.setVisible(false);
@@ -123,13 +129,17 @@ public class SQLExecutionView extends VerticalLayout {
 
         dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
 
+        setProjectParameterGrid(filteredProjectParameters);
         comboBox = new ComboBox<>("Verbindung");
         
         try {
             List<Configuration> configList = projectConnectionService.getSqlConnectionConfiguration(dbUrl, dbUser, dbPassword, configTable);
-            if(configList.isEmpty() &&  !projectConnectionService.getErrorMessage().isEmpty()) {
-                Notification.show("Error: " + projectConnectionService.getErrorMessage(), 5000, Notification.Position.MIDDLE);
-              }
+            String errorMessage = projectConnectionService.getErrorMessage();
+            if (configList.isEmpty() && !errorMessage.isEmpty()) {
+                Notification.show("Error: " + errorMessage, 5000, Notification.Position.MIDDLE);
+                logView.logMessage(Constants.ERROR, errorMessage);
+
+            }
             if (configList != null && !configList.isEmpty()) {
                 comboBox.setItems(configList);
                 comboBox.setItemLabelGenerator(Configuration::getName);
@@ -137,6 +147,7 @@ public class SQLExecutionView extends VerticalLayout {
             }
         } catch (Exception e) {
             Notification.show("Error: " + e.getMessage(), 5000, Notification.Position.MIDDLE);
+            logView.logMessage(Constants.ERROR, "error while fetch sql connection");
         }
         // Add value change listener to comboBox
         comboBox.addValueChangeListener(event -> {
@@ -160,11 +171,13 @@ public class SQLExecutionView extends VerticalLayout {
         exportButton.addClickListener(clickEvent -> {
 
             Notification.show("Exportiere Daten" );
+            logView.logMessage(Constants.INFO, "exportbutton click");
             generateExcelFile(rows, "query.xlsx");
         });
 
         runButton.addClickListener(clickEvent -> {
             try {
+                logView.logMessage(Constants.INFO, "sql run button click");
                 show_grid(sqlTextField.getValue());
                 runButton.setEnabled(false);
             } catch (SQLException ex) {
@@ -196,7 +209,30 @@ public class SQLExecutionView extends VerticalLayout {
         HorizontalLayout horizontalLayout = new HorizontalLayout();
         horizontalLayout.add(runButton, exportButton);
         horizontalLayout.setAlignItems(Alignment.BASELINE);
-        add(horizontalLayout, grid2);
+        add(horizontalLayout, grid2, parameterGrid);
+        setSizeFull();
+        parameterGrid.setVisible(false);
+        logView.setVisible(false);
+        add(logView);
+
+        if(MainLayout.isAdmin) {
+
+            UI.getCurrent().addShortcutListener(
+                    () -> {
+                        isVisible = !isVisible;
+                        parameterGrid.setVisible(isVisible);
+                    },
+                    Key.KEY_I, KeyModifier.ALT);
+
+            UI.getCurrent().addShortcutListener(
+                    () -> {
+                        isLogsVisible = !isLogsVisible;
+                        logView.setVisible(isLogsVisible);
+                    },
+                    Key.KEY_V, KeyModifier.ALT);
+        }
+
+        logView.logMessage(Constants.INFO, "Ending SQLExecutionView");
     }
 
     /*
@@ -235,10 +271,13 @@ public class SQLExecutionView extends VerticalLayout {
         return sqlTextField;
     }
     private TreeGrid createTreeGrid() {
+        logView.logMessage(Constants.INFO, "Starting createTreeGrid for sql defination");
         treeGrid = new TreeGrid<>();
         sqlDefinitionList = projectConnectionService.getSqlDefinitions(dbUrl,dbUser,dbPassword, sqlTable);
-        if (sqlDefinitionList.isEmpty() && !projectConnectionService.getErrorMessage().isEmpty()) {
-            Notification.show("Error: " + projectConnectionService.getErrorMessage(), 5000, Notification.Position.MIDDLE);
+        String errorMessage = projectConnectionService.getErrorMessage();
+        if (sqlDefinitionList.isEmpty() && !errorMessage.isEmpty()) {
+            Notification.show("Error: " + errorMessage, 5000, Notification.Position.MIDDLE);
+            logView.logMessage(Constants.ERROR, errorMessage);
         }
         treeGrid.setItems(getRootProjects(), this::getChildProjects);
 
@@ -291,10 +330,12 @@ public class SQLExecutionView extends VerticalLayout {
                 deleteTreeGridItem(event.getItem().get());
             });
         }
+        logView.logMessage(Constants.INFO, "Ending createTreeGrid for sql defination");
         return treeGrid;
     }
 
     private VerticalLayout showEditAndNewDialog(SqlDefinition sqlDefinition, String context){
+        logView.logMessage(Constants.INFO, "Starting showEditAndNewDialog for sql defination");
         VerticalLayout dialogLayout = new VerticalLayout();
         Dialog dialog = new Dialog();
         SqlDefinition newSqlDefinition = new SqlDefinition();
@@ -323,12 +364,16 @@ public class SQLExecutionView extends VerticalLayout {
             System.out.println("saved data....");
             if(context.equals("New")) {
                 saveSqlDefinition(newSqlDefinition);
+                logView.logMessage(Constants.INFO, "Created new sql_defination" + sqlDefinition.getName());
             } else {
                 saveSqlDefinition(sqlDefinition);
+                logView.logMessage(Constants.INFO, "Edited sql_defination" + sqlDefinition.getName());
             }
             sqlDefinitionList = projectConnectionService.getSqlDefinitions(dbUrl,dbUser,dbPassword, sqlTable);
-            if (sqlDefinitionList.isEmpty() && !projectConnectionService.getErrorMessage().isEmpty()) {
-                Notification.show("Error: " + projectConnectionService.getErrorMessage(), 5000, Notification.Position.MIDDLE);
+            String errorMessage = projectConnectionService.getErrorMessage();
+            if (sqlDefinitionList.isEmpty() && !errorMessage.isEmpty()) {
+                Notification.show("Error: " + errorMessage, 5000, Notification.Position.MIDDLE);
+                logView.logMessage(Constants.ERROR, errorMessage);
             }
             treeGrid.setItems(getRootProjects(), this ::getChildProjects);
             //   rows = retrieveRows();
@@ -337,12 +382,13 @@ public class SQLExecutionView extends VerticalLayout {
         });
 
         dialog.open();
-
+        logView.logMessage(Constants.INFO, "Ending showEditAndNewDialog for sql defination");
         return dialogLayout;
 
     }
 
     private Component editSqlDefination(SqlDefinition sqlDefinition, boolean isNew) {
+        logView.logMessage(Constants.INFO, "Starting editSqlDefination for edit and new");
         VerticalLayout content = new VerticalLayout();
 
         TextField name = new TextField("NAME");
@@ -401,11 +447,12 @@ public class SQLExecutionView extends VerticalLayout {
         });
 
         content.add(name,sql,beschreibung, pid, rolesComboBox);
+        logView.logMessage(Constants.INFO, "Ending editSqlDefination for edit and new");
         return content;
     }
 
     private Component deleteTreeGridItem(SqlDefinition sqlDefinition) {
-
+        logView.logMessage(Constants.INFO, "deleteTreeGridItem for delete SqlDefinition ");
         VerticalLayout dialogLayout = new VerticalLayout();
         Dialog dialog = new Dialog();
         dialog.setDraggable(true);
@@ -517,7 +564,7 @@ public class SQLExecutionView extends VerticalLayout {
 
 
     private void show_grid(String sql) throws SQLException, IOException {
-
+        logView.logMessage(Constants.INFO, "Starting show_grid for sql execution result Grid");
         System.out.println("Execute SQL: " + sql );
 
         // Create the grid and set its items
@@ -561,10 +608,11 @@ public class SQLExecutionView extends VerticalLayout {
             //Text txt = new Text("Es konnten keine Daten  abgerufen werden!");
             //add(txt);
         }
-
+        logView.logMessage(Constants.INFO, "Ending show_grid for sql execution result Grid");
     }
 
     public List<Map<String,Object>> retrieveRows(String queryString) {
+        logView.logMessage(Constants.INFO, "Starting retrieveRows for sql execution result");
         List<Map<String, Object>> rows;
         if (queryString != null) {
             try {
@@ -577,13 +625,15 @@ public class SQLExecutionView extends VerticalLayout {
                     return rows;
                 } else {
                     Notification.show("connection cnfiguration does not exist! ", 5000, Notification.Position.MIDDLE);
+                    logView.logMessage(Constants.ERROR, "Starting retrieveRows for sql execution result");
                 }
             } catch (Exception e) {
                 e.printStackTrace();
+                logView.logMessage(Constants.ERROR, "while sql execute");
                 Notification.show(e.getCause().getMessage(), 5000, Notification.Position.MIDDLE);
             }
         }
-
+        logView.logMessage(Constants.INFO, "Ending retrieveRows for sql execution result");
         return Collections.emptyList();
     }
 
@@ -592,6 +642,20 @@ public class SQLExecutionView extends VerticalLayout {
         if (!projectConnectionService.getErrorMessage().isEmpty()) {
             Notification.show("Error: " + projectConnectionService.getErrorMessage(), 5000, Notification.Position.MIDDLE);
         }
+    }
+    private void setProjectParameterGrid(List<ProjectParameter> listOfProjectParameters) {
+        logView.logMessage(Constants.INFO, "Starting setProjectParameterGrid() for set database detail in Grid");
+        parameterGrid = new Grid<>(ProjectParameter.class, false);
+        parameterGrid.addColumn(ProjectParameter::getName).setHeader("Name").setAutoWidth(true).setResizable(true);
+        parameterGrid.addColumn(ProjectParameter::getValue).setHeader("Value").setAutoWidth(true).setResizable(true);
+        parameterGrid.addColumn(ProjectParameter::getDescription).setHeader("Description").setAutoWidth(true).setResizable(true);
+
+        parameterGrid.setItems(listOfProjectParameters);
+        parameterGrid.addThemeVariants(GridVariant.LUMO_COMPACT);
+        parameterGrid.setHeight("400px");
+        parameterGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+        logView.logMessage(Constants.INFO, "Ending setProjectParameterGrid() for set database detail in Grid");
+
     }
 
     public List<LinkedHashMap<String,Object>> retrieveRows_old(String queryString) throws SQLException, IOException {
@@ -673,6 +737,7 @@ public class SQLExecutionView extends VerticalLayout {
     }
 
     private void generateExcelFile(List<Map<String, Object>> rows, String fileName) {
+        logView.logMessage(Constants.INFO, "Start generateExcelFile");
         // Create a new Excel workbook and sheet
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Sheet1");
@@ -730,8 +795,10 @@ public class SQLExecutionView extends VerticalLayout {
             add(anchor);
             UI.getCurrent().getPage().executeJs("arguments[0].click()", anchor);
         } catch (IOException e) {
+            logView.logMessage(Constants.ERROR, "Error generateExcelFile");
             e.printStackTrace();
         }
+        logView.logMessage(Constants.INFO, "Ending generateExcelFile");
     }
 
     private static void generateExcel(String file, String query) throws IOException {

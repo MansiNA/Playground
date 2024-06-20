@@ -263,6 +263,7 @@ public class HWMapping extends VerticalLayout implements BeforeEnterObserver {
             }
             else
             {
+                logView.logMessage(Constants.ERROR, "Error during upload: " + result);
                 notification = Notification.show("Error during upload!",4000, Notification.Position.MIDDLE);
                 notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
             }
@@ -292,6 +293,7 @@ public class HWMapping extends VerticalLayout implements BeforeEnterObserver {
                 updateCLTVHWMeasuredataGrid();
 
             } else {
+                logView.logMessage(Constants.ERROR,  message);
                 Notification.show(message, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
             }
             confirmationDialog.close(); // Close the confirmation dialog
@@ -311,6 +313,7 @@ public class HWMapping extends VerticalLayout implements BeforeEnterObserver {
             if (!message.contains("Error")) {
                 Notification.show(message, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
             } else {
+                logView.logMessage(Constants.ERROR, message);
                 Notification.show(message, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
             }
         });
@@ -353,6 +356,7 @@ public class HWMapping extends VerticalLayout implements BeforeEnterObserver {
 
         } catch (Exception e) {
             String errormessage = projectConnectionService.getErrorMessage();
+            logView.logMessage(Constants.ERROR, "Error during upload: " + errormessage);
             Notification notification = Notification.show("Error during fetch: " + errormessage, 4000, Notification.Position.MIDDLE);
             notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
         }

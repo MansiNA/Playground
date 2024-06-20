@@ -281,6 +281,7 @@ public class PFGProductMappingView extends VerticalLayout implements BeforeEnter
                 Notification.show(modifiedProducts.size() + " Uploaded successfully", 2000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
                 modifiedProducts.clear();
             } else {
+                logView.logMessage(Constants.ERROR, "Error during upload: " + result);
                 Notification.show("Error during upload: " + result, 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
             }
             updateMissingGrid();
@@ -320,6 +321,7 @@ public class PFGProductMappingView extends VerticalLayout implements BeforeEnter
               //  startAgentBtn.setEnabled(false);
                 Notification.show(message, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
             } else {
+                logView.logMessage(Constants.ERROR, message);
                 Notification.show(message, 5000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
             }
 
@@ -430,6 +432,7 @@ public class PFGProductMappingView extends VerticalLayout implements BeforeEnter
         var xx = projectConnectionService.getCltvAllProducts(dbUrl, dbUser, dbPassword, productsDb);
 
         if (xx.isEmpty() && !projectConnectionService.getErrorMessage().isEmpty()){
+            logView.logMessage(Constants.ERROR, projectConnectionService.getErrorMessage());
             Notification.show(projectConnectionService.getErrorMessage(),4000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
         }
 
@@ -469,6 +472,7 @@ public class PFGProductMappingView extends VerticalLayout implements BeforeEnter
         if (result.equals(Constants.OK)){
             Notification.show(" Uploaded successfully",2000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
         } else {
+            logView.logMessage(Constants.ERROR, "Error during upload: " + result);
             Notification.show( "Error during upload: "+ result,3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
         }
       //  service.saveProduct(event.getProduct());
@@ -613,7 +617,7 @@ public class PFGProductMappingView extends VerticalLayout implements BeforeEnter
             }
         } catch (Exception ex) {
             ex.printStackTrace();
-
+            logView.logMessage(Constants.ERROR, projectConnectionService.getErrorMessage());
             Notification.show(projectConnectionService.getErrorMessage(),4000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
         }
         logView.logMessage(Constants.INFO, "Ending updateMissingGrid() for update missing grid");

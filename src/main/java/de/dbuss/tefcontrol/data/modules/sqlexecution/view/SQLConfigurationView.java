@@ -1,14 +1,20 @@
 package de.dbuss.tefcontrol.data.modules.sqlexecution.view;
 
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.Key;
+import com.vaadin.flow.component.KeyModifier;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import de.dbuss.tefcontrol.components.LogView;
 import de.dbuss.tefcontrol.data.entity.Constants;
 import de.dbuss.tefcontrol.data.entity.ProjectParameter;
 import de.dbuss.tefcontrol.data.modules.sqlexecution.entity.Configuration;
@@ -38,10 +44,17 @@ public class SQLConfigurationView extends VerticalLayout {
     private String dbUser;
     private String dbPassword;
     private String configTable;
+    Grid<ProjectParameter> parameterGrid = new Grid<>(ProjectParameter.class, false);
+    private LogView logView;
+    private Boolean isLogsVisible = false;
+    private Boolean isVisible = false;
 
     public SQLConfigurationView(ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService) {
         this.projectConnectionService = projectConnectionService;
         this.projectParameterService = projectParameterService;
+
+        logView = new LogView();
+        logView.logMessage(Constants.INFO, "Starting SQLConfigurationView");
 
         addClassName("configuration-view");
         setSizeFull();
@@ -69,11 +82,11 @@ public class SQLConfigurationView extends VerticalLayout {
         }
 
         dbUrl = "jdbc:sqlserver://" + dbServer + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
-
+        setProjectParameterGrid(filteredProjectParameters);
         configureGrid();
         configureForm();
 
-        add(getToolbar(), getContent());
+        add(getToolbar(), getContent(), parameterGrid);
 
         updateList();
         closeEditor();
@@ -88,6 +101,28 @@ public class SQLConfigurationView extends VerticalLayout {
         //     config=new Configuration("User","Password","URL");
         //     cf.setConfiguration(config);
 
+        parameterGrid.setVisible(false);
+        logView.setVisible(false);
+        add(logView);
+
+        if(MainLayout.isAdmin) {
+
+            UI.getCurrent().addShortcutListener(
+                    () -> {
+                        isVisible = !isVisible;
+                        parameterGrid.setVisible(isVisible);
+                    },
+                    Key.KEY_I, KeyModifier.ALT);
+
+            UI.getCurrent().addShortcutListener(
+                    () -> {
+                        isLogsVisible = !isLogsVisible;
+                        logView.setVisible(isLogsVisible);
+                    },
+                    Key.KEY_V, KeyModifier.ALT);
+        }
+
+        logView.logMessage(Constants.INFO, "Ending SQLConfigurationView");
     }
 
     private Component getContent() {
@@ -102,6 +137,7 @@ public class SQLConfigurationView extends VerticalLayout {
     }
 
     private void configureGrid() {
+        logView.logMessage(Constants.INFO, "Starting configureGrid");
         grid.addClassNames("configuration-grid");
         grid.setSizeFull();
         grid.setColumns("name", "userName","db_Url");
@@ -112,11 +148,20 @@ public class SQLConfigurationView extends VerticalLayout {
     }
 
     private void updateList() {
-
-        grid.setItems(projectConnectionService.getSqlConnectionConfiguration(dbUrl, dbUser, dbPassword, configTable));
+        logView.logMessage(Constants.INFO, "Starting updateList for Grid");
+        List<Configuration> configList = projectConnectionService.getSqlConnectionConfiguration(dbUrl, dbUser, dbPassword, configTable);
+        String errorMessage = projectConnectionService.getErrorMessage();
+        if (configList.isEmpty() && !errorMessage.isEmpty()) {
+            Notification.show("Error: " + errorMessage, 5000, Notification.Position.MIDDLE);
+            logView.logMessage(Constants.ERROR, errorMessage);
+        } else {
+            grid.setItems(configList);
+        }
+        logView.logMessage(Constants.INFO, "Ending updateList for Grid");
     }
 
     private void configureForm() {
+        logView.logMessage(Constants.INFO, "adding configureForm for new sql_connection");
         cf = new ConfigForm();
         cf.setWidth("25em");
 
@@ -126,11 +171,13 @@ public class SQLConfigurationView extends VerticalLayout {
 
     }
     private void saveConfig(ConfigForm.SaveEvent event) {
+        logView.logMessage(Constants.INFO, "Updating saveConfig for sql_connection in DB");
         projectConnectionService.saveSqlConnectionConfiguration(dbUrl, dbUser, dbPassword, configTable, event.getConfiguration());
         updateList();
         closeEditor();
     }
     private HorizontalLayout getToolbar() {
+        logView.logMessage(Constants.INFO, "Starting getToolbar ");
         filterText.setPlaceholder("Filter by name...");
         filterText.setClearButtonVisible(true);
         filterText.setValueChangeMode(ValueChangeMode.LAZY);
@@ -141,9 +188,24 @@ public class SQLConfigurationView extends VerticalLayout {
 
 
         toolbar.addClassName("toolbar");
+        logView.logMessage(Constants.INFO, "Ending getToolbar ");
+
         return toolbar;
     }
+    private void setProjectParameterGrid(List<ProjectParameter> listOfProjectParameters) {
+        logView.logMessage(Constants.INFO, "Starting setProjectParameterGrid() for set database detail in Grid");
+        parameterGrid = new Grid<>(ProjectParameter.class, false);
+        parameterGrid.addColumn(ProjectParameter::getName).setHeader("Name").setAutoWidth(true).setResizable(true);
+        parameterGrid.addColumn(ProjectParameter::getValue).setHeader("Value").setAutoWidth(true).setResizable(true);
+        parameterGrid.addColumn(ProjectParameter::getDescription).setHeader("Description").setAutoWidth(true).setResizable(true);
 
+        parameterGrid.setItems(listOfProjectParameters);
+        parameterGrid.addThemeVariants(GridVariant.LUMO_COMPACT);
+        parameterGrid.setHeight("400px");
+        parameterGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+        logView.logMessage(Constants.INFO, "Ending setProjectParameterGrid() for set database detail in Grid");
+
+    }
     private void addContact() {
         grid.asSingleSelect().clear();
         editConfig(new Configuration());

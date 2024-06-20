@@ -279,6 +279,7 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
             } else {
                 notification = Notification.show("Error during upload: " + resultOfPeriods, 15000, Notification.Position.MIDDLE);
                 notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+                logView.logMessage(Constants.ERROR, "Error during upload: " + resultOfPeriods);
             }
 
             logView.logMessage(Constants.INFO, "Saving current Scenario in saveCobiAdminCurrentScenarios() ");
@@ -289,6 +290,7 @@ public class CobiAdminView extends VerticalLayout implements BeforeEnterObserver
             } else {
                 notification = Notification.show("Error during upload: " + resultOfScenarios, 15000, Notification.Position.MIDDLE);
                 notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+                logView.logMessage(Constants.ERROR, "Error during upload: " + resultOfScenarios);
             }
 
             hl.remove(qsGrid);

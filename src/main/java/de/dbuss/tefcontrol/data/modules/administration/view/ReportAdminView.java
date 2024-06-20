@@ -229,6 +229,7 @@ public class ReportAdminView extends VerticalLayout implements BeforeEnterObserv
             } else {
                 notification = Notification.show("Error during upload: " + resultOfPeriods, 15000, Notification.Position.MIDDLE);
                 notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+                logView.logMessage(Constants.ERROR, "Error during upload: " + resultOfPeriods);
             }
 
             String message = projectConnectionService.startAgent(projectId);
@@ -237,6 +238,7 @@ public class ReportAdminView extends VerticalLayout implements BeforeEnterObserv
             } else {
                 String AgenterrorMessage = "ERROR: Job " + agentName + " already running please try again later...";
                 Notification.show(AgenterrorMessage, 6000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                logView.logMessage(Constants.ERROR, "ERROR: Job " + agentName + " already running please try again later...");
             }
 
         });

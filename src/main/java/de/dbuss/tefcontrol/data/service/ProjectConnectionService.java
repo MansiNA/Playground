@@ -2399,7 +2399,7 @@ public class ProjectConnectionService {
             return fetchedData;
         } catch (Exception ex) {
             ex.printStackTrace();
-            handleDatabaseError(ex);
+            errorMessage = handleDatabaseError(ex);
             return Collections.emptyList();
         } finally {
             connectionClose(jdbcTemplate);
@@ -2455,7 +2455,7 @@ public class ProjectConnectionService {
             return fetchedData;
         } catch (Exception ex) {
             ex.printStackTrace();
-            handleDatabaseError(ex);
+            errorMessage = handleDatabaseError(ex);
             return Collections.emptyList();
         } finally {
             connectionClose(jdbcTemplate);
@@ -2518,7 +2518,7 @@ public class ProjectConnectionService {
             System.out.println("Number of rows affected: " + rowsAffected);
         } catch (Exception ex) {
             ex.printStackTrace();
-            handleDatabaseError(ex);
+            errorMessage = handleDatabaseError(ex);
         } finally {
             connectionClose(jdbcTemplate);
         }
