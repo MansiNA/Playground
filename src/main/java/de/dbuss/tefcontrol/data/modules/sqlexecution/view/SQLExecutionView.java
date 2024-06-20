@@ -56,7 +56,7 @@ import java.util.stream.Collectors;
 @RolesAllowed({"ADMIN"})
 public class SQLExecutionView extends VerticalLayout {
 
-    private String exportPath;
+ //   private String exportPath;
     private ProjectConnectionService projectConnectionService;
     private ProjectParameterService projectParameterService;
   //  private ConfigurationService service;
@@ -89,17 +89,17 @@ public class SQLExecutionView extends VerticalLayout {
     private Boolean isLogsVisible = false;
     private Boolean isVisible = false;
 
-    public SQLExecutionView(ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, @Value("${sqlcsv_exportPath}") String p_exportPath, JdbcTemplate jdbcTemplate) throws SQLException, IOException {
+    public SQLExecutionView(ProjectConnectionService projectConnectionService, ProjectParameterService projectParameterService, JdbcTemplate jdbcTemplate) throws SQLException, IOException {
         //add(new H1("Table View"));
         this.projectConnectionService = projectConnectionService;
         this.projectParameterService = projectParameterService;
-        this.exportPath = p_exportPath;
+     //   this.exportPath = p_exportPath;
         this.jdbcTemplate = jdbcTemplate;
 
         logView = new LogView();
         logView.logMessage(Constants.INFO, "Starting SQLExecutionView");
 
-        System.out.println("Export Path: " + exportPath);
+     //   System.out.println("Export Path: " + exportPath);
         exportButton.setVisible(false);
         runButton.setEnabled(false);
 
