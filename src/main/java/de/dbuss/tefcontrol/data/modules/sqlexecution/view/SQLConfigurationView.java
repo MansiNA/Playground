@@ -166,10 +166,18 @@ public class SQLConfigurationView extends VerticalLayout {
         cf.setWidth("25em");
 
         cf.addListener(ConfigForm.SaveEvent.class, this::saveConfig);
-        //   cf.addListener(ConfigForm.DeleteEvent.class, this::deleteContact);
+        cf.addListener(ConfigForm.DeleteEvent.class, this::deleteConfig);
         cf.addListener(ConfigForm.CloseEvent.class, e-> closeEditor());
 
     }
+
+    private void deleteConfig(ConfigForm.DeleteEvent deleteEvent) {
+        logView.logMessage(Constants.INFO, "Updating saveConfig for sql_connection in DB");
+        projectConnectionService.deleteSqlConnectionConfiguration(dbUrl, dbUser, dbPassword, configTable, deleteEvent.getConfiguration());
+        updateList();
+        closeEditor();
+    }
+
     private void saveConfig(ConfigForm.SaveEvent event) {
         logView.logMessage(Constants.INFO, "Updating saveConfig for sql_connection in DB");
         projectConnectionService.saveSqlConnectionConfiguration(dbUrl, dbUser, dbPassword, configTable, event.getConfiguration());

@@ -2432,6 +2432,27 @@ public class ProjectConnectionService {
         }
     }
 
+    public void deleteSqlConnectionConfiguration(String dbUrl, String dbUser, String dbPassword, String tableName, Configuration config) {
+        try {
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
+            String sqlDelete = "DELETE FROM " + tableName + " WHERE ID = ?";
+            int rowsAffected = jdbcTemplate.update(sqlDelete, config.getId());
+
+            if (rowsAffected > 0) {
+                System.out.println("Deleted configuration with ID: " + config.getId());
+            } else {
+                System.out.println("No configuration found with ID: " + config.getId());
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            handleDatabaseError(ex);
+        } finally {
+            connectionClose(jdbcTemplate);
+        }
+    }
+
     public List<SqlDefinition> getSqlDefinitions(String dbUrl, String dbUser, String dbPassword, String tableName) {
         try {
             DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);

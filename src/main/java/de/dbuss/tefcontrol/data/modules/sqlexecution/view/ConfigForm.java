@@ -103,7 +103,7 @@ public class ConfigForm extends FormLayout {
         save.addClickListener(event -> validateAndSave());
         delete.addClickListener(event -> fireEvent(new DeleteEvent(this, configuration)));
         cancel.addClickListener(event -> fireEvent(new CloseEvent(this)));
-        delete.setEnabled(false);
+     //   delete.setEnabled(false);
 
         binder.addStatusChangeListener(e -> {
             boolean hasChanges = binder.hasChanges();
