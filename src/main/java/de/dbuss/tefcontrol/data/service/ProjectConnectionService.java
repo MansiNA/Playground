@@ -2645,6 +2645,43 @@ public class ProjectConnectionService {
         }
     }
 
+    public String saveOrUpdateRosettaChannel(RosettaChannel rosettaChannel, String tableName, String dbUrl, String dbUser, String dbPassword) {
+        try {
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
+            // Check if the record exists
+            String checkSql = "SELECT COUNT(*) FROM " + tableName + " WHERE LfdNr = ?";
+            int count = jdbcTemplate.queryForObject(checkSql, new Object[]{rosettaChannel.getLfdNr()}, Integer.class);
+
+            if (count > 0) {
+                // Update existing record
+                String updateSql = "UPDATE " + tableName + " SET Rosetta_Channel = ?, CoOne_Channel = ?, [User] = ? WHERE LfdNr = ?";
+                jdbcTemplate.update(updateSql,
+                        rosettaChannel.getRosettaChannel(),
+                        rosettaChannel.getCoOneChannel(),
+                        MainLayout.userName, // Assuming MainLayout.userName holds the current user
+                        rosettaChannel.getLfdNr()
+                );
+            } else {
+                // Insert new record
+                String insertSql = "INSERT INTO " + tableName + " (Rosetta_Channel, CoOne_Channel, [User]) VALUES (?, ?, ?)";
+                jdbcTemplate.update(insertSql,
+                        rosettaChannel.getRosettaChannel(),
+                        rosettaChannel.getCoOneChannel(),
+                        MainLayout.userName // Assuming MainLayout.userName holds the current user
+                );
+            }
+
+            return Constants.OK;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return handleDatabaseError(e);
+        } finally {
+            connectionClose(jdbcTemplate);
+        }
+    }
+
     public List<RosettaKPI> getRosettaKPIs(String tableName, String dbUrl, String dbUser, String dbPassword) {
         try {
             DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
@@ -2663,6 +2700,43 @@ public class ProjectConnectionService {
         } catch (Exception ex) {
             errorMessage = handleDatabaseError(ex);
             return Collections.emptyList();
+        } finally {
+            connectionClose(jdbcTemplate);
+        }
+    }
+
+    public String saveOrUpdateRosettaKPI(RosettaKPI rosettaKPI, String tableName, String dbUrl, String dbUser, String dbPassword) {
+        try {
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
+            // Check if the record exists
+            String checkSql = "SELECT COUNT(*) FROM " + tableName + " WHERE LfdNr = ?";
+            int count = jdbcTemplate.queryForObject(checkSql, new Object[]{rosettaKPI.getLfdNr()}, Integer.class);
+
+            if (count > 0) {
+                // Update existing record
+                String updateSql = "UPDATE " + tableName + " SET Rosetta_KPI = ?, CoOne_Measure = ?, [User] = ? WHERE LfdNr = ?";
+                jdbcTemplate.update(updateSql,
+                        rosettaKPI.getRosettaKPI(),
+                        rosettaKPI.getCoOneMeasure(),
+                        MainLayout.userName, // Assuming MainLayout.userName holds the current user
+                        rosettaKPI.getLfdNr()
+                );
+            } else {
+                // Insert new record
+                String insertSql = "INSERT INTO " + tableName + " (Rosetta_KPI, CoOne_Measure, [User]) VALUES (?, ?, ?)";
+                jdbcTemplate.update(insertSql,
+                        rosettaKPI.getRosettaKPI(),
+                        rosettaKPI.getCoOneMeasure(),
+                        MainLayout.userName // Assuming MainLayout.userName holds the current user
+                );
+            }
+
+            return Constants.OK;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return handleDatabaseError(e);
         } finally {
             connectionClose(jdbcTemplate);
         }
@@ -2692,6 +2766,45 @@ public class ProjectConnectionService {
         }
     }
 
+    public String saveOrUpdateRosettaPartner(RosettaPartner rosettaPartner, String tableName, String dbUrl, String dbUser, String dbPassword) {
+        try {
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
+            // Check if the record exists
+            String checkSql = "SELECT COUNT(*) FROM " + tableName + " WHERE LfdNr = ?";
+            int count = jdbcTemplate.queryForObject(checkSql, new Object[]{rosettaPartner.getLfdNr()}, Integer.class);
+
+            if (count > 0) {
+                // Update existing record
+                String updateSql = "UPDATE " + tableName + " SET Rosetta_Partner = ?, CoOne_SPS = ?, CoOne_PaymentType = ?, [User] = ? WHERE LfdNr = ?";
+                jdbcTemplate.update(updateSql,
+                        rosettaPartner.getRosettaPartner(),
+                        rosettaPartner.getCoOneSPS(),
+                        rosettaPartner.getCoOnePaymentType(),
+                        MainLayout.userName, // Assuming MainLayout.userName holds the current user
+                        rosettaPartner.getLfdNr()
+                );
+            } else {
+                // Insert new record
+                String insertSql = "INSERT INTO " + tableName + " (Rosetta_Partner, CoOne_SPS, CoOne_PaymentType, [User]) VALUES (?, ?, ?, ?)";
+                jdbcTemplate.update(insertSql,
+                        rosettaPartner.getRosettaPartner(),
+                        rosettaPartner.getCoOneSPS(),
+                        rosettaPartner.getCoOnePaymentType(),
+                        MainLayout.userName // Assuming MainLayout.userName holds the current user
+                );
+            }
+
+            return Constants.OK;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return handleDatabaseError(e);
+        } finally {
+            connectionClose(jdbcTemplate);
+        }
+    }
+
     public List<RosettaPaymentType> getRosettaPaymentTypes(String tableName, String dbUrl, String dbUser, String dbPassword) {
         try {
             DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
@@ -2710,6 +2823,42 @@ public class ProjectConnectionService {
         } catch (Exception ex) {
             errorMessage = handleDatabaseError(ex);
             return Collections.emptyList();
+        } finally {
+            connectionClose(jdbcTemplate);
+        }
+    }
+    public String saveOrUpdateRosettaPaymentType(RosettaPaymentType rosettaPaymentType, String tableName, String dbUrl, String dbUser, String dbPassword) {
+        try {
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
+            // Check if the record exists
+            String checkSql = "SELECT COUNT(*) FROM " + tableName + " WHERE LfdNr = ?";
+            int count = jdbcTemplate.queryForObject(checkSql, new Object[]{rosettaPaymentType.getLfdNr()}, Integer.class);
+
+            if (count > 0) {
+                // Update existing record
+                String updateSql = "UPDATE " + tableName + " SET Rosetta_PaymentType = ?, CoOne_PaymentType = ?, [User] = ? WHERE LfdNr = ?";
+                jdbcTemplate.update(updateSql,
+                        rosettaPaymentType.getRosettaPaymentType(),
+                        rosettaPaymentType.getCoOnePaymentType(),
+                        MainLayout.userName, // Assuming MainLayout.userName holds the current user
+                        rosettaPaymentType.getLfdNr()
+                );
+            } else {
+                // Insert new record
+                String insertSql = "INSERT INTO " + tableName + " (Rosetta_PaymentType, CoOne_PaymentType, [User]) VALUES (?, ?, ?)";
+                jdbcTemplate.update(insertSql,
+                        rosettaPaymentType.getRosettaPaymentType(),
+                        rosettaPaymentType.getCoOnePaymentType(),
+                        MainLayout.userName // Assuming MainLayout.userName holds the current user
+                );
+            }
+
+            return Constants.OK;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return handleDatabaseError(e);
         } finally {
             connectionClose(jdbcTemplate);
         }
@@ -2738,6 +2887,43 @@ public class ProjectConnectionService {
         }
     }
 
+    public String saveOrUpdateRosettaProductTLN(RosettaProductTLN rosettaProductTLN, String tableName, String dbUrl, String dbUser, String dbPassword) {
+        try {
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
+            // Check if the record exists
+            String checkSql = "SELECT COUNT(*) FROM " + tableName + " WHERE LfdNr = ?";
+            int count = jdbcTemplate.queryForObject(checkSql, new Object[]{rosettaProductTLN.getLfdNr()}, Integer.class);
+
+            if (count > 0) {
+                // Update existing record
+                String updateSql = "UPDATE " + tableName + " SET Rosetta_Product = ?, CoOne_ContractType = ?, [User] = ? WHERE LfdNr = ?";
+                jdbcTemplate.update(updateSql,
+                        rosettaProductTLN.getRosettaProduct(),
+                        rosettaProductTLN.getCoOneContractType(),
+                        MainLayout.userName, // Assuming MainLayout.userName holds the current user
+                        rosettaProductTLN.getLfdNr()
+                );
+            } else {
+                // Insert new record
+                String insertSql = "INSERT INTO " + tableName + " (Rosetta_Product, CoOne_ContractType, [User]) VALUES (?, ?, ?)";
+                jdbcTemplate.update(insertSql,
+                        rosettaProductTLN.getRosettaProduct(),
+                        rosettaProductTLN.getCoOneContractType(),
+                        MainLayout.userName // Assuming MainLayout.userName holds the current user
+                );
+            }
+
+            return Constants.OK;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return handleDatabaseError(e);
+        } finally {
+            connectionClose(jdbcTemplate);
+        }
+    }
+
     public List<RosettaProductUSG> getRosettaProductUSGs(String tableName, String dbUrl, String dbUser, String dbPassword) {
         try {
             DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
@@ -2761,6 +2947,43 @@ public class ProjectConnectionService {
         }
     }
 
+    public String saveOrUpdateRosettaProductUSG(RosettaProductUSG rosettaProductUSG, String tableName, String dbUrl, String dbUser, String dbPassword) {
+        try {
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
+            // Check if the record exists
+            String checkSql = "SELECT COUNT(*) FROM " + tableName + " WHERE LfdNr = ?";
+            int count = jdbcTemplate.queryForObject(checkSql, new Object[]{rosettaProductUSG.getLfdNr()}, Integer.class);
+
+            if (count > 0) {
+                // Update existing record
+                String updateSql = "UPDATE " + tableName + " SET Rosetta_Product = ?, CoOne_Measure = ?, [User] = ? WHERE LfdNr = ?";
+                jdbcTemplate.update(updateSql,
+                        rosettaProductUSG.getRosettaProduct(),
+                        rosettaProductUSG.getCoOneMeasure(),
+                        MainLayout.userName, // Assuming MainLayout.userName holds the current user
+                        rosettaProductUSG.getLfdNr()
+                );
+            } else {
+                // Insert new record
+                String insertSql = "INSERT INTO " + tableName + " (Rosetta_Product, CoOne_Measure, [User]) VALUES (?, ?, ?)";
+                jdbcTemplate.update(insertSql,
+                        rosettaProductUSG.getRosettaProduct(),
+                        rosettaProductUSG.getCoOneMeasure(),
+                        MainLayout.userName // Assuming MainLayout.userName holds the current user
+                );
+            }
+
+            return Constants.OK;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return handleDatabaseError(e);
+        } finally {
+            connectionClose(jdbcTemplate);
+        }
+    }
+
     public List<RosettaUsageDirection> getRosettaUsageDirections(String tableName, String dbUrl, String dbUser, String dbPassword) {
         try {
             DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
@@ -2779,6 +3002,43 @@ public class ProjectConnectionService {
         } catch (Exception ex) {
             errorMessage = handleDatabaseError(ex);
             return Collections.emptyList();
+        } finally {
+            connectionClose(jdbcTemplate);
+        }
+    }
+
+    public String saveOrUpdateRosettaUsageDirection(RosettaUsageDirection rosettaUsageDirection, String tableName, String dbUrl, String dbUser, String dbPassword) {
+        try {
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
+            // Check if the record exists
+            String checkSql = "SELECT COUNT(*) FROM " + tableName + " WHERE LfdNr = ?";
+            int count = jdbcTemplate.queryForObject(checkSql, new Object[]{rosettaUsageDirection.getLfdNr()}, Integer.class);
+
+            if (count > 0) {
+                // Update existing record
+                String updateSql = "UPDATE " + tableName + " SET Rosetta_UsageDirection = ?, CoOne_UsageDirection = ?, [User] = ? WHERE LfdNr = ?";
+                jdbcTemplate.update(updateSql,
+                        rosettaUsageDirection.getRosettaUsageDirection(),
+                        rosettaUsageDirection.getCoOneUsageDirection(),
+                        MainLayout.userName, // Assuming MainLayout.userName holds the current user
+                        rosettaUsageDirection.getLfdNr()
+                );
+            } else {
+                // Insert new record
+                String insertSql = "INSERT INTO " + tableName + " (Rosetta_UsageDirection, CoOne_UsageDirection, [User]) VALUES (?, ?, ?)";
+                jdbcTemplate.update(insertSql,
+                        rosettaUsageDirection.getRosettaUsageDirection(),
+                        rosettaUsageDirection.getCoOneUsageDirection(),
+                        MainLayout.userName // Assuming MainLayout.userName holds the current user
+                );
+            }
+
+            return Constants.OK;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return handleDatabaseError(e);
         } finally {
             connectionClose(jdbcTemplate);
         }

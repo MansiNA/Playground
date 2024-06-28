@@ -298,7 +298,7 @@ public class RosettaMappingView extends VerticalLayout implements BeforeEnterObs
         content.setSizeFull();
         content.setHeightFull();
         brandCrud = new Crud<>(RosettaBrand.class, createBrandEditor());
-        brandCrud.setToolbarVisible(false);
+        brandCrud.setToolbarVisible(true);
         brandCrud.setHeightFull();
         brandCrud.setSizeFull();
         setupBrandGrid();
@@ -308,7 +308,6 @@ public class RosettaMappingView extends VerticalLayout implements BeforeEnterObs
             brandCrud.edit(selectedEntity, Crud.EditMode.EXISTING_ITEM);
             brandCrud.getDeleteButton().getElement().getStyle().set("display", "none");
         });
-        brandCrud.setToolbarVisible(true);
         brandCrud.addSaveListener(event -> {
             logView.logMessage(Constants.INFO, "executing crud.addSaveListener for save editedAttachment in Attachment grid");
             RosettaBrand rosettaBrand = event.getItem();
@@ -347,7 +346,7 @@ public class RosettaMappingView extends VerticalLayout implements BeforeEnterObs
         TextField rosettaBrandField = new TextField("Rosetta Brand");
         TextField coOneSPSField = new TextField("CoOne SPS");
         TextField userField = new TextField("User");
-        userField.setReadOnly(true);
+      //  userField.setReadOnly(true);
         // Bind fields to Binder
         binder.forField(lfdNrField).asRequired()
                 .bind(RosettaBrand::getLfdNr, RosettaBrand::setLfdNr);
@@ -358,11 +357,11 @@ public class RosettaMappingView extends VerticalLayout implements BeforeEnterObs
         binder.forField(coOneSPSField)
                 .bind(RosettaBrand::getCoOneSPS, RosettaBrand::setCoOneSPS);
 
-        binder.forField(userField)
-                .bind(RosettaBrand::getUser, RosettaBrand::setUser);
+//        binder.forField(userField)
+//                .bind(RosettaBrand::getUser, RosettaBrand::setUser);
 
         // Add fields to FormLayout
-        editForm.add(lfdNrField, rosettaBrandField, coOneSPSField, userField);
+        editForm.add(lfdNrField, rosettaBrandField, coOneSPSField );
 
         // Return BinderCrudEditor with the Binder and FormLayout
         return new BinderCrudEditor<>(binder, editForm);
@@ -407,20 +406,42 @@ public class RosettaMappingView extends VerticalLayout implements BeforeEnterObs
         content.setSizeFull();
         content.setHeightFull();
         channelCrud = new Crud<>(RosettaChannel.class, createChannelEditor());
-        channelCrud.setToolbarVisible(false);
+        channelCrud.setToolbarVisible(true);
         channelCrud.setHeightFull();
         channelCrud.setSizeFull();
         setupChannelGrid();
+        updateChannelGrid();
+        channelGrid.addItemDoubleClickListener(event -> {
+            RosettaChannel  selectedEntity = event.getItem();
+            channelCrud.edit(selectedEntity, Crud.EditMode.EXISTING_ITEM);
+            channelCrud.getDeleteButton().getElement().getStyle().set("display", "none");
+        });
+        channelCrud.addSaveListener(event -> {
+            logView.logMessage(Constants.INFO, "executing crud.addSaveListener for save editedAttachment in Attachment grid");
+            RosettaChannel rosettaChannel = event.getItem();
+            String resultString = projectConnectionService.saveOrUpdateRosettaChannel(rosettaChannel, channelTable, dbUrl, dbUser, dbPassword);
+            if (resultString.equals(Constants.OK)) {
+                logView.logMessage(Constants.INFO, "save rosettaChannel data");
+                Notification.show(" Update successfully", 2000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                updateChannelGrid();
+            } else {
+                logView.logMessage(Constants.ERROR, "Error while saving rosettaChannel data");
+                Notification.show("Error during upload: " + resultString, 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+            }
+        });
+
+        content.add(channelCrud);
+        logView.logMessage(Constants.INFO, "Ending getChannelGrid() for get ChannelGrid");
+        return content;
+    }
+
+    private void updateChannelGrid() {
         List<RosettaChannel> listOfdata = projectConnectionService.getRosettaChannels(channelTable, dbUrl, dbUser, dbPassword);
         if (listOfdata != null) {
 
             GenericDataProvider dataProvider = new GenericDataProvider(listOfdata, "lfdNr");
             channelGrid.setDataProvider(dataProvider);
         }
-
-        content.add(channelCrud);
-        logView.logMessage(Constants.INFO, "Ending getChannelGrid() for get ChannelGrid");
-        return content;
     }
 
     private CrudEditor<RosettaChannel> createChannelEditor() {
@@ -430,6 +451,7 @@ public class RosettaMappingView extends VerticalLayout implements BeforeEnterObs
 
         // Create fields
         IntegerField lfdNrField = new IntegerField("LfdNr");
+        lfdNrField.setReadOnly(true);
         TextField rosettaChannelField = new TextField("Rosetta Channel");
         TextField coOneChannelField = new TextField("CoOne Channel");
         TextField userField = new TextField("User");
@@ -448,7 +470,7 @@ public class RosettaMappingView extends VerticalLayout implements BeforeEnterObs
                 .bind(RosettaChannel::getUser, RosettaChannel::setUser);
 
         // Add fields to FormLayout
-        editForm.add(lfdNrField, rosettaChannelField, coOneChannelField, userField);
+        editForm.add(lfdNrField, rosettaChannelField, coOneChannelField);
 
         return new BinderCrudEditor<>(binder, editForm);
     }
@@ -491,21 +513,42 @@ public class RosettaMappingView extends VerticalLayout implements BeforeEnterObs
         content.setSizeFull();
         content.setHeightFull();
         kpiCrud = new Crud<>(RosettaKPI.class, createKPIEditor());
-        kpiCrud.setToolbarVisible(false);
+        kpiCrud.setToolbarVisible(true);
         kpiCrud.setHeightFull();
         kpiCrud.setSizeFull();
         setupKPIGrid();
+        updateKPIGrid();
+        kpiGrid.addItemDoubleClickListener(event -> {
+            RosettaKPI  selectedEntity = event.getItem();
+            kpiCrud.edit(selectedEntity, Crud.EditMode.EXISTING_ITEM);
+            kpiCrud.getDeleteButton().getElement().getStyle().set("display", "none");
+        });
+        kpiCrud.addSaveListener(event -> {
+            logView.logMessage(Constants.INFO, "executing crud.addSaveListener for save row in grid");
+            RosettaKPI rosettaKPI = event.getItem();
+            String resultString = projectConnectionService.saveOrUpdateRosettaKPI(rosettaKPI, kPITable, dbUrl, dbUser, dbPassword);
+            if (resultString.equals(Constants.OK)) {
+                logView.logMessage(Constants.INFO, "save rosettaKPI data");
+                Notification.show(" Update successfully", 2000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                updateKPIGrid();
+            } else {
+                logView.logMessage(Constants.ERROR, "Error while saving rosettaKPI data");
+                Notification.show("Error during upload: " + resultString, 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+            }
+        });
+
+        content.add(kpiCrud);
+        logView.logMessage(Constants.INFO, "Ending getKPIGrid() for get KPIGrid");
+        return content;
+    }
+    private void updateKPIGrid() {
         List<RosettaKPI> listOfdata = projectConnectionService.getRosettaKPIs(kPITable, dbUrl, dbUser, dbPassword);
         if (listOfdata != null) {
             GenericDataProvider dataProvider = new GenericDataProvider(listOfdata, "lfdNr");
             kpiGrid.setDataProvider(dataProvider);
         }
 
-        content.add(kpiCrud);
-        logView.logMessage(Constants.INFO, "Ending getKPIGrid() for get KPIGrid");
-        return content;
     }
-
     private CrudEditor<RosettaKPI> createKPIEditor() {
         logView.logMessage(Constants.INFO, "createKPIEditor() for create Editor");
         FormLayout editForm = new FormLayout();
@@ -513,6 +556,7 @@ public class RosettaMappingView extends VerticalLayout implements BeforeEnterObs
 
         // Create fields
         IntegerField lfdNrField = new IntegerField("LfdNr");
+        lfdNrField.setReadOnly(true);
         TextField rosettaKPIField = new TextField("Rosetta KPI");
         TextField coOneMeasureField = new TextField("CoOne Measure");
         TextField userField = new TextField("User");
@@ -531,7 +575,7 @@ public class RosettaMappingView extends VerticalLayout implements BeforeEnterObs
                 .bind(RosettaKPI::getUser, RosettaKPI::setUser);
 
         // Add fields to FormLayout
-        editForm.add(lfdNrField, rosettaKPIField, coOneMeasureField, userField);
+        editForm.add(lfdNrField, rosettaKPIField, coOneMeasureField);
 
         // Return BinderCrudEditor with the Binder and FormLayout
         return new BinderCrudEditor<>(binder, editForm);
@@ -575,20 +619,43 @@ public class RosettaMappingView extends VerticalLayout implements BeforeEnterObs
         content.setSizeFull();
         content.setHeightFull();
         partnerCrud = new Crud<>(RosettaPartner.class, createPartnerEditor());
-        partnerCrud.setToolbarVisible(false);
+        partnerCrud.setToolbarVisible(true);
         partnerCrud.setHeightFull();
         partnerCrud.setSizeFull();
         setupPartnerGrid();
-        List<RosettaPartner> listOfdata = projectConnectionService.getRosettaPartners(partnerTable, dbUrl, dbUser, dbPassword);
-        if (listOfdata != null) {
-            GenericDataProvider dataProvider = new GenericDataProvider(listOfdata, "lfdNr");
-            partnerCrud.setDataProvider(dataProvider);
-        }
+        updatePartnerGrid();
+
+        partnerGrid.addItemDoubleClickListener(event -> {
+            RosettaPartner  selectedEntity = event.getItem();
+            partnerCrud.edit(selectedEntity, Crud.EditMode.EXISTING_ITEM);
+            partnerCrud.getDeleteButton().getElement().getStyle().set("display", "none");
+        });
+        partnerCrud.addSaveListener(event -> {
+            logView.logMessage(Constants.INFO, "executing crud.addSaveListener for save row in grid");
+            RosettaPartner rosettaPartner = event.getItem();
+            String resultString = projectConnectionService.saveOrUpdateRosettaPartner(rosettaPartner, partnerTable, dbUrl, dbUser, dbPassword);
+            if (resultString.equals(Constants.OK)) {
+                logView.logMessage(Constants.INFO, "save rosettaPartner data");
+                Notification.show(" Update successfully", 2000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                updatePartnerGrid();
+            } else {
+                logView.logMessage(Constants.ERROR, "Error while saving rosettaPartner data");
+                Notification.show("Error during upload: " + resultString, 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+            }
+        });
+
         content.add(partnerCrud);
         logView.logMessage(Constants.INFO, "Ending getPartnerGrid() for get PartnerGrid");
         return content;
     }
 
+    private void updatePartnerGrid() {
+        List<RosettaPartner> listOfdata = projectConnectionService.getRosettaPartners(partnerTable, dbUrl, dbUser, dbPassword);
+        if (listOfdata != null) {
+            GenericDataProvider dataProvider = new GenericDataProvider(listOfdata, "lfdNr");
+            partnerCrud.setDataProvider(dataProvider);
+        }
+    }
     private CrudEditor<RosettaPartner> createPartnerEditor() {
         logView.logMessage(Constants.INFO, "createPartnerEditor() for create Editor");
         FormLayout editForm = new FormLayout();
@@ -596,6 +663,7 @@ public class RosettaMappingView extends VerticalLayout implements BeforeEnterObs
 
         // Create fields
         IntegerField lfdNrField = new IntegerField("LfdNr");
+        lfdNrField.setReadOnly(true);
         TextField rosettaPartnerField = new TextField("Rosetta Partner");
         TextField coOneSPSField = new TextField("CoOne SPS");
         TextField coOnePaymentTypeField = new TextField("CoOne Payment Type");
@@ -618,7 +686,7 @@ public class RosettaMappingView extends VerticalLayout implements BeforeEnterObs
                 .bind(RosettaPartner::getUser, RosettaPartner::setUser);
 
         // Add fields to FormLayout
-        editForm.add(lfdNrField, rosettaPartnerField, coOneSPSField, coOnePaymentTypeField, userField);
+        editForm.add(lfdNrField, rosettaPartnerField, coOneSPSField, coOnePaymentTypeField);
 
         // Return BinderCrudEditor with the Binder and FormLayout
         return new BinderCrudEditor<>(binder, editForm);
@@ -664,18 +732,41 @@ public class RosettaMappingView extends VerticalLayout implements BeforeEnterObs
         content.setSizeFull();
         content.setHeightFull();
         paymentTypeCrud = new Crud<>(RosettaPaymentType.class, createPaymentTypeEditor());
-        paymentTypeCrud.setToolbarVisible(false);
+        paymentTypeCrud.setToolbarVisible(true);
         paymentTypeCrud.setHeightFull();
         paymentTypeCrud.setSizeFull();
         setupPaymentTypeGrid();
+        updatePaymentTypeGrid();
+        paymentTypeGrid.addItemDoubleClickListener(event -> {
+            RosettaPaymentType  selectedEntity = event.getItem();
+            paymentTypeCrud.edit(selectedEntity, Crud.EditMode.EXISTING_ITEM);
+            paymentTypeCrud.getDeleteButton().getElement().getStyle().set("display", "none");
+        });
+        paymentTypeCrud.addSaveListener(event -> {
+            logView.logMessage(Constants.INFO, "executing crud.addSaveListener for save row in grid");
+            RosettaPaymentType rosettaPaymentType = event.getItem();
+            String resultString = projectConnectionService.saveOrUpdateRosettaPaymentType(rosettaPaymentType, paymentTypeTable, dbUrl, dbUser, dbPassword);
+            if (resultString.equals(Constants.OK)) {
+                logView.logMessage(Constants.INFO, "save rosettaPaymentType data");
+                Notification.show(" Update successfully", 2000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                updatePaymentTypeGrid();
+            } else {
+                logView.logMessage(Constants.ERROR, "Error while saving rosettaPaymentType data");
+                Notification.show("Error during upload: " + resultString, 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+            }
+        });
+
+        content.add(paymentTypeCrud);
+        logView.logMessage(Constants.INFO, "Ending getPaymentTypeGrid() for get PaymentTypeGrid");
+        return content;
+    }
+
+    private void updatePaymentTypeGrid() {
         List<RosettaPaymentType> listOfdata = projectConnectionService.getRosettaPaymentTypes(paymentTypeTable, dbUrl, dbUser, dbPassword);
         if (listOfdata != null) {
             GenericDataProvider dataProvider = new GenericDataProvider(listOfdata, "lfdNr");
             paymentTypeGrid.setDataProvider(dataProvider);
         }
-        content.add(paymentTypeCrud);
-        logView.logMessage(Constants.INFO, "Ending getPaymentTypeGrid() for get PaymentTypeGrid");
-        return content;
     }
 
     private CrudEditor<RosettaPaymentType> createPaymentTypeEditor() {
@@ -685,6 +776,7 @@ public class RosettaMappingView extends VerticalLayout implements BeforeEnterObs
 
         // Create fields
         IntegerField lfdNrField = new IntegerField("LfdNr");
+        lfdNrField.setReadOnly(true);
         TextField rosettaPaymentTypeField = new TextField("Rosetta Payment Type");
         TextField coOnePaymentTypeField = new TextField("CoOne Payment Type");
         TextField userField = new TextField("User");
@@ -703,7 +795,7 @@ public class RosettaMappingView extends VerticalLayout implements BeforeEnterObs
                 .bind(RosettaPaymentType::getUser, RosettaPaymentType::setUser);
 
         // Add fields to FormLayout
-        editForm.add(lfdNrField, rosettaPaymentTypeField, coOnePaymentTypeField, userField);
+        editForm.add(lfdNrField, rosettaPaymentTypeField, coOnePaymentTypeField);
 
         // Return BinderCrudEditor with the Binder and FormLayout
         return new BinderCrudEditor<>(binder, editForm);
@@ -746,20 +838,43 @@ public class RosettaMappingView extends VerticalLayout implements BeforeEnterObs
         content.setSizeFull();
         content.setHeightFull();
         productTLNCrud = new Crud<>(RosettaProductTLN.class, createProductTLNEditor());
-        productTLNCrud.setToolbarVisible(false);
+        productTLNCrud.setToolbarVisible(true);
         productTLNCrud.setHeightFull();
         productTLNCrud.setSizeFull();
         setupProductTLNGrid();
-        List<RosettaProductTLN> listOfdata = projectConnectionService.getRosettaProductTLNs(productTLNTable, dbUrl, dbUser, dbPassword);
-        if (listOfdata != null) {
-            GenericDataProvider dataProvider = new GenericDataProvider(listOfdata, "lfdNr");
-            productTLNGrid.setDataProvider(dataProvider);
-        }
+        updateProductTLNGrid();
+        productTLNGrid.addItemDoubleClickListener(event -> {
+            RosettaProductTLN  selectedEntity = event.getItem();
+            productTLNCrud.edit(selectedEntity, Crud.EditMode.EXISTING_ITEM);
+            productTLNCrud.getDeleteButton().getElement().getStyle().set("display", "none");
+        });
+        productTLNCrud.addSaveListener(event -> {
+            logView.logMessage(Constants.INFO, "executing crud.addSaveListener for save row in grid");
+            RosettaProductTLN rosettaProductTLN = event.getItem();
+            String resultString = projectConnectionService.saveOrUpdateRosettaProductTLN(rosettaProductTLN, productTLNTable, dbUrl, dbUser, dbPassword);
+            if (resultString.equals(Constants.OK)) {
+                logView.logMessage(Constants.INFO, "save rosettaProductTLN data");
+                Notification.show(" Update successfully", 2000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                updateProductTLNGrid();
+            } else {
+                logView.logMessage(Constants.ERROR, "Error while saving rosettaProductTLN data");
+                Notification.show("Error during upload: " + resultString, 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+            }
+        });
+
+
         content.add(productTLNCrud);
         logView.logMessage(Constants.INFO, "Ending getProductTLNGrid() for get ProductTLNGrid");
         return content;
     }
 
+    private void updateProductTLNGrid() {
+        List<RosettaProductTLN> listOfdata = projectConnectionService.getRosettaProductTLNs(productTLNTable, dbUrl, dbUser, dbPassword);
+        if (listOfdata != null) {
+            GenericDataProvider dataProvider = new GenericDataProvider(listOfdata, "lfdNr");
+            productTLNGrid.setDataProvider(dataProvider);
+        }
+    }
     private CrudEditor<RosettaProductTLN> createProductTLNEditor() {
         logView.logMessage(Constants.INFO, "createProductTLNEditor() for create Editor");
         FormLayout editForm = new FormLayout();
@@ -767,6 +882,7 @@ public class RosettaMappingView extends VerticalLayout implements BeforeEnterObs
 
         // Create fields
         IntegerField lfdNrField = new IntegerField("LfdNr");
+        lfdNrField.setReadOnly(true);
         TextField rosettaProductField = new TextField("Rosetta Product");
         TextField coOneContractTypeField = new TextField("CoOne Contract Type");
         TextField userField = new TextField("User");
@@ -785,7 +901,7 @@ public class RosettaMappingView extends VerticalLayout implements BeforeEnterObs
                 .bind(RosettaProductTLN::getUser, RosettaProductTLN::setUser);
 
         // Add fields to FormLayout
-        editForm.add(lfdNrField, rosettaProductField, coOneContractTypeField, userField);
+        editForm.add(lfdNrField, rosettaProductField, coOneContractTypeField);
 
         // Return BinderCrudEditor with the Binder and FormLayout
         return new BinderCrudEditor<>(binder, editForm);
@@ -828,20 +944,42 @@ public class RosettaMappingView extends VerticalLayout implements BeforeEnterObs
         content.setSizeFull();
         content.setHeightFull();
         productUSGCrud = new Crud<>(RosettaProductUSG.class, createProductUSGEditor());
-        productUSGCrud.setToolbarVisible(false);
+        productUSGCrud.setToolbarVisible(true);
         productUSGCrud.setHeightFull();
         productUSGCrud.setSizeFull();
         setupProductUSGGrid();
-        List<RosettaProductUSG> listOfdata = projectConnectionService.getRosettaProductUSGs(productUSGTable, dbUrl, dbUser, dbPassword);
-        if (listOfdata != null) {
-            GenericDataProvider dataProvider = new GenericDataProvider(listOfdata, "lfdNr");
-            productUSGGrid.setDataProvider(dataProvider);
-        }
+        updateProductUSGGrid();
+        productUSGGrid.addItemDoubleClickListener(event -> {
+            RosettaProductUSG  selectedEntity = event.getItem();
+            productUSGCrud.edit(selectedEntity, Crud.EditMode.EXISTING_ITEM);
+            productUSGCrud.getDeleteButton().getElement().getStyle().set("display", "none");
+        });
+        productUSGCrud.addSaveListener(event -> {
+            logView.logMessage(Constants.INFO, "executing crud.addSaveListener for save row in grid");
+            RosettaProductUSG rosettaProductUSG = event.getItem();
+            String resultString = projectConnectionService.saveOrUpdateRosettaProductUSG(rosettaProductUSG, productUSGTable, dbUrl, dbUser, dbPassword);
+            if (resultString.equals(Constants.OK)) {
+                logView.logMessage(Constants.INFO, "save rosettaProductUSG data");
+                Notification.show(" Update successfully", 2000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                updateProductUSGGrid();
+            } else {
+                logView.logMessage(Constants.ERROR, "Error while saving rosettaProductUSG data");
+                Notification.show("Error during upload: " + resultString, 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+            }
+        });
+
         content.add(productUSGCrud);
         logView.logMessage(Constants.INFO, "Ending getProductUSGGrid() for get ProductUSGGrid");
         return content;
     }
 
+    private void updateProductUSGGrid() {
+        List<RosettaProductUSG> listOfdata = projectConnectionService.getRosettaProductUSGs(productUSGTable, dbUrl, dbUser, dbPassword);
+        if (listOfdata != null) {
+            GenericDataProvider dataProvider = new GenericDataProvider(listOfdata, "lfdNr");
+            productUSGGrid.setDataProvider(dataProvider);
+        }
+    }
     public CrudEditor<RosettaProductUSG> createProductUSGEditor() {
         logView.logMessage(Constants.INFO, "createProductUSGEditor() for create Editor");
         FormLayout editForm = new FormLayout();
@@ -849,6 +987,7 @@ public class RosettaMappingView extends VerticalLayout implements BeforeEnterObs
 
         // Create fields
         IntegerField lfdNrField = new IntegerField("LfdNr");
+        lfdNrField.setReadOnly(true);
         TextField rosettaProductField = new TextField("Rosetta Product");
         TextField coOneMeasureField = new TextField("CoOne Measure");
         TextField userField = new TextField("User");
@@ -867,7 +1006,7 @@ public class RosettaMappingView extends VerticalLayout implements BeforeEnterObs
                 .bind(RosettaProductUSG::getUser, RosettaProductUSG::setUser);
 
         // Add fields to FormLayout
-        editForm.add(lfdNrField, rosettaProductField, coOneMeasureField, userField);
+        editForm.add(lfdNrField, rosettaProductField, coOneMeasureField);
 
         // Return BinderCrudEditor with the Binder and FormLayout
         return new BinderCrudEditor<>(binder, editForm);
@@ -910,20 +1049,41 @@ public class RosettaMappingView extends VerticalLayout implements BeforeEnterObs
         content.setSizeFull();
         content.setHeightFull();
         usageDirectionCrud = new Crud<>(RosettaUsageDirection.class, createUsageDirectionEditor());
-        usageDirectionCrud.setToolbarVisible(false);
+        usageDirectionCrud.setToolbarVisible(true);
         usageDirectionCrud.setHeightFull();
         usageDirectionCrud.setSizeFull();
         setupUsageDirectionGrid();
-        List<RosettaUsageDirection> listOfdata = projectConnectionService.getRosettaUsageDirections(productUSGDirectionTable, dbUrl, dbUser, dbPassword);
-        if (listOfdata != null) {
-            GenericDataProvider dataProvider = new GenericDataProvider(listOfdata, "lfdNr");
-            usageDirectionGrid.setDataProvider(dataProvider);
-        }
+        updateUsageDirectionGrid();
+        usageDirectionGrid.addItemDoubleClickListener(event -> {
+            RosettaUsageDirection  selectedEntity = event.getItem();
+            usageDirectionCrud.edit(selectedEntity, Crud.EditMode.EXISTING_ITEM);
+            usageDirectionCrud.getDeleteButton().getElement().getStyle().set("display", "none");
+        });
+        usageDirectionCrud.addSaveListener(event -> {
+            logView.logMessage(Constants.INFO, "executing crud.addSaveListener for save row in grid");
+            RosettaUsageDirection usageDirection = event.getItem();
+            String resultString = projectConnectionService.saveOrUpdateRosettaUsageDirection(usageDirection, productUSGDirectionTable, dbUrl, dbUser, dbPassword);
+            if (resultString.equals(Constants.OK)) {
+                logView.logMessage(Constants.INFO, "save usageDirection data");
+                Notification.show(" Update successfully", 2000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                updateUsageDirectionGrid();
+            } else {
+                logView.logMessage(Constants.ERROR, "Error while saving usageDirection data");
+                Notification.show("Error during upload: " + resultString, 3000, Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+            }
+        });
         content.add(usageDirectionCrud);
         logView.logMessage(Constants.INFO, "Ending getUsageDirectionGrid() for get UsageDirectionGrid");
         return content;
     }
 
+    private void updateUsageDirectionGrid() {
+        List<RosettaUsageDirection> listOfdata = projectConnectionService.getRosettaUsageDirections(productUSGDirectionTable, dbUrl, dbUser, dbPassword);
+        if (listOfdata != null) {
+            GenericDataProvider dataProvider = new GenericDataProvider(listOfdata, "lfdNr");
+            usageDirectionGrid.setDataProvider(dataProvider);
+        }
+    }
     public CrudEditor<RosettaUsageDirection> createUsageDirectionEditor() {
         logView.logMessage(Constants.INFO, "createUsageDirectionEditor() for create Editor");
         FormLayout editForm = new FormLayout();
@@ -931,6 +1091,7 @@ public class RosettaMappingView extends VerticalLayout implements BeforeEnterObs
 
         // Create fields
         IntegerField lfdNrField = new IntegerField("LfdNr");
+        lfdNrField.setReadOnly(true);
         TextField rosettaUsageDirectionField = new TextField("Rosetta Usage Direction");
         TextField coOneUsageDirectionField = new TextField("CoOne Usage Direction");
         TextField userField = new TextField("User");
@@ -949,7 +1110,7 @@ public class RosettaMappingView extends VerticalLayout implements BeforeEnterObs
                 .bind(RosettaUsageDirection::getUser, RosettaUsageDirection::setUser);
 
         // Add fields to FormLayout
-        editForm.add(lfdNrField, rosettaUsageDirectionField, coOneUsageDirectionField, userField);
+        editForm.add(lfdNrField, rosettaUsageDirectionField, coOneUsageDirectionField);
 
         // Return BinderCrudEditor with the Binder and FormLayout
         return new BinderCrudEditor<>(binder, editForm);
