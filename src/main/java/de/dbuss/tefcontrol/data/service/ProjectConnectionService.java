@@ -18,6 +18,7 @@ import de.dbuss.tefcontrol.data.modules.inputpbicomments.view.GenericCommentsVie
 import de.dbuss.tefcontrol.data.modules.kpi.Strategic_KPIView;
 import de.dbuss.tefcontrol.data.modules.pfgproductmapping.entity.CltvAllProduct;
 import de.dbuss.tefcontrol.data.modules.pfgproductmapping.entity.ProductHierarchie;
+import de.dbuss.tefcontrol.data.modules.rosettamapping.entity.*;
 import de.dbuss.tefcontrol.data.modules.sqlexecution.entity.Configuration;
 import de.dbuss.tefcontrol.data.modules.sqlexecution.entity.SqlDefinition;
 import de.dbuss.tefcontrol.data.modules.tarifmapping.entity.CLTVProduct;
@@ -2558,6 +2559,228 @@ public class ProjectConnectionService {
             ex.printStackTrace();
             handleDatabaseError(ex);
             return false;
+        }
+    }
+
+    public List<RosettaBrand> getRosettaBrands(String tableName, String dbUrl, String dbUser, String dbPassword) {
+        try {
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+            String sqlQuery = "SELECT * FROM " +tableName;
+            RowMapper<RosettaBrand> rowMapper = (rs, rowNum) -> {
+                RosettaBrand rosettaBrand = new RosettaBrand();
+                rosettaBrand.setLfdNr(rs.getInt("LfdNr"));
+                rosettaBrand.setRosettaBrand(rs.getString("Rosetta_Brand"));
+                rosettaBrand.setCoOneSPS(rs.getString("CoOne_SPS"));
+                rosettaBrand.setUser(rs.getString("User"));
+                return rosettaBrand;
+            };
+            List<RosettaBrand> fetchedData = jdbcTemplate.query(sqlQuery, rowMapper);
+            return fetchedData;
+        } catch (Exception ex) {
+            errorMessage = handleDatabaseError(ex);
+            return Collections.emptyList();
+        } finally {
+            connectionClose(jdbcTemplate);
+        }
+    }
+
+    public String saveOrUpdateRosettaBrand(RosettaBrand rosettaBrand, String tableName, String dbUrl, String dbUser, String dbPassword) {
+        try {
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
+            // Check if the record exists
+            String checkSql = "SELECT COUNT(*) FROM " + tableName + " WHERE LfdNr = ?";
+            int count = jdbcTemplate.queryForObject(checkSql, new Object[]{rosettaBrand.getLfdNr()}, Integer.class);
+
+            if (count > 0) {
+                // Update existing record
+                String updateSql = "UPDATE " + tableName + " SET Rosetta_Brand = ?, CoOne_SPS = ?, [User] = ? WHERE LfdNr = ?";
+                jdbcTemplate.update(updateSql,
+                        rosettaBrand.getRosettaBrand(),
+                        rosettaBrand.getCoOneSPS(),
+                        MainLayout.userName, // Assuming MainLayout.userName holds the current user
+                        rosettaBrand.getLfdNr()
+                );
+            } else {
+                // Insert new record
+                String insertSql = "INSERT INTO " + tableName + " (Rosetta_Brand, CoOne_SPS, [User]) VALUES (?, ?, ?)";
+                jdbcTemplate.update(insertSql,
+                        rosettaBrand.getRosettaBrand(),
+                        rosettaBrand.getCoOneSPS(),
+                        MainLayout.userName // Assuming MainLayout.userName holds the current user
+                );
+            }
+
+            return Constants.OK;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return handleDatabaseError(e);
+        } finally {
+            connectionClose(jdbcTemplate);
+        }
+    }
+
+    public List<RosettaChannel> getRosettaChannels(String tableName, String dbUrl, String dbUser, String dbPassword) {
+        try {
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+            String sqlQuery = "SELECT * FROM " +tableName;
+            RowMapper<RosettaChannel> rowMapper = (rs, rowNum) -> {
+                RosettaChannel rosettaChannel = new RosettaChannel();
+                rosettaChannel.setLfdNr(rs.getInt("LfdNr"));
+                rosettaChannel.setRosettaChannel(rs.getString("Rosetta_Channel"));
+                rosettaChannel.setCoOneChannel(rs.getString("CoOne_Channel"));
+                rosettaChannel.setUser(rs.getString("User"));
+                return rosettaChannel;
+            };
+            List<RosettaChannel> fetchedData = jdbcTemplate.query(sqlQuery, rowMapper);
+            return fetchedData;
+        } catch (Exception ex) {
+            errorMessage = handleDatabaseError(ex);
+            return Collections.emptyList();
+        } finally {
+            connectionClose(jdbcTemplate);
+        }
+    }
+
+    public List<RosettaKPI> getRosettaKPIs(String tableName, String dbUrl, String dbUser, String dbPassword) {
+        try {
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+            String sqlQuery = "SELECT * FROM " +tableName;
+            RowMapper<RosettaKPI> rowMapper = (rs, rowNum) -> {
+                RosettaKPI rosettaKPI = new RosettaKPI();
+                rosettaKPI.setLfdNr(rs.getInt("LfdNr"));
+                rosettaKPI.setRosettaKPI(rs.getString("Rosetta_KPI"));
+                rosettaKPI.setCoOneMeasure(rs.getString("CoOne_Measure"));
+                rosettaKPI.setUser(rs.getString("User"));
+                return rosettaKPI;
+            };
+            List<RosettaKPI> fetchedData = jdbcTemplate.query(sqlQuery, rowMapper);
+            return fetchedData;
+        } catch (Exception ex) {
+            errorMessage = handleDatabaseError(ex);
+            return Collections.emptyList();
+        } finally {
+            connectionClose(jdbcTemplate);
+        }
+    }
+
+    public List<RosettaPartner> getRosettaPartners(String tableName, String dbUrl, String dbUser, String dbPassword) {
+        try {
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+            String sqlQuery = "SELECT * FROM " + tableName;
+            RowMapper<RosettaPartner> rowMapper = (rs, rowNum) -> {
+                RosettaPartner rosettaPartner = new RosettaPartner();
+                rosettaPartner.setLfdNr(rs.getInt("LfdNr"));
+                rosettaPartner.setRosettaPartner(rs.getString("Rosetta_Partner"));
+                rosettaPartner.setCoOneSPS(rs.getString("CoOne_SPS"));
+                rosettaPartner.setCoOnePaymentType(rs.getString("CoOne_PaymentType"));
+                rosettaPartner.setUser(rs.getString("User"));
+                return rosettaPartner;
+            };
+            List<RosettaPartner> fetchedData = jdbcTemplate.query(sqlQuery, rowMapper);
+            return fetchedData;
+        } catch (Exception ex) {
+            errorMessage = handleDatabaseError(ex);
+            return Collections.emptyList();
+        } finally {
+            connectionClose(jdbcTemplate);
+        }
+    }
+
+    public List<RosettaPaymentType> getRosettaPaymentTypes(String tableName, String dbUrl, String dbUser, String dbPassword) {
+        try {
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+            String sqlQuery = "SELECT * FROM " + tableName;
+            RowMapper<RosettaPaymentType> rowMapper = (rs, rowNum) -> {
+                RosettaPaymentType rosettaPaymentType = new RosettaPaymentType();
+                rosettaPaymentType.setLfdNr(rs.getInt("LfdNr"));
+                rosettaPaymentType.setRosettaPaymentType(rs.getString("Rosetta_PaymentType"));
+                rosettaPaymentType.setCoOnePaymentType(rs.getString("CoOne_PaymentType"));
+                rosettaPaymentType.setUser(rs.getString("User"));
+                return rosettaPaymentType;
+            };
+            List<RosettaPaymentType> fetchedData = jdbcTemplate.query(sqlQuery, rowMapper);
+            return fetchedData;
+        } catch (Exception ex) {
+            errorMessage = handleDatabaseError(ex);
+            return Collections.emptyList();
+        } finally {
+            connectionClose(jdbcTemplate);
+        }
+    }
+
+    public List<RosettaProductTLN> getRosettaProductTLNs(String tableName, String dbUrl, String dbUser, String dbPassword) {
+        try {
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+            String sqlQuery = "SELECT * FROM " + tableName;
+            RowMapper<RosettaProductTLN> rowMapper = (rs, rowNum) -> {
+                RosettaProductTLN rosettaProductTLN = new RosettaProductTLN();
+                rosettaProductTLN.setLfdNr(rs.getInt("LfdNr"));
+                rosettaProductTLN.setRosettaProduct(rs.getString("Rosetta_Product"));
+                rosettaProductTLN.setCoOneContractType(rs.getString("CoOne_ContractType"));
+                rosettaProductTLN.setUser(rs.getString("User"));
+                return rosettaProductTLN;
+            };
+            List<RosettaProductTLN> fetchedData = jdbcTemplate.query(sqlQuery, rowMapper);
+            return fetchedData;
+        } catch (Exception ex) {
+            errorMessage = handleDatabaseError(ex);
+            return Collections.emptyList();
+        } finally {
+            connectionClose(jdbcTemplate);
+        }
+    }
+
+    public List<RosettaProductUSG> getRosettaProductUSGs(String tableName, String dbUrl, String dbUser, String dbPassword) {
+        try {
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+            String sqlQuery = "SELECT * FROM " + tableName;
+            RowMapper<RosettaProductUSG> rowMapper = (rs, rowNum) -> {
+                RosettaProductUSG rosettaProductUSG = new RosettaProductUSG();
+                rosettaProductUSG.setLfdNr(rs.getInt("LfdNr"));
+                rosettaProductUSG.setRosettaProduct(rs.getString("Rosetta_Product"));
+                rosettaProductUSG.setCoOneMeasure(rs.getString("CoOne_Measure"));
+                rosettaProductUSG.setUser(rs.getString("User"));
+                return rosettaProductUSG;
+            };
+            List<RosettaProductUSG> fetchedData = jdbcTemplate.query(sqlQuery, rowMapper);
+            return fetchedData;
+        } catch (Exception ex) {
+            errorMessage = handleDatabaseError(ex);
+            return Collections.emptyList();
+        } finally {
+            connectionClose(jdbcTemplate);
+        }
+    }
+
+    public List<RosettaUsageDirection> getRosettaUsageDirections(String tableName, String dbUrl, String dbUser, String dbPassword) {
+        try {
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+            String sqlQuery = "SELECT * FROM " + tableName;
+            RowMapper<RosettaUsageDirection> rowMapper = (rs, rowNum) -> {
+                RosettaUsageDirection rosettaUsageDirection = new RosettaUsageDirection();
+                rosettaUsageDirection.setLfdNr(rs.getInt("LfdNr"));
+                rosettaUsageDirection.setRosettaUsageDirection(rs.getString("Rosetta_UsageDirection"));
+                rosettaUsageDirection.setCoOneUsageDirection(rs.getString("CoOne_UsageDirection"));
+                rosettaUsageDirection.setUser(rs.getString("User"));
+                return rosettaUsageDirection;
+            };
+            List<RosettaUsageDirection> fetchedData = jdbcTemplate.query(sqlQuery, rowMapper);
+            return fetchedData;
+        } catch (Exception ex) {
+            errorMessage = handleDatabaseError(ex);
+            return Collections.emptyList();
+        } finally {
+            connectionClose(jdbcTemplate);
         }
     }
 

@@ -121,4 +121,16 @@ public class Constants {
 
     // This constant is used for SQL_connection config module
     public static final String CONFIG = "config";
+
+    // This constant is used for Rosetta_Mapping config module
+    public static final String ROSETTA_MAPPING = "Rosetta_Mapping";
+    public static final String BRAND_TABLE = "Brand_Table";
+    public static final String KPI_TABLE = "KPI_Table";
+    public static final String CHANNEL_TABLE = "Channel_Table";
+    public static final String PARTNER_TABLE = "Partner_Table";
+    public static final String PAYMENTTYPE_TABLE = "PaymentType_Table";
+    public static final String PRODUCTTLN_TABLE = "ProductTLN_Table";
+    public static final String PRODUCTUSG_TABLE = "ProductUSG_Table";
+    public static final String PRODUCTUSGDIRECTION_TABLE = "ProductUSGDirection_Table";
+
 }
