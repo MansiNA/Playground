@@ -388,12 +388,13 @@ public class RosettaMappingView extends VerticalLayout implements BeforeEnterObs
         brandGrid.getColumns().forEach(col -> col.setAutoWidth(true));
 
         brandGrid.removeColumn(brandGrid.getColumnByKey(EDIT_COLUMN));
+        brandGrid.removeColumn(brandGrid.getColumnByKey(USER));
 
         // Reorder the columns
         brandGrid.setColumnOrder(brandGrid.getColumnByKey(LFDNR),
                 brandGrid.getColumnByKey(ROSETTA_BRAND),
-                brandGrid.getColumnByKey(CO_ONE_SPS),
-                brandGrid.getColumnByKey(USER));
+                brandGrid.getColumnByKey(CO_ONE_SPS));
+            //    brandGrid.getColumnByKey(USER));
 
         brandGrid.addThemeVariants(GridVariant.LUMO_COMPACT);
         logView.logMessage(Constants.INFO, "Ending setupBrandGrid() for setup BrandGrid");
@@ -495,12 +496,13 @@ public class RosettaMappingView extends VerticalLayout implements BeforeEnterObs
         channelGrid.getColumns().forEach(col -> col.setAutoWidth(true));
 
         channelGrid.removeColumnByKey(EDIT_COLUMN);
+        channelGrid.removeColumn(channelGrid.getColumnByKey(USER));
 
         // Reorder the columns
         channelGrid.setColumnOrder(channelGrid.getColumnByKey(LFDNR),
                 channelGrid.getColumnByKey(ROSETTA_CHANNEL),
-                channelGrid.getColumnByKey(CO_ONE_CHANNEL),
-                channelGrid.getColumnByKey(USER));
+                channelGrid.getColumnByKey(CO_ONE_CHANNEL));
+              //  channelGrid.getColumnByKey(USER));
 
         channelGrid.addThemeVariants(GridVariant.LUMO_COMPACT);
         logView.logMessage(Constants.INFO, "Ending setupChannelGrid() for setup ChannelGrid");
@@ -602,12 +604,13 @@ public class RosettaMappingView extends VerticalLayout implements BeforeEnterObs
         kpiGrid.getColumns().forEach(col -> col.setAutoWidth(true));
 
         kpiGrid.removeColumnByKey(EDIT_COLUMN);
+        kpiGrid.removeColumn(kpiGrid.getColumnByKey(USER));
 
         // Reorder the columns
         kpiGrid.setColumnOrder(kpiGrid.getColumnByKey(LFDNR),
                 kpiGrid.getColumnByKey(ROSETTA_KPI),
-                kpiGrid.getColumnByKey(CO_ONE_MEASURE),
-                kpiGrid.getColumnByKey(USER));
+                kpiGrid.getColumnByKey(CO_ONE_MEASURE));
+           //     kpiGrid.getColumnByKey(USER));
 
         kpiGrid.addThemeVariants(GridVariant.LUMO_COMPACT);
         logView.logMessage(Constants.INFO, "Ending setupKPIGrid() for setup KPIGrid");
@@ -714,13 +717,14 @@ public class RosettaMappingView extends VerticalLayout implements BeforeEnterObs
         partnerGrid.getColumns().forEach(col -> col.setAutoWidth(true));
 
         partnerGrid.removeColumnByKey(EDIT_COLUMN);
+        partnerGrid.removeColumn(partnerGrid.getColumnByKey(USER));
 
         // Reorder the columns
         partnerGrid.setColumnOrder(partnerGrid.getColumnByKey(LFDNR),
                 partnerGrid.getColumnByKey(ROSETTA_PARTNER),
                 partnerGrid.getColumnByKey(CO_ONE_SPS),
-                partnerGrid.getColumnByKey(CO_ONE_PAYMENT_TYPE),
-                partnerGrid.getColumnByKey(USER));
+                partnerGrid.getColumnByKey(CO_ONE_PAYMENT_TYPE));
+            //    partnerGrid.getColumnByKey(USER));
 
         partnerGrid.addThemeVariants(GridVariant.LUMO_COMPACT);
         logView.logMessage(Constants.INFO, "Ending setupPartnerGrid() for setup PartnerGrid");
@@ -821,12 +825,13 @@ public class RosettaMappingView extends VerticalLayout implements BeforeEnterObs
         paymentTypeGrid.getColumns().forEach(col -> col.setAutoWidth(true));
 
         paymentTypeGrid.removeColumnByKey(EDIT_COLUMN);
+        paymentTypeGrid.removeColumn(paymentTypeGrid.getColumnByKey(USER));
 
         // Reorder the columns
         paymentTypeGrid.setColumnOrder(paymentTypeGrid.getColumnByKey(LFDNR),
                 paymentTypeGrid.getColumnByKey(ROSETTA_PAYMENT_TYPE),
-                paymentTypeGrid.getColumnByKey(CO_ONE_PAYMENT_TYPE),
-                paymentTypeGrid.getColumnByKey(USER));
+                paymentTypeGrid.getColumnByKey(CO_ONE_PAYMENT_TYPE));
+             //   paymentTypeGrid.getColumnByKey(USER));
 
         paymentTypeGrid.addThemeVariants(GridVariant.LUMO_COMPACT);
         logView.logMessage(Constants.INFO, "Ending setupPaymentTypeGrid() for setup PaymentTypeGrid");
@@ -927,12 +932,13 @@ public class RosettaMappingView extends VerticalLayout implements BeforeEnterObs
         productTLNGrid.getColumns().forEach(col -> col.setAutoWidth(true));
 
         productTLNGrid.removeColumnByKey(EDIT_COLUMN);
+        productTLNGrid.removeColumn(productTLNGrid.getColumnByKey(USER));
 
         // Reorder the columns
         productTLNGrid.setColumnOrder(productTLNGrid.getColumnByKey(LFDNR),
                 productTLNGrid.getColumnByKey(ROSETTA_PRODUCT),
-                productTLNGrid.getColumnByKey(CO_ONE_CONTRACT_TYPE),
-                productTLNGrid.getColumnByKey(USER));
+                productTLNGrid.getColumnByKey(CO_ONE_CONTRACT_TYPE));
+            //    productTLNGrid.getColumnByKey(USER));
 
         productTLNGrid.addThemeVariants(GridVariant.LUMO_COMPACT);
         logView.logMessage(Constants.INFO, "Ending setupProductTLNGrid() for setup ProductTLNGrid");
@@ -1032,12 +1038,13 @@ public class RosettaMappingView extends VerticalLayout implements BeforeEnterObs
         productUSGGrid.getColumns().forEach(col -> col.setAutoWidth(true));
 
         productUSGGrid.removeColumnByKey(EDIT_COLUMN);
+        productUSGGrid.removeColumn(productUSGGrid.getColumnByKey(USER));
 
         // Reorder the columns
         productUSGGrid.setColumnOrder(productUSGGrid.getColumnByKey(LFDNR),
                 productUSGGrid.getColumnByKey(ROSETTA_PRODUCT),
-                productUSGGrid.getColumnByKey(CO_ONE_MEASURE),
-                productUSGGrid.getColumnByKey(USER));
+                productUSGGrid.getColumnByKey(CO_ONE_MEASURE));
+            //    productUSGGrid.getColumnByKey(USER));
 
         productUSGGrid.addThemeVariants(GridVariant.LUMO_COMPACT);
         logView.logMessage(Constants.INFO, "Ending setupProductUSGGrid() for setup ProductUSGGrid");
@@ -1136,12 +1143,13 @@ public class RosettaMappingView extends VerticalLayout implements BeforeEnterObs
         usageDirectionGrid.getColumns().forEach(col -> col.setAutoWidth(true));
 
         usageDirectionGrid.removeColumn(usageDirectionGrid.getColumnByKey(EDIT_COLUMN));
+        usageDirectionGrid.removeColumn(usageDirectionGrid.getColumnByKey(USER));
 
         // Reorder the columns
         usageDirectionGrid.setColumnOrder(usageDirectionGrid.getColumnByKey(LFDNR),
                 usageDirectionGrid.getColumnByKey(ROSETTA_USAGE_DIRECTION),
-                usageDirectionGrid.getColumnByKey(CO_ONE_USAGE_DIRECTION),
-                usageDirectionGrid.getColumnByKey(USER));
+                usageDirectionGrid.getColumnByKey(CO_ONE_USAGE_DIRECTION));
+            //    usageDirectionGrid.getColumnByKey(USER));
 
         usageDirectionGrid.addThemeVariants(GridVariant.LUMO_COMPACT);
         logView.logMessage(Constants.INFO, "Ending setupUsageDirectionGrid() for setup UsageDirectionGrid");
