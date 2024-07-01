@@ -19,6 +19,7 @@ import de.dbuss.tefcontrol.data.modules.kpi.Strategic_KPIView;
 import de.dbuss.tefcontrol.data.modules.pfgproductmapping.entity.CltvAllProduct;
 import de.dbuss.tefcontrol.data.modules.pfgproductmapping.entity.ProductHierarchie;
 import de.dbuss.tefcontrol.data.modules.rosettamapping.entity.*;
+import de.dbuss.tefcontrol.data.modules.saleschannelmapping.entity.CLTVSalesChannel;
 import de.dbuss.tefcontrol.data.modules.sqlexecution.entity.Configuration;
 import de.dbuss.tefcontrol.data.modules.sqlexecution.entity.SqlDefinition;
 import de.dbuss.tefcontrol.data.modules.tarifmapping.entity.CLTVProduct;
@@ -3032,6 +3033,78 @@ public class ProjectConnectionService {
                         rosettaUsageDirection.getRosettaUsageDirection(),
                         rosettaUsageDirection.getCoOneUsageDirection(),
                         MainLayout.userName // Assuming MainLayout.userName holds the current user
+                );
+            }
+
+            return Constants.OK;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return handleDatabaseError(e);
+        } finally {
+            connectionClose(jdbcTemplate);
+        }
+    }
+
+    public List<CLTVSalesChannel> getCLTVSalesChannels(String tableName, String dbUrl, String dbUser, String dbPassword) {
+        try {
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+            String sqlQuery = "SELECT TOP (1000) [LfdNr], [SalesChannels_CoOne_BK_ID], [SalesChannels_CoOne_ID], [SalesChannels_Name], [SalesChannel_CLTV], [User], [gueltig_von], [gueltig_bis] FROM " + tableName;
+            RowMapper<CLTVSalesChannel> rowMapper = (rs, rowNum) -> {
+                CLTVSalesChannel cltvSalesChannel = new CLTVSalesChannel();
+                cltvSalesChannel.setLfdNr(rs.getInt("LfdNr"));
+                cltvSalesChannel.setSalesChannelsCoOneBkId(rs.getString("SalesChannels_CoOne_BK_ID"));
+                cltvSalesChannel.setSalesChannelsCoOneId(rs.getString("SalesChannels_CoOne_ID"));
+                cltvSalesChannel.setSalesChannelsName(rs.getString("SalesChannels_Name"));
+                cltvSalesChannel.setSalesChannelCltv(rs.getString("SalesChannel_CLTV"));
+                cltvSalesChannel.setUser(rs.getString("User"));
+                cltvSalesChannel.setGueltigVon(rs.getDate("gueltig_von").toLocalDate());
+                cltvSalesChannel.setGueltigBis(rs.getDate("gueltig_bis").toLocalDate());
+                return cltvSalesChannel;
+            };
+            List<CLTVSalesChannel> fetchedData = jdbcTemplate.query(sqlQuery, rowMapper);
+            return fetchedData;
+        } catch (Exception ex) {
+            errorMessage = handleDatabaseError(ex);
+            return Collections.emptyList();
+        } finally {
+            connectionClose(jdbcTemplate);
+        }
+    }
+
+    public String saveOrUpdateCLTVSalesChannel(CLTVSalesChannel cltvSalesChannel, String tableName, String dbUrl, String dbUser, String dbPassword) {
+        try {
+            DataSource dataSource = getDataSourceUsingParameter(dbUrl, dbUser, dbPassword);
+            jdbcTemplate = new JdbcTemplate(dataSource);
+
+            // Check if the record exists
+            String checkSql = "SELECT COUNT(*) FROM " + tableName + " WHERE LfdNr = ?";
+            int count = jdbcTemplate.queryForObject(checkSql, new Object[]{cltvSalesChannel.getLfdNr()}, Integer.class);
+
+            if (count > 0) {
+                // Update existing record
+                String updateSql = "UPDATE " + tableName + " SET SalesChannels_CoOne_BK_ID = ?, SalesChannels_CoOne_ID = ?, SalesChannels_Name = ?, SalesChannel_CLTV = ?, [User] = ?, gueltig_von = ?, gueltig_bis = ? WHERE LfdNr = ?";
+                jdbcTemplate.update(updateSql,
+                        cltvSalesChannel.getSalesChannelsCoOneBkId(),
+                        cltvSalesChannel.getSalesChannelsCoOneId(),
+                        cltvSalesChannel.getSalesChannelsName(),
+                        cltvSalesChannel.getSalesChannelCltv(),
+                        MainLayout.userName, // Assuming MainLayout.userName holds the current user
+                        cltvSalesChannel.getGueltigVon(),
+                        cltvSalesChannel.getGueltigBis(),
+                        cltvSalesChannel.getLfdNr()
+                );
+            } else {
+                // Insert new record
+                String insertSql = "INSERT INTO " + tableName + " ( SalesChannels_CoOne_BK_ID, SalesChannels_CoOne_ID, SalesChannels_Name, SalesChannel_CLTV, [User], gueltig_von, gueltig_bis) VALUES ( ?, ?, ?, ?, ?, ?, ?)";
+                jdbcTemplate.update(insertSql,
+                        cltvSalesChannel.getSalesChannelsCoOneBkId(),
+                        cltvSalesChannel.getSalesChannelsCoOneId(),
+                        cltvSalesChannel.getSalesChannelsName(),
+                        cltvSalesChannel.getSalesChannelCltv(),
+                        MainLayout.userName, // Assuming MainLayout.userName holds the current user
+                        cltvSalesChannel.getGueltigVon(),
+                        cltvSalesChannel.getGueltigBis()
                 );
             }
 

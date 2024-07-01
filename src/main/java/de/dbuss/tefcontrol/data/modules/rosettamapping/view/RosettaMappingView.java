@@ -34,8 +34,6 @@ import de.dbuss.tefcontrol.components.QS_Callback;
 import de.dbuss.tefcontrol.components.QS_Grid;
 import de.dbuss.tefcontrol.data.dto.ProjectAttachmentsDTO;
 import de.dbuss.tefcontrol.data.entity.*;
-import de.dbuss.tefcontrol.data.modules.b2pOutlook.entity.OutlookMGSR;
-import de.dbuss.tefcontrol.data.modules.cltv_Inflow.entity.CLTVInflow;
 import de.dbuss.tefcontrol.data.modules.rosettamapping.entity.*;
 import de.dbuss.tefcontrol.data.service.*;
 import de.dbuss.tefcontrol.dataprovider.GenericDataProvider;
@@ -113,7 +111,7 @@ public class RosettaMappingView extends VerticalLayout implements BeforeEnterObs
         this.projectsService = projectsService;
         this.projectAttachmentsService = projectAttachmentsService;
         logView = new LogView();
-        logView.logMessage(Constants.INFO, "Starting B2POutlookFINView");
+        logView.logMessage(Constants.INFO, "Starting RosettaMappingView");
 
         List<ProjectParameter> listOfProjectParameters = projectParameterService.findAll();
         List<ProjectParameter> filteredProjectParameters = listOfProjectParameters.stream()
@@ -212,7 +210,7 @@ public class RosettaMappingView extends VerticalLayout implements BeforeEnterObs
                     Key.KEY_V, KeyModifier.ALT);
         }
 
-        logView.logMessage(Constants.INFO, "Ending B2POutlookFINView");
+        logView.logMessage(Constants.INFO, "Ending RosettaMappingViewF");
     }
 
     @Override
@@ -235,7 +233,7 @@ public class RosettaMappingView extends VerticalLayout implements BeforeEnterObs
         //log.info("Starting getTabsheet() for Tabsheet");
         TabSheet tabSheet = new TabSheet();
 
-        tabSheet.add("Upload", getUploadAllTabs());
+        tabSheet.add("Mapping", getMappingAllTabs());
         tabSheet.add("Description", getDescriptionTab());
         tabSheet.add("Attachments", getAttachmentTab());
 
@@ -265,7 +263,7 @@ public class RosettaMappingView extends VerticalLayout implements BeforeEnterObs
         defaultUtils.setProjectId(projectId);
         defaultUtils.setAttachmentGridItems(projectAttachmentsDTOS);
     }
-    private Component getUploadAllTabs() {
+    private Component getMappingAllTabs() {
         logView.logMessage(Constants.INFO, "Sarting getUpladTab() for set upload data");
         VerticalLayout content = new VerticalLayout();
 

@@ -133,4 +133,7 @@ public class Constants {
     public static final String PRODUCTUSG_TABLE = "ProductUSG_Table";
     public static final String PRODUCTUSGDIRECTION_TABLE = "ProductUSGDirection_Table";
 
+
+    // This constant is used for Sales_Channel_Mapping config module
+    public static final String SALES_CHANNEL_MAPPING = "Sales_Channel_Mapping";
 }
