@@ -28,7 +28,8 @@ import java.util.stream.Collectors;
 
 
 @PageTitle("SQL Connection Configuration")
-@Route(value = "config/:project_Id", layout= MainLayout.class)
+@Route(value = "config", layout= MainLayout.class)
+//@Route(value = "config/:project_Id", layout= MainLayout.class)
 @RolesAllowed("ADMIN")
 public class SQLConfigurationView extends VerticalLayout {
 

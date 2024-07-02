@@ -139,7 +139,7 @@ public class MainLayout extends AppLayout {
         urlToViewMap.put(Constants.ADJUSTMENTREFX, AdjustmentsREFXView.class);
         urlToViewMap.put(Constants.HUB_FLOW_MAPPING, HUBFlowMappingView.class);
         urlToViewMap.put(Constants.SQL_EXECUTION, SQLExecutionView.class);
-        urlToViewMap.put(Constants.CONFIG, SQLConfigurationView.class);
+      //  urlToViewMap.put(Constants.CONFIG, SQLConfigurationView.class);
         urlToViewMap.put(Constants.ROSETTA_MAPPING, RosettaMappingView.class);
         urlToViewMap.put(Constants.SALES_CHANNEL_MAPPING, SalesChannelMapping.class);
 

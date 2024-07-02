@@ -12,6 +12,7 @@ import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.contextmenu.GridContextMenu;
 import com.vaadin.flow.component.grid.contextmenu.GridMenuItem;
 import com.vaadin.flow.component.html.Anchor;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -156,8 +157,13 @@ public class SQLExecutionView extends VerticalLayout {
             }
         });
 
+        Button configureButton = new Button("Configure", VaadinIcon.COG.create());
+        configureButton.addClickListener(event -> {
+            UI.getCurrent().navigate(SQLConfigurationView.class);
+        });
+
         HorizontalLayout hl = new HorizontalLayout();
-        hl.add(comboBox);
+        hl.add(comboBox, configureButton);
 
         hl.setAlignItems(Alignment.BASELINE);
 
